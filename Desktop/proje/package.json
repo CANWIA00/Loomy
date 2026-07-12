@@ -9,6 +9,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@shopify/react-native-skia": "2.6.2",
     "@swc/helpers": "^0.5.23",
+    "axios": "^1.18.1",
     "babel-preset-expo": "~57.0.0",
     "expo": "~57.0.4",
     "expo-constants": "~57.0.3",

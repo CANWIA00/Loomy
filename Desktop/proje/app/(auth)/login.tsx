@@ -6,16 +6,43 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    router.replace("/(tabs)/dashboard");
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Hata", "E-posta ve şifre gereklidir.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await login(email.trim(), password.trim());
+      console.log("Role:", response.user.role);
+      console.log("Profile completed:", response.user.profileCompleted);
+
+      if (response.user.role === "ADMIN" && !response.user.profileCompleted) {
+        router.replace("/(auth)/complete-profile");
+      } else {
+        router.replace("/(tabs)/dashboard");
+      }
+    } catch (error: any) {
+      console.log("Login error:", error?.message || error);
+      const message = error.response?.data?.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.";
+      Alert.alert("Hata", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,10 +102,15 @@ export default function LoginScreen() {
           <TouchableOpacity
             className="w-full h-12 bg-[#3B82F6] rounded-lg items-center justify-center mt-5 active:bg-[#2563EB]"
             onPress={handleLogin}
+            disabled={loading}
           >
-            <Text className="text-white font-semibold text-base">
-              Giriş Yap
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-white font-semibold text-base">
+                Giriş Yap
+              </Text>
+            )}
           </TouchableOpacity>
 
           <View className="flex-row justify-center mt-8">

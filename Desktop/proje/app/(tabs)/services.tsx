@@ -94,6 +94,18 @@ export default function ServicesScreen() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  const customerNameRef = useRef<TextInput>(null);
+  const serviceAddressRef = useRef<TextInput>(null);
+  const startTimeRef = useRef<TextInput>(null);
+  const endTimeRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const internalIpRef = useRef<TextInput>(null);
+  const externalIpRef = useRef<TextInput>(null);
+  const detailsRef = useRef<TextInput>(null);
+  const feeRef = useRef<TextInput>(null);
+  const technicianRef = useRef<TextInput>(null);
+  const documentDateRef = useRef<TextInput>(null);
+
   const updateForm = (key: keyof typeof initialForm, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -152,6 +164,51 @@ export default function ServicesScreen() {
       signaturePathsRef.current = [];
       setSignatureModal(true);
     }
+  };
+
+  const handleClear = () => {
+    Alert.alert("Formu Temizle", "Formdaki tüm veriler silinecek. Devam etmek istiyor musunuz?", [
+      { text: "Hayır", style: "cancel" },
+      {
+        text: "Evet, Temizle",
+        style: "destructive",
+        onPress: () => {
+          setShowForm(false);
+          setForm({
+            customerName: "",
+            serviceAddress: "",
+            startTime: "",
+            endTime: "",
+            phone: "",
+            internalIp: "",
+            externalIp: "",
+            details: "",
+            fee: "",
+            technician: "",
+            documentDate: "",
+            services: [],
+            technical: [],
+          });
+          setSelectedCustomerId(null);
+          setIsEditing(false);
+          setEditingId(null);
+          customerNameRef.current?.setNativeProps({ text: "" });
+          serviceAddressRef.current?.setNativeProps({ text: "" });
+          startTimeRef.current?.setNativeProps({ text: "" });
+          endTimeRef.current?.setNativeProps({ text: "" });
+          phoneRef.current?.setNativeProps({ text: "" });
+          internalIpRef.current?.setNativeProps({ text: "" });
+          externalIpRef.current?.setNativeProps({ text: "" });
+          detailsRef.current?.setNativeProps({ text: "" });
+          feeRef.current?.setNativeProps({ text: "" });
+          technicianRef.current?.setNativeProps({ text: "" });
+          documentDateRef.current?.setNativeProps({ text: "" });
+          setTimeout(() => {
+            setShowForm(true);
+          }, 50);
+        },
+      },
+    ]);
   };
 
   const handleEdit = (record: typeof fakeRecords[0]) => {
@@ -349,6 +406,14 @@ export default function ServicesScreen() {
 
         {showForm && (
           <View className="bg-[#111] rounded-2xl border border-[#1F1F1F] p-4 mb-6">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-white font-semibold text-base">
+                {isEditing ? "Servis Kaydını Düzenle" : "Yeni Servis Kaydı"}
+              </Text>
+              <TouchableOpacity onPress={handleClear} className="w-7 h-7 bg-[#2A2A2A] rounded-full items-center justify-center">
+                <Ionicons name="trash-outline" size={16} color="#EF4444" />
+              </TouchableOpacity>
+            </View>
             <View className="flex-row gap-3 mb-3">
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Müşteri Seç</Text>
@@ -460,6 +525,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Müşteri Adı</Text>
                 <TextInput
+                  ref={customerNameRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="Müşteri adını girin"
                   placeholderTextColor="#555"
@@ -471,6 +537,7 @@ export default function ServicesScreen() {
                 <Text className="text-gray-400 text-xs font-medium mb-1">Servis Adresi</Text>
                 <View className="relative flex-1">
                   <TextInput
+                    ref={serviceAddressRef}
                     className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 pr-10 text-white text-sm"
                     placeholder="Servis adresini girin veya seçin"
                     placeholderTextColor="#555"
@@ -491,6 +558,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Başlangıç</Text>
                 <TextInput
+                  ref={startTimeRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="HH:MM"
                   placeholderTextColor="#555"
@@ -501,6 +569,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Bitiş</Text>
                 <TextInput
+                  ref={endTimeRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="HH:MM"
                   placeholderTextColor="#555"
@@ -514,6 +583,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Müşteri Telefonu</Text>
                 <TextInput
+                  ref={phoneRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="Telefon numarası"
                   placeholderTextColor="#555"
@@ -525,6 +595,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Dahili IP</Text>
                 <TextInput
+                  ref={internalIpRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="Dahili IP"
                   placeholderTextColor="#555"
@@ -535,6 +606,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Harici IP</Text>
                 <TextInput
+                  ref={externalIpRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="Harici IP"
                   placeholderTextColor="#555"
@@ -603,6 +675,7 @@ export default function ServicesScreen() {
             <View className="mb-3">
               <Text className="text-gray-400 text-xs font-medium mb-1">Detaylar</Text>
               <TextInput
+                ref={detailsRef}
                 className="w-full min-h-[64px] bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 py-2 text-white text-sm"
                 placeholder="Ek detaylar veya notlar"
                 placeholderTextColor="#555"
@@ -617,6 +690,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Servis Ücreti (₺)</Text>
                 <TextInput
+                  ref={feeRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="0.00"
                   placeholderTextColor="#555"
@@ -628,6 +702,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Teknisyen</Text>
                 <TextInput
+                  ref={technicianRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="Teknisyen adını girin"
                   placeholderTextColor="#555"
@@ -638,6 +713,7 @@ export default function ServicesScreen() {
               <View className="flex-1">
                 <Text className="text-gray-400 text-xs font-medium mb-1">Belge Tarihi</Text>
                 <TextInput
+                  ref={documentDateRef}
                   className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
                   placeholder="GG/AA/YYYY"
                   placeholderTextColor="#555"

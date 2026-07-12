@@ -1,9 +1,13 @@
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function SettingsScreen() {
-  const handleLogout = () => {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
     router.replace("/(auth)/login");
   };
 

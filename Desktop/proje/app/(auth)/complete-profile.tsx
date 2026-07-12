@@ -9,18 +9,22 @@ import {
   ScrollView,
   Alert,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function CompleteProfileScreen() {
   const router = useRouter();
+  const { completeProfile } = useAuth();
   const [logo, setLogo] = useState("https://picsum.photos/seed/company/200/200");
   const [companyName, setCompanyName] = useState("");
   const [address, setAddress] = useState("");
   const [phone1, setPhone1] = useState("");
   const [phone2, setPhone2] = useState("");
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -35,7 +39,7 @@ export default function CompleteProfileScreen() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!companyName.trim()) {
       Alert.alert("Hata", "Kurumsal isim alanı boş olamaz.");
       return;
@@ -53,11 +57,25 @@ export default function CompleteProfileScreen() {
       return;
     }
 
-    console.log({ logo, companyName, address, phone1, phone2, email });
-
-    Alert.alert("Başarılı", "Kurumsal bilgiler kaydedildi.", [
-      { text: "Devam Et", onPress: () => router.replace("/(tabs)/dashboard") },
-    ]);
+    setLoading(true);
+    try {
+      await completeProfile({
+        companyName: companyName.trim(),
+        address: address.trim(),
+        phone1: phone1.trim(),
+        phone2: phone2.trim() || undefined,
+        email: email.trim(),
+        logo,
+      });
+      Alert.alert("Başarılı", "Kurumsal bilgiler kaydedildi.", [
+        { text: "Devam Et", onPress: () => router.replace("/(tabs)/dashboard") },
+      ]);
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Bir sorun oluştu. Lütfen tekrar deneyin.";
+      Alert.alert("Hata", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputClass =
@@ -163,8 +181,13 @@ export default function CompleteProfileScreen() {
             <TouchableOpacity
               className="w-full h-12 bg-[#3B82F6] rounded-lg items-center justify-center mt-6 active:bg-[#2563EB]"
               onPress={handleComplete}
+              disabled={loading}
             >
-              <Text className="text-white font-semibold text-base">Tamamla</Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white font-semibold text-base">Tamamla</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

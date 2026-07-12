@@ -1,28 +1,11 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-
-interface Customer {
-  id: string;
-  companyName: string;
-  address: string;
-  email: string;
-  phone: string;
-  contactPerson: string;
-  contactPhone: string;
-}
-
-const initialData: Customer[] = [
-  { id: "1", companyName: "ABC Teknoloji", address: "İstanbul, Kadıköy, Bağdat Caddesi No:42", email: "info@abc.com", phone: "555-123-4567", contactPerson: "Ahmet Yılmaz", contactPhone: "555-111-2233" },
-  { id: "2", companyName: "XYZ Yazılım", address: "Ankara, Çankaya, Atatürk Bulvarı No:25", email: "info@xyz.com", phone: "555-987-6543", contactPerson: "Ayşe Demir", contactPhone: "555-222-3344" },
-  { id: "3", companyName: "DEF Danışmanlık", address: "İzmir, Konak, Cumhuriyet Bulvarı No:10", email: "info@def.com", phone: "555-456-7890", contactPerson: "Mehmet Öz", contactPhone: "555-333-4455" },
-  { id: "4", companyName: "GHI Güvenlik", address: "İstanbul, Beşiktaş, Barbaros Bulvarı No:15", email: "info@ghi.com", phone: "555-321-7654", contactPerson: "Zeynep Kaya", contactPhone: "555-444-5566" },
-  { id: "5", companyName: "JKL Enerji", address: "İzmir, Karşıyaka, Mustafa Kemal Cad. No:5", email: "info@jkl.com", phone: "555-654-3210", contactPerson: "Ali Öztürk", contactPhone: "555-555-6677" },
-];
+import { useState, useEffect, useCallback } from "react";
+import { customerApi, Customer } from "../../api/customers";
 
 export default function CustomersScreen() {
-  const [customers, setCustomers] = useState<Customer[]>(initialData);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [newCompany, setNewCompany] = useState("");
   const [newAddress, setNewAddress] = useState("");
@@ -31,20 +14,62 @@ export default function CustomersScreen() {
   const [newContact, setNewContact] = useState("");
   const [newContactPhone, setNewContactPhone] = useState("");
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [size] = useState(20);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
-  const filteredCustomers = customers.filter((c) =>
-    c.companyName.toLowerCase().includes(search.toLowerCase()) ||
-    c.contactPerson.toLowerCase().includes(search.toLowerCase()) ||
-    c.phone.includes(search)
-  );
+  const fetchCustomers = useCallback(async (pageNum: number = 0, searchQuery?: string) => {
+    setLoading(true);
+    try {
+      const response = searchQuery
+        ? await customerApi.search(searchQuery, pageNum, size)
+        : await customerApi.getAll(pageNum, size);
+      setCustomers(response.data.content);
+      setTotalElements(response.data.totalElements);
+      setTotalPages(response.data.totalPages);
+      setPage(response.data.number);
+    } catch (error: any) {
+      Alert.alert("Hata", "Müşteriler yüklenirken bir sorun oluştu.");
+    } finally {
+      setLoading(false);
+    }
+  }, [size]);
 
-  function handleSave() {
+  useEffect(() => {
+    fetchCustomers(0);
+  }, [fetchCustomers]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (search.trim()) {
+        fetchCustomers(0, search.trim());
+      } else {
+        fetchCustomers(0);
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [search, fetchCustomers]);
+
+  function resetForm() {
+    setNewCompany("");
+    setNewAddress("");
+    setNewEmail("");
+    setNewPhone("");
+    setNewContact("");
+    setNewContactPhone("");
+    setEditingCustomer(null);
+  }
+
+  async function handleSave() {
     if (!newCompany.trim()) {
       Alert.alert("Hata", "Şirket adı gerekli");
       return;
     }
-    const yeni: Customer = {
-      id: Date.now().toString(),
+
+    const data = {
       companyName: newCompany.trim(),
       address: newAddress.trim(),
       email: newEmail.trim(),
@@ -52,25 +77,66 @@ export default function CustomersScreen() {
       contactPerson: newContact.trim(),
       contactPhone: newContactPhone.trim(),
     };
-    setCustomers([yeni, ...customers]);
-    setNewCompany("");
-    setNewAddress("");
-    setNewEmail("");
-    setNewPhone("");
-    setNewContact("");
-    setNewContactPhone("");
-    setFormOpen(false);
+
+    setLoading(true);
+    try {
+      if (editingCustomer) {
+        await customerApi.update(editingCustomer.id, data);
+        Alert.alert("Başarılı", "Müşteri güncellendi.");
+      } else {
+        await customerApi.create(data);
+        Alert.alert("Başarılı", "Müşteri eklendi.");
+      }
+      resetForm();
+      setFormOpen(false);
+      fetchCustomers(page, search.trim() || undefined);
+    } catch (error: any) {
+      Alert.alert("Hata", "İşlem sırasında bir sorun oluştu.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleDelete(id: string) {
     Alert.alert("Sil", "Silmek istediğinize emin misiniz?", [
       { text: "İptal", style: "cancel" },
-      { text: "Sil", style: "destructive", onPress: () => setCustomers(customers.filter((c) => c.id !== id)) },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          setLoading(true);
+          try {
+            await customerApi.delete(id);
+            Alert.alert("Başarılı", "Müşteri silindi.");
+            fetchCustomers(page, search.trim() || undefined);
+          } catch (error: any) {
+            Alert.alert("Hata", "Silme işleminde bir sorun oluştu.");
+          } finally {
+            setLoading(false);
+          }
+        },
+      },
     ]);
   }
 
-  function handleEdit(id: string) {
-    Alert.alert("Düzenle", "Düzenleniyor...");
+  async function handleEdit(id: string) {
+    setLoading(true);
+    try {
+      const response = await customerApi.getById(id);
+      const c = response.data;
+      setEditingCustomer(c);
+      setNewCompany(c.companyName);
+      setNewAddress(c.address);
+      setNewEmail(c.email);
+      setNewPhone(c.phone);
+      setNewContact(c.contactPerson);
+      setNewContactPhone(c.contactPhone);
+      setFormOpen(true);
+    } catch (error: any) {
+      Alert.alert("Hata", "Müşteri bilgileri yüklenirken bir sorun oluştu.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -93,12 +159,18 @@ export default function CustomersScreen() {
           Müşterilerinizi görüntüleyin ve yönetin
         </Text>
 
-        {/* YENİ MÜŞTERİ EKLE */}
         <TouchableOpacity
-          onPress={() => setFormOpen(!formOpen)}
+          onPress={() => {
+            if (formOpen) {
+              resetForm();
+            }
+            setFormOpen(!formOpen);
+          }}
           className="flex-row items-center justify-between bg-[#1A1A1A] rounded-2xl p-4 mb-4"
         >
-          <Text className="text-white text-lg font-bold">Yeni Müşteri Ekle</Text>
+          <Text className="text-white text-lg font-bold">
+            {editingCustomer ? "Müşteri Düzenle" : "Yeni Müşteri Ekle"}
+          </Text>
           <Ionicons name={formOpen ? "chevron-up" : "chevron-down"} size={22} color="#3B82F6" />
         </TouchableOpacity>
 
@@ -151,17 +223,23 @@ export default function CustomersScreen() {
             />
             <TouchableOpacity
               onPress={handleSave}
+              disabled={loading}
               className="bg-[#3B82F6] rounded-lg py-3 items-center"
             >
-              <Text className="text-white text-sm font-bold">Kaydet</Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white text-sm font-bold">
+                  {editingCustomer ? "Güncelle" : "Kaydet"}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
 
-        {/* TÜM MÜŞTERİLER */}
         <View className="flex-row items-center justify-between mb-3">
           <Text className="text-white text-lg font-bold">Tüm Müşteriler</Text>
-          <Text className="text-gray-500 text-sm">{customers.length} kayıt</Text>
+          <Text className="text-gray-500 text-sm">{totalElements} kayıt</Text>
         </View>
 
         <TextInput
@@ -172,39 +250,76 @@ export default function CustomersScreen() {
           onChangeText={setSearch}
         />
 
-        {filteredCustomers.map((c) => (
-          <View
-            key={c.id}
-            className="bg-[#1A1A1A] rounded-2xl p-4 mb-3"
-          >
-            <View className="flex-row items-center">
-              <View className="w-12 h-12 rounded-full bg-[#3B82F6]/20 items-center justify-center">
-                <Text className="text-[#3B82F6] text-lg font-bold">
-                  {c.companyName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View className="ml-3 flex-1">
-                <Text className="text-white text-base font-bold">{c.companyName}</Text>
-                <Text className="text-gray-400 text-sm mt-0.5">{c.contactPerson}</Text>
-                <Text className="text-gray-500 text-xs mt-0.5">{c.phone}</Text>
-              </View>
-              <View className="flex-row gap-2">
-                <TouchableOpacity
-                  onPress={() => handleEdit(c.id)}
-                  className="w-9 h-9 bg-[#3B82F6]/10 rounded-xl items-center justify-center"
-                >
-                  <Ionicons name="create-outline" size={18} color="#3B82F6" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleDelete(c.id)}
-                  className="w-9 h-9 bg-[#EF4444]/10 rounded-xl items-center justify-center"
-                >
-                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
-                </TouchableOpacity>
-              </View>
-            </View>
+        {loading && customers.length === 0 ? (
+          <View className="items-center py-10">
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text className="text-gray-500 text-sm mt-3">Yükleniyor...</Text>
           </View>
-        ))}
+        ) : (
+          <>
+            {customers.map((c) => (
+              <View
+                key={c.id}
+                className="bg-[#1A1A1A] rounded-2xl p-4 mb-3"
+              >
+                <View className="flex-row items-center">
+                  <View className="w-12 h-12 rounded-full bg-[#3B82F6]/20 items-center justify-center">
+                    <Text className="text-[#3B82F6] text-lg font-bold">
+                      {c.companyName.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View className="ml-3 flex-1">
+                    <Text className="text-white text-base font-bold">{c.companyName}</Text>
+                    <Text className="text-gray-400 text-sm mt-0.5">{c.contactPerson}</Text>
+                    <Text className="text-gray-500 text-xs mt-0.5">{c.phone}</Text>
+                  </View>
+                  <View className="flex-row gap-2">
+                    <TouchableOpacity
+                      onPress={() => handleEdit(c.id)}
+                      className="w-9 h-9 bg-[#3B82F6]/10 rounded-xl items-center justify-center"
+                    >
+                      <Ionicons name="create-outline" size={18} color="#3B82F6" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleDelete(c.id)}
+                      className="w-9 h-9 bg-[#EF4444]/10 rounded-xl items-center justify-center"
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+
+            {customers.length === 0 && (
+              <View className="items-center py-10">
+                <Text className="text-gray-500 text-sm">Müşteri bulunamadı.</Text>
+              </View>
+            )}
+
+            {totalPages > 1 && (
+              <View className="flex-row items-center justify-center gap-3 mt-4">
+                <TouchableOpacity
+                  disabled={page === 0}
+                  onPress={() => fetchCustomers(page - 1, search.trim() || undefined)}
+                  className={`px-4 py-2 rounded-lg ${page === 0 ? "bg-[#1A1A1A] opacity-50" : "bg-[#3B82F6]"}`}
+                >
+                  <Text className="text-white text-sm">Önceki</Text>
+                </TouchableOpacity>
+                <Text className="text-gray-400 text-sm">
+                  {page + 1} / {totalPages}
+                </Text>
+                <TouchableOpacity
+                  disabled={page >= totalPages - 1}
+                  onPress={() => fetchCustomers(page + 1, search.trim() || undefined)}
+                  className={`px-4 py-2 rounded-lg ${page >= totalPages - 1 ? "bg-[#1A1A1A] opacity-50" : "bg-[#3B82F6]"}`}
+                >
+                  <Text className="text-white text-sm">Sonraki</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
+        )}
       </View>
     </ScrollView>
   );

@@ -8,22 +8,21 @@ import {
   Platform,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-
-const VALID_CODES = {
-  ADMIN: "ADMIN2024",
-  USER: "MIRA2024",
-};
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const validate = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,24 +54,35 @@ export default function RegisterScreen() {
     return true;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!validate()) return;
 
-    let role = "User";
-    if (inviteCode.trim() === VALID_CODES.ADMIN) {
-      role = "Admin";
-    } else if (inviteCode.trim() !== VALID_CODES.USER) {
-      Alert.alert("Hata", "Geçersiz davet kodu!");
-      return;
-    }
+    setLoading(true);
+    try {
+      const response = await register({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password,
+        inviteCode: inviteCode.trim(),
+      });
 
-    // TODO: Backend kayıt API çağrısı buraya gelecek
-    console.log({ name, email, phone, password, role });
+      console.log("Register response:", JSON.stringify(response, null, 2));
+      console.log("Role:", response.user.role);
 
-    if (role === "Admin") {
-      router.replace("/(auth)/complete-profile");
-    } else {
-      router.replace("/(tabs)/dashboard");
+      if (response.user.role === "ADMIN") {
+        console.log("Redirecting to complete-profile...");
+        router.replace("/(auth)/complete-profile");
+      } else {
+        console.log("Redirecting to dashboard...");
+        router.replace("/(tabs)/dashboard");
+      }
+    } catch (error: any) {
+      console.log("Register error:", error?.message || error);
+      const message = error.response?.data?.message || "Kayıt başarısız. Lütfen tekrar deneyin.";
+      Alert.alert("Hata", message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,7 +119,7 @@ export default function RegisterScreen() {
                 </Text>
                 <TextInput
                   className={inputClass}
-                  placeholder="Admin tarafından verilen kodu girin"
+                  placeholder="Admin veya davet kodunu girin"
                   placeholderTextColor="#555"
                   value={inviteCode}
                   onChangeText={setInviteCode}
@@ -192,8 +202,13 @@ export default function RegisterScreen() {
             <TouchableOpacity
               className="w-full h-12 bg-[#3B82F6] rounded-lg items-center justify-center mt-6 active:bg-[#2563EB]"
               onPress={handleRegister}
+              disabled={loading}
             >
-              <Text className="text-white font-semibold text-base">Kaydol</Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white font-semibold text-base">Kaydol</Text>
+              )}
             </TouchableOpacity>
 
             <View className="flex-row justify-center mt-8">
