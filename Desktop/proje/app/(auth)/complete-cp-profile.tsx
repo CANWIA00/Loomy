@@ -15,14 +15,14 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../contexts/AuthContext";
 
-export default function CompleteProfileScreen() {
+export default function CompleteCompanyProfileScreen() {
   const router = useRouter();
-  const { completeProfile } = useAuth();
-  const [logo, setLogo] = useState("https://picsum.photos/seed/company/200/200");
-  const [companyName, setCompanyName] = useState("");
+  const { completeCompanyProfile } = useAuth();
+  const [logoUrl, setLogoUrl] = useState("https://picsum.photos/seed/company/200/200");
+  const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [phone1, setPhone1] = useState("");
-  const [phone2, setPhone2] = useState("");
+  const [phone, setPhone] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,42 +35,28 @@ export default function CompleteProfileScreen() {
     });
 
     if (!result.canceled && result.assets[0]) {
-      setLogo(result.assets[0].uri);
+      setLogoUrl(result.assets[0].uri);
     }
   };
 
   const handleComplete = async () => {
-    if (!companyName.trim()) {
-      Alert.alert("Hata", "Kurumsal isim alanı boş olamaz.");
-      return;
-    }
-    if (!address.trim()) {
-      Alert.alert("Hata", "Adres alanı boş olamaz.");
-      return;
-    }
-    if (!phone1.trim()) {
-      Alert.alert("Hata", "İletişim numarası alanı boş olamaz.");
-      return;
-    }
-    if (!email.trim()) {
-      Alert.alert("Hata", "E-posta alanı boş olamaz.");
-      return;
-    }
-
     setLoading(true);
     try {
-      await completeProfile({
-        companyName: companyName.trim(),
+      const response = await completeCompanyProfile({
+        name: name.trim(),
         address: address.trim(),
-        phone1: phone1.trim(),
-        phone2: phone2.trim() || undefined,
+        phone: phone.trim(),
         email: email.trim(),
-        logo,
+        taxNumber: taxNumber.trim(),
+        logoUrl,
       });
-      Alert.alert("Başarılı", "Kurumsal bilgiler kaydedildi.", [
-        { text: "Devam Et", onPress: () => router.replace("/(tabs)/dashboard") },
-      ]);
+
+      console.log("✅ Complete Profile Success:", response);
+      console.log("🟢 Dashboard'a yönlendiriliyor...");
+
+      router.replace("/(tabs)/dashboard");
     } catch (error: any) {
+      console.log("🔴 Complete Profile Error:", error);
       const message = error.response?.data?.message || "Bir sorun oluştu. Lütfen tekrar deneyin.";
       Alert.alert("Hata", message);
     } finally {
@@ -110,7 +96,7 @@ export default function CompleteProfileScreen() {
                 <Text className={labelClass}>Logo</Text>
                 <TouchableOpacity onPress={pickImage} className="mt-1">
                   <Image
-                    source={{ uri: logo }}
+                    source={{ uri: logoUrl }}
                     className="w-20 h-20 rounded-xl bg-[#2A2A2A]"
                     resizeMode="cover"
                   />
@@ -119,13 +105,13 @@ export default function CompleteProfileScreen() {
               </View>
 
               <View>
-                <Text className={labelClass}>Kurumsal İsmi</Text>
+                <Text className={labelClass}>Şirket Adı</Text>
                 <TextInput
                   className={inputClass}
                   placeholder="Şirket adı"
                   placeholderTextColor="#555"
-                  value={companyName}
-                  onChangeText={setCompanyName}
+                  value={name}
+                  onChangeText={setName}
                 />
               </View>
 
@@ -141,26 +127,26 @@ export default function CompleteProfileScreen() {
               </View>
 
               <View>
-                <Text className={labelClass}>İletişim Numarası 1</Text>
+                <Text className={labelClass}>Telefon</Text>
                 <TextInput
                   className={inputClass}
                   placeholder="0555 123 45 67"
                   placeholderTextColor="#555"
-                  value={phone1}
-                  onChangeText={setPhone1}
+                  value={phone}
+                  onChangeText={setPhone}
                   keyboardType="phone-pad"
                 />
               </View>
 
               <View>
-                <Text className={labelClass}>İletişim Numarası 2 (opsiyonel)</Text>
+                <Text className={labelClass}>Vergi Numarası</Text>
                 <TextInput
                   className={inputClass}
-                  placeholder="0555 987 65 43"
+                  placeholder="1234567890"
                   placeholderTextColor="#555"
-                  value={phone2}
-                  onChangeText={setPhone2}
-                  keyboardType="phone-pad"
+                  value={taxNumber}
+                  onChangeText={setTaxNumber}
+                  keyboardType="numeric"
                 />
               </View>
 

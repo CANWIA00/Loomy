@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { authApi, User } from "../api/auth";
+import { authApi, User, CompanyRequestDto } from "../api/auth";
 import { setOnUnauthorized } from "../api/client";
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ user: User }>;
-  register: (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => Promise<{ user: User }>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => Promise<{ token: string; role: string; profileCompleted: boolean }>;
   logout: () => Promise<void>;
-  completeProfile: (data: { companyName: string; address: string; phone1: string; phone2?: string; email: string; logo?: string }) => Promise<void>;
+  completeCompanyProfile: (data: CompanyRequestDto) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,8 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: "",
       name: "",
       email: email,
-      role: data.role as "ADMIN" | "USER",
-      profileCompleted: false,
+      role: (data.role as "ADMIN" | "USER") || "USER",
+      profileCompleted: data.profileCompleted ?? false,
     };
 
     await AsyncStorage.setItem("token", data.token);
@@ -89,38 +89,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(data.token);
     setUser(loggedInUser);
 
-    return { user: loggedInUser };
+    return loggedInUser;
   };
 
   const register = async (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => {
-    const axiosResponse = await authApi.register(data);
-    const res = axiosResponse.data;
+    console.log("🔵 [AUTH] register() çağrıldı", { email: data.email, name: data.name });
+    try {
+      console.log("🚀 [AUTH] API'ye istek gönderiliyor...", data);
+      const axiosResponse = await authApi.register(data);
+      console.log("✅ [AUTH] API response geldi:", axiosResponse.data);
+      const res = axiosResponse.data;
 
-    const newUser: User = {
-      id: "",
-      name: data.name,
-      email: data.email,
-      role: res.role as "ADMIN" | "USER",
-      profileCompleted: false,
-    };
+      const newUser: User = {
+        id: "",
+        name: data.name,
+        email: data.email,
+        role: (res.role as "ADMIN" | "USER") || "USER",
+        profileCompleted: res.profileCompleted ?? false,
+      };
 
-    await AsyncStorage.setItem("token", res.token);
-    await AsyncStorage.setItem("user", JSON.stringify(newUser));
-    setToken(res.token);
-    setUser(newUser);
+      await AsyncStorage.setItem("token", res.token || "");
+      await AsyncStorage.setItem("user", JSON.stringify(newUser));
+      setToken(res.token || "");
+      setUser(newUser);
 
-    return { user: newUser };
+      console.log("✅ [AUTH] register() başarılı, return ediliyor:", res);
+      return res;
+    } catch (error: any) {
+      console.log("🔴 [AUTH] register() hatası:", error?.message);
+      console.log("🔴 [AUTH] Hata detayı:", error?.response?.data);
+      throw error;
+    }
   };
 
-  const completeProfile = async (data: { companyName: string; address: string; phone1: string; phone2?: string; email: string; logo?: string }) => {
-    await authApi.completeProfile(data);
+  const completeCompanyProfile = async (data: CompanyRequestDto) => {
+    const response = await authApi.completeCompanyProfile(data);
     const updatedUser = { ...user!, profileCompleted: true };
     await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
     setUser(updatedUser);
+    return response.data;
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, completeProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, completeCompanyProfile }}>
       {children}
     </AuthContext.Provider>
   );

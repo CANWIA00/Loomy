@@ -15,8 +15,8 @@ export default function Index() {
 
     if (!user) {
       router.replace("/(auth)/login");
-    } else if (user.role === "ADMIN" && !user.profileCompleted) {
-      router.replace("/(auth)/complete-profile");
+    } else if (user?.role === "ADMIN") {
+      router.replace("/(auth)/complete-cp-profile");
     } else {
       router.replace("/(tabs)/dashboard");
     }

@@ -3,6 +3,7 @@ import apiClient from "./client";
 export interface LoginResponse {
   token: string;
   role: string;
+  profileCompleted: boolean;
 }
 
 export interface User {
@@ -22,13 +23,13 @@ export interface RegisterData {
   inviteCode: string;
 }
 
-export interface CompleteProfileData {
-  companyName: string;
+export interface CompanyRequestDto {
+  name: string;
   address: string;
-  phone1: string;
-  phone2?: string;
+  phone: string;
   email: string;
-  logo?: string;
+  taxNumber: string;
+  logoUrl?: string;
 }
 
 export const authApi = {
@@ -44,6 +45,6 @@ export const authApi = {
   validateToken: () =>
     apiClient.get<User>("/auth/validate"),
 
-  completeProfile: (data: CompleteProfileData) =>
-    apiClient.post("/companies/complete-profile", data),
+  completeCompanyProfile: (data: CompanyRequestDto) =>
+    apiClient.put("/companies/complete-profile", data),
 };
