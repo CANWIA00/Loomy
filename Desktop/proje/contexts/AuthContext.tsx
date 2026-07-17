@@ -42,27 +42,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadStoredAuth = useCallback(async () => {
     try {
+      console.log("🔵 [AUTH] loadStoredAuth() çağrıldı");
       const storedToken = await AsyncStorage.getItem("token");
       const storedUser = await AsyncStorage.getItem("user");
+
+      console.log("🔍 [AUTH] Stored token:", storedToken ? `${storedToken.substring(0, 30)}...` : "NULL");
+      console.log("🔍 [AUTH] Stored user:", storedUser ? "VAR" : "NULL");
 
       if (storedToken && storedUser) {
         const parsed: User = JSON.parse(storedUser);
         setToken(storedToken);
         setUser(parsed);
+        console.log("✅ [AUTH] Token ve user state'e yüklendi");
 
         try {
           const response = await authApi.validateToken();
+          console.log("✅ [AUTH] Token geçerli, user güncellendi");
           setUser(response.data);
           await AsyncStorage.setItem("user", JSON.stringify(response.data));
         } catch {
+          console.log("🔴 [AUTH] Token geçersiz, temizleniyor");
           await AsyncStorage.removeItem("token");
           await AsyncStorage.removeItem("user");
           setToken(null);
           setUser(null);
         }
+      } else {
+        console.log("ℹ️ [AUTH] Kayıtlı token/user bulunamadı");
       }
-    } catch {
-      // silent fail
+    } catch (e: any) {
+      console.log("🔴 [AUTH] loadStoredAuth hatası:", e.message);
     } finally {
       setLoading(false);
     }
@@ -73,8 +82,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadStoredAuth]);
 
   const login = async (email: string, password: string) => {
+    console.log("🔵 [AUTH] login() çağrıldı:", email);
+
     const axiosResponse = await authApi.login(email, password);
     const data = axiosResponse.data;
+
+    console.log("🔵 [AUTH] Login response:", JSON.stringify(data));
+
+    if (!data.token) {
+      console.log("🔴 [AUTH] Login response'da token YOK!");
+      throw new Error("Token alınamadı. Lütfen tekrar deneyin.");
+    }
 
     const loggedInUser: User = {
       id: "",
@@ -84,21 +102,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profileCompleted: data.profileCompleted ?? false,
     };
 
-    await AsyncStorage.setItem("token", data.token);
-    await AsyncStorage.setItem("user", JSON.stringify(loggedInUser));
-    setToken(data.token);
+    try {
+      await AsyncStorage.setItem("token", data.token);
+      console.log("✅ [AUTH] Token AsyncStorage'a yazıldı");
+
+      await AsyncStorage.setItem("user", JSON.stringify(loggedInUser));
+      console.log("✅ [AUTH] User AsyncStorage'a yazıldı");
+    } catch (storageError: any) {
+      console.log("🔴 [AUTH] AsyncStorage yazma hatası:", storageError.message);
+      throw new Error("Oturum bilgileri kaydedilemedi: " + storageError.message);
+    }
+
+    const savedToken = await AsyncStorage.getItem("token");
+    console.log("🔍 [AUTH] AsyncStorage'dan okunan token:", savedToken ? `${savedToken.substring(0, 30)}...` : "NULL");
+
+    if (!savedToken) {
+      console.log("🔴 [AUTH] Token AsyncStorage'a yazılmamış!");
+      throw new Error("Token kaydedilemedi. Lütfen tekrar deneyin.");
+    }
+
+    setToken(savedToken);
     setUser(loggedInUser);
 
+    console.log("✅ [AUTH] login() tamamlandı, token state güncellendi");
     return loggedInUser;
   };
 
   const register = async (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => {
-    console.log("🔵 [AUTH] register() çağrıldı", { email: data.email, name: data.name });
+    console.log("🔵 [AUTH] register() çağrıldı:", { email: data.email, name: data.name });
     try {
-      console.log("🚀 [AUTH] API'ye istek gönderiliyor...", data);
+      console.log("🚀 [AUTH] API'ye istek gönderiliyor...");
       const axiosResponse = await authApi.register(data);
-      console.log("✅ [AUTH] API response geldi:", axiosResponse.data);
       const res = axiosResponse.data;
+      console.log("✅ [AUTH] Register response:", JSON.stringify(res));
+
+      if (!res.token) {
+        console.log("🔴 [AUTH] Register response'da token YOK!");
+        throw new Error("Kayıt sonrası token alınamadı.");
+      }
 
       const newUser: User = {
         id: "",
@@ -108,12 +149,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profileCompleted: res.profileCompleted ?? false,
       };
 
-      await AsyncStorage.setItem("token", res.token || "");
-      await AsyncStorage.setItem("user", JSON.stringify(newUser));
-      setToken(res.token || "");
+      try {
+        await AsyncStorage.setItem("token", res.token);
+        console.log("✅ [AUTH] Register - Token AsyncStorage'a yazıldı");
+
+        await AsyncStorage.setItem("user", JSON.stringify(newUser));
+        console.log("✅ [AUTH] Register - User AsyncStorage'a yazıldı");
+      } catch (storageError: any) {
+        console.log("🔴 [AUTH] Register - AsyncStorage yazma hatası:", storageError.message);
+        throw new Error("Oturum bilgileri kaydedilemedi: " + storageError.message);
+      }
+
+      const savedToken = await AsyncStorage.getItem("token");
+      console.log("🔍 [AUTH] Register - AsyncStorage'dan okunan token:", savedToken ? `${savedToken.substring(0, 30)}...` : "NULL");
+
+      if (!savedToken) {
+        console.log("🔴 [AUTH] Register - Token AsyncStorage'a yazılmamış!");
+        throw new Error("Token kaydedilemedi. Lütfen tekrar deneyin.");
+      }
+
+      setToken(savedToken);
       setUser(newUser);
 
-      console.log("✅ [AUTH] register() başarılı, return ediliyor:", res);
+      console.log("✅ [AUTH] register() tamamlandı");
       return res;
     } catch (error: any) {
       console.log("🔴 [AUTH] register() hatası:", error?.message);

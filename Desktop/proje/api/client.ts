@@ -28,10 +28,12 @@ export const setOnUnauthorized = (callback: (() => void) | null) => {
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
+    console.log("🔑 [INTERCEPTOR] AsyncStorage token:", token ? `${token.substring(0, 20)}...` : "NULL");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     console.log(`🚀 [API REQUEST] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data || "");
+    console.log("🔑 [INTERCEPTOR] Authorization header:", config.headers.Authorization ? `${String(config.headers.Authorization).substring(0, 25)}...` : "YOK");
     return config;
   },
   (error) => {

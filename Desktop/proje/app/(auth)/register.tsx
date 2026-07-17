@@ -74,9 +74,14 @@ export default function RegisterScreen() {
         inviteCode: inviteCode.trim(),
       });
 
-      if (response.role === "ADMIN") {
+      console.log("🔑 Register response:", response);
+      console.log("📋 Role:", response?.role, "| profileCompleted:", response?.profileCompleted);
+
+      if (response?.role === "ADMIN" && response?.profileCompleted === false) {
+        console.log("➡️ complete-cp-profile'a yönlendiriliyor (Admin - Profil tamamlanmamış)");
         router.replace("/(auth)/complete-cp-profile");
       } else {
+        console.log("➡️ dashboard'a yönlendiriliyor");
         router.replace("/(tabs)/dashboard");
       }
     } catch (error: any) {

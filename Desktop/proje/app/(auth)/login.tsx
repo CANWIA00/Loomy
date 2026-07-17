@@ -43,10 +43,10 @@ export default function LoginScreen() {
       const response = await login(email.trim(), password.trim());
 
       console.log("🔑 Login response:", response);
-      console.log("📋 Role:", response?.role);
+      console.log("📋 Role:", response?.role, "| profileCompleted:", response?.profileCompleted);
 
-      if (response?.role === "ADMIN") {
-        console.log("➡️ complete-cp-profile'a yönlendiriliyor");
+      if (response?.role === "ADMIN" && response?.profileCompleted === false) {
+        console.log("➡️ complete-cp-profile'a yönlendiriliyor (Admin - Profil tamamlanmamış)");
         router.replace("/(auth)/complete-cp-profile");
       } else {
         console.log("➡️ dashboard'a yönlendiriliyor");
