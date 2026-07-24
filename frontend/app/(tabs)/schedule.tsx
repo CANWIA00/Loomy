@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar, type ICalendarEventBase, type Mode } from "react-native-big-calendar";
@@ -8,6 +8,10 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-na
 import { teamApi, type Team, type CompanyUser } from "../../api/teams";
 import { appointmentApi, type Appointment } from "../../api/appointments";
 import { customerApi, type Customer } from "../../api/customers";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { useAuth } from "../../contexts/AuthContext";
+import CustomAlert from "../../components/CustomAlert";
 
 const CELL_HEIGHT = Math.max(500 - 30, 1200) / 24;
 
@@ -20,7 +24,6 @@ function DraggableEventCard({
   originalAppointment,
   onDragEnd,
   onPressEvent,
-  onDeleteEvent,
 }: {
   event: ScheduleEvent;
   touchableOpacityProps: any;
@@ -30,8 +33,9 @@ function DraggableEventCard({
   originalAppointment: Appointment | undefined;
   onDragEnd: (eventId: number, newStartTime: string, newDate: string) => void;
   onPressEvent: (event: ScheduleEvent) => void;
-  onDeleteEvent: (id: number) => void;
 }) {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const isDragging = useSharedValue(false);
@@ -103,7 +107,7 @@ function DraggableEventCard({
           { backgroundColor: `${event.renk}20`, borderLeftWidth: 3, borderLeftColor: event.renk, borderRadius: 6 },
         ]}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View>
           <View style={{ flex: 1 }}>
             <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600', lineHeight: 13 }} numberOfLines={1}>{event.title}</Text>
             {event.ekipAdi ? (
@@ -111,40 +115,24 @@ function DraggableEventCard({
                 <Text style={{ color: '#fff', fontSize: 7, fontWeight: '700', lineHeight: 10 }} numberOfLines={1}>{event.ekipAdi}</Text>
               </View>
             ) : null}
+            {event.notlar ? (
+              <Text style={{ color: '#ccc', fontSize: 8, lineHeight: 10, marginTop: 1 }} numberOfLines={2}>{event.notlar}</Text>
+            ) : null}
           </View>
-          <TouchableOpacity
-            onPress={() => { if (event.eventId) onDeleteEvent(event.eventId); }}
-            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-            style={{ backgroundColor: '#3A3A3A', borderRadius: 12, padding: 7, marginLeft: 4 }}
-          >
-            <Ionicons name="trash" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
         </View>
       </Animated.View>
     </GestureDetector>
   );
 }
 
-const trLocale = {
-  monthNames: ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"],
-  monthNamesShort: ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"],
-  dayNames: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"],
-  dayNamesShort: ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
-  today: "Bugün",
-};
+
 
 interface ScheduleEvent extends ICalendarEventBase {
   renk: string;
   ekipAdi?: string;
   eventId?: number;
+  notlar?: string;
 }
-
-const durationOptions = [
-  { label: "30 dk", value: "30dk" },
-  { label: "1 saat", value: "1saat" },
-  { label: "1.5 saat", value: "1.5saat" },
-  { label: "2 saat", value: "2saat" },
-];
 
 const durationToMs = (duration: string): number => {
   const map: Record<string, number> = {
@@ -161,7 +149,6 @@ const parseSaat = (s: string): { h: number; m: number } => {
   return { h, m: m || 0 };
 };
 
-const trGunler = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
 const dateToStr = (d: Date): string => {
   const y = d.getFullYear();
@@ -175,21 +162,23 @@ const strToDate = (s: string): Date => {
   return new Date(y, m - 1, d);
 };
 
-const TEAM_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
+const TEAM_COLORS = ["#6080FF", "#10B981", "#F59E0B", "#EF4444", "#8060FF", "#EC4899"];
 
 function TrWeekHeader({ dateRange }: any) {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   return (
-    <View className="flex-row border-b border-[#2A2A2A]">
+    <View className="flex-row border-b" style={{ borderColor: colors.border }}>
       {dateRange.map((date: any, i: number) => {
         const bugun = new Date();
         const isToday = date.date() === bugun.getDate() && date.month() === bugun.getMonth();
         return (
           <View key={i} className="flex-1 items-center py-2">
-            <Text className="text-xs mb-1" style={{ color: isToday ? "#3B82F6" : "#9CA3AF" }}>
-              {trGunler[date.day()]}
+            <Text className="text-xs mb-1" style={{ color: isToday ? colors.primary : colors.textSecondary }}>
+              {[t("dayShort.sun"), t("dayShort.mon"), t("dayShort.tue"), t("dayShort.wed"), t("dayShort.thu"), t("dayShort.fri"), t("dayShort.sat")][date.day()]}
             </Text>
-            <View className={`h-7 w-7 rounded-full items-center justify-center ${isToday ? "bg-[#3B82F6]" : ""}`}>
-              <Text className={`text-sm font-semibold ${isToday ? "text-white" : "text-white"}`}>
+            <View className={`h-7 w-7 rounded-full items-center justify-center ${isToday ? "" : ""}`} style={isToday ? { backgroundColor: colors.primary } : {}}>
+              <Text className="text-sm font-semibold" style={{ color: "white" }}>
                 {date.date()}
               </Text>
             </View>
@@ -200,25 +189,34 @@ function TrWeekHeader({ dateRange }: any) {
   );
 }
 
-function TrMonthHeader({ weekStartsOn }: any) {
-  const gunler = weekStartsOn === 1
-    ? ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-    : ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
-  return (
-    <View className="flex-row border-b border-[#2A2A2A]">
-      {gunler.map((g, i) => (
-        <View key={i} className="flex-1 items-center py-2">
-          <Text className="text-xs" style={{ color: "#9CA3AF" }}>{g}</Text>
-        </View>
-      ))}
-    </View>
-  );
+function TrMonthHeader() {
+  return null;
 }
 
 export default function ScheduleScreen() {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t, locale, lang, setLanguage } = useLanguage();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const calendarLocale = {
+    monthNames: [t("month.january"), t("month.february"), t("month.march"), t("month.april"), t("month.may"), t("month.june"), t("month.july"), t("month.august"), t("month.september"), t("month.october"), t("month.november"), t("month.december")],
+    monthNamesShort: [t("month.january").substring(0, 3), t("month.february").substring(0, 3), t("month.march").substring(0, 3), t("month.april").substring(0, 3), t("month.may").substring(0, 3), t("month.june").substring(0, 3), t("month.july").substring(0, 3), t("month.august").substring(0, 3), t("month.september").substring(0, 3), t("month.october").substring(0, 3), t("month.november").substring(0, 3), t("month.december").substring(0, 3)],
+    dayNames: [t("day.monday"), t("day.tuesday"), t("day.wednesday"), t("day.thursday"), t("day.friday"), t("day.saturday"), t("day.sunday")],
+    dayNamesShort: [t("dayShort.mon"), t("dayShort.tue"), t("dayShort.wed"), t("dayShort.thu"), t("dayShort.fri"), t("dayShort.sat"), t("dayShort.sun")],
+    today: t("dash.today"),
+  };
+  const durationOptions = [
+    { label: t("dur.30min"), value: "30dk" },
+    { label: t("dur.1hour"), value: "1saat" },
+    { label: t("dur.1.5hour"), value: "1.5saat" },
+    { label: t("dur.2hour"), value: "2saat" },
+  ];
   const [mode, setMode] = useState<Mode>("day");
   const [calendarDate, setCalendarDate] = useState(new Date());
-  const [selectedTeamFilter, setSelectedTeamFilter] = useState("Tümü");
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState(t("sch.allTeams"));
+  const [planFilter, setPlanFilter] = useState<"gun" | "hafta" | "ay" | "tum">("gun");
+  const [listTeamFilter, setListTeamFilter] = useState(t("sch.allTeams"));
+  const [listTeamDropdownOpen, setListTeamDropdownOpen] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [customers, setCustomers] = useState<{ id: string; companyName: string; contactPerson: string }[]>([]);
@@ -234,14 +232,15 @@ export default function ScheduleScreen() {
 
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dateInputText, setDateInputText] = useState("");
 
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; companyName: string; contactPerson: string } | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
 
-  const [serviceTypes] = useState<string[]>([
-    "Alarm", "Yangın", "CCTV", "Montaj",
-    "Kablolama", "Devreye Alma", "Bakım", "Arıza",
-  ]);
+  const serviceTypes = [
+    t("sch.serviceTypes.alarm"), t("sch.serviceTypes.fire"), t("sch.serviceTypes.cctv"), t("sch.serviceTypes.assembly"),
+    t("sch.serviceTypes.wiring"), t("sch.serviceTypes.commissioning"), t("sch.serviceTypes.maintenance"), t("sch.serviceTypes.repair"),
+  ];
   const [selectedService, setSelectedService] = useState("Alarm");
 
   const [timeInput, setTimeInput] = useState("09:00");
@@ -272,6 +271,25 @@ export default function ScheduleScreen() {
   const [appointmentSaving, setAppointmentSaving] = useState(false);
   const [containerWidth, setContainerWidth] = useState(350);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "confirm">("error");
+
+  const showAlert = (type: "success" | "error" | "confirm", title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
+  const [detailModal, setDetailModal] = useState(false);
+  const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(null);
+
+  const [dayListModal, setDayListModal] = useState(false);
+  const [dayListDate, setDayListDate] = useState<Date>(new Date());
+  const [dayListAppointments, setDayListAppointments] = useState<Appointment[]>([]);
+
   const now = new Date();
   const scrollOffset = now.getHours() * 60 + now.getMinutes() - 30;
 
@@ -290,7 +308,7 @@ export default function ScheduleScreen() {
       setCompanyUsers(usersRes.data);
     } catch (error: any) {
       console.error("Veri yükleme hatası:", error);
-      Alert.alert("Hata", "Veriler yüklenirken bir hata oluştu.");
+      showAlert("error", t("common.error"), t("sch.errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -300,7 +318,7 @@ export default function ScheduleScreen() {
     loadData();
   }, [loadData]);
 
-  const filteredAppointments = selectedTeamFilter === "Tümü"
+  const filteredAppointments = selectedTeamFilter === t("sch.allTeams")
     ? appointments
     : appointments.filter((a) => a.ekip === selectedTeamFilter);
 
@@ -316,14 +334,15 @@ export default function ScheduleScreen() {
       ekipAdi: a.ekip,
       start,
       end,
-      renk: team?.color || "#3B82F6",
+      renk: team?.color || "#6080FF",
       eventId: a.id,
+      notlar: a.notes || "",
     };
   });
 
   const handleAddTeam = async () => {
     if (!newTeamName.trim() || !newTeamLeader.trim()) {
-      Alert.alert("Uyarı", "Ekip adı ve lider zorunludur.");
+      showAlert("error", t("common.warning"), t("sch.errorTeamRequired"));
       return;
     }
     try {
@@ -341,7 +360,7 @@ export default function ScheduleScreen() {
       setNewTeamMembers([]);
       setEkipModal(false);
     } catch (error: any) {
-      Alert.alert("Hata", error.response?.data?.message || "Ekip eklenemedi.");
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorTeamAdd"));
     } finally {
       setAddLoading(false);
     }
@@ -361,7 +380,7 @@ export default function ScheduleScreen() {
         setTeams((prev) => prev.map((t) => t.id === memberAddTeamId ? res.data : t));
         setMemberSearch("");
       } catch (error: any) {
-        Alert.alert("Hata", error.response?.data?.message || "Personel eklenemedi.");
+        showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorPersonnelAdd"));
       } finally {
         setAddLoading(false);
       }
@@ -383,7 +402,7 @@ export default function ScheduleScreen() {
       setDeleteConfirmModal(false);
       setDeleteTeamId(null);
     } catch (error: any) {
-      Alert.alert("Hata", error.response?.data?.message || "Ekip silinemedi.");
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorTeamDelete"));
     } finally {
       setDeleteLoading(false);
     }
@@ -403,7 +422,7 @@ export default function ScheduleScreen() {
 
   const handleSelectedRemove = async () => {
     if (selectedMembers.length === 0) {
-      Alert.alert("Uyarı", "Lütfen en az bir personel seçin.");
+      showAlert("error", t("common.warning"), t("sch.errorSelectPersonnel"));
       return;
     }
     const teamId = removeTeamId;
@@ -417,7 +436,7 @@ export default function ScheduleScreen() {
       setSelectedMembers([]);
       setRemoveTeamId(null);
     } catch (error: any) {
-      Alert.alert("Hata", error.response?.data?.message || "Personel çıkarılamadı.");
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorPersonnelRemove"));
     } finally {
       setRemoveLoading(false);
     }
@@ -425,6 +444,10 @@ export default function ScheduleScreen() {
 
   const handleCellPress = (date: Date) => {
     setSelectedDate(date);
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    setDateInputText(`${dd}/${mm}/${yyyy}`);
     setSelectedCustomer(null);
     setCustomerSearch("");
     setTimeInput("09:00");
@@ -441,32 +464,63 @@ export default function ScheduleScreen() {
       (a) => event.title.startsWith(`${a.customerName} - ${a.tur}`)
     );
     if (atama) {
-      setEditingAppointmentId(atama.id);
-      setSelectedCustomer(atama.customerId ? { id: atama.customerId, companyName: atama.customerName, contactPerson: "" } : null);
-      setSelectedDate(strToDate(atama.tarih));
-      setTimeInput(atama.startTime);
-      setSelectedDuration(atama.duration);
-      setSelectedService(atama.tur);
-      setSelectedTeamId(atama.ekipId);
-      setNotlar(atama.notes || "");
-      setAppointmentModal(true);
+      setDetailAppointment(atama);
+      setDetailModal(true);
     }
+  };
+
+  const handleDetailEdit = () => {
+    if (!detailAppointment) return;
+    const atama = detailAppointment;
+    setEditingAppointmentId(atama.id);
+    const found = customers.find((c) => c.companyName === atama.customerName);
+    setSelectedCustomer(found || (atama.customerId ? { id: atama.customerId, companyName: atama.customerName, contactPerson: "" } : null));
+    const d = strToDate(atama.tarih);
+    setSelectedDate(d);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    setDateInputText(`${dd}/${mm}/${yyyy}`);
+    setTimeInput(atama.startTime);
+    setSelectedDuration(atama.duration);
+    setSelectedService(atama.tur);
+    setSelectedTeamId(atama.ekipId);
+    setNotlar(atama.notes || "");
+    setDetailModal(false);
+    setAppointmentModal(true);
   };
 
   const handleAppointmentSave = async () => {
     const team = teams.find((t) => t.id === selectedTeamId);
     const customerName = selectedCustomer?.companyName || customerSearch.trim();
     if (!customerName) {
-      Alert.alert("Uyarı", "Müşteri seçimi zorunludur.");
+      showAlert("error", t("common.warning"), t("sch.errorCustomerRequired"));
       return;
     }
     if (!/^\d{2}:\d{2}$/.test(timeInput)) {
-      Alert.alert("Uyarı", "Geçerli saat girin (HH:MM).");
+      showAlert("error", t("common.warning"), t("sch.errorInvalidTime"));
       return;
     }
     const [h] = timeInput.split(":").map(Number);
     if (h < 8 || h > 23) {
-      Alert.alert("Uyarı", "Saat 08:00 - 23:00 arasında olmalıdır.");
+      showAlert("error", t("common.warning"), t("sch.errorTimeRange"));
+      return;
+    }
+    const tarihStr = dateToStr(selectedDate);
+    const { h: newH, m: newM } = parseSaat(timeInput);
+    const newStartMin = newH * 60 + newM;
+    const newEndMin = newStartMin + durationToMs(selectedDuration) / 60000;
+    const conflict = appointments.find((a) => {
+      if (a.ekipId !== selectedTeamId) return false;
+      if (a.tarih !== tarihStr) return false;
+      if (editingAppointmentId && a.id === editingAppointmentId) return false;
+      const { h: aH, m: aM } = parseSaat(a.startTime);
+      const aStartMin = aH * 60 + aM;
+      const aEndMin = aStartMin + durationToMs(a.duration) / 60000;
+      return newStartMin < aEndMin && newEndMin > aStartMin;
+    });
+    if (conflict) {
+      showAlert("error", t("sch.errorConflict"), t("sch.errorConflictMsg", { name: conflict.customerName, time: conflict.startTime, duration: conflict.duration }));
       return;
     }
     try {
@@ -492,13 +546,32 @@ export default function ScheduleScreen() {
       setAppointmentModal(false);
       setEditingAppointmentId(null);
     } catch (error: any) {
-      Alert.alert("Hata", error.response?.data?.message || "İşlem başarısız.");
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorSave"));
     } finally {
       setAppointmentSaving(false);
     }
   };
 
   const handleDragEnd = async (eventId: number, newStartTime: string, newDate: string) => {
+    const draggedAppt = appointments.find((a) => a.id === eventId);
+    if (draggedAppt) {
+      const { h: newH, m: newM } = parseSaat(newStartTime);
+      const newStartMin = newH * 60 + newM;
+      const newEndMin = newStartMin + durationToMs(draggedAppt.duration) / 60000;
+      const conflict = appointments.find((a) => {
+        if (a.ekipId !== draggedAppt.ekipId) return false;
+        if (a.tarih !== newDate) return false;
+        if (a.id === eventId) return false;
+        const { h: aH, m: aM } = parseSaat(a.startTime);
+        const aStartMin = aH * 60 + aM;
+        const aEndMin = aStartMin + durationToMs(a.duration) / 60000;
+        return newStartMin < aEndMin && newEndMin > aStartMin;
+      });
+      if (conflict) {
+        showAlert("error", t("sch.errorConflict"), t("sch.errorConflictMsg", { name: conflict.customerName, time: conflict.startTime, duration: conflict.duration }));
+        return;
+      }
+    }
     try {
       await appointmentApi.update(eventId, { startTime: newStartTime, tarih: newDate } as any);
       setAppointments((prev) =>
@@ -507,7 +580,7 @@ export default function ScheduleScreen() {
         )
       );
     } catch (error: any) {
-      Alert.alert("Hata", error.response?.data?.message || "Plan taşınamadı.");
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorDrag"));
     }
   };
 
@@ -527,7 +600,7 @@ export default function ScheduleScreen() {
       setAppointmentModal(false);
       setEditingAppointmentId(null);
     } catch (error: any) {
-      Alert.alert("Hata", error.response?.data?.message || "Plan silinemedi.");
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorSave"));
     } finally {
       setDeleteLoading(false);
     }
@@ -540,31 +613,39 @@ export default function ScheduleScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#0A0A0A] items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-400 mt-3">Yükleniyor...</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.textSecondary, marginTop: 12 }}>{t("sch.loading")}</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-[#0A0A0A]" indicatorStyle="white">
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg}>
       <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
         <View className="flex-row items-center justify-between mb-1">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back-outline" size={24} color="#3B82F6" />
+              <Ionicons name="arrow-back-outline" size={24} color={colors.primary} />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-white tracking-tight">
-              Plan Yönetimi
+            <Text className="text-2xl font-bold tracking-tight" style={{ color: colors.text }}>
+              {t("sch.title")}
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/dashboard")}>
-            <Ionicons name="home-outline" size={24} color="#3B82F6" />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity onPress={() => setLanguage(lang === "tr" ? "en" : "tr")} style={{ backgroundColor: colors.bgCard2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
+              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{lang === "tr" ? "EN" : "TR"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleTheme}>
+              <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={22} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/dashboard")}>
+              <Ionicons name="home-outline" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
-        <Text className="text-gray-500 text-sm mb-5">
-          Ekiplerinizi ve servis planlarınızı yönetin
+        <Text className="text-sm mb-5" style={{ color: colors.textMuted }}>
+          {t("sch.subtitle")}
         </Text>
 
         <View className="flex-row flex-wrap gap-2 mb-4 items-center">
@@ -572,66 +653,218 @@ export default function ScheduleScreen() {
             <TouchableOpacity
               key={m}
               className={`px-4 h-8 rounded-lg items-center justify-center ${
-                mode === m ? "bg-[#3B82F6]" : "bg-[#1A1A1A] border border-[#2A2A2A]"
+                mode === m ? "" : "border"
               }`}
+              style={{
+                backgroundColor: mode === m ? colors.primary : colors.bgCard,
+                borderColor: mode === m ? undefined : colors.border,
+              }}
               onPress={() => setMode(m)}
             >
-              <Text className={`text-xs font-medium ${mode === m ? "text-white" : "text-gray-400"}`}>
-                {m === "day" ? "Gün" : m === "week" ? "Hafta" : "Ay"}
+              <Text className="text-xs font-medium" style={{ color: mode === m ? "white" : colors.textSecondary }}>
+                {m === "day" ? t("sch.day") : m === "week" ? t("sch.week") : t("sch.month")}
               </Text>
             </TouchableOpacity>
           ))}
 
           <TouchableOpacity
-            className="flex-row items-center h-8 px-3 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg"
+            className="flex-row items-center h-8 px-3 border rounded-lg"
+            style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
             onPress={() => setTeamDropdownOpen(true)}
           >
-            <Text className="text-xs text-white mr-2">
-              {selectedTeamFilter === "Tümü" ? "Tüm Ekipler" : selectedTeamFilter}
+            <Text className="text-xs mr-2" style={{ color: colors.text }}>
+              {selectedTeamFilter === t("sch.allTeams") ? t("sch.allTeams") : selectedTeamFilter}
             </Text>
-            <Ionicons name="chevron-down" size={14} color="#6B7280" />
+            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="h-8 w-8 bg-[#2A2A2A] rounded-lg items-center justify-center"
-            onPress={() => setSelectedTeamFilter("Tümü")}
+            className="h-8 w-8 rounded-lg items-center justify-center"
+            style={{ backgroundColor: colors.bgInput }}
+            onPress={() => setSelectedTeamFilter(t("sch.allTeams"))}
           >
-            <Ionicons name="close-circle-outline" size={18} color="#EF4444" />
+            <Ionicons name="close" size={16} color={colors.danger} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center h-8 px-3 rounded-lg ml-auto"
+            style={{ backgroundColor: colors.primary }}
+            onPress={() => {
+              const d = new Date();
+              setSelectedDate(d);
+              const dd = String(d.getDate()).padStart(2, "0");
+              const mm = String(d.getMonth() + 1).padStart(2, "0");
+              const yyyy = d.getFullYear();
+              setDateInputText(`${dd}/${mm}/${yyyy}`);
+              setSelectedCustomer(null);
+              setCustomerSearch("");
+              setTimeInput("09:00");
+              setSelectedDuration("1saat");
+              setSelectedService(serviceTypes[0] || "Alarm");
+              setSelectedTeamId(teams[0]?.id || 0);
+              setNotlar("");
+              setEditingAppointmentId(null);
+              setAppointmentModal(true);
+            }}
+          >
+            <Ionicons name="add" size={16} color="white" />
+            <Text className="text-xs font-medium ml-1" style={{ color: "white" }}>{t("sch.newPlan")}</Text>
           </TouchableOpacity>
         </View>
 
-        <View className="bg-[#111] rounded-2xl border border-[#1F1F1F] p-3 mb-6">
+        <View className="rounded-2xl border p-3 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
           <View className="flex-row items-center justify-between mb-2">
             <TouchableOpacity
-              className="h-8 px-3 bg-[#2A2A2A] rounded-lg items-center justify-center flex-row"
+              className="h-8 px-3 rounded-lg items-center justify-center flex-row"
+              style={{ backgroundColor: colors.bgInput }}
               onPress={() => {
                 const d = new Date(calendarDate);
                 d.setDate(d.getDate() - (mode === "week" ? 7 : mode === "month" ? 30 : 1));
                 setCalendarDate(d);
               }}
             >
-              <Ionicons name="chevron-back" size={14} color="#9CA3AF" />
+              <Ionicons name="chevron-back" size={14} color={colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity
-              className="h-8 px-4 bg-[#3B82F6]/10 rounded-lg items-center justify-center"
+              className="h-8 px-4 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.primary + '15' }}
               onPress={() => setCalendarDate(new Date())}
             >
-              <Text className="text-[#3B82F6] text-xs font-medium">Bugün</Text>
+              <Text className="text-xs font-medium" style={{ color: colors.primary }}>
+                {(() => {
+                  const d = new Date(calendarDate);
+                  const dd = String(d.getDate()).padStart(2, "0");
+                  const mm = String(d.getMonth() + 1).padStart(2, "0");
+                  const yyyy = d.getFullYear();
+                  if (mode === "day") return `${dd}/${mm}/${yyyy}`;
+                  if (mode === "week") {
+                    const weekStart = new Date(d);
+                    weekStart.setDate(d.getDate() - d.getDay());
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    const ws = String(weekStart.getDate()).padStart(2, "0");
+                    const wsm = String(weekStart.getMonth() + 1).padStart(2, "0");
+                    const wsy = weekStart.getFullYear();
+                    const we = String(weekEnd.getDate()).padStart(2, "0");
+                    const wem = String(weekEnd.getMonth() + 1).padStart(2, "0");
+                    const wey = weekEnd.getFullYear();
+                    return `${ws}/${wsm}/${wsy} - ${we}/${wem}/${wey}`;
+                  }
+                  const aylar = [t("month.january"), t("month.february"), t("month.march"), t("month.april"), t("month.may"), t("month.june"), t("month.july"), t("month.august"), t("month.september"), t("month.october"), t("month.november"), t("month.december")];
+                  return `${aylar[d.getMonth()]} ${yyyy}`;
+                })()}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="h-8 px-3 bg-[#2A2A2A] rounded-lg items-center justify-center flex-row"
+              className="h-8 px-3 rounded-lg items-center justify-center flex-row"
+              style={{ backgroundColor: colors.bgInput }}
               onPress={() => {
                 const d = new Date(calendarDate);
                 d.setDate(d.getDate() + (mode === "week" ? 7 : mode === "month" ? 30 : 1));
                 setCalendarDate(d);
               }}
             >
-              <Ionicons name="chevron-forward" size={14} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View className="bg-[#111] rounded-2xl border border-[#1F1F1F] overflow-hidden mb-6" onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
+        <View className="rounded-2xl border overflow-hidden mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
+          {mode === "month" ? (() => {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+            const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+            const today = new Date();
+            const gunKisa = [t("dayShort.mon"), t("dayShort.tue"), t("dayShort.wed"), t("dayShort.thu"), t("dayShort.fri"), t("dayShort.sat"), t("dayShort.sun")];
+            const cells: { day: number | null; date: Date | null }[] = [];
+            for (let i = 0; i < totalCells; i++) {
+              const dayNum = i - startOffset + 1;
+              if (dayNum < 1 || dayNum > daysInMonth) {
+                cells.push({ day: null, date: null });
+              } else {
+                cells.push({ day: dayNum, date: new Date(year, month, dayNum) });
+              }
+            }
+            return (
+              <View>
+                <View className="flex-row border-b" style={{ borderColor: colors.border }}>
+                  {gunKisa.map((g, i) => (
+                    <View key={i} className="flex-1 items-center py-2">
+                      <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{g}</Text>
+                    </View>
+                  ))}
+                </View>
+                <View className="flex-row flex-wrap">
+                  {cells.map((cell, i) => {
+                    const isToday = cell.date && cell.date.getDate() === today.getDate() && cell.date.getMonth() === today.getMonth() && cell.date.getFullYear() === today.getFullYear();
+                    const dayEvents = cell.date ? events.filter((e) => e.start.getDate() === cell.date!.getDate() && e.start.getMonth() === cell.date!.getMonth() && e.start.getFullYear() === cell.date!.getFullYear()) : [];
+                    return (
+                      <TouchableOpacity
+                        key={i}
+                        style={{
+                          width: `${100 / 7}%`,
+                          minHeight: 80,
+                          borderWidth: 0.5,
+                          borderColor: colors.border + '40',
+                          backgroundColor: isToday ? colors.primary + '15' : 'transparent',
+                          padding: 4,
+                        }}
+                        onPress={() => {
+                          if (!cell.date) return;
+                          const dateStr = dateToStr(cell.date);
+                          const dayAppts = appointments.filter((a) => a.tarih === dateStr);
+                          setDayListDate(cell.date);
+                          setDayListAppointments(dayAppts);
+                          setDayListModal(true);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        {cell.day !== null && (
+                          <Text
+                            style={{
+                              color: isToday ? colors.primary : colors.textSecondary,
+                              fontSize: 11,
+                              fontWeight: isToday ? '700' : '500',
+                              marginBottom: 2,
+                            }}
+                          >
+                            {cell.day}
+                          </Text>
+                        )}
+                        {dayEvents.slice(0, 3).map((ev, j) => (
+                          <TouchableOpacity
+                            key={j}
+                            style={{
+                              backgroundColor: `${ev.renk}25`,
+                              borderLeftWidth: 2,
+                              borderLeftColor: ev.renk,
+                              borderRadius: 3,
+                              paddingHorizontal: 3,
+                              paddingVertical: 1,
+                              marginBottom: 2,
+                            }}
+                            onPress={() => handleEventPress(ev)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={{ color: colors.text, fontSize: 9, fontWeight: '600', lineHeight: 12 }} numberOfLines={1}>{ev.title}</Text>
+                            {ev.notlar ? (
+                              <Text style={{ color: colors.textSecondary, fontSize: 7, lineHeight: 10 }} numberOfLines={1}>{ev.notlar}</Text>
+                            ) : null}
+                          </TouchableOpacity>
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <Text style={{ color: colors.primary, fontSize: 8, fontWeight: '600' }}>+{dayEvents.length - 3} {t("sch.more")}</Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })() : (
           <Calendar
             date={calendarDate}
             mode={mode}
@@ -642,8 +875,7 @@ export default function ScheduleScreen() {
             onPressCell={handleCellPress}
             onPressEvent={handleEventPress}
             renderHeader={TrWeekHeader}
-            renderHeaderForMonthView={TrMonthHeader}
-            locale={trLocale as any}
+            locale={calendarLocale as any}
             eventCellStyle={(event: ScheduleEvent) => ({
               backgroundColor: `${event.renk}20`,
               borderLeftWidth: 3,
@@ -662,16 +894,15 @@ export default function ScheduleScreen() {
                   originalAppointment={originalAppointment}
                   onDragEnd={handleDragEnd}
                   onPressEvent={handleEventPress}
-                  onDeleteEvent={handleAppointmentDeleteRequest}
                 />
               );
             }}
             theme={{
               palette: {
-                primary: { main: "#3B82F6", contrastText: "#fff" },
-                nowIndicator: "#3B82F6",
-                gray: { 100: "#f5f5f5", 200: "#2A2A2A", 300: "#9CA3AF", 500: "#6B7280", 800: "#1A1A1A" },
-                moreLabel: "#3B82F6",
+                primary: { main: colors.primary, contrastText: "#fff" },
+                nowIndicator: colors.primary,
+                gray: { 100: "#f5f5f5", 200: colors.border, 300: colors.textSecondary, 500: colors.textMuted, 800: colors.bgCard },
+                moreLabel: colors.primary,
               },
               typography: {
                 xs: { fontSize: 11 },
@@ -681,13 +912,183 @@ export default function ScheduleScreen() {
               },
             }}
           />
+          )}
         </View>
 
-        <View className="bg-[#111] rounded-2xl border border-[#1F1F1F] p-4 mb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-white font-semibold text-base">Ekipler</Text>
+        <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
+          <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="list" size={18} color={colors.primary} />
+              <Text className="font-semibold text-base" style={{ color: colors.text }}>{t("sch.planList")}</Text>
+              <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.primary + '20' }}>
+                <Text className="text-xs font-semibold" style={{ color: colors.primary }}>{filteredAppointments.length}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View className="flex-row flex-wrap gap-2 mb-3 items-center">
+            {(["gun", "hafta", "ay", "tum"] as const).map((f) => {
+              const labels: Record<string, string> = { gun: t("sch.day"), hafta: t("sch.week"), ay: t("sch.month"), tum: t("sch.allTeams") };
+              return (
+                <TouchableOpacity
+                  key={f}
+                  className={`px-3 h-7 rounded-lg items-center justify-center ${planFilter !== f ? "border" : ""}`}
+                  style={{
+                    backgroundColor: planFilter === f ? colors.primary : colors.bgCard,
+                    borderColor: planFilter === f ? undefined : colors.border,
+                  }}
+                  onPress={() => setPlanFilter(f)}
+                >
+                  <Text className="text-xs font-medium" style={{ color: planFilter === f ? "white" : colors.textSecondary }}>
+                    {labels[f]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+
             <TouchableOpacity
-              className="flex-row items-center h-8 px-3 bg-[#3B82F6]/10 rounded-lg"
+              className="flex-row items-center h-7 px-2.5 border rounded-lg"
+              style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
+              onPress={() => setListTeamDropdownOpen(true)}
+            >
+              <Text className="text-xs mr-1.5" style={{ color: colors.text }}>
+                {listTeamFilter === t("sch.allTeams") ? t("sch.allTeams") : listTeamFilter}
+              </Text>
+              <Ionicons name="chevron-down" size={12} color={colors.textMuted} />
+            </TouchableOpacity>
+
+            {(planFilter !== "gun" || listTeamFilter !== t("sch.allTeams")) && (
+              <TouchableOpacity
+                className="h-7 w-7 rounded-lg items-center justify-center"
+                style={{ backgroundColor: colors.danger + '15' }}
+                onPress={() => {
+                  setPlanFilter("gun");
+                  setListTeamFilter(t("sch.allTeams"));
+                }}
+              >
+                <Ionicons name="close" size={16} color={colors.danger} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {(() => {
+            const d = new Date(calendarDate);
+            const todayStr = dateToStr(new Date());
+
+            const dayStart = new Date(d);
+            const dayEnd = new Date(d);
+            const dayStartStr = dateToStr(dayStart);
+            const dayEndStr = dateToStr(dayEnd);
+
+            const weekStart = new Date(d);
+            weekStart.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1));
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            const weekStartStr = dateToStr(weekStart);
+            const weekEndStr = dateToStr(weekEnd);
+
+            const monthStartStr = dateToStr(new Date(d.getFullYear(), d.getMonth(), 1));
+            const monthEndStr = dateToStr(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+
+            const listFilteredAppointments = listTeamFilter === t("sch.allTeams")
+              ? filteredAppointments
+              : filteredAppointments.filter((a) => a.ekip === listTeamFilter);
+
+            const sorted = [...listFilteredAppointments].sort((a, b) => {
+              if (a.tarih !== b.tarih) return a.tarih.localeCompare(b.tarih);
+              return a.startTime.localeCompare(b.startTime);
+            });
+
+            const filtered = sorted.filter((a) => {
+              if (planFilter === "gun") return a.tarih === dayStartStr;
+              if (planFilter === "hafta") return a.tarih >= weekStartStr && a.tarih <= weekEndStr;
+              if (planFilter === "ay") return a.tarih >= monthStartStr && a.tarih <= monthEndStr;
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <View className="py-8 items-center">
+                  <Ionicons name="calendar-outline" size={40} color={colors.textMuted} />
+                  <Text className="text-sm mt-2" style={{ color: colors.textMuted }}>
+                    {planFilter === "gun" ? t("sch.noPlanToday") : planFilter === "hafta" ? t("sch.noPlanWeek") : planFilter === "ay" ? t("sch.noPlanMonth") : t("sch.noPlanFound")}
+                  </Text>
+                </View>
+              );
+            }
+
+            let lastDate = "";
+            return (
+              <ScrollView className="max-h-[400px]" nestedScrollEnabled indicatorStyle={colors.indicatorBg}>
+                {filtered.map((a) => {
+                  const team = teams.find((t) => t.id === a.ekipId);
+                  const gunler = [t("dayShort.sun"), t("dayShort.mon"), t("dayShort.tue"), t("dayShort.wed"), t("dayShort.thu"), t("dayShort.fri"), t("dayShort.sat")];
+                  const d = strToDate(a.tarih);
+                  const dateLabel = `${gunler[d.getDay()]} ${a.tarih}`;
+                  const showDateHeader = a.tarih !== lastDate;
+                  if (showDateHeader) lastDate = a.tarih;
+                  return (
+                    <View key={a.id}>
+                      {showDateHeader && (
+                        <View className="flex-row items-center gap-2 mt-2 mb-1.5">
+                          <Ionicons name="calendar" size={13} color={colors.primary} />
+                          <Text className="text-xs font-semibold" style={{ color: colors.primary }}>{dateLabel}</Text>
+                          <View className="flex-1 h-px" style={{ backgroundColor: colors.border }} />
+                        </View>
+                      )}
+                      <TouchableOpacity
+                        className="rounded-xl p-3 mb-1.5 flex-row items-center gap-3"
+                        style={{
+                          backgroundColor: `${team?.color || "#6080FF"}10`,
+                          borderLeftWidth: 3,
+                          borderLeftColor: team?.color || "#6080FF",
+                          opacity: a.tarih < todayStr ? 0.5 : 1,
+                        }}
+                        onPress={() => {
+                          setDetailAppointment(a);
+                          setDetailModal(true);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View className="items-center" style={{ minWidth: 45 }}>
+                          <Text className="text-sm font-bold" style={{ color: colors.text }}>{a.startTime}</Text>
+                          <Text className="text-[10px]" style={{ color: colors.textMuted }}>{a.duration}</Text>
+                        </View>
+                        <View style={{ width: 1, height: 32, backgroundColor: colors.border }} />
+                        <View className="flex-1">
+                          <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{a.customerName}</Text>
+                          <View className="flex-row items-center gap-1.5 mt-0.5">
+                            <View className="w-2 h-2 rounded-full" style={{ backgroundColor: team?.color || "#6080FF" }} />
+                            <Text className="text-xs" style={{ color: colors.textSecondary }}>{a.ekip}</Text>
+                            <Text className="text-xs" style={{ color: colors.textMuted }}>•</Text>
+                            <Text className="text-xs" style={{ color: colors.textSecondary }}>{a.tur}</Text>
+                          </View>
+                        </View>
+                        {a.tarih < todayStr ? (
+                          <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.textMuted + '30' }}>
+                            <Text className="text-[10px] font-medium" style={{ color: colors.textMuted }}>{t("sch.past")}</Text>
+                          </View>
+                        ) : a.tarih === todayStr ? (
+                          <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.primary + '20' }}>
+                            <Text className="text-[10px] font-medium" style={{ color: colors.primary }}>{t("dash.today")}</Text>
+                          </View>
+                        ) : null}
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            );
+          })()}
+        </View>
+
+        <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="font-semibold text-base" style={{ color: colors.text }}>{t("sch.teams")}</Text>
+            {isAdmin && (
+            <TouchableOpacity
+              className="flex-row items-center h-8 px-3 rounded-lg"
+              style={{ backgroundColor: colors.primary + '15' }}
               onPress={() => {
                 setNewTeamName("");
                 setNewTeamLeader("");
@@ -695,16 +1096,18 @@ export default function ScheduleScreen() {
                 setEkipModal(true);
               }}
             >
-              <Ionicons name="add" size={16} color="#3B82F6" />
-              <Text className="text-[#3B82F6] text-xs font-medium ml-1">Yeni Ekip</Text>
+              <Ionicons name="add" size={16} color={colors.primary} />
+              <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("sch.newTeam")}</Text>
             </TouchableOpacity>
+            )}
           </View>
 
           <View className="flex-row flex-wrap gap-3">
             {teams.map((team) => (
               <View
                 key={team.id}
-                className="w-[48%] md:w-[32%] lg:w-[24%] bg-[#1A1A1A] rounded-2xl p-4 h-64"
+                className="w-[48%] md:w-[32%] lg:w-[24%] rounded-2xl p-4 h-64"
+                style={{ backgroundColor: colors.bgCard }}
               >
                 <View className="flex-row items-center gap-3 mb-3">
                   <View
@@ -714,59 +1117,61 @@ export default function ScheduleScreen() {
                     <Ionicons name="people" size={20} color={team.color} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-semibold text-sm">{team.name}</Text>
-                    <Text className="text-gray-500 text-xs">Lider: {team.leader}</Text>
+                    <Text className="font-semibold text-sm" style={{ color: colors.text }}>{team.name}</Text>
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.leader")} {team.leader}</Text>
                   </View>
-                  <TouchableOpacity
-                    className="p-2 rounded-lg bg-[#3A3A3A]"
-                    onPress={() => handleTeamDelete(team.id)}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="trash-outline" size={16} color="#9CA3AF" />
+                  {isAdmin && (
+                  <TouchableOpacity onPress={() => handleTeamDelete(team.id)} activeOpacity={0.7}>
+                    <Ionicons name="trash-outline" size={16} color={colors.danger} />
                   </TouchableOpacity>
+                  )}
                 </View>
-                <ScrollView className="flex-1 mb-2" indicatorStyle="white" nestedScrollEnabled>
+                <ScrollView className="flex-1 mb-2" indicatorStyle={colors.indicatorBg} nestedScrollEnabled>
                   <View className="mb-3">
-                    <Text className="text-gray-400 text-xs font-medium mb-2">Personel ({team.members.length + 1})</Text>
-                    <View className="flex-row items-center py-1 border-b border-[#2A2A2A]/30">
+                    <Text className="text-xs font-medium mb-2" style={{ color: colors.textSecondary }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
+                    <View className="flex-row items-center py-1 border-b" style={{ borderColor: colors.border + '4D' }}>
                       <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: team.color }}>
                         <Text className="text-white text-[10px] font-bold">{team.leader.charAt(0)}</Text>
                       </View>
-                      <Text className="text-[#F59E0B] text-xs font-medium mr-1">{team.leader}</Text>
-                      <Text className="text-[#F59E0B] text-xs">👑</Text>
+                      <Text className="text-xs font-medium mr-1" style={{ color: colors.warning }}>{team.leader}</Text>
+                      <Text className="text-xs" style={{ color: colors.warning }}>👑</Text>
                     </View>
                     {team.members.map((personel, idx) => (
-                      <View key={idx} className="flex-row items-center py-1 border-b border-[#2A2A2A]/30">
-                        <View className="w-6 h-6 rounded-full bg-[#2A2A2A] items-center justify-center mr-2">
-                          <Text className="text-[10px] text-gray-300 font-medium">
+                      <View key={idx} className="flex-row items-center py-1 border-b" style={{ borderColor: colors.border + '4D' }}>
+                        <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
+                          <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>
                             {personel.charAt(0)}
                           </Text>
                         </View>
-                        <Text className="text-gray-300 text-xs">{personel}</Text>
+                        <Text className="text-xs" style={{ color: colors.textSecondary }}>{personel}</Text>
                       </View>
                     ))}
                   </View>
                 </ScrollView>
-                <View className="flex-row items-center justify-between pt-2 border-t border-[#2A2A2A]">
-                  <Text className="text-gray-400 text-xs">
-                    {appointments.filter((a) => a.ekipId === team.id).length} atama
+                <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
+                  <Text className="text-xs" style={{ color: colors.textSecondary }}>
+                    {appointments.filter((a) => a.ekipId === team.id).length} {t("sch.assignments")}
                   </Text>
-                  <View className="flex-row gap-1">
+                {isAdmin && (
+                <View className="flex-row gap-1">
                     <TouchableOpacity
-                      className="p-1.5 rounded-lg bg-[#F59E0B]/10"
+                      className="p-1.5 rounded-lg"
+                      style={{ backgroundColor: colors.warning + '15' }}
                       onPress={() => handlePersonelCikarAc(team.id)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="person-remove-outline" size={16} color="#F59E0B" />
+                      <Ionicons name="person-remove-outline" size={16} color={colors.warning} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                      className="p-1.5 rounded-lg bg-[#3B82F6]/10"
+                      className="p-1.5 rounded-lg"
+                      style={{ backgroundColor: colors.primary + '15' }}
                       onPress={() => handlePersonelEkleAc(team.id)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="person-add-outline" size={16} color="#3B82F6" />
+                      <Ionicons name="person-add-outline" size={16} color={colors.primary} />
                     </TouchableOpacity>
-                  </View>
+                </View>
+                )}
                 </View>
               </View>
             ))}
@@ -775,86 +1180,90 @@ export default function ScheduleScreen() {
 
         <Modal visible={ekipModal} transparent animationType="fade" onRequestClose={() => setEkipModal(false)}>
           <View className="flex-1 justify-center items-center bg-black/60">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-md p-4">
+            <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-white text-lg font-bold">Yeni Ekip</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("sch.newTeam")}</Text>
                 <TouchableOpacity onPress={() => setEkipModal(false)}>
-                  <Ionicons name="close" size={24} color="#555" />
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
-              <Text className="text-gray-400 text-xs font-medium mb-1">Ekip Adı</Text>
+              <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.teamName")}</Text>
               <TextInput
-                className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm mb-3"
-                placeholder="Ekip adını girin"
-                placeholderTextColor="#555"
+                className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                placeholder={t("sch.teamName")}
+                placeholderTextColor={colors.textMuted}
                 value={newTeamName}
                 onChangeText={setNewTeamName}
               />
-              <Text className="text-gray-400 text-xs font-medium mb-1">Ekip Lideri</Text>
+              <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.teamLeader")}</Text>
               <TouchableOpacity
-                className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 flex-row items-center justify-between mb-3"
+                className="w-full h-10 border rounded-lg px-3 flex-row items-center justify-between mb-3"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border }}
                 onPress={() => setLeaderDropdownOpen(!leaderDropdownOpen)}
               >
-                <Text className={`text-sm ${newTeamLeader ? "text-white" : "text-gray-500"}`}>
-                  {newTeamLeader || "Lider seçin..."}
+                <Text className="text-sm" style={{ color: newTeamLeader ? colors.text : colors.textMuted }}>
+                  {newTeamLeader || t("sch.selectLeader")}
                 </Text>
-                <Ionicons name={leaderDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#666" />
+                <Ionicons name={leaderDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.textMuted} />
               </TouchableOpacity>
               {leaderDropdownOpen && (
-                <View className="bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg mb-3 max-h-40 overflow-hidden">
+                <View className="border rounded-lg mb-3 max-h-40 overflow-hidden" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
                   <ScrollView nestedScrollEnabled bounces={false}>
                     {companyUsers.map((user) => (
                       <TouchableOpacity
                         key={user.id}
-                        className={`px-3 py-2.5 border-b border-[#2A2A2A] flex-row items-center ${newTeamLeader === user.name ? "bg-[#3B82F6]/10" : ""}`}
+                        className={`px-3 py-2.5 border-b flex-row items-center`}
+                        style={{ borderColor: colors.border, backgroundColor: newTeamLeader === user.name ? colors.primary + '15' : 'transparent' }}
                         onPress={() => {
                           setNewTeamLeader(user.name);
                           setLeaderDropdownOpen(false);
                         }}
                       >
-                        <View className="w-6 h-6 rounded-full bg-[#3B82F6] items-center justify-center mr-2">
+                        <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.primary }}>
                           <Text className="text-white text-[10px] font-bold">{user.name.charAt(0)}</Text>
                         </View>
                         <View className="flex-1">
-                          <Text className={`text-sm ${newTeamLeader === user.name ? "text-[#3B82F6] font-semibold" : "text-white"}`}>
+                          <Text className="text-sm" style={{ color: newTeamLeader === user.name ? colors.primary : colors.text, fontWeight: newTeamLeader === user.name ? '600' : '400' }}>
                             {user.name}
                           </Text>
-                          <Text className="text-gray-500 text-xs">{user.email}</Text>
+                          <Text className="text-xs" style={{ color: colors.textMuted }}>{user.email}</Text>
                         </View>
                         {newTeamLeader === user.name && (
-                          <Ionicons name="checkmark" size={18} color="#3B82F6" />
+                          <Ionicons name="checkmark" size={18} color={colors.primary} />
                         )}
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
                 </View>
               )}
-              <Text className="text-gray-400 text-xs font-medium mb-1">Personeller</Text>
+              <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.personnel")}</Text>
               <TouchableOpacity
-                className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 flex-row items-center justify-between mb-1"
+                className="w-full h-10 border rounded-lg px-3 flex-row items-center justify-between mb-1"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border }}
                 onPress={() => setMemberSelectOpen(!memberSelectOpen)}
               >
-                <Text className={`text-sm flex-1 ${newTeamMembers.length > 0 ? "text-white" : "text-gray-500"}`}>
+                <Text className="text-sm flex-1" style={{ color: newTeamMembers.length > 0 ? colors.text : colors.textMuted }}>
                   {newTeamMembers.length > 0
-                    ? `${newTeamMembers.length} personel seçildi`
-                    : "Personel seçin..."}
+                    ? `${newTeamMembers.length} ${t("sch.personnelSelected")}`
+                    : t("sch.selectPersonnel")}
                 </Text>
-                <Ionicons name={memberSelectOpen ? "chevron-up" : "chevron-down"} size={16} color="#666" />
+                <Ionicons name={memberSelectOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.textMuted} />
               </TouchableOpacity>
               {newTeamMembers.length > 0 && (
                 <View className="flex-row flex-wrap gap-1.5 mb-2">
                   {newTeamMembers.map((name) => (
-                    <View key={name} className="flex-row items-center bg-[#3B82F6]/20 border border-[#3B82F6]/40 rounded-lg px-2 py-1">
-                      <Text className="text-[#3B82F6] text-xs mr-1">{name}</Text>
+                    <View key={name} className="flex-row items-center border rounded-lg px-2 py-1" style={{ backgroundColor: colors.primary + '33', borderColor: colors.primary + '66' }}>
+                      <Text className="text-xs mr-1" style={{ color: colors.primary }}>{name}</Text>
                       <TouchableOpacity onPress={() => setNewTeamMembers((prev) => prev.filter((n) => n !== name))}>
-                        <Ionicons name="close" size={12} color="#3B82F6" />
+                        <Ionicons name="close" size={12} color={colors.primary} />
                       </TouchableOpacity>
                     </View>
                   ))}
                 </View>
               )}
               {memberSelectOpen && (
-                <View className="bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg mb-3 max-h-40 overflow-hidden">
+                <View className="border rounded-lg mb-3 max-h-40 overflow-hidden" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
                   <ScrollView nestedScrollEnabled bounces={false}>
                     {companyUsers
                       .filter((u) => u.name !== newTeamLeader)
@@ -863,24 +1272,25 @@ export default function ScheduleScreen() {
                         return (
                           <TouchableOpacity
                             key={user.id}
-                            className={`px-3 py-2.5 border-b border-[#2A2A2A] flex-row items-center ${isSelected ? "bg-[#3B82F6]/10" : ""}`}
+                            className={`px-3 py-2.5 border-b flex-row items-center`}
+                            style={{ borderColor: colors.border, backgroundColor: isSelected ? colors.primary + '15' : 'transparent' }}
                             onPress={() => {
                               setNewTeamMembers((prev) =>
                                 isSelected ? prev.filter((n) => n !== user.name) : [...prev, user.name]
                               );
                             }}
                           >
-                            <View className={`w-5 h-5 rounded border items-center justify-center mr-2 ${isSelected ? "bg-[#3B82F6] border-[#3B82F6]" : "border-[#555]"}`}>
+                            <View className={`w-5 h-5 rounded border items-center justify-center mr-2`} style={{ backgroundColor: isSelected ? colors.primary : 'transparent', borderColor: isSelected ? colors.primary : colors.textMuted }}>
                               {isSelected && <Ionicons name="checkmark" size={14} color="white" />}
                             </View>
-                            <View className="w-6 h-6 rounded-full bg-[#2A2A2A] items-center justify-center mr-2">
-                              <Text className="text-[10px] text-gray-300 font-medium">{user.name.charAt(0)}</Text>
+                            <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
+                              <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{user.name.charAt(0)}</Text>
                             </View>
                             <View className="flex-1">
-                              <Text className={`text-sm ${isSelected ? "text-[#3B82F6] font-semibold" : "text-white"}`}>
+                              <Text className="text-sm" style={{ color: isSelected ? colors.primary : colors.text, fontWeight: isSelected ? '600' : '400' }}>
                                 {user.name}
                               </Text>
-                              <Text className="text-gray-500 text-xs">{user.email}</Text>
+                              <Text className="text-xs" style={{ color: colors.textMuted }}>{user.email}</Text>
                             </View>
                           </TouchableOpacity>
                         );
@@ -891,16 +1301,18 @@ export default function ScheduleScreen() {
               {!memberSelectOpen && <View className="mb-3" />}
               <View className="flex-row gap-3">
                 <TouchableOpacity
-                  className="flex-1 h-10 bg-[#2A2A2A] rounded-lg items-center justify-center"
+                  className="flex-1 h-10 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
                   onPress={() => setEkipModal(false)}
                 >
-                  <Text className="text-gray-300 font-medium">İptal</Text>
+                  <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("sch.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 h-10 bg-[#3B82F6] rounded-lg items-center justify-center"
+                  className="flex-1 h-10 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.primary }}
                   onPress={handleAddTeam}
                 >
-                  <Text className="text-white font-medium">Ekle</Text>
+                  <Text className="font-medium" style={{ color: "white" }}>{t("sch.add")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -913,34 +1325,76 @@ export default function ScheduleScreen() {
             activeOpacity={1}
             onPress={() => setTeamDropdownOpen(false)}
           >
-            <View className="bg-[#1A1A1A] rounded-2xl w-64 max-h-60 overflow-hidden">
+            <View className="rounded-2xl w-64 max-h-60 overflow-hidden" style={{ backgroundColor: colors.bgCard }}>
               <ScrollView nestedScrollEnabled bounces={false}>
                 <TouchableOpacity
-                  className="px-4 py-3 border-b border-[#2A2A2A]"
+                  className="px-4 py-3 border-b" style={{ borderColor: colors.border }}
                   onPress={() => {
-                    setSelectedTeamFilter("Tümü");
+                    setSelectedTeamFilter(t("sch.allTeams"));
                     setTeamDropdownOpen(false);
                   }}
                 >
-                  <Text className={`text-sm ${selectedTeamFilter === "Tümü" ? "text-[#3B82F6] font-semibold" : "text-white"}`}>
-                    Tüm Ekipler
+                  <Text className="text-sm" style={{ color: selectedTeamFilter === t("sch.allTeams") ? colors.primary : colors.text, fontWeight: selectedTeamFilter === t("sch.allTeams") ? '600' : '400' }}>
+                    {t("sch.allTeams")}
                   </Text>
                 </TouchableOpacity>
-                {teams.map((t) => (
+                {teams.map((tm) => (
                   <TouchableOpacity
-                    key={t.id}
-                    className="px-4 py-3 border-b border-[#2A2A2A] flex-row items-center"
+                    key={tm.id}
+                    className="px-4 py-3 border-b flex-row items-center" style={{ borderColor: colors.border }}
                     onPress={() => {
-                      setSelectedTeamFilter(t.name);
+                      setSelectedTeamFilter(tm.name);
                       setTeamDropdownOpen(false);
                     }}
                   >
                     <View
                       className="w-2.5 h-2.5 rounded-full mr-3"
-                      style={{ backgroundColor: t.color }}
+                      style={{ backgroundColor: tm.color }}
                     />
-                    <Text className={`text-sm ${selectedTeamFilter === t.name ? "text-[#3B82F6] font-semibold" : "text-white"}`}>
-                      {t.name}
+                    <Text className="text-sm" style={{ color: selectedTeamFilter === tm.name ? colors.primary : colors.text, fontWeight: selectedTeamFilter === tm.name ? '600' : '400' }}>
+                      {tm.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        <Modal visible={listTeamDropdownOpen} transparent animationType="fade" onRequestClose={() => setListTeamDropdownOpen(false)}>
+          <TouchableOpacity
+            className="flex-1 justify-center items-center bg-black/40"
+            activeOpacity={1}
+            onPress={() => setListTeamDropdownOpen(false)}
+          >
+            <View className="rounded-2xl w-64 max-h-60 overflow-hidden" style={{ backgroundColor: colors.bgCard }}>
+              <ScrollView nestedScrollEnabled bounces={false}>
+                <TouchableOpacity
+                  className="px-4 py-3 border-b" style={{ borderColor: colors.border }}
+                  onPress={() => {
+                    setListTeamFilter(t("sch.allTeams"));
+                    setListTeamDropdownOpen(false);
+                  }}
+                >
+                  <Text className="text-sm" style={{ color: listTeamFilter === t("sch.allTeams") ? colors.primary : colors.text, fontWeight: listTeamFilter === t("sch.allTeams") ? '600' : '400' }}>
+                    {t("sch.allTeams")}
+                  </Text>
+                </TouchableOpacity>
+                {teams.map((tm) => (
+                  <TouchableOpacity
+                    key={tm.id}
+                    className="px-4 py-3 border-b flex-row items-center" style={{ borderColor: colors.border }}
+                    onPress={() => {
+                      setListTeamFilter(tm.name);
+                      setListTeamDropdownOpen(false);
+                    }}
+                  >
+                    <View
+                      className="w-2.5 h-2.5 rounded-full mr-3"
+                      style={{ backgroundColor: tm.color }}
+                    />
+                    <Text className="text-sm" style={{ color: listTeamFilter === tm.name ? colors.primary : colors.text, fontWeight: listTeamFilter === tm.name ? '600' : '400' }}>
+                      {tm.name}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -951,67 +1405,113 @@ export default function ScheduleScreen() {
 
         <Modal visible={appointmentModal} transparent animationType="fade" onRequestClose={() => resetAppointmentModal()}>
           <View className="flex-1 justify-center items-center bg-black/60">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-md p-4">
+            <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-white text-lg font-bold">{editingAppointmentId ? "Planı Güncelle" : "Servis Atama"}</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{editingAppointmentId ? t("sch.updateAppointment") : t("sch.newAppointment")}</Text>
                 <TouchableOpacity onPress={() => resetAppointmentModal()}>
-                  <Ionicons name="close" size={24} color="#555" />
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
 
               <View className="mb-3">
-                <Text className="text-gray-400 text-xs font-medium mb-1">Müşteri</Text>
+                <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.customer")}</Text>
                 <View className="flex-row gap-2">
                   <View className="flex-1 relative z-10">
                     <TouchableOpacity
-                      className="h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 flex-row items-center justify-between"
+                      className="h-10 border rounded-lg px-3 flex-row items-center justify-between"
+                      style={{ backgroundColor: colors.bg, borderColor: colors.border }}
                       onPress={() => setCustomerDropdownOpen(true)}
                     >
-                      <Text className="text-white text-sm">
-                        {selectedCustomer ? selectedCustomer.companyName : "Müşteri seçin..."}
+                      <Text className="text-sm" style={{ color: colors.text }}>
+                        {selectedCustomer ? selectedCustomer.companyName : t("sch.selectCustomer")}
                       </Text>
-                      <Ionicons name="chevron-down" size={16} color="#666" />
+                      <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
 
-              <ScrollView className="max-h-[400px]" nestedScrollEnabled indicatorStyle="white">
+              <ScrollView className="max-h-[400px]" nestedScrollEnabled indicatorStyle={colors.indicatorBg}>
                 <View className="mb-3">
-                  <Text className="text-gray-400 text-xs font-medium mb-1">Tarih</Text>
-                  <View className="h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 items-center justify-center">
-                    <Text className="text-white text-sm">
-                      {selectedDate.toLocaleDateString("tr-TR")}
-                    </Text>
+                  <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.date")}</Text>
+                  <View className="flex-row items-center gap-2">
+                    <TextInput
+                      className="flex-1 h-10 border rounded-lg px-3 text-sm"
+                      style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                      placeholder="GG/AA/YYYY"
+                      placeholderTextColor={colors.textMuted}
+                      value={dateInputText}
+                      onChangeText={(text) => {
+                        const digits = text.replace(/\D/g, "").slice(0, 8);
+                        let formatted = digits;
+                        if (digits.length > 2) formatted = digits.slice(0, 2) + "/" + digits.slice(2);
+                        if (digits.length > 4) formatted = digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
+                        setDateInputText(formatted);
+                        const parts = formatted.split("/");
+                        if (parts.length === 3 && parts[2].length === 4) {
+                          const day = parseInt(parts[0], 10);
+                          const month = parseInt(parts[1], 10) - 1;
+                          const year = parseInt(parts[2], 10);
+                          if (!isNaN(day) && !isNaN(month) && !isNaN(year) && day >= 1 && day <= 31 && month >= 0 && month <= 11) {
+                            const d = new Date(year, month, day);
+                            if (d.getDate() === day && d.getMonth() === month) {
+                              setSelectedDate(d);
+                            }
+                          }
+                        }
+                      }}
+                      keyboardType="number-pad"
+                      maxLength={10}
+                    />
+                    <TouchableOpacity
+                      className="h-10 w-10 items-center justify-center"
+                      onPress={() => {
+                        const now = new Date();
+                        const dd = String(now.getDate()).padStart(2, "0");
+                        const mm = String(now.getMonth() + 1).padStart(2, "0");
+                        const yyyy = now.getFullYear();
+                        setDateInputText(`${dd}/${mm}/${yyyy}`);
+                        setSelectedDate(now);
+                      }}
+                    >
+                      <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+                    </TouchableOpacity>
                   </View>
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-gray-400 text-xs font-medium mb-1">Saat</Text>
+                  <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.time")}</Text>
                   <TextInput
-                    className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
+                    className="w-full h-10 border rounded-lg px-3 text-sm"
+                    style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
                     placeholder="HH:MM"
-                    placeholderTextColor="#555"
+                    placeholderTextColor={colors.textMuted}
                     value={timeInput}
-                    onChangeText={setTimeInput}
-                    keyboardType="numbers-and-punctuation"
+                    onChangeText={(text) => {
+                      const digits = text.replace(/\D/g, "").slice(0, 4);
+                      let formatted = digits;
+                      if (digits.length > 2) formatted = digits.slice(0, 2) + ":" + digits.slice(2);
+                      setTimeInput(formatted);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={5}
                   />
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-gray-400 text-xs font-medium mb-1">Süre</Text>
+                  <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.duration")}</Text>
                   <View className="flex-row gap-1.5 flex-wrap">
                     {durationOptions.map((s) => (
                       <TouchableOpacity
                         key={s.value}
-                        className={`px-3 h-8 rounded-lg items-center justify-center border ${
-                          selectedDuration === s.value
-                            ? "bg-[#3B82F6]/20 border-[#3B82F6]"
-                            : "bg-[#0A0A0A] border-[#2A2A2A]"
-                        }`}
+                        className={`px-3 h-8 rounded-lg items-center justify-center border`}
+                        style={{
+                          backgroundColor: selectedDuration === s.value ? colors.primary + '33' : colors.bg,
+                          borderColor: selectedDuration === s.value ? colors.primary : colors.border,
+                        }}
                         onPress={() => setSelectedDuration(s.value)}
                       >
-                        <Text className={`text-xs ${selectedDuration === s.value ? "text-[#3B82F6]" : "text-gray-400"}`}>
+                        <Text className="text-xs" style={{ color: selectedDuration === s.value ? colors.primary : colors.textSecondary }}>
                           {s.label}
                         </Text>
                       </TouchableOpacity>
@@ -1020,21 +1520,21 @@ export default function ScheduleScreen() {
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-gray-400 text-xs font-medium mb-1">Ekip Seç</Text>
+                  <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.selectTeam")}</Text>
                   <View className="flex-row flex-wrap gap-1.5">
-                    {teams.map((t) => (
+                    {teams.map((tm) => (
                       <TouchableOpacity
-                        key={t.id}
-                        className={`flex-row items-center px-3 h-8 rounded-lg border ${
-                          selectedTeamId === t.id
-                            ? "bg-[#3B82F6]/20 border-[#3B82F6]"
-                            : "bg-[#0A0A0A] border-[#2A2A2A]"
-                        }`}
-                        onPress={() => setSelectedTeamId(t.id)}
+                        key={tm.id}
+                        className={`flex-row items-center px-3 h-8 rounded-lg border`}
+                        style={{
+                          backgroundColor: selectedTeamId === tm.id ? colors.primary + '33' : colors.bg,
+                          borderColor: selectedTeamId === tm.id ? colors.primary : colors.border,
+                        }}
+                        onPress={() => setSelectedTeamId(tm.id)}
                       >
-                        <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: t.color }} />
-                        <Text className={`text-xs ${selectedTeamId === t.id ? "text-[#3B82F6]" : "text-gray-400"}`}>
-                          {t.name}
+                        <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: tm.color }} />
+                        <Text className="text-xs" style={{ color: selectedTeamId === tm.id ? colors.primary : colors.textSecondary }}>
+                          {tm.name}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -1042,26 +1542,28 @@ export default function ScheduleScreen() {
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-gray-400 text-xs font-medium mb-1">Servis Türü</Text>
+                  <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.serviceType")}</Text>
                   <View className="flex-row gap-2">
                     <View className="flex-1 relative z-10">
                       <TouchableOpacity
-                        className="h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 flex-row items-center justify-between"
+                        className="h-10 border rounded-lg px-3 flex-row items-center justify-between"
+                        style={{ backgroundColor: colors.bg, borderColor: colors.border }}
                         onPress={() => setServiceDropdownOpen(true)}
                       >
-                        <Text className="text-white text-sm">{selectedService}</Text>
-                        <Ionicons name="chevron-down" size={16} color="#666" />
+                        <Text className="text-sm" style={{ color: colors.text }}>{selectedService}</Text>
+                        <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
                       </TouchableOpacity>
                     </View>
                   </View>
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-gray-400 text-xs font-medium mb-1">Notlar</Text>
+                  <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.notes")}</Text>
                   <TextInput
-                    className="w-full h-20 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 py-2 text-white text-sm"
-                    placeholder="Servis notları..."
-                    placeholderTextColor="#555"
+                    className="w-full h-20 border rounded-lg px-3 py-2 text-sm"
+                    style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                    placeholder={t("sch.notesPlaceholder")}
+                    placeholderTextColor={colors.textMuted}
                     multiline
                     textAlignVertical="top"
                     value={notlar}
@@ -1073,28 +1575,29 @@ export default function ScheduleScreen() {
               <View className="flex-row gap-3 mt-4">
                 {editingAppointmentId ? (
                   <TouchableOpacity
-                    className="h-10 px-3 bg-[#3A3A3A] rounded-lg items-center justify-center"
                     onPress={() => handleAppointmentDeleteRequest(editingAppointmentId)}
                   >
-                    <Ionicons name="trash-outline" size={18} color="#9CA3AF" />
+                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
                   </TouchableOpacity>
                 ) : null}
                 <View className="flex-1" />
                 <TouchableOpacity
-                  className="h-10 px-4 bg-[#2A2A2A] rounded-lg items-center justify-center"
+                  className="h-10 px-4 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
                   onPress={() => resetAppointmentModal()}
                 >
-                  <Text className="text-gray-300 font-medium">İptal</Text>
+                  <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("sch.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className={`h-10 px-4 rounded-lg items-center justify-center ${appointmentSaving ? "bg-[#3B82F6]/50" : "bg-[#3B82F6]"}`}
+                  className={`h-10 px-4 rounded-lg items-center justify-center`}
+                  style={{ backgroundColor: appointmentSaving ? colors.primary + '80' : colors.primary }}
                   onPress={handleAppointmentSave}
                   disabled={appointmentSaving}
                 >
                   {appointmentSaving ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
-                    <Text className="text-white font-medium">{editingAppointmentId ? "Güncelle" : "Atama Yap"}</Text>
+                    <Text className="font-medium" style={{ color: "white" }}>{editingAppointmentId ? t("sch.update") : t("sch.assign")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -1104,17 +1607,18 @@ export default function ScheduleScreen() {
 
         <Modal visible={customerDropdownOpen} transparent animationType="fade" onRequestClose={() => setCustomerDropdownOpen(false)}>
           <View className="flex-1 justify-center items-center bg-black/40">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-md p-4">
+            <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-white text-lg font-bold">Müşteri Seç</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("sch.customer")}</Text>
                 <TouchableOpacity onPress={() => setCustomerDropdownOpen(false)}>
-                  <Ionicons name="close" size={24} color="#555" />
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
               <TextInput
-                className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm mb-3"
-                placeholder="Müşteri ara..."
-                placeholderTextColor="#555"
+                className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                placeholder={t("sch.selectCustomer")}
+                placeholderTextColor={colors.textMuted}
                 value={customerSearch}
                 onChangeText={setCustomerSearch}
                 autoFocus
@@ -1128,28 +1632,30 @@ export default function ScheduleScreen() {
                   .map((m) => (
                     <TouchableOpacity
                       key={m.id}
-                      className="px-3 py-2 border-b border-[#2A2A2A]"
+                      className="px-3 py-2 border-b" style={{ borderColor: colors.border }}
                       onPress={() => {
                         setSelectedCustomer(m);
                         setCustomerDropdownOpen(false);
                         setCustomerSearch("");
                       }}
                     >
-                      <Text className="text-white text-sm">{m.companyName}</Text>
-                      <Text className="text-gray-500 text-xs">{m.contactPerson}</Text>
+                      <Text className="text-sm" style={{ color: colors.text }}>{m.companyName}</Text>
+                      <Text className="text-xs" style={{ color: colors.textMuted }}>{m.contactPerson}</Text>
                     </TouchableOpacity>
                   ))}
               </ScrollView>
-              <View className="flex-row items-center gap-2 mt-3 border-t border-[#2A2A2A] pt-3">
+              <View className="flex-row items-center gap-2 mt-3 border-t pt-3" style={{ borderColor: colors.border }}>
                 <TextInput
-                  className="flex-1 h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm"
-                  placeholder="Geçici müşteri adı girin..."
-                  placeholderTextColor="#555"
+                  className="flex-1 h-10 border rounded-lg px-3 text-sm"
+                  style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                  placeholder={t("sch.tempCustomer")}
+                  placeholderTextColor={colors.textMuted}
                   value={tempCustomerName}
                   onChangeText={setTempCustomerName}
                 />
                 <TouchableOpacity
-                  className="h-10 px-4 bg-[#3B82F6] rounded-lg items-center justify-center"
+                  className="h-10 px-4 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.primary }}
                   onPress={() => {
                     if (tempCustomerName.trim()) {
                       const gecici = {
@@ -1163,7 +1669,7 @@ export default function ScheduleScreen() {
                     }
                   }}
                 >
-                  <Text className="text-white text-sm font-medium">Ekle</Text>
+                  <Text className="text-sm font-medium" style={{ color: "white" }}>{t("sch.add")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1172,24 +1678,24 @@ export default function ScheduleScreen() {
 
         <Modal visible={serviceDropdownOpen} transparent animationType="fade" onRequestClose={() => setServiceDropdownOpen(false)}>
           <View className="flex-1 justify-center items-center bg-black/40">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-md p-4">
+            <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-white text-lg font-bold">Servis Türü Seç</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("sch.serviceType")}</Text>
                 <TouchableOpacity onPress={() => setServiceDropdownOpen(false)}>
-                  <Ionicons name="close" size={24} color="#555" />
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
               <ScrollView className="max-h-60" nestedScrollEnabled keyboardShouldPersistTaps="handled">
                 {serviceTypes.map((h, index) => (
                   <TouchableOpacity
                     key={index}
-                    className={`px-3 py-3 border-b border-[#2A2A2A] ${selectedService === h ? "bg-[#3B82F6]/10" : ""}`}
+                    className={`px-3 py-3 border-b`} style={{ borderColor: colors.border, backgroundColor: selectedService === h ? colors.primary + '15' : 'transparent' }}
                     onPress={() => {
                       setSelectedService(h);
                       setServiceDropdownOpen(false);
                     }}
                   >
-                    <Text className={`text-sm ${selectedService === h ? "text-[#3B82F6] font-semibold" : "text-white"}`}>
+                    <Text className="text-sm" style={{ color: selectedService === h ? colors.primary : colors.text, fontWeight: selectedService === h ? '600' : '400' }}>
                       {h}
                     </Text>
                   </TouchableOpacity>
@@ -1201,17 +1707,18 @@ export default function ScheduleScreen() {
 
         <Modal visible={memberModal} transparent animationType="fade" onRequestClose={() => setMemberModal(false)}>
           <View className="flex-1 justify-center items-center bg-black/60">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-sm p-4">
+            <View className="rounded-2xl w-11/12 max-w-sm p-4" style={{ backgroundColor: colors.bgCard }}>
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-white text-lg font-bold">Personel Ekle</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("sch.addPersonnel")}</Text>
                 <TouchableOpacity onPress={() => { setMemberModal(false); setMemberSearch(""); setMemberAddTeamId(null); }}>
-                  <Ionicons name="close" size={24} color="#555" />
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
               <TextInput
-                className="w-full h-10 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 text-white text-sm mb-3"
-                placeholder="Personel ara..."
-                placeholderTextColor="#555"
+                className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                placeholder={t("sch.searchPersonnel")}
+                placeholderTextColor={colors.textMuted}
                 value={memberSearch}
                 onChangeText={setMemberSearch}
                 autoFocus
@@ -1228,9 +1735,9 @@ export default function ScheduleScreen() {
                   })
                   .length === 0 ? (
                     <View className="py-8 items-center">
-                      <Ionicons name="people-outline" size={32} color="#555" />
-                      <Text className="text-gray-500 text-sm mt-2">
-                        {memberSearch ? "Sonuç bulunamadı" : "Eklenebilecek personel kalmadı"}
+                      <Ionicons name="people-outline" size={32} color={colors.textMuted} />
+                      <Text className="text-sm mt-2" style={{ color: colors.textMuted }}>
+                        {memberSearch ? t("sch.noResults") : t("sch.noPersonnelLeft")}
                       </Text>
                     </View>
                   ) : (
@@ -1246,29 +1753,30 @@ export default function ScheduleScreen() {
                     .map((user) => (
                       <TouchableOpacity
                         key={user.id}
-                        className="px-3 py-2.5 border-b border-[#2A2A2A] flex-row items-center"
+                        className="px-3 py-2.5 border-b flex-row items-center" style={{ borderColor: colors.border }}
                         onPress={() => handlePersonelEkle(user.name)}
                         activeOpacity={0.7}
                       >
-                        <View className="w-8 h-8 rounded-full bg-[#3B82F6] items-center justify-center mr-3">
+                        <View className="w-8 h-8 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.primary }}>
                           <Text className="text-white text-xs font-bold">{user.name.charAt(0)}</Text>
                         </View>
                         <View className="flex-1">
-                          <Text className="text-white text-sm">{user.name}</Text>
-                          <Text className="text-gray-500 text-xs">{user.email}</Text>
+                          <Text className="text-sm" style={{ color: colors.text }}>{user.name}</Text>
+                          <Text className="text-xs" style={{ color: colors.textMuted }}>{user.email}</Text>
                         </View>
-                        <Ionicons name="add-circle-outline" size={22} color="#3B82F6" />
+                        <Ionicons name="add-circle-outline" size={22} color={colors.primary} />
                       </TouchableOpacity>
                     ))
                   )}
               </ScrollView>
               <View className="mt-3">
                 <TouchableOpacity
-                  className="w-full h-10 bg-[#2A2A2A] rounded-lg items-center justify-center"
+                  className="w-full h-10 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
                   onPress={() => { setMemberModal(false); setMemberSearch(""); setMemberAddTeamId(null); }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-gray-300 font-medium">Kapat</Text>
+                  <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("common.close")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1277,27 +1785,29 @@ export default function ScheduleScreen() {
 
         <Modal visible={deleteConfirmModal} transparent animationType="fade" onRequestClose={() => !deleteLoading && setDeleteConfirmModal(false)}>
           <View className="flex-1 justify-center items-center bg-black/60">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-sm p-5">
+            <View className="rounded-2xl w-11/12 max-w-sm p-5" style={{ backgroundColor: colors.bgCard }}>
               <View className="items-center mb-4">
-                  <View className="w-14 h-14 rounded-full bg-[#3A3A3A] items-center justify-center mb-3">
-                    <Ionicons name="trash" size={28} color="#9CA3AF" />
+                  <View className="w-14 h-14 rounded-full items-center justify-center mb-3" style={{ backgroundColor: colors.bgInput }}>
+                    <Ionicons name="trash" size={28} color={colors.danger} />
                   </View>
-                  <Text className="text-white text-lg font-bold text-center">Ekibi Sil</Text>
-                <Text className="text-gray-400 text-sm text-center mt-2">
-                  Bu ekibi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                  <Text className="text-lg font-bold text-center" style={{ color: colors.text }}>{t("sch.teamDelete")}</Text>
+                <Text className="text-sm text-center mt-2" style={{ color: colors.textSecondary }}>
+                  {t("sch.teamDeleteMsg")}
                 </Text>
               </View>
               <View className="flex-row gap-3">
                 <TouchableOpacity
-                  className="flex-1 h-11 bg-[#2A2A2A] rounded-xl items-center justify-center"
+                  className="flex-1 h-11 rounded-xl items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
                   onPress={() => { setDeleteConfirmModal(false); setDeleteTeamId(null); }}
                   disabled={deleteLoading}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-gray-300 font-medium">İptal</Text>
+                  <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("sch.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className={`flex-1 h-11 rounded-xl items-center justify-center ${deleteLoading ? "bg-[#EF4444]/50" : "bg-[#EF4444]"}`}
+                  className={`flex-1 h-11 rounded-xl items-center justify-center`}
+                  style={{ backgroundColor: deleteLoading ? colors.danger + '80' : colors.danger }}
                   onPress={confirmDeleteTeam}
                   disabled={deleteLoading}
                   activeOpacity={0.7}
@@ -1305,7 +1815,7 @@ export default function ScheduleScreen() {
                   {deleteLoading ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
-                    <Text className="text-white font-medium">Evet, Sil</Text>
+                    <Text className="font-medium" style={{ color: "white" }}>{t("sch.yesDelete")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -1315,11 +1825,11 @@ export default function ScheduleScreen() {
 
         <Modal visible={memberRemoveModal} transparent animationType="fade" onRequestClose={() => { setMemberRemoveModal(false); setRemoveTeamId(null); setSelectedMembers([]); }}>
           <View className="flex-1 justify-center items-center bg-black/60">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-sm p-4">
+            <View className="rounded-2xl w-11/12 max-w-sm p-4" style={{ backgroundColor: colors.bgCard }}>
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-white text-lg font-bold">Personel Çıkar</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("sch.removePersonnel")}</Text>
                 <TouchableOpacity onPress={() => { setMemberRemoveModal(false); setRemoveTeamId(null); setSelectedMembers([]); }}>
-                  <Ionicons name="close" size={24} color="#555" />
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
               {(() => {
@@ -1327,21 +1837,21 @@ export default function ScheduleScreen() {
                 if (!team) return null;
                 const hasLeader = team.leader && team.leader.trim().length > 0;
                 return (
-                  <View className="bg-[#F59E0B]/10 border border-[#F59E0B]/20 rounded-lg p-2.5 mb-3">
-                    <Text className="text-[#F59E0B] text-xs">
-                      Lider: {team.leader} — lider çıkarılamaz, sadece üyeler seçilebilir.
+                  <View className="border rounded-lg p-2.5 mb-3" style={{ backgroundColor: colors.warning + '15', borderColor: colors.warning + '33' }}>
+                    <Text className="text-xs" style={{ color: colors.warning }}>
+                      {t("sch.leaderWarning", { leader: team.leader })}
                     </Text>
                   </View>
                 );
               })()}
-              <Text className="text-gray-400 text-sm mb-3">Çıkarmak istediğiniz personeli seçin:</Text>
+              <Text className="text-sm mb-3" style={{ color: colors.textSecondary }}>{t("sch.removePersonnelMsg")}</Text>
               <ScrollView className="max-h-60">
                 {teams
                   .find((t) => t.id === removeTeamId)
                   ?.members.length === 0 ? (
                   <View className="py-8 items-center">
-                    <Ionicons name="people-outline" size={32} color="#555" />
-                    <Text className="text-gray-500 text-sm mt-2">Ekipte çıkarılacak personel yok</Text>
+                    <Ionicons name="people-outline" size={32} color={colors.textMuted} />
+                    <Text className="text-sm mt-2" style={{ color: colors.textMuted }}>{t("sch.noPersonnelToRemove")}</Text>
                   </View>
                 ) : (
                 teams
@@ -1349,36 +1859,42 @@ export default function ScheduleScreen() {
                   ?.members.map((p) => (
                     <TouchableOpacity
                       key={p}
-                      className={`flex-row items-center justify-between py-3 px-3 border-b border-[#2A2A2A] rounded-lg mb-1 ${selectedMembers.includes(p) ? "bg-[#EF4444]/10 border-[#EF4444]/30" : ""}`}
+                      className={`flex-row items-center justify-between py-3 px-3 border rounded-lg mb-1`}
+                      style={{
+                        borderColor: selectedMembers.includes(p) ? colors.danger + '4D' : colors.border,
+                        backgroundColor: selectedMembers.includes(p) ? colors.danger + '1A' : 'transparent',
+                      }}
                       onPress={() => togglePersonelSec(p)}
                       activeOpacity={0.7}
                     >
                       <View className="flex-row items-center gap-2">
-                        <View className={`w-5 h-5 rounded border items-center justify-center ${selectedMembers.includes(p) ? "bg-[#EF4444] border-[#EF4444]" : "border-[#555]"}`}>
+                        <View className={`w-5 h-5 rounded border items-center justify-center`} style={{ backgroundColor: selectedMembers.includes(p) ? colors.danger : 'transparent', borderColor: selectedMembers.includes(p) ? colors.danger : colors.textMuted }}>
                           {selectedMembers.includes(p) && (
                             <Ionicons name="checkmark" size={14} color="white" />
                           )}
                         </View>
-                        <View className="w-7 h-7 rounded-full bg-[#2A2A2A] items-center justify-center">
-                          <Text className="text-[10px] text-gray-300 font-medium">{p.charAt(0)}</Text>
+                        <View className="w-7 h-7 rounded-full items-center justify-center" style={{ backgroundColor: colors.bgInput }}>
+                          <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{p.charAt(0)}</Text>
                         </View>
-                        <Text className="text-white text-sm">{p}</Text>
+                        <Text className="text-sm" style={{ color: colors.text }}>{p}</Text>
                       </View>
-                      <Ionicons name="remove-circle-outline" size={20} color="#6B7280" />
+                      <Ionicons name="remove-circle-outline" size={20} color={colors.textMuted} />
                     </TouchableOpacity>
                   ))
                 )}
               </ScrollView>
               <View className="flex-row gap-3 mt-3">
                 <TouchableOpacity
-                  className="flex-1 h-10 bg-[#2A2A2A] rounded-lg items-center justify-center"
+                  className="flex-1 h-10 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
                   onPress={() => { setMemberRemoveModal(false); setRemoveTeamId(null); setSelectedMembers([]); }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-gray-300 font-medium">İptal</Text>
+                  <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("sch.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className={`flex-1 h-10 rounded-lg items-center justify-center ${removeLoading || selectedMembers.length === 0 ? "bg-[#EF4444]/30" : "bg-[#EF4444]"}`}
+                  className={`flex-1 h-10 rounded-lg items-center justify-center`}
+                  style={{ backgroundColor: removeLoading || selectedMembers.length === 0 ? colors.danger + '4D' : colors.danger }}
                   onPress={handleSelectedRemove}
                   disabled={removeLoading || selectedMembers.length === 0}
                   activeOpacity={0.7}
@@ -1386,8 +1902,8 @@ export default function ScheduleScreen() {
                   {removeLoading ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
-                    <Text className="text-white font-medium">
-                      {selectedMembers.length > 0 ? `${selectedMembers.length} Kişiyi Çıkar` : "Seçilenleri Çıkar"}
+                    <Text className="font-medium" style={{ color: "white" }}>
+                      {selectedMembers.length > 0 ? `${selectedMembers.length} ${t("sch.removeSelected")}` : t("sch.removeDefault")}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -1398,27 +1914,29 @@ export default function ScheduleScreen() {
 
         <Modal visible={appointmentDeleteModal} transparent animationType="fade" onRequestClose={() => !deleteLoading && setAppointmentDeleteModal(false)}>
           <View className="flex-1 justify-center items-center bg-black/60">
-            <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-sm p-5">
+            <View className="rounded-2xl w-11/12 max-w-sm p-5" style={{ backgroundColor: colors.bgCard }}>
               <View className="items-center mb-4">
-                <View className="w-14 h-14 rounded-full bg-[#3A3A3A] items-center justify-center mb-3">
-                  <Ionicons name="trash" size={28} color="#9CA3AF" />
+                <View className="w-14 h-14 rounded-full items-center justify-center mb-3" style={{ backgroundColor: colors.bgInput }}>
+                  <Ionicons name="trash" size={28} color={colors.danger} />
                 </View>
-                <Text className="text-white text-lg font-bold text-center">Planı Sil</Text>
-                <Text className="text-gray-400 text-sm text-center mt-2">
-                  Bu planı silmek istediğinize emin misiniz?
+                <Text className="text-lg font-bold text-center" style={{ color: colors.text }}>{t("sch.planDelete")}</Text>
+                <Text className="text-sm text-center mt-2" style={{ color: colors.textSecondary }}>
+                  {t("sch.planDeleteMsg")}
                 </Text>
               </View>
               <View className="flex-row gap-3">
                 <TouchableOpacity
-                  className="flex-1 h-11 bg-[#2A2A2A] rounded-xl items-center justify-center"
+                  className="flex-1 h-11 rounded-xl items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
                   onPress={() => { setAppointmentDeleteModal(false); setAppointmentDeleteId(null); }}
                   disabled={deleteLoading}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-gray-300 font-medium">İptal</Text>
+                  <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("sch.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className={`flex-1 h-11 rounded-xl items-center justify-center ${deleteLoading ? "bg-[#EF4444]/50" : "bg-[#EF4444]"}`}
+                  className={`flex-1 h-11 rounded-xl items-center justify-center`}
+                  style={{ backgroundColor: deleteLoading ? colors.danger + '80' : colors.danger }}
                   onPress={handleAppointmentDelete}
                   disabled={deleteLoading}
                   activeOpacity={0.7}
@@ -1426,13 +1944,203 @@ export default function ScheduleScreen() {
                   {deleteLoading ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
-                    <Text className="text-white font-medium">Evet, Sil</Text>
+                    <Text className="font-medium" style={{ color: "white" }}>{t("sch.yesDelete")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
+
+        <Modal visible={dayListModal} transparent animationType="fade" onRequestClose={() => setDayListModal(false)}>
+          <View className="flex-1 justify-center items-center bg-black/60">
+            <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
+              <View className="flex-row items-center justify-between mb-4">
+                <View>
+                  <Text className="text-lg font-bold" style={{ color: colors.text }}>
+                    {dayListDate.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })}
+                  </Text>
+                  <Text className="text-xs" style={{ color: colors.textMuted }}>
+                    {dayListAppointments.length} {t("sch.servicePlan")}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setDayListModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+
+              {dayListAppointments.length === 0 ? (
+                <View className="py-8 items-center">
+                  <Ionicons name="calendar-outline" size={40} color={colors.textMuted} />
+                  <Text className="text-sm mt-2" style={{ color: colors.textMuted }}>{t("sch.noPlanToday")}</Text>
+                  <TouchableOpacity
+                    className="mt-3 h-9 px-4 rounded-lg items-center justify-center"
+                    style={{ backgroundColor: colors.primary }}
+                    onPress={() => {
+                      setDayListModal(false);
+                      handleCellPress(dayListDate);
+                    }}
+                  >
+                    <Text className="text-xs font-medium" style={{ color: "white" }}>+ {t("sch.newPlan")}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <ScrollView className="max-h-[400px]" nestedScrollEnabled>
+                  {dayListAppointments.map((a) => {
+                    const team = teams.find((t) => t.id === a.ekipId);
+                    return (
+                      <TouchableOpacity
+                        key={a.id}
+                        className="rounded-xl p-3 mb-2 flex-row items-center gap-3"
+                        style={{ backgroundColor: `${team?.color || "#6080FF"}12`, borderLeftWidth: 3, borderLeftColor: team?.color || "#6080FF" }}
+                        onPress={() => {
+                          setDayListModal(false);
+                          setDetailAppointment(a);
+                          setDetailModal(true);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View className="flex-1">
+                          <View className="flex-row items-center gap-2">
+                            <Text className="text-sm font-semibold" style={{ color: colors.text }}>{a.startTime}</Text>
+                            <Text className="text-xs" style={{ color: colors.textMuted }}>- {a.duration}</Text>
+                          </View>
+                          <Text className="text-sm font-medium" style={{ color: colors.text }}>{a.customerName}</Text>
+                          <View className="flex-row items-center gap-2 mt-1">
+                            <View className="flex-row items-center gap-1">
+                              <View className="w-2 h-2 rounded-full" style={{ backgroundColor: team?.color || "#6080FF" }} />
+                              <Text className="text-xs" style={{ color: colors.textSecondary }}>{a.ekip}</Text>
+                            </View>
+                            <Text className="text-xs" style={{ color: colors.textMuted }}>•</Text>
+                            <Text className="text-xs" style={{ color: colors.textSecondary }}>{a.tur}</Text>
+                          </View>
+                          {a.notes ? (
+                            <Text className="text-xs mt-1" style={{ color: colors.textMuted }} numberOfLines={1}>{a.notes}</Text>
+                          ) : null}
+                        </View>
+                        <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              )}
+
+              {dayListAppointments.length > 0 && (
+                <TouchableOpacity
+                  className="mt-3 h-9 rounded-lg items-center justify-center flex-row gap-1"
+                  style={{ backgroundColor: colors.primary + '15' }}
+                  onPress={() => {
+                    setDayListModal(false);
+                    handleCellPress(dayListDate);
+                  }}
+                >
+                  <Ionicons name="add" size={16} color={colors.primary} />
+                  <Text className="text-xs font-medium" style={{ color: colors.primary }}>+ {t("sch.newPlan")}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </Modal>
+
+        <Modal visible={detailModal} transparent animationType="fade" onRequestClose={() => setDetailModal(false)}>
+          <View className="flex-1 justify-center items-center bg-black/60">
+            <View className="rounded-2xl w-11/12 max-w-md p-5" style={{ backgroundColor: colors.bgCard }}>
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("sch.planDetail")}</Text>
+                <TouchableOpacity onPress={() => setDetailModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+
+              {detailAppointment && (() => {
+                const team = teams.find((t) => t.id === detailAppointment.ekipId);
+                const gunler = [t("day.sunday"), t("day.monday"), t("day.tuesday"), t("day.wednesday"), t("day.thursday"), t("day.friday"), t("day.saturday")];
+                const d = strToDate(detailAppointment.tarih);
+                return (
+                  <View>
+                    <View className="rounded-xl p-4 mb-4" style={{ backgroundColor: `${team?.color || "#6080FF"}15` }}>
+                      <View className="flex-row items-center gap-2 mb-2">
+                        <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: `${team?.color || "#6080FF"}30` }}>
+                          <Ionicons name="people" size={20} color={team?.color || "#6080FF"} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-semibold text-sm" style={{ color: colors.text }}>{detailAppointment.customerName}</Text>
+                          <Text className="text-xs" style={{ color: colors.textSecondary }}>{detailAppointment.tur}</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View className="gap-3 mb-4">
+                      <View className="flex-row items-center gap-3">
+                        <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+                        <View>
+                           <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.date")}</Text>
+                          <Text className="text-sm font-medium" style={{ color: colors.text }}>{gunler[d.getDay()]}, {detailAppointment.tarih}</Text>
+                        </View>
+                      </View>
+
+                      <View className="flex-row items-center gap-3">
+                        <Ionicons name="time-outline" size={18} color={colors.primary} />
+                        <View>
+                           <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.timeDuration")}</Text>
+                          <Text className="text-sm font-medium" style={{ color: colors.text }}>{detailAppointment.startTime} - {detailAppointment.duration}</Text>
+                        </View>
+                      </View>
+
+                      <View className="flex-row items-center gap-3">
+                        <Ionicons name="people-outline" size={18} color={colors.primary} />
+                        <View>
+                           <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.team")}</Text>
+                          <Text className="text-sm font-medium" style={{ color: colors.text }}>{detailAppointment.ekip}</Text>
+                        </View>
+                      </View>
+
+                      {detailAppointment.notes ? (
+                        <View className="flex-row items-start gap-3">
+                          <Ionicons name="document-text-outline" size={18} color={colors.primary} style={{ marginTop: 2 }} />
+                          <View className="flex-1">
+                            <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.notes")}</Text>
+                            <Text className="text-sm" style={{ color: colors.text }}>{detailAppointment.notes}</Text>
+                          </View>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    <View className="flex-row gap-3">
+                      <TouchableOpacity
+                        className="flex-1 h-10 rounded-lg items-center justify-center flex-row gap-2"
+                        style={{ backgroundColor: colors.danger + '15' }}
+                        onPress={() => {
+                          setDetailModal(false);
+                          handleAppointmentDeleteRequest(detailAppointment.id);
+                        }}
+                      >
+                        <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                        <Text className="text-xs font-medium" style={{ color: colors.danger }}>{t("common.delete")}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        className="flex-1 h-10 rounded-lg items-center justify-center flex-row gap-2"
+                        style={{ backgroundColor: colors.primary }}
+                        onPress={handleDetailEdit}
+                      >
+                        <Ionicons name="create-outline" size={16} color="white" />
+                        <Text className="text-xs font-medium" style={{ color: "white" }}>{t("common.edit")}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })()}
+            </View>
+          </View>
+        </Modal>
+
+        <CustomAlert
+          visible={alertVisible}
+          type={alertType}
+          title={alertTitle}
+          message={alertMessage}
+          onClose={() => setAlertVisible(false)}
+        />
 
       </View>
     </ScrollView>

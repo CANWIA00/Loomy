@@ -7,10 +7,16 @@ import Svg, { Path } from "react-native-svg";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
 import { profileApi, UserProfile } from "../../api/profile";
+import { authApi } from "../../api/auth";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage } from "../../contexts/LanguageContext";
+import CustomAlert from "../../components/CustomAlert";
 
 export default function ProfileScreen() {
   const { logout } = useAuth();
+  const { colors, toggleTheme, isDark } = useTheme();
+  const { t, lang, setLanguage } = useLanguage();
   const navigation = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +35,7 @@ export default function ProfileScreen() {
   const [editCompanyLogo, setEditCompanyLogo] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [signatureModalVisible, setSignatureModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -48,9 +55,9 @@ export default function ProfileScreen() {
         router.replace("/(auth)/login");
         return;
       }
-      const message = err.response?.data?.message || "Profil bilgileri yüklenemedi.";
+      const message = err.response?.data?.message || t("prf.errorLoad");
       setError(message);
-      Alert.alert("Hata", message);
+      Alert.alert(t("common.error"), message);
     } finally {
       setLoading(false);
     }
@@ -69,10 +76,26 @@ export default function ProfileScreen() {
     navigation.replace("/(auth)/login");
   };
 
+  const handleDeleteAccount = () => {
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    setDeleteModalVisible(false);
+    try {
+      await authApi.deleteAccount();
+      await logout();
+      navigation.replace("/(auth)/login");
+    } catch (err: any) {
+      const message = err.response?.data?.message || t("prf.errorDeleteAccount");
+      Alert.alert(t("common.error"), message);
+    }
+  };
+
   const handleCopyInviteCode = async () => {
     if (!company?.invitationCode) return;
     await Clipboard.setStringAsync(company.invitationCode);
-    Alert.alert("Kopyalandı", `Davet kodu panoya kopyalandı:\n${company.invitationCode}`);
+    Alert.alert(t("prf.copied"), t("prf.copiedMsg", { code: company.invitationCode }));
   };
 
   const startEditingUser = () => {
@@ -89,7 +112,7 @@ export default function ProfileScreen() {
 
   const handleUpdateUser = async () => {
     if (!editName.trim()) {
-      Alert.alert("Hata", "Ad Soyad boş bırakılamaz.");
+      Alert.alert(t("common.error"), t("prf.nameEmpty"));
       return;
     }
 
@@ -102,11 +125,11 @@ export default function ProfileScreen() {
 
       setProfile((prev) => prev ? { ...prev, user: response.data } : prev);
       setEditingUser(false);
-      Alert.alert("Başarılı", "Profil bilgileriniz güncellendi.");
+      Alert.alert(t("common.success"), t("prf.successUser"));
     } catch (err: any) {
       console.log("🔴 [PROFILE] Güncelleme hatası:", err.response?.status, err.response?.data || err.message);
-      const message = err.response?.data?.message || "Güncelleme başarısız.";
-      Alert.alert("Hata", message);
+      const message = err.response?.data?.message || t("prf.errorUser");
+      Alert.alert(t("common.error"), message);
     } finally {
       setSaving(false);
     }
@@ -121,9 +144,9 @@ export default function ProfileScreen() {
       });
       setProfile((prev) => prev ? { ...prev, user: response.data } : prev);
       setSignatureModalVisible(false);
-      Alert.alert("Başarılı", "İmzanız kaydedildi.");
+      Alert.alert(t("common.success"), t("prf.successSignature"));
     } catch (err: any) {
-      Alert.alert("Hata", "İmza kaydedilemedi.");
+      Alert.alert(t("common.error"), t("prf.errorSignature"));
     }
   };
 
@@ -151,7 +174,7 @@ export default function ProfileScreen() {
 
   const handleUpdateCompany = async () => {
     if (!editCompanyName.trim()) {
-      Alert.alert("Hata", "Şirket adı boş bırakılamaz.");
+      Alert.alert(t("common.error"), t("prf.companyNameEmpty"));
       return;
     }
 
@@ -168,11 +191,11 @@ export default function ProfileScreen() {
 
       setProfile((prev) => prev ? { ...prev, company: response.data } : prev);
       setEditingCompany(false);
-      Alert.alert("Başarılı", "Kurumsal bilgiler güncellendi.");
+      Alert.alert(t("common.success"), t("prf.successCompany"));
     } catch (err: any) {
       console.log("🔴 [PROFILE] Şirket güncelleme hatası:", err.response?.status, err.response?.data || err.message);
-      const message = err.response?.data?.message || "Güncelleme başarısız.";
-      Alert.alert("Hata", message);
+      const message = err.response?.data?.message || t("prf.errorUser");
+      Alert.alert(t("common.error"), message);
     } finally {
       setSaving(false);
     }
@@ -182,85 +205,93 @@ export default function ProfileScreen() {
   const company = profile?.company;
   const isAdmin = user?.role === "ADMIN";
 
-  const inputClass = "bg-[#2A2A2A] text-white text-sm rounded-lg px-3 py-2 border border-[#3B82F6]/30";
-  const labelClass = "text-gray-400 text-xs font-medium mb-1";
+  const inputClass = "text-sm rounded-lg px-3 py-2";
+  const labelClass = "text-xs font-medium mb-1";
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#0A0A0A] items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-400 text-sm mt-3">Yükleniyor...</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.textSecondary, fontSize: 14, marginTop: 12 }}>{t("prf.loading")}</Text>
       </View>
     );
   }
 
   if (error && !profile) {
     return (
-      <View className="flex-1 bg-[#0A0A0A] items-center justify-center px-6">
-        <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-        <Text className="text-white text-lg font-semibold mt-4">Bir hata oluştu</Text>
-        <Text className="text-gray-400 text-sm mt-2 text-center">{error}</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+        <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: "600", marginTop: 16 }}>{t("prf.error")}</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 14, marginTop: 8, textAlign: "center" }}>{error}</Text>
         <TouchableOpacity
-          className="mt-6 bg-[#3B82F6] rounded-xl px-6 py-3"
+          style={{ marginTop: 24, backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 }}
           onPress={fetchProfile}
         >
-          <Text className="text-white font-semibold">Tekrar Dene</Text>
+          <Text style={{ color: "white", fontWeight: "600" }}>{t("prf.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-[#0A0A0A]" indicatorStyle="white">
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg}>
       <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
         <View className="flex-row items-center justify-between mb-6">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back-outline" size={24} color="#3B82F6" />
+              <Ionicons name="arrow-back-outline" size={24} color={colors.primary} />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-white tracking-tight">
-              Profil
+            <Text style={{ color: colors.text, fontSize: 24, fontWeight: "700", letterSpacing: -0.5 }}>
+              {t("prf.title")}
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/dashboard")}>
-            <Ionicons name="home-outline" size={24} color="#3B82F6" />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity onPress={() => setLanguage(lang === "tr" ? "en" : "tr")} style={{ backgroundColor: colors.bgCard2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
+              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{lang === "tr" ? "EN" : "TR"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleTheme}>
+              <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={22} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/dashboard")}>
+              <Ionicons name="home-outline" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View className="items-center mb-6">
-          <View className="w-20 h-20 rounded-full bg-[#3B82F6] items-center justify-center mb-3">
-            <Text className="text-3xl font-bold text-white">
+          <View style={{ width: 80, height: 80, borderRadius: 999, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+            <Text style={{ color: "white", fontSize: 24, fontWeight: "700" }}>
               {user?.name?.charAt(0)?.toUpperCase() || "?"}
             </Text>
           </View>
-          <Text className="text-xl font-bold text-white">{user?.name}</Text>
-          <Text className="text-gray-400 text-sm">{user?.email}</Text>
+          <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{user?.name}</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{user?.email}</Text>
         </View>
 
         {/* Bilgiler Kartı */}
-        <View className="bg-[#1A1A1A] rounded-2xl p-4">
+        <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, padding: 16 }}>
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center gap-3">
-              <Ionicons name="person-outline" size={20} color="#3B82F6" />
-              <Text className="text-white font-semibold">Bilgiler</Text>
+              <Ionicons name="person-outline" size={20} color={colors.primary} />
+              <Text style={{ color: colors.text, fontWeight: "600" }}>{t("prf.info")}</Text>
             </View>
             <View className="flex-row items-center gap-2">
               {editingUser ? (
                 <>
                   <TouchableOpacity onPress={cancelEditingUser} disabled={saving}>
-                    <Ionicons name="close-circle-outline" size={22} color="#EF4444" />
+                    <Ionicons name="close-circle-outline" size={22} color={colors.danger} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={handleUpdateUser} disabled={saving}>
                     <Ionicons
                       name={saving ? "hourglass-outline" : "checkmark-circle"}
                       size={22}
-                      color={saving ? "#6B7280" : "#22C55E"}
+                      color={saving ? colors.textMuted : colors.success}
                     />
                   </TouchableOpacity>
                 </>
               ) : (
                 <TouchableOpacity onPress={startEditingUser}>
-                  <Ionicons name="create-outline" size={22} color="#3B82F6" />
+                  <Ionicons name="create-outline" size={22} color={colors.primary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -269,60 +300,60 @@ export default function ProfileScreen() {
           <View className="flex-row gap-4">
             <View className="flex-1 gap-4">
               <View>
-                <Text className={labelClass}>Ad Soyad</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.name")}</Text>
                 {editingUser ? (
                   <TextInput
-                    className={inputClass}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text, fontSize: 14, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}
                     value={editName}
                     onChangeText={setEditName}
                     editable={!saving}
                   />
                 ) : (
-                  <Text className="text-white text-sm">{user?.name}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{user?.name}</Text>
                 )}
               </View>
               <View>
-                <Text className={labelClass}>E-posta</Text>
-                <Text className="text-white text-sm">{user?.email}</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.email")}</Text>
+                <Text style={{ color: colors.text, fontSize: 14 }}>{user?.email}</Text>
               </View>
               <View>
-                <Text className={labelClass}>Telefon</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.phone")}</Text>
                 {editingUser ? (
                   <TextInput
-                    className={inputClass}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text, fontSize: 14, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}
                     value={editPhone}
                     onChangeText={setEditPhone}
                     editable={!saving}
                     keyboardType="phone-pad"
                   />
                 ) : (
-                  <Text className="text-white text-sm">{user?.phone || "-"}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{user?.phone || "-"}</Text>
                 )}
               </View>
               <View>
-                <Text className={labelClass}>Rol</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.role")}</Text>
                 <View className="flex-row items-center gap-2">
-                  <Text className="text-white text-sm">{user?.role}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{user?.role}</Text>
                   {isAdmin && (
-                    <View className="bg-[#3B82F6]/15 border border-[#3B82F6]/30 rounded-lg px-2 py-0.5">
-                      <Text className="text-[#3B82F6] text-xs font-medium">Admin</Text>
+                    <View style={{ backgroundColor: colors.primary + "15", borderColor: colors.primary + "4D", borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
+                      <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "500" }}>Admin</Text>
                     </View>
                   )}
                 </View>
               </View>
               <View>
-                <Text className={labelClass}>İmza</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.signature")}</Text>
                 {user?.signature ? (
                   <View className="flex-row items-center gap-2 mt-1">
                     <TouchableOpacity onPress={() => setSignatureModalVisible(true)}>
-                      <View className="bg-white rounded-lg px-2 py-1.5">
+                      <View style={{ backgroundColor: colors.bgInput, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 }}>
                         {(() => {
                           try {
                             const parsed = JSON.parse(user.signature!);
                             const pts = Array.isArray(parsed) && parsed.length > 0
                               ? (Array.isArray(parsed[0]) ? parsed : [parsed])
                               : [];
-                            if (pts.length === 0) return <Text className="text-gray-400 text-xs">-</Text>;
+                            if (pts.length === 0) return <Text style={{ color: colors.textSecondary, fontSize: 12 }}>-</Text>;
                             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                             pts.forEach((path: any[]) => {
                               path.forEach((p: any) => {
@@ -342,16 +373,16 @@ export default function ProfileScreen() {
                                   const d = path.map((p: any, j: number) =>
                                     j === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`
                                   ).join(" ");
-                                  return <Path key={i} d={d} stroke="#000" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />;
+                                  return <Path key={i} d={d} stroke={colors.text} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />;
                                 })}
                               </Svg>
                             );
-                          } catch { return <Text className="text-gray-400 text-xs">-</Text>; }
+                          } catch { return <Text style={{ color: colors.textSecondary, fontSize: 12 }}>-</Text>; }
                         })()}
                       </View>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setSignatureModalVisible(true)}>
-                      <Ionicons name="create-outline" size={18} color="#3B82F6" />
+                      <Ionicons name="create-outline" size={18} color={colors.primary} />
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -359,8 +390,8 @@ export default function ProfileScreen() {
                     onPress={() => setSignatureModalVisible(true)}
                     className="flex-row items-center gap-1.5 mt-1"
                   >
-                    <Ionicons name="pen-outline" size={14} color="#3B82F6" />
-                    <Text className="text-[#3B82F6] text-xs">İmza Eklemek İçin Tıklayın</Text>
+                    <Ionicons name="pen-outline" size={14} color={colors.primary} />
+                    <Text style={{ color: colors.primary, fontSize: 12 }}>{t("prf.addSignature")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -370,44 +401,44 @@ export default function ProfileScreen() {
 
         {/* Davet Kodları Kartı — Admin */}
         {isAdmin && (
-          <View className="bg-[#1A1A1A] rounded-2xl p-4 mt-4">
+          <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, padding: 16, marginTop: 16 }}>
             <View className="flex-row items-center gap-3 mb-4">
-              <Ionicons name="key-outline" size={20} color="#3B82F6" />
-              <Text className="text-white font-semibold">Admin Yetkileri</Text>
+              <Ionicons name="key-outline" size={20} color={colors.primary} />
+              <Text style={{ color: colors.text, fontWeight: "600" }}>{t("prf.adminPrivileges")}</Text>
             </View>
-            <View className="bg-[#2A2A2A] rounded-xl p-3">
-              <Text className="text-gray-400 text-xs font-medium mb-1">Rol</Text>
-              <Text className="text-white text-sm font-semibold">{user?.role}</Text>
+            <View style={{ backgroundColor: colors.bgInput, borderRadius: 12, padding: 12 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.role")}</Text>
+              <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>{user?.role}</Text>
             </View>
           </View>
         )}
 
         {/* Kurumsal Bilgiler Kartı */}
         {company && (
-          <View className="bg-[#1A1A1A] rounded-2xl p-4 mt-4">
+          <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, padding: 16, marginTop: 16 }}>
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center gap-3">
-                <Ionicons name="business-outline" size={20} color="#3B82F6" />
-                <Text className="text-white font-semibold">Kurumsal Bilgiler</Text>
+                <Ionicons name="business-outline" size={20} color={colors.primary} />
+                <Text style={{ color: colors.text, fontWeight: "600" }}>{t("prf.companyInfo")}</Text>
               </View>
               {isAdmin && (
                 <View className="flex-row items-center gap-2">
                   {editingCompany ? (
                     <>
                       <TouchableOpacity onPress={cancelEditingCompany} disabled={saving}>
-                        <Ionicons name="close-circle-outline" size={22} color="#EF4444" />
+                        <Ionicons name="close-circle-outline" size={22} color={colors.danger} />
                       </TouchableOpacity>
                       <TouchableOpacity onPress={handleUpdateCompany} disabled={saving}>
                         <Ionicons
                           name={saving ? "hourglass-outline" : "checkmark-circle"}
                           size={22}
-                          color={saving ? "#6B7280" : "#22C55E"}
+                          color={saving ? colors.textMuted : colors.success}
                         />
                       </TouchableOpacity>
                     </>
                   ) : (
                     <TouchableOpacity onPress={startEditingCompany}>
-                      <Ionicons name="create-outline" size={22} color="#3B82F6" />
+                      <Ionicons name="create-outline" size={22} color={colors.primary} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -416,32 +447,32 @@ export default function ProfileScreen() {
 
             <View className="flex-row items-center gap-4 mb-4">
               {editingCompany ? (
-                <View className="w-12 h-12 rounded-xl bg-[#2A2A2A] items-center justify-center">
-                  <Ionicons name="image-outline" size={24} color="#6B7280" />
+                <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="image-outline" size={24} color={colors.textMuted} />
                 </View>
               ) : company.logoUrl ? (
                 <Image
                   source={{ uri: company.logoUrl }}
-                  className="w-12 h-12 rounded-xl bg-[#2A2A2A]"
+                  style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.bgInput }}
                   resizeMode="cover"
                 />
               ) : (
-                <View className="w-12 h-12 rounded-xl bg-[#3B82F6]/10 items-center justify-center">
-                  <Ionicons name="business" size={24} color="#3B82F6" />
+                <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.primary + "15", alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="business" size={24} color={colors.primary} />
                 </View>
               )}
               <View className="flex-1">
                 {editingCompany ? (
                   <TextInput
-                    className={inputClass}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text, fontSize: 14, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}
                     value={editCompanyName}
                     onChangeText={setEditCompanyName}
                     editable={!saving}
-                    placeholder="Şirket Adı"
-                    placeholderTextColor="#6B7280"
+                    placeholder={t("prf.companyName")}
+                    placeholderTextColor={colors.textMuted}
                   />
                 ) : (
-                  <Text className="text-white text-sm font-semibold">{company.name}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>{company.name}</Text>
                 )}
               </View>
             </View>
@@ -449,85 +480,85 @@ export default function ProfileScreen() {
             <View className="gap-3">
               {isAdmin && company.invitationCode && (
                 <View>
-                  <Text className={labelClass}>Davet Kodu</Text>
-                  <View className="flex-row items-center justify-between bg-[#2A2A2A] rounded-lg px-3 py-2 border border-[#3B82F6]/30">
-                    <Text className="text-[#3B82F6] text-sm font-mono font-semibold">{company.invitationCode}</Text>
-                    <TouchableOpacity onPress={handleCopyInviteCode} className="ml-2">
-                      <Ionicons name="copy-outline" size={18} color="#3B82F6" />
+                  <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.invitationCode")}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.bgInput, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}>
+                    <Text style={{ color: colors.primary, fontSize: 14, fontFamily: "monospace", fontWeight: "600" }}>{company.invitationCode}</Text>
+                    <TouchableOpacity onPress={handleCopyInviteCode} style={{ marginLeft: 8 }}>
+                      <Ionicons name="copy-outline" size={18} color={colors.primary} />
                     </TouchableOpacity>
                   </View>
-                  <Text className="text-gray-500 text-xs mt-1">Bu kodu paylaşıp çalışan kaydı yapabilirsiniz.</Text>
+                  <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>{t("prf.invitationHint")}</Text>
                 </View>
               )}
               <View>
-                <Text className={labelClass}>Adres</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.address")}</Text>
                 {editingCompany ? (
                   <TextInput
-                    className={inputClass}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text, fontSize: 14, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}
                     value={editCompanyAddress}
                     onChangeText={setEditCompanyAddress}
                     editable={!saving}
-                    placeholder="Adres"
-                    placeholderTextColor="#6B7280"
+                    placeholder={t("prf.address")}
+                    placeholderTextColor={colors.textMuted}
                   />
                 ) : (
-                  <Text className="text-white text-sm">{company.address}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{company.address}</Text>
                 )}
               </View>
               <View>
-                <Text className={labelClass}>Telefon</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.companyPhone")}</Text>
                 {editingCompany ? (
                   <TextInput
-                    className={inputClass}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text, fontSize: 14, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}
                     value={editCompanyPhone}
                     onChangeText={setEditCompanyPhone}
                     editable={!saving}
                     keyboardType="phone-pad"
-                    placeholder="Telefon"
-                    placeholderTextColor="#6B7280"
+                    placeholder={t("prf.companyPhone")}
+                    placeholderTextColor={colors.textMuted}
                   />
                 ) : (
-                  <Text className="text-white text-sm">{company.phone}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{company.phone}</Text>
                 )}
               </View>
               <View>
-                <Text className={labelClass}>E-posta</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.companyEmail")}</Text>
                 {editingCompany ? (
                   <TextInput
-                    className={inputClass}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text, fontSize: 14, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}
                     value={editCompanyEmail}
                     onChangeText={setEditCompanyEmail}
                     editable={!saving}
                     keyboardType="email-address"
-                    placeholder="E-posta"
-                    placeholderTextColor="#6B7280"
+                    placeholder={t("prf.companyEmail")}
+                    placeholderTextColor={colors.textMuted}
                   />
                 ) : (
-                  <Text className="text-white text-sm">{company.email}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{company.email}</Text>
                 )}
               </View>
               <View>
-                <Text className={labelClass}>Vergi Numarası</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.taxNumber")}</Text>
                 {editingCompany ? (
                   <TextInput
-                    className={inputClass}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text, fontSize: 14, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}
                     value={editCompanyTaxNumber}
                     onChangeText={setEditCompanyTaxNumber}
                     editable={!saving}
                     keyboardType="number-pad"
-                    placeholder="Vergi Numarası"
-                    placeholderTextColor="#6B7280"
+                    placeholder={t("prf.taxNumber")}
+                    placeholderTextColor={colors.textMuted}
                   />
                 ) : (
-                  <Text className="text-white text-sm">{company.taxNumber || "-"}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{company.taxNumber || "-"}</Text>
                 )}
               </View>
               {editingCompany && (
                 <View>
-                  <Text className={labelClass}>Logo</Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500", marginBottom: 4 }}>{t("prf.logo")}</Text>
                   <View className="flex-row items-center gap-3">
                     <TouchableOpacity
-                      className="flex-1 bg-[#2A2A2A] rounded-lg px-3 py-2.5 border border-[#3B82F6]/30 flex-row items-center gap-2"
+                      style={{ flex: 1, backgroundColor: colors.bgInput, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.primary + "4D", flexDirection: "row", alignItems: "center", gap: 8 }}
                       onPress={async () => {
                         const result = await ImagePicker.launchImageLibraryAsync({
                           mediaTypes: ["images"],
@@ -542,19 +573,19 @@ export default function ProfileScreen() {
                       }}
                       disabled={saving}
                     >
-                      <Ionicons name="image-outline" size={18} color="#3B82F6" />
-                      <Text className="text-gray-400 text-sm">
-                        {editCompanyLogo ? "Logo seçildi" : "Logo seçin..."}
+                      <Ionicons name="image-outline" size={18} color={colors.primary} />
+                      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                        {editCompanyLogo ? t("prf.logoSelected") : t("prf.logoSelect")}
                       </Text>
                     </TouchableOpacity>
                     {editCompanyLogo && (
                       <TouchableOpacity onPress={() => setEditCompanyLogo(null)} disabled={saving}>
-                        <Ionicons name="close-circle" size={20} color="#EF4444" />
+                        <Ionicons name="close-circle" size={20} color={colors.danger} />
                       </TouchableOpacity>
                     )}
                   </View>
                   {editCompanyLogo && (
-                    <Image source={{ uri: editCompanyLogo }} className="w-full h-16 rounded-lg mt-2 bg-[#2A2A2A]" resizeMode="contain" />
+                    <Image source={{ uri: editCompanyLogo }} style={{ width: "100%", height: 64, borderRadius: 8, marginTop: 8, backgroundColor: colors.bgInput }} resizeMode="contain" />
                   )}
                 </View>
               )}
@@ -562,24 +593,34 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Çıkış Yap */}
-        <TouchableOpacity className="mt-6" onPress={handleLogout}>
-          <View className="bg-red-500/10 rounded-xl py-3.5 items-center">
+        {/* Hesabı Sil */}
+        <TouchableOpacity style={{ marginTop: 24 }} onPress={handleDeleteAccount}>
+          <View style={{ backgroundColor: colors.danger + "15", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}>
             <View className="flex-row items-center gap-2">
-              <Ionicons name="log-out-outline" size={18} color="#EF4444" />
-              <Text className="text-red-400 font-semibold">Çıkış Yap</Text>
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+              <Text style={{ color: colors.danger, fontWeight: "600" }}>{t("prf.deleteAccount")}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {/* Çıkış Yap */}
+        <TouchableOpacity style={{ marginTop: 12 }} onPress={handleLogout}>
+          <View style={{ backgroundColor: colors.danger + "15", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}>
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+              <Text style={{ color: colors.danger, fontWeight: "600" }}>{t("prf.logout")}</Text>
             </View>
           </View>
         </TouchableOpacity>
       </View>
 
       <Modal visible={signatureModalVisible} transparent animationType="fade" onRequestClose={() => setSignatureModalVisible(false)}>
-        <View className="flex-1 justify-center items-center bg-black/60">
-          <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-md p-4">
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.6)" }}>
+          <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, width: "91.666%", maxWidth: 448, padding: 16 }}>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-white text-lg font-bold">İmzam</Text>
-              <TouchableOpacity onPress={() => setSignatureModalVisible(false)} className="p-1">
-                <Ionicons name="close" size={24} color="#6B7280" />
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("prf.mySignature")}</Text>
+              <TouchableOpacity onPress={() => setSignatureModalVisible(false)} style={{ padding: 4 }}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
             <ProfileSignaturePad
@@ -590,11 +631,23 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+      <CustomAlert
+        visible={deleteModalVisible}
+        type="confirm"
+        title={t("prf.deleteAccount")}
+        message={t("prf.deleteAccountConfirm")}
+        onClose={() => setDeleteModalVisible(false)}
+        onConfirm={confirmDeleteAccount}
+        confirmText={t("common.delete")}
+        confirmColor="#ef4444"
+      />
     </ScrollView>
   );
 }
 
 function ProfileSignaturePad({ onSave, onClose, initialSignature }: { onSave: (paths: any[]) => void; onClose: () => void; initialSignature?: string | null }) {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [paths, setPaths] = useState<any[][]>([]);
   const [containerSize, setContainerSize] = useState({ width: 300, height: 200 });
   const currentPointsRef = useRef<any[]>([]);
@@ -654,7 +707,7 @@ function ProfileSignaturePad({ onSave, onClose, initialSignature }: { onSave: (p
 
   const handleSave = () => {
     if (allPathsRef.current.length === 0) {
-      Alert.alert("Uyarı", "Lütfen imza atın.");
+      Alert.alert(t("common.warning"), t("prf.signRequired"));
       return;
     }
     onSave(allPathsRef.current);
@@ -671,34 +724,34 @@ function ProfileSignaturePad({ onSave, onClose, initialSignature }: { onSave: (p
   return (
     <>
       <View
-        className="bg-[#111] border border-[#2A2A2A] rounded-lg h-56 items-center justify-center"
+        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1, borderRadius: 8, height: 224, alignItems: "center", justifyContent: "center" }}
         onLayout={(e) => setContainerSize(e.nativeEvent.layout)}
         {...panResponder.panHandlers}
       >
         {paths.length === 0 && currentPointsRef.current.length === 0 && (
-          <Text className="text-gray-500 text-sm absolute">Lütfen bu alana imzanızı atınız</Text>
+          <Text style={{ color: colors.textMuted, fontSize: 14, position: "absolute" }}>{t("prf.signHere")}</Text>
         )}
         <Svg width="100%" height="100%" viewBox={`0 0 ${containerSize.width} ${containerSize.height}`}>
           {paths.map((points, i) => (
-            <Path key={i} d={pointsToPath(points)} stroke="#3B82F6" strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <Path key={i} d={pointsToPath(points)} stroke={colors.primary} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
           ))}
           {currentPointsRef.current.length > 0 && (
-            <Path d={pointsToPath(currentPointsRef.current)} stroke="#3B82F6" strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <Path d={pointsToPath(currentPointsRef.current)} stroke={colors.primary} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
           )}
         </Svg>
       </View>
       <View className="flex-row gap-3 mt-4">
         <TouchableOpacity
-          className="flex-1 h-10 bg-[#2A2A2A] rounded-lg items-center justify-center"
+          style={{ flex: 1, height: 40, backgroundColor: colors.bgInput, borderRadius: 8, alignItems: "center", justifyContent: "center" }}
           onPress={handleClear}
         >
-          <Text className="text-gray-300 font-medium">Temizle</Text>
+          <Text style={{ color: colors.textSecondary, fontWeight: "500" }}>{t("prf.clear")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="flex-1 h-10 bg-[#3B82F6] rounded-lg items-center justify-center"
+          style={{ flex: 1, height: 40, backgroundColor: colors.primary, borderRadius: 8, alignItems: "center", justifyContent: "center" }}
           onPress={handleSave}
         >
-          <Text className="text-white font-medium">Kaydet</Text>
+          <Text style={{ color: "white", fontWeight: "500" }}>{t("prf.save")}</Text>
         </TouchableOpacity>
       </View>
     </>

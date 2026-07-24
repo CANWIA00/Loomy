@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "../prisma";
 import { generateToken } from "../services/jwt";
 import { AuthRequest } from "../middleware/auth";
+import { generateVerificationCode, sendVerificationEmail } from "../services/email";
 
 export async function register(req: Request, res: Response): Promise<void> {
   try {
@@ -28,6 +29,8 @@ export async function register(req: Request, res: Response): Promise<void> {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationCode = generateVerificationCode();
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
 
     if (inviteCode.startsWith("ADMIN-")) {
       const adminKey = await prisma.adminKey.findUnique({
@@ -67,6 +70,8 @@ export async function register(req: Request, res: Response): Promise<void> {
           role: "ADMIN",
           inviteCode,
           companyId: company.id,
+          verificationCode,
+          verificationExpires,
         },
       });
 
@@ -79,17 +84,14 @@ export async function register(req: Request, res: Response): Promise<void> {
         },
       });
 
-      const token = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        companyId: company.id,
-      });
+      sendVerificationEmail(email, verificationCode, name).catch((err) =>
+        console.error("Verification email error:", err)
+      );
 
       res.status(201).json({
-        token,
-        role: user.role,
-        profileCompleted: company.profileCompleted,
+        requiresVerification: true,
+        email,
+        message: "Dogrulama kodu e-posta adresinize gonderildi.",
       });
       return;
     }
@@ -113,20 +115,19 @@ export async function register(req: Request, res: Response): Promise<void> {
           role: "USER",
           inviteCode,
           companyId: company.id,
+          verificationCode,
+          verificationExpires,
         },
       });
 
-      const token = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        companyId: company.id,
-      });
+      sendVerificationEmail(email, verificationCode, name).catch((err) =>
+        console.error("Verification email error:", err)
+      );
 
       res.status(201).json({
-        token,
-        role: user.role,
-        profileCompleted: company.profileCompleted,
+        requiresVerification: true,
+        email,
+        message: "Dogrulama kodu e-posta adresinize gonderildi.",
       });
       return;
     }
@@ -136,6 +137,128 @@ export async function register(req: Request, res: Response): Promise<void> {
     });
   } catch (error: any) {
     console.error("Register error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function verifyEmail(req: Request, res: Response): Promise<void> {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      res.status(400).json({ message: "E-posta ve dogrulama kodu zorunludur." });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { company: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "Kullanici bulunamadi." });
+      return;
+    }
+
+    if (user.emailVerified) {
+      const token = generateToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        companyId: user.companyId ?? undefined,
+      });
+
+      res.json({
+        token,
+        role: user.role,
+        profileCompleted: user.company?.profileCompleted ?? false,
+      });
+      return;
+    }
+
+    if (!user.verificationCode || !user.verificationExpires) {
+      res.status(400).json({ message: "Dogrulama kodu bulunamadi. Lutfen yeni bir kod isteyin." });
+      return;
+    }
+
+    if (new Date() > user.verificationExpires) {
+      res.status(400).json({ message: "Dogrulama kodunun suresi dolmus. Lutfen yeni bir kod isteyin." });
+      return;
+    }
+
+    if (user.verificationCode !== code.trim()) {
+      res.status(400).json({ message: "Gecersiz dogrulama kodu." });
+      return;
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationCode: null,
+        verificationExpires: null,
+      },
+    });
+
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      companyId: user.companyId ?? undefined,
+    });
+
+    res.json({
+      token,
+      role: user.role,
+      profileCompleted: user.company?.profileCompleted ?? false,
+    });
+  } catch (error: any) {
+    console.error("Verify email error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function resendVerification(req: Request, res: Response): Promise<void> {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ message: "E-posta adresi zorunludur." });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "Kullanici bulunamadi." });
+      return;
+    }
+
+    if (user.emailVerified) {
+      res.status(400).json({ message: "E-posta adresi zaten dogrulanmis." });
+      return;
+    }
+
+    const verificationCode = generateVerificationCode();
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationCode,
+        verificationExpires,
+      },
+    });
+
+    sendVerificationEmail(email, verificationCode, user.name).catch((err) =>
+      console.error("Resend verification email error:", err)
+    );
+
+    res.json({ message: "Yeni dogrulama kodu e-posta adresinize gonderildi." });
+  } catch (error: any) {
+    console.error("Resend verification error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });
   }
 }
@@ -161,6 +284,15 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     if (!user.isActive) {
       res.status(403).json({ message: "Hesabınız devre dışı bırakılmıştır." });
+      return;
+    }
+
+    if (!user.emailVerified) {
+      res.status(403).json({
+        message: "E-posta adresiniz doğrulanmamış. Lütfen e-posta doğrulamanızı tamamlayın.",
+        requiresVerification: true,
+        email: user.email,
+      });
       return;
     }
 
@@ -215,6 +347,37 @@ export async function validate(req: AuthRequest, res: Response): Promise<void> {
     res.json(user);
   } catch (error: any) {
     console.error("Validate error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function deleteAccount(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      include: { company: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "Kullanıcı bulunamadı." });
+      return;
+    }
+
+    await prisma.user.delete({ where: { id: user.id } });
+
+    if (user.companyId) {
+      const remainingUsers = await prisma.user.count({
+        where: { companyId: user.companyId },
+      });
+
+      if (remainingUsers === 0) {
+        await prisma.company.delete({ where: { id: user.companyId } });
+      }
+    }
+
+    res.json({ message: "Hesap başarıyla silindi." });
+  } catch (error: any) {
+    console.error("Delete account error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });
   }
 }

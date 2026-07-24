@@ -10,18 +10,6 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
-const serviceList = [
-  "Alarm", "Yangın", "CCTV", "AHM Bağlantısı",
-  "Kablolama", "Montaj", "Devreye Alma Eğitimi", "Belge Kontrolü",
-];
-
-const technicalList = [
-  "AHM Sinyal Kontrolü", "Eğitim ve Tatbikat", "DVR Kayıt Kontrolü",
-  "Uzak Erişim", "Kayıt ve Yedekleme Eğitimi", "Kameralara Netlik ve Yön Ayarı",
-  "Test sinyal Programlaması", "Akü Ömrü Kontrolü",
-  "Kablosuz Dedektör Pil Kontrolü (TÜM)", "GPRS Bağlantısı",
-];
-
 function checkbox(checked: boolean, label: string): string {
   return `
     <div class="checkbox-item">
@@ -51,12 +39,24 @@ function renderSignatureSvg(signature: any): string {
     const d = points.map((p: any, i: number) =>
       i === 0 ? `M ${p.x - minX + pad} ${p.y - minY + pad}` : `L ${p.x - minX + pad} ${p.y - minY + pad}`
     ).join(' ');
-    return `<path d="${d}" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    return `<path d="${d}" stroke="#222238" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" style="max-width:100%;max-height:40px;">${paths}</svg>`;
 }
 
-export function generateServicePDFHtml(data: any): string {
+export function generateServicePDFHtml(data: any, t: (key: string, params?: Record<string, string>) => string): string {
+  const serviceList = [
+    t("svc.list.alarm"), t("svc.list.fire"), t("svc.list.cctv"), t("svc.list.ahm"),
+    t("svc.list.wiring"), t("svc.list.assembly"), t("svc.list.commissioning"), t("svc.list.docCheck"),
+  ];
+
+  const technicalList = [
+    t("svc.tech.ahmSignal"), t("svc.tech.drill"), t("svc.tech.dovr"),
+    t("svc.tech.remote"), t("svc.tech.backup"), t("svc.tech.cameraClarity"),
+    t("svc.tech.signalTest"), t("svc.tech.battery"),
+    t("svc.tech.wirelessPil"), t("svc.tech.gprs"),
+  ];
+
   return `
 <!DOCTYPE html>
 <html>
@@ -72,7 +72,7 @@ export function generateServicePDFHtml(data: any): string {
     body {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11px;
-      color: #1a1a1a;
+      color: #222238;
       padding: 20px;
       box-sizing: border-box;
       position: relative;
@@ -93,7 +93,7 @@ export function generateServicePDFHtml(data: any): string {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #1a1a1a;
+      border-bottom: 2px solid #222238;
       padding-bottom: 10px;
       margin-bottom: 20px;
     }
@@ -120,7 +120,7 @@ export function generateServicePDFHtml(data: any): string {
       font-size: 12px;
       font-weight: bold;
       text-transform: uppercase;
-      border-bottom: 1px solid #1a1a1a;
+      border-bottom: 1px solid #222238;
       padding-bottom: 4px;
       margin-bottom: 10px;
     }
@@ -164,13 +164,13 @@ export function generateServicePDFHtml(data: any): string {
       display: inline-block;
       width: 12px;
       height: 12px;
-      border: 1.5px solid #1a1a1a;
+      border: 1.5px solid #222238;
       border-radius: 2px;
       flex-shrink: 0;
       position: relative;
     }
     .checkbox-box.checked {
-      background-color: #1a1a1a;
+      background-color: #222238;
     }
     .checkbox-box.checked::after {
       content: '';
@@ -205,21 +205,27 @@ export function generateServicePDFHtml(data: any): string {
     .signature-box {
       flex: 1;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .signature-line {
-      border-bottom: 1px solid #1a1a1a;
+      width: 100%;
+      border-bottom: 1px solid #222238;
       margin-bottom: 6px;
-      margin-left: 20px;
-      margin-right: 20px;
     }
     .signature-label {
       font-size: 10px;
       color: #666;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     .signature-name {
       font-size: 11px;
       font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .signature-svg {
+      text-align: center;
     }
     .footer {
       padding: 6px 20px 8px 20px;
@@ -237,60 +243,60 @@ export function generateServicePDFHtml(data: any): string {
   <div class="content-wrapper">
     <div class="header">
       <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" style="max-height:40px;max-width:150px;object-fit:contain;" />` : ''}</div>
-      <div class="title">SERVİS TESLİM FORMU</div>
-      <div class="date-area">Tarih: ${escapeHtml(data.documentDate) || ''}</div>
+      <div class="title">${t("pdf.title")}</div>
+      <div class="date-area">${t("pdf.date")} ${escapeHtml(data.documentDate) || ''}</div>
     </div>
 
     <div class="two-column">
     <div class="section">
-      <div class="section-title">MÜŞTERİ BİLGİLERİ</div>
+      <div class="section-title">${t("pdf.customerInfo")}</div>
       <div class="info-list">
-        <div class="info-item"><span class="label">Müşteri Adı:</span> <span class="value">${escapeHtml(data.customerName) || ''}</span></div>
-        <div class="info-item"><span class="label">Adres:</span> <span class="value">${escapeHtml(data.serviceAddress) || ''}</span></div>
-        <div class="info-item"><span class="label">Telefon:</span> <span class="value">${escapeHtml(data.phone) || ''}</span></div>
-        <div class="info-item"><span class="label">E-posta:</span> <span class="value">${escapeHtml(data.email) || ''}</span></div>
-        <div class="info-item"><span class="label">Abone No:</span> <span class="value">${escapeHtml(data.subscriberNo) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.customerName")}</span> <span class="value">${escapeHtml(data.customerName) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.address")}</span> <span class="value">${escapeHtml(data.serviceAddress) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.phone")}</span> <span class="value">${escapeHtml(data.phone) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.email")}</span> <span class="value">${escapeHtml(data.email) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.subscriberNo")}</span> <span class="value">${escapeHtml(data.subscriberNo) || ''}</span></div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">SERVİS DETAYLARI</div>
+      <div class="section-title">${t("pdf.serviceDetails")}</div>
       <div class="info-list">
-        <div class="info-item"><span class="label">Sorumlu Personel:</span> <span class="value">${escapeHtml(data.technician) || ''}</span></div>
-        <div class="info-item"><span class="label">Başlama Saati:</span> <span class="value">${escapeHtml(data.startTime) || ''}</span></div>
-        <div class="info-item"><span class="label">Bitiş Saati:</span> <span class="value">${escapeHtml(data.endTime) || ''}</span></div>
-        <div class="info-item"><span class="label">Telefon Numarası:</span> <span class="value">${escapeHtml(data.phone) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.responsiblePersonnel")}</span> <span class="value">${escapeHtml(data.technician) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.startTime")}</span> <span class="value">${escapeHtml(data.startTime) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.endTime")}</span> <span class="value">${escapeHtml(data.endTime) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.phoneNumber")}</span> <span class="value">${escapeHtml(data.phone) || ''}</span></div>
       </div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">SERVİS HİZMETLERİ</div>
+    <div class="section-title">${t("pdf.serviceServices")}</div>
     <div class="checkbox-grid">
       ${serviceList.map(h => checkbox(data.services?.includes(h) || false, h)).join('')}
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">TEKNİK HİZMETLER</div>
+    <div class="section-title">${t("pdf.technicalServices")}</div>
     <div class="checkbox-grid">
-      ${technicalList.map(t => checkbox(data.technical?.includes(t) || false, t)).join('')}
+      ${technicalList.map(h => checkbox(data.technical?.includes(h) || false, h)).join('')}
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">DETAYLAR / NOTLAR</div>
+    <div class="section-title">${t("pdf.detailsNotes")}</div>
     <div class="details-content">
       ${escapeHtml(data.details || '')}
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">SERVİS BEDELİ</div>
+    <div class="section-title">${t("pdf.serviceFee")}</div>
     <div class="fee-content">
       ${data.fee && data.fee !== "0" && data.fee !== "0.00" ?
-        `Servis Bedeli: ₺${escapeHtml(data.fee)} + KDV` :
-        'Ücretsiz Servis'
+        t("pdf.serviceFeeLine", { amount: `₺${escapeHtml(data.fee)}` }) :
+        t("pdf.freeService")
       }
     </div>
   </div>
@@ -298,22 +304,22 @@ export function generateServicePDFHtml(data: any): string {
   <div class="bottom-fixed">
     <div class="signature-section">
       <div class="signature-box">
+        <div class="signature-label">${t("pdf.customerSignatureLabel")}</div>
         <div class="signature-line"></div>
-        <div class="signature-label">Müşteri Adı & Soyadı / İmza</div>
         <div class="signature-name">${escapeHtml(data.customerName || '')}</div>
-        ${data.signature ? `<div style="text-align:center;margin-bottom:4px;">${renderSignatureSvg(data.signature)}</div>` : ''}
+        ${data.signature ? `<div class="signature-svg">${renderSignatureSvg(data.signature)}</div>` : ''}
       </div>
       <div class="signature-box">
+        <div class="signature-label">${t("pdf.technicianSignatureLabel")}</div>
         <div class="signature-line"></div>
-        <div class="signature-label">Teknisyen Adı & Soyadı / İmza</div>
         <div class="signature-name">${escapeHtml(data.technician || '')}</div>
-        ${data.technicianSignature ? `<div style="text-align:center;margin-top:4px;">${renderSignatureSvg(data.technicianSignature)}</div>` : ''}
+        ${data.technicianSignature ? `<div class="signature-svg">${renderSignatureSvg(data.technicianSignature)}</div>` : ''}
       </div>
     </div>
 
     <div class="footer">
-      <div class="footer-text">1D GÜVENLİK VE İLETİŞİM SİSTEMLERİ TİCARET LTD. ŞTİ.</div>
-      <div class="footer-text">Goncalar Mah. Ali Alp Böke Cad. No: 150 C Karşıyaka - İZMİR</div>
+      <div class="footer-text">${t("pdf.companyNameLabel")}</div>
+      <div class="footer-text">${t("pdf.companyAddressLabel")}</div>
       <div class="footer-text">Tel: 0232 365 20 87 &nbsp;&nbsp; Gsm: 0 533 368 03 13</div>
     </div>
   </div>

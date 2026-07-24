@@ -10,7 +10,9 @@
     "seed": "ts-node src/seed.ts",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate",
+    "db:backup": "docker exec dashboard-postgres pg_dump -U postgres -d management_dashboard | gzip > backups/backup_$(date +%Y%m%d_%H%M%S).sql.gz",
+    "db:restore": "echo 'Kullanim: docker compose exec postgres sh /backups/restore.sh <dosya_adi>'"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",
@@ -18,7 +20,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^9.0.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -26,6 +29,7 @@
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.5",
+    "@types/nodemailer": "^8.0.1",
     "nodemon": "^3.1.9",
     "prisma": "^6.11.1",
     "ts-node": "^10.9.2",

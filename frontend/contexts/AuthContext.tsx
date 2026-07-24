@@ -8,7 +8,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => Promise<{ token: string; role: string; profileCompleted: boolean }>;
+  register: (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => Promise<{ token?: string; role?: string; profileCompleted?: boolean; requiresVerification?: boolean; email?: string; message?: string }>;
   logout: () => Promise<void>;
   completeCompanyProfile: (data: CompanyRequestDto) => Promise<any>;
 }
@@ -138,40 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = axiosResponse.data;
       console.log("✅ [AUTH] Register response:", JSON.stringify(res));
 
-      if (!res.token) {
-        console.log("🔴 [AUTH] Register response'da token YOK!");
-        throw new Error("Kayıt sonrası token alınamadı.");
+      if (res.requiresVerification) {
+        console.log("📧 [AUTH] Email doğrulama gerekli");
+        return res;
       }
-
-      const newUser: User = {
-        id: "",
-        name: data.name,
-        email: data.email,
-        role: (res.role as "ADMIN" | "USER") || "USER",
-        profileCompleted: res.profileCompleted ?? false,
-      };
-
-      try {
-        await AsyncStorage.setItem("token", res.token);
-        console.log("✅ [AUTH] Register - Token AsyncStorage'a yazıldı");
-
-        await AsyncStorage.setItem("user", JSON.stringify(newUser));
-        console.log("✅ [AUTH] Register - User AsyncStorage'a yazıldı");
-      } catch (storageError: any) {
-        console.log("🔴 [AUTH] Register - AsyncStorage yazma hatası:", storageError.message);
-        throw new Error("Oturum bilgileri kaydedilemedi: " + storageError.message);
-      }
-
-      const savedToken = await AsyncStorage.getItem("token");
-      console.log("🔍 [AUTH] Register - AsyncStorage'dan okunan token:", savedToken ? `${savedToken.substring(0, 30)}...` : "NULL");
-
-      if (!savedToken) {
-        console.log("🔴 [AUTH] Register - Token AsyncStorage'a yazılmamış!");
-        throw new Error("Token kaydedilemedi. Lütfen tekrar deneyin.");
-      }
-
-      setToken(savedToken);
-      setUser(newUser);
 
       console.log("✅ [AUTH] register() tamamlandı");
       return res;

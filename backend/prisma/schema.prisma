@@ -13,18 +13,21 @@ enum Role {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  name       String
-  email      String   @unique
-  password   String
-  phone      String   @unique
-  role       Role     @default(USER)
-  isActive   Boolean  @default(true)
-  inviteCode String
-  companyId  String?
-  signature  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  name                String
+  email               String    @unique
+  password            String
+  phone               String    @unique
+  role                Role      @default(USER)
+  isActive            Boolean   @default(true)
+  emailVerified       Boolean   @default(false)
+  verificationCode    String?
+  verificationExpires DateTime?
+  inviteCode          String
+  companyId           String?
+  signature           String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   company Company? @relation(fields: [companyId], references: [id])
 }

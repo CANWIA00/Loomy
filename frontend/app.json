@@ -1,34 +1,34 @@
 {
   "expo": {
-    "name": "Mira",
-    "slug": "mira",
+    "name": "Loomy",
+    "slug": "loomy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/loomy-dark.png",
     "userInterfaceStyle": "dark",
-    "scheme": "mira",
+    "scheme": "loomy",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A0A0A",
-        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#181828",
+        "foregroundImage": "./assets/loomy-dark.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/loomy-dark.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Mira, servis adresinizi belirlemek için konumunuzu kullanır.",
-          "locationWhenInUsePermission": "Mira, servis adresinizi belirlemek için konumunuzu kullanır."
+          "locationAlwaysAndWhenInUsePermission": "Loomy, servis adresinizi belirlemek için konumunuzu kullanır.",
+          "locationWhenInUsePermission": "Loomy, servis adresinizi belirlemek için konumunuzu kullanır."
         }
       ],
       "expo-sharing",

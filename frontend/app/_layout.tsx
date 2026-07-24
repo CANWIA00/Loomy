@@ -3,18 +3,31 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider } from "../contexts/AuthContext";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { LanguageProvider } from "../contexts/LanguageContext";
+
+function RootLayoutInner() {
+  const { colors, isDark } = useTheme();
+  return (
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bg }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </SafeAreaView>
+  );
+}
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <SafeAreaView className="flex-1 bg-[#0A0A0A]">
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </SafeAreaView>
-    </AuthProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <RootLayoutInner />
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

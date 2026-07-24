@@ -14,10 +14,14 @@ import {
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function CompleteCompanyProfileScreen() {
   const router = useRouter();
   const { completeCompanyProfile } = useAuth();
+  const { colors } = useTheme();
+  const { t } = useLanguage();
   const [logoUrl, setLogoUrl] = useState("https://picsum.photos/seed/company/200/200");
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -51,27 +55,27 @@ export default function CompleteCompanyProfileScreen() {
         logoUrl,
       });
 
-      console.log("✅ Complete Profile Success:", response);
-      console.log("🟢 Dashboard'a yönlendiriliyor...");
-
       router.replace("/(tabs)/dashboard");
     } catch (error: any) {
-      console.log("🔴 Complete Profile Error:", error);
-      const message = error.response?.data?.message || "Bir sorun oluştu. Lütfen tekrar deneyin.";
-      Alert.alert("Hata", message);
+      const message = error.response?.data?.message || t("cp.errorGeneric");
+      Alert.alert(t("common.error"), message);
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass =
-    "w-full h-11 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 text-white text-base";
-  const labelClass = "text-gray-400 text-xs font-medium mb-1";
+  const inputStyle = {
+    backgroundColor: colors.bgCard,
+    color: colors.text,
+    borderColor: colors.border,
+    borderWidth: 1,
+  };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-[#0A0A0A]"
+      className="flex-1"
+      style={{ backgroundColor: colors.bg }}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
@@ -80,58 +84,62 @@ export default function CompleteCompanyProfileScreen() {
         <View className="px-6 py-10">
           <View className="w-full max-w-sm mx-auto">
             <View className="items-center mb-8">
-              <View className="w-14 h-14 bg-[#3B82F6] rounded-2xl items-center justify-center mb-4">
+              <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: colors.primary }}>
                 <Text className="text-2xl font-bold text-white">M</Text>
               </View>
-              <Text className="text-2xl font-bold text-white tracking-tight">
-                Kurumsal Bilgileri Tamamlayın
+              <Text style={{ color: colors.text }} className="text-2xl font-bold tracking-tight">
+                {t("cp.title")}
               </Text>
-              <Text className="text-gray-500 text-sm mt-1.5 tracking-wide text-center">
-                Şirket bilgilerinizi girerek hesabınızı tamamlayın
+              <Text style={{ color: colors.textMuted }} className="text-sm mt-1.5 tracking-wide text-center">
+                {t("cp.subtitle")}
               </Text>
             </View>
 
             <View className="space-y-4">
               <View className="items-center">
-                <Text className={labelClass}>Logo</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">{t("cp.logo")}</Text>
                 <TouchableOpacity onPress={pickImage} className="mt-1">
                   <Image
                     source={{ uri: logoUrl }}
-                    className="w-20 h-20 rounded-xl bg-[#2A2A2A]"
+                    className="w-20 h-20 rounded-xl"
+                    style={{ backgroundColor: colors.bgInput }}
                     resizeMode="cover"
                   />
                 </TouchableOpacity>
-                <Text className="text-gray-500 text-xs mt-1.5">Logoya tıklayarak değiştirin</Text>
+                <Text style={{ color: colors.textMuted }} className="text-xs mt-1.5">{t("cp.logoHint")}</Text>
               </View>
 
               <View>
-                <Text className={labelClass}>Şirket Adı</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">{t("cp.companyName")}</Text>
                 <TextInput
-                  className={inputClass}
-                  placeholder="Şirket adı"
-                  placeholderTextColor="#555"
+                  className="w-full h-11 rounded-lg px-4 text-base"
+                  style={inputStyle}
+                  placeholder={t("cp.companyNamePlaceholder")}
+                  placeholderTextColor={colors.textMuted}
                   value={name}
                   onChangeText={setName}
                 />
               </View>
 
               <View>
-                <Text className={labelClass}>Adres</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">{t("cp.address")}</Text>
                 <TextInput
-                  className={inputClass}
-                  placeholder="Şirket adresi"
-                  placeholderTextColor="#555"
+                  className="w-full h-11 rounded-lg px-4 text-base"
+                  style={inputStyle}
+                  placeholder={t("cp.companyAddressPlaceholder")}
+                  placeholderTextColor={colors.textMuted}
                   value={address}
                   onChangeText={setAddress}
                 />
               </View>
 
               <View>
-                <Text className={labelClass}>Telefon</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">{t("cp.phone")}</Text>
                 <TextInput
-                  className={inputClass}
+                  className="w-full h-11 rounded-lg px-4 text-base"
+                  style={inputStyle}
                   placeholder="0555 123 45 67"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={colors.textMuted}
                   value={phone}
                   onChangeText={setPhone}
                   keyboardType="phone-pad"
@@ -139,11 +147,12 @@ export default function CompleteCompanyProfileScreen() {
               </View>
 
               <View>
-                <Text className={labelClass}>Vergi Numarası</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">{t("cp.taxNumber")}</Text>
                 <TextInput
-                  className={inputClass}
+                  className="w-full h-11 rounded-lg px-4 text-base"
+                  style={inputStyle}
                   placeholder="1234567890"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={colors.textMuted}
                   value={taxNumber}
                   onChangeText={setTaxNumber}
                   keyboardType="numeric"
@@ -151,11 +160,12 @@ export default function CompleteCompanyProfileScreen() {
               </View>
 
               <View>
-                <Text className={labelClass}>E-posta</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">{t("cp.email")}</Text>
                 <TextInput
-                  className={inputClass}
+                  className="w-full h-11 rounded-lg px-4 text-base"
+                  style={inputStyle}
                   placeholder="ornek@sirket.com"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={colors.textMuted}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -165,14 +175,15 @@ export default function CompleteCompanyProfileScreen() {
             </View>
 
             <TouchableOpacity
-              className="w-full h-12 bg-[#3B82F6] rounded-lg items-center justify-center mt-6 active:bg-[#2563EB]"
+              className="w-full h-12 rounded-lg items-center justify-center mt-6"
+              style={{ backgroundColor: colors.primary }}
               onPress={handleComplete}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className="text-white font-semibold text-base">Tamamla</Text>
+                 <Text className="text-white font-semibold text-base">{t("cp.complete")}</Text>
               )}
             </TouchableOpacity>
           </View>

@@ -6,6 +6,12 @@ export interface LoginResponse {
   profileCompleted: boolean;
 }
 
+export interface RegisterResponse {
+  requiresVerification: boolean;
+  email: string;
+  message: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -38,13 +44,22 @@ export const authApi = {
     apiClient.post<LoginResponse>("/auth/login", { email, password }),
 
   register: (data: RegisterData) =>
-    apiClient.post<LoginResponse>("/auth/register", data),
+    apiClient.post<RegisterResponse>("/auth/register", data),
+
+  verifyEmail: (email: string, code: string) =>
+    apiClient.post<LoginResponse>("/auth/verify-email", { email, code }),
+
+  resendVerification: (email: string) =>
+    apiClient.post("/auth/resend-verification", { email }),
 
   logout: () =>
     apiClient.post("/auth/logout"),
 
   validateToken: () =>
     apiClient.get<User>("/auth/validate"),
+
+  deleteAccount: () =>
+    apiClient.delete("/auth/account"),
 
   completeCompanyProfile: (data: CompanyRequestDto) =>
     apiClient.put("/profile/my-company", data),

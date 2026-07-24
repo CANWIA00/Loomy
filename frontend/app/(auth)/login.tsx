@@ -7,14 +7,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage, Lang } from "../../contexts/LanguageContext";
 import CustomAlert from "../../components/CustomAlert";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t, lang, setLanguage } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -29,11 +35,11 @@ export default function LoginScreen() {
     let hasError = false;
 
     if (!email.trim()) {
-      setEmailError("E-posta alanı boş olamaz.");
+      setEmailError(t("login.errorEmail"));
       hasError = true;
     }
     if (!password.trim()) {
-      setPasswordError("Şifre alanı boş olamaz.");
+      setPasswordError(t("login.errorPassword"));
       hasError = true;
     }
     if (hasError) return;
@@ -42,21 +48,26 @@ export default function LoginScreen() {
     try {
       const response = await login(email.trim(), password.trim());
 
-      console.log("🔑 Login response:", response);
-      console.log("📋 Role:", response?.role, "| profileCompleted:", response?.profileCompleted);
-
       if (response?.role === "ADMIN" && response?.profileCompleted === false) {
-        console.log("➡️ complete-cp-profile'a yönlendiriliyor (Admin - Profil tamamlanmamış)");
         router.replace("/(auth)/complete-cp-profile");
       } else {
-        console.log("➡️ dashboard'a yönlendiriliyor");
         router.replace("/(tabs)/dashboard");
       }
     } catch (error: any) {
-      console.log("Login error:", error?.message || error);
-      const message = error.response?.data?.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.";
+      const message = error.response?.data?.message || t("login.errorLogin");
+      const requiresVerification = error.response?.data?.requiresVerification;
+      const verificationEmail = error.response?.data?.email;
+
+      if (requiresVerification && verificationEmail) {
+        router.push({
+          pathname: "/(auth)/verify-email",
+          params: { email: verificationEmail },
+        });
+        return;
+      }
+
       setAlertType("error");
-      setAlertTitle("Hata");
+      setAlertTitle(t("login.error"));
       setAlertMessage(message);
       setAlertVisible(true);
     } finally {
@@ -68,31 +79,49 @@ export default function LoginScreen() {
     <>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 bg-[#0A0A0A]"
+        className="flex-1"
+        style={{ backgroundColor: colors.bg }}
       >
         <View className="flex-1 justify-center px-6">
           <View className="w-full max-w-sm mx-auto">
-            <View className="items-center mb-10">
-              <View className="w-14 h-14 bg-[#3B82F6] rounded-2xl items-center justify-center mb-4">
-                <Text className="text-2xl font-bold text-white">M</Text>
+            <View className="flex-row items-center justify-between mb-10">
+              <TouchableOpacity onPress={toggleTheme}>
+                <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={22} color={colors.primary} />
+              </TouchableOpacity>
+              <View className="items-center flex-1 mx-3">
+                <Image
+                  source={isDark ? require("../../assets/loomy-dark.png") : require("../../assets/loomy-light.png")}
+                  style={{ width: 88, height: 88 }}
+                  className="rounded-2xl mb-4"
+                  resizeMode="contain"
+                />
+                <Text style={{ color: colors.text }} className="text-2xl font-bold tracking-tight">
+                  Loomy
+                </Text>
+                <Text style={{ color: colors.textMuted }} className="text-sm mt-1.5 tracking-wide">
+                  {t("login.subtitle")}
+                </Text>
               </View>
-              <Text className="text-2xl font-bold text-white tracking-tight">
-                Mira
-              </Text>
-              <Text className="text-gray-500 text-sm mt-1.5 tracking-wide">
-                Müşteri İletişim Platformu
-              </Text>
+              <TouchableOpacity onPress={() => setLanguage(lang === "tr" ? "en" : "tr" as Lang)} style={{ backgroundColor: colors.bgCard2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
+                <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{lang === "tr" ? "EN" : "TR"}</Text>
+              </TouchableOpacity>
             </View>
 
             <View className="space-y-4">
               <View>
-                <Text className="text-gray-400 text-sm font-medium mb-1.5">
-                  E-posta
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-medium mb-1.5">
+                  {t("login.email")}
                 </Text>
                 <TextInput
-                  className={`w-full h-11 bg-[#1A1A1A] border rounded-lg px-4 text-white text-base ${emailError ? "border-red-500" : "border-[#2A2A2A]"}`}
+                  className="w-full h-11 rounded-lg px-4 text-base"
+                  style={{
+                    backgroundColor: colors.bgCard,
+                    color: colors.text,
+                    borderColor: emailError ? colors.danger : colors.border,
+                    borderWidth: 1,
+                  }}
                   placeholder="ornek@email.com"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={colors.textMuted}
                   value={email}
                   onChangeText={(text) => { setEmail(text); setEmailError(""); }}
                   keyboardType="email-address"
@@ -102,13 +131,19 @@ export default function LoginScreen() {
               </View>
 
               <View>
-                <Text className="text-gray-400 text-sm font-medium mb-1.5">
-                  Şifre
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-medium mb-1.5">
+                  {t("login.password")}
                 </Text>
                 <TextInput
-                  className={`w-full h-11 bg-[#1A1A1A] border rounded-lg px-4 text-white text-base ${passwordError ? "border-red-500" : "border-[#2A2A2A]"}`}
+                  className="w-full h-11 rounded-lg px-4 text-base"
+                  style={{
+                    backgroundColor: colors.bgCard,
+                    color: colors.text,
+                    borderColor: passwordError ? colors.danger : colors.border,
+                    borderWidth: 1,
+                  }}
                   placeholder="••••••••"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={colors.textMuted}
                   value={password}
                   onChangeText={(text) => { setPassword(text); setPasswordError(""); }}
                   secureTextEntry
@@ -117,12 +152,13 @@ export default function LoginScreen() {
               </View>
 
               <TouchableOpacity className="self-end">
-                <Text className="text-gray-500 text-sm">Şifremi Unuttum</Text>
+                <Text style={{ color: colors.textMuted }} className="text-sm">{t("login.forgotPassword")}</Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity
-              className="w-full h-12 bg-[#3B82F6] rounded-lg items-center justify-center mt-5 active:bg-[#2563EB]"
+              className="w-full h-12 rounded-lg items-center justify-center mt-5"
+              style={{ backgroundColor: colors.primary }}
               onPress={handleLogin}
               disabled={loading}
             >
@@ -130,15 +166,15 @@ export default function LoginScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text className="text-white font-semibold text-base">
-                  Giriş Yap
+                  {t("login.login")}
                 </Text>
               )}
             </TouchableOpacity>
 
             <View className="flex-row justify-center mt-8">
-              <Text className="text-gray-500">Hesabın yok mu? </Text>
+              <Text style={{ color: colors.textMuted }}>{t("login.noAccount")}</Text>
               <TouchableOpacity onPress={() => router.push("/register")}>
-                <Text className="text-[#3B82F6] font-semibold">Kayıt Ol</Text>
+                <Text style={{ color: colors.primary }} className="font-semibold">{t("login.register")}</Text>
               </TouchableOpacity>
             </View>
           </View>

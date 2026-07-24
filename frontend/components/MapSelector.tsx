@@ -2,6 +2,8 @@ import { useState } from "react";
 import { View, Text, TouchableOpacity, Modal, Alert, ActivityIndicator, Platform, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface MapSelectorProps {
   visible: boolean;
@@ -17,6 +19,8 @@ export default function MapSelector({ visible, onSelect, onClose }: MapSelectorP
 }
 
 function WebMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
+  const { t } = useLanguage();
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
 
   const handleCurrentLocation = async () => {
@@ -39,7 +43,7 @@ function WebMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
       onSelect(adres);
       onClose();
     } catch {
-      Alert.alert("Hata", "Konum alınamadı. Tarayıcı konum iznini kontrol edin.");
+      Alert.alert(t("common.error"), t("map.errorLocation"));
     } finally {
       setLoading(false);
     }
@@ -47,36 +51,36 @@ function WebMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-center items-center bg-black/40 backdrop-blur-sm">
-        <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-sm p-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-white text-lg font-bold">Adres Seç</Text>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+        <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, width: "91%", maxWidth: 384, padding: 24 }}>
+          <View className="flex-row justify-between items-center" style={{ marginBottom: 24 }}>
+            <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("map.selectAddress")}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#555" />
+              <Ionicons name="close" size={24} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-5 items-center mb-4"
+            style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 20, alignItems: "center", marginBottom: 16 }}
             onPress={handleCurrentLocation}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="large" color="#3B82F6" />
+              <ActivityIndicator size="large" color={colors.primary} />
             ) : (
-              <Ionicons name="location-outline" size={36} color="#3B82F6" />
+              <Ionicons name="location-outline" size={36} color={colors.primary} />
             )}
-            <Text className="text-white text-base font-semibold mt-3">Mevcut Konumumu Al</Text>
-            <Text className="text-gray-500 text-xs mt-1">GPS ile konumunuzu kullanın</Text>
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600", marginTop: 12 }}>{t("map.currentLocation")}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>{t("map.gpsHint")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-5 items-center"
+            style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 20, alignItems: "center" }}
             onPress={() => Linking.openURL("https://www.google.com/maps")}
           >
-            <Ionicons name="map-outline" size={36} color="#10B981" />
-            <Text className="text-white text-base font-semibold mt-3">Haritadan Seç</Text>
-            <Text className="text-gray-500 text-xs mt-1">Google Maps'te adres belirleyin</Text>
+            <Ionicons name="map-outline" size={36} color={colors.teal} />
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600", marginTop: 12 }}>{t("map.selectFromMap")}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>{t("map.googleMapsHint")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -85,6 +89,8 @@ function WebMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
 }
 
 function MobileMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
+  const { t } = useLanguage();
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
   const [showMap, setShowMap] = useState(false);
 
@@ -93,7 +99,7 @@ function MobileMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("İzin Gerekli", "Konum izni verilmedi.");
+        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
@@ -106,7 +112,7 @@ function MobileMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
       onSelect(adres);
       onClose();
     } catch {
-      Alert.alert("Hata", "Konum alınamadı. Lütfen GPS ve internet bağlantınızı kontrol edin.");
+      Alert.alert(t("common.error"), t("map.errorLocationMobile"));
     } finally {
       setLoading(false);
     }
@@ -127,15 +133,15 @@ function MobileMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
   if (showMap) {
     return (
       <Modal visible={visible} transparent animationType="slide" onRequestClose={() => setShowMap(false)}>
-        <View className="flex-1 justify-center items-center bg-black/40 backdrop-blur-sm">
-          <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-lg max-h-[80%] p-4">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-white text-lg font-bold">Haritadan Seç</Text>
+        <View className="flex-1 justify-center items-center" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+          <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, width: "91%", maxWidth: 448, maxHeight: "80%", padding: 16 }}>
+            <View className="flex-row justify-between items-center" style={{ marginBottom: 16 }}>
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("map.selectFromMap")}</Text>
               <TouchableOpacity onPress={() => setShowMap(false)}>
-                <Ionicons name="close" size={24} color="#555" />
+                <Ionicons name="close" size={24} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
-            <View className="flex-1 rounded-xl overflow-hidden">
+            <View className="flex-1" style={{ borderRadius: 12, overflow: "hidden" }}>
               <MapView onSelect={handleMapPress} />
             </View>
           </View>
@@ -146,36 +152,36 @@ function MobileMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-center items-center bg-black/40 backdrop-blur-sm">
-        <View className="bg-[#1A1A1A] rounded-2xl w-11/12 max-w-sm p-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-white text-lg font-bold">Adres Seç</Text>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+        <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, width: "91%", maxWidth: 384, padding: 24 }}>
+          <View className="flex-row justify-between items-center" style={{ marginBottom: 24 }}>
+            <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("map.selectAddress")}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#555" />
+              <Ionicons name="close" size={24} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-5 items-center mb-4"
+            style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 20, alignItems: "center", marginBottom: 16 }}
             onPress={handleCurrentLocation}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="large" color="#3B82F6" />
+              <ActivityIndicator size="large" color={colors.primary} />
             ) : (
-              <Ionicons name="location-outline" size={36} color="#3B82F6" />
+              <Ionicons name="location-outline" size={36} color={colors.primary} />
             )}
-            <Text className="text-white text-base font-semibold mt-3">Mevcut Konumumu Al</Text>
-            <Text className="text-gray-500 text-xs mt-1">GPS ile konumunuzu kullanın</Text>
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600", marginTop: 12 }}>{t("map.currentLocation")}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>{t("map.gpsHint")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-5 items-center"
+            style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 20, alignItems: "center" }}
             onPress={() => setShowMap(true)}
           >
-            <Ionicons name="map-outline" size={36} color="#10B981" />
-            <Text className="text-white text-base font-semibold mt-3">Haritadan Seç</Text>
-            <Text className="text-gray-500 text-xs mt-1">Harita üzerinde nokta belirleyin</Text>
+            <Ionicons name="map-outline" size={36} color={colors.teal} />
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600", marginTop: 12 }}>{t("map.selectFromMap")}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>{t("map.mapHint")}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,4 +1,6 @@
 import { Modal, View, Text, TouchableOpacity } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 type CustomAlertProps = {
   visible: boolean;
@@ -12,60 +14,60 @@ type CustomAlertProps = {
 };
 
 export default function CustomAlert({ visible, type, title, message, onClose, onConfirm, confirmText, confirmColor }: CustomAlertProps) {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
   const isError = type === "error";
   const isConfirm = type === "confirm";
 
+  const iconBgColor = isError ? colors.danger + "33" : isConfirm ? colors.warning + "33" : colors.success + "33";
+  const titleColor = isError ? colors.danger : isConfirm ? colors.warning : colors.success;
+
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View className="flex-1 bg-black/60 items-center justify-center px-6">
-        <View className="bg-[#1A1A1A] rounded-2xl p-6 w-full max-w-sm items-center border border-[#2A2A2A]">
+      <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+        <View className="rounded-2xl p-6 w-full max-w-sm items-center" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}>
           <View
-            className={`w-16 h-16 rounded-full items-center justify-center mb-4 ${
-              isError ? "bg-red-500/20" : isConfirm ? "bg-[#F59E0B]/20" : "bg-green-500/20"
-            }`}
+            className="w-16 h-16 rounded-full items-center justify-center mb-4"
+            style={{ backgroundColor: iconBgColor }}
           >
             <Text className="text-3xl">{isError ? "🚫" : isConfirm ? "⚠️" : "✅"}</Text>
           </View>
 
-          <Text
-            className={`text-lg font-bold mb-2 ${
-              isError ? "text-red-500" : isConfirm ? "text-[#F59E0B]" : "text-green-500"
-            }`}
-          >
+          <Text style={{ color: titleColor }} className="text-lg font-bold mb-2">
             {title}
           </Text>
 
-          <Text className="text-gray-400 text-sm text-center mb-6 leading-5">
+          <Text style={{ color: colors.textSecondary }} className="text-sm text-center mb-6 leading-5">
             {message}
           </Text>
 
           {isConfirm ? (
             <View className="flex-row gap-3 w-full">
               <TouchableOpacity
-                className="flex-1 h-11 bg-[#2A2A2A] rounded-lg items-center justify-center"
+                className="flex-1 h-11 rounded-lg items-center justify-center"
+                style={{ backgroundColor: colors.bgInput }}
                 onPress={onClose}
                 activeOpacity={0.8}
               >
-                <Text className="text-gray-300 font-semibold text-base">İptal</Text>
+                <Text style={{ color: colors.textSecondary }} className="font-semibold text-base">{t("common.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 h-11 rounded-lg items-center justify-center"
-                style={{ backgroundColor: confirmColor || "#3B82F6" }}
+                style={{ backgroundColor: confirmColor || colors.primary }}
                 onPress={() => { onClose(); onConfirm?.(); }}
                 activeOpacity={0.8}
               >
-                <Text className="text-white font-semibold text-base">{confirmText || "Onayla"}</Text>
+                <Text style={{ color: "white" }} className="font-semibold text-base">{confirmText || t("common.confirm")}</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <TouchableOpacity
-              className={`w-full h-11 rounded-lg items-center justify-center ${
-                isError ? "bg-red-500" : "bg-[#3B82F6]"
-              }`}
+              className="w-full h-11 rounded-lg items-center justify-center"
+              style={{ backgroundColor: isError ? colors.danger : colors.primary }}
               onPress={onClose}
               activeOpacity={0.8}
             >
-              <Text className="text-white font-semibold text-base">Tamam</Text>
+              <Text style={{ color: "white" }} className="font-semibold text-base">{t("common.ok")}</Text>
             </TouchableOpacity>
           )}
         </View>

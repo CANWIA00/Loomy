@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import { Redirect, useRouter } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../contexts/LanguageContext";
 import { View, ActivityIndicator, Text } from "react-native";
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const hasNavigated = useRef(false);
 
@@ -29,16 +31,16 @@ export default function Index() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#0A0A0A] items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-500 text-sm mt-3">Yükleniyor...</Text>
+      <View className="flex-1 bg-[#181828] items-center justify-center">
+        <ActivityIndicator size="large" color="#6080FF" />
+        <Text className="text-gray-500 text-sm mt-3">{t("common.loading")}</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#0A0A0A] items-center justify-center">
-      <ActivityIndicator size="large" color="#3B82F6" />
+    <View className="flex-1 bg-[#181828] items-center justify-center">
+      <ActivityIndicator size="large" color="#6080FF" />
     </View>
   );
 }

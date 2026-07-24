@@ -8,14 +8,20 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage, Lang } from "../../contexts/LanguageContext";
 import CustomAlert from "../../components/CustomAlert";
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t, lang, setLanguage } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -38,28 +44,28 @@ export default function RegisterScreen() {
     let hasError = false;
 
     if (!inviteCode.trim()) {
-      setInviteCodeError("Davet kodu boş olamaz.");
+      setInviteCodeError(t("reg.errorInviteCode"));
       hasError = true;
     }
     if (!name.trim()) {
-      setNameError("Ad Soyad alanı boş olamaz.");
+      setNameError(t("reg.errorName"));
       hasError = true;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError("Geçerli bir e-posta adresi girin.");
+      setEmailError(t("reg.errorEmail"));
       hasError = true;
     }
     if (phone.replace(/\s/g, "").length < 10) {
-      setPhoneError("Telefon en az 10 haneli olmalıdır.");
+      setPhoneError(t("reg.errorPhone"));
       hasError = true;
     }
     if (password.length < 6) {
-      setPasswordError("Şifre en az 6 karakter olmalıdır.");
+      setPasswordError(t("reg.errorPassword"));
       hasError = true;
     }
     if (password !== confirmPassword) {
-      setConfirmPasswordError("Şifreler eşleşmiyor.");
+      setConfirmPasswordError(t("reg.errorPasswordMatch"));
       hasError = true;
     }
     if (hasError) return;
@@ -74,20 +80,20 @@ export default function RegisterScreen() {
         inviteCode: inviteCode.trim(),
       });
 
-      console.log("🔑 Register response:", response);
-      console.log("📋 Role:", response?.role, "| profileCompleted:", response?.profileCompleted);
-
-      if (response?.role === "ADMIN" && response?.profileCompleted === false) {
-        console.log("➡️ complete-cp-profile'a yönlendiriliyor (Admin - Profil tamamlanmamış)");
+      if (response?.requiresVerification) {
+        router.replace({
+          pathname: "/(auth)/verify-email",
+          params: { email: email.trim() },
+        });
+      } else if (response?.role === "ADMIN" && response?.profileCompleted === false) {
         router.replace("/(auth)/complete-cp-profile");
       } else {
-        console.log("➡️ dashboard'a yönlendiriliyor");
         router.replace("/(tabs)/dashboard");
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || error?.message || "Kayıt başarısız. Lütfen tekrar deneyin.";
+      const message = error.response?.data?.message || error?.message || t("reg.errorRegister");
       setAlertType("error");
-      setAlertTitle("Hata");
+      setAlertTitle(t("common.error"));
       setAlertMessage(message);
       setAlertVisible(true);
     } finally {
@@ -95,14 +101,19 @@ export default function RegisterScreen() {
     }
   };
 
-  const getInputClass = (hasError: boolean) =>
-    `w-full h-11 bg-[#1A1A1A] border rounded-lg px-4 text-white text-base ${hasError ? "border-red-500" : "border-[#2A2A2A]"}`;
+  const getInputStyle = (hasError: boolean) => ({
+    backgroundColor: colors.bgCard,
+    color: colors.text,
+    borderColor: hasError ? colors.danger : colors.border,
+    borderWidth: 1,
+  });
 
   return (
     <>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 bg-[#0A0A0A]"
+        className="flex-1"
+        style={{ backgroundColor: colors.bg }}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
@@ -110,47 +121,60 @@ export default function RegisterScreen() {
         >
           <View className="px-6 py-10">
             <View className="w-full max-w-sm mx-auto">
-              <View className="items-center mb-8">
-                <View className="w-14 h-14 bg-[#3B82F6] rounded-2xl items-center justify-center mb-4">
-                  <Text className="text-2xl font-bold text-white">M</Text>
+              <View className="flex-row items-center justify-between mb-8">
+                <TouchableOpacity onPress={toggleTheme}>
+                  <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={22} color={colors.primary} />
+                </TouchableOpacity>
+                <View className="items-center flex-1 mx-3">
+                  <Image
+                    source={isDark ? require("../../assets/loomy-dark.png") : require("../../assets/loomy-light.png")}
+                    style={{ width: 88, height: 88 }}
+                    className="rounded-2xl mb-4"
+                    resizeMode="contain"
+                  />
+                  <Text style={{ color: colors.text }} className="text-2xl font-bold tracking-tight">
+                    Loomy
+                  </Text>
+                  <Text style={{ color: colors.textMuted }} className="text-sm mt-1.5 tracking-wide">
+                    {t("reg.title")}
+                  </Text>
                 </View>
-                <Text className="text-2xl font-bold text-white tracking-tight">
-                  Mira
-                </Text>
-                <Text className="text-gray-500 text-sm mt-1.5 tracking-wide">
-                  Yeni hesap oluşturun
-                </Text>
+                <TouchableOpacity onPress={() => setLanguage(lang === "tr" ? "en" : "tr" as Lang)} style={{ backgroundColor: colors.bgCard2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
+                  <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{lang === "tr" ? "EN" : "TR"}</Text>
+                </TouchableOpacity>
               </View>
 
               <View className="space-y-4">
                 <View>
-                  <Text className="text-gray-400 text-xs font-medium mb-1">
-                    Davet Kodu
+                  <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">
+                    {t("reg.inviteCode")}
                   </Text>
                   <TextInput
-                    className={getInputClass(!!inviteCodeError)}
-                    placeholder="Admin veya davet kodunu girin"
-                    placeholderTextColor="#555"
+                    className="w-full h-11 rounded-lg px-4 text-base"
+                    style={getInputStyle(!!inviteCodeError)}
+                    placeholder={t("reg.inviteCodePlaceholder")}
+                    placeholderTextColor={colors.textMuted}
                     value={inviteCode}
                     onChangeText={(text) => { setInviteCode(text); setInviteCodeError(""); }}
                     secureTextEntry
                   />
                   {inviteCodeError ? <Text className="text-red-500 text-xs mt-1 ml-1">{inviteCodeError}</Text> : null}
                   {!inviteCodeError && (
-                    <Text className="text-gray-500 text-xs mt-1.5 ml-1">
-                      "ADMIN-XXX" ile admin, "INVITE-XXX" ile çalışan kaydı yapabilirsiniz.
+                    <Text style={{ color: colors.textMuted }} className="text-xs mt-1.5 ml-1">
+                      {t("reg.inviteHint")}
                     </Text>
                   )}
                 </View>
 
                 <View>
-                  <Text className="text-gray-400 text-xs font-medium mb-1">
-                    Ad Soyad
+                  <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">
+                    {t("reg.fullName")}
                   </Text>
                   <TextInput
-                    className={getInputClass(!!nameError)}
-                    placeholder="Ad Soyad"
-                    placeholderTextColor="#555"
+                    className="w-full h-11 rounded-lg px-4 text-base"
+                    style={getInputStyle(!!nameError)}
+                    placeholder={t("reg.fullName")}
+                    placeholderTextColor={colors.textMuted}
                     value={name}
                     onChangeText={(text) => { setName(text); setNameError(""); }}
                   />
@@ -158,13 +182,14 @@ export default function RegisterScreen() {
                 </View>
 
                 <View>
-                  <Text className="text-gray-400 text-xs font-medium mb-1">
-                    E-posta
+                  <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">
+                    {t("reg.email")}
                   </Text>
                   <TextInput
-                    className={getInputClass(!!emailError)}
-                    placeholder="ornek@email.com"
-                    placeholderTextColor="#555"
+                    className="w-full h-11 rounded-lg px-4 text-base"
+                    style={getInputStyle(!!emailError)}
+                    placeholder={t("reg.email")}
+                    placeholderTextColor={colors.textMuted}
                     value={email}
                     onChangeText={(text) => { setEmail(text); setEmailError(""); }}
                     keyboardType="email-address"
@@ -174,28 +199,31 @@ export default function RegisterScreen() {
                 </View>
 
                 <View>
-                  <Text className="text-gray-400 text-xs font-medium mb-1">
-                    Telefon
+                  <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">
+                    {t("reg.phone")}
                   </Text>
                   <TextInput
-                    className={getInputClass(!!phoneError)}
-                    placeholder="555-123-4567"
-                    placeholderTextColor="#555"
+                    className="w-full h-11 rounded-lg px-4 text-base"
+                    style={getInputStyle(!!phoneError)}
+                    placeholder={t("reg.phone")}
+                    placeholderTextColor={colors.textMuted}
                     value={phone}
-                    onChangeText={(text) => { setPhone(text); setPhoneError(""); }}
+                    onChangeText={(text) => { setPhone(text.replace(/[^0-9]/g, "")); setPhoneError(""); }}
                     keyboardType="phone-pad"
+                    maxLength={15}
                   />
                   {phoneError ? <Text className="text-red-500 text-xs mt-1 ml-1">{phoneError}</Text> : null}
                 </View>
 
                 <View>
-                  <Text className="text-gray-400 text-xs font-medium mb-1">
-                    Şifre
+                  <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">
+                    {t("reg.password")}
                   </Text>
                   <TextInput
-                    className={getInputClass(!!passwordError)}
+                    className="w-full h-11 rounded-lg px-4 text-base"
+                    style={getInputStyle(!!passwordError)}
                     placeholder="••••••••"
-                    placeholderTextColor="#555"
+                    placeholderTextColor={colors.textMuted}
                     value={password}
                     onChangeText={(text) => { setPassword(text); setPasswordError(""); }}
                     secureTextEntry
@@ -204,13 +232,14 @@ export default function RegisterScreen() {
                 </View>
 
                 <View>
-                  <Text className="text-gray-400 text-xs font-medium mb-1">
-                    Şifre Tekrar
+                  <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mb-1">
+                    {t("reg.confirmPassword")}
                   </Text>
                   <TextInput
-                    className={getInputClass(!!confirmPasswordError)}
-                    placeholder="••••••••"
-                    placeholderTextColor="#555"
+                    className="w-full h-11 rounded-lg px-4 text-base"
+                    style={getInputStyle(!!confirmPasswordError)}
+                    placeholder={t("reg.confirmPassword")}
+                    placeholderTextColor={colors.textMuted}
                     value={confirmPassword}
                     onChangeText={(text) => { setConfirmPassword(text); setConfirmPasswordError(""); }}
                     secureTextEntry
@@ -221,21 +250,22 @@ export default function RegisterScreen() {
               </View>
 
               <TouchableOpacity
-                className="w-full h-12 bg-[#3B82F6] rounded-lg items-center justify-center mt-6 active:bg-[#2563EB]"
+                className="w-full h-12 rounded-lg items-center justify-center mt-6"
+                style={{ backgroundColor: colors.primary }}
                 onPress={handleRegister}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text className="text-white font-semibold text-base">Kaydol</Text>
+                   <Text className="text-white font-semibold text-base">{t("reg.register")}</Text>
                 )}
               </TouchableOpacity>
 
               <View className="flex-row justify-center mt-8">
-                <Text className="text-gray-500">Zaten hesabınız var mı? </Text>
+                <Text style={{ color: colors.textMuted }}>{t("reg.hasAccount")}</Text>
                 <TouchableOpacity onPress={() => router.replace("/login")}>
-                  <Text className="text-[#3B82F6] font-medium">Giriş Yap</Text>
+                  <Text style={{ color: colors.primary }} className="font-medium">{t("reg.login")}</Text>
                 </TouchableOpacity>
               </View>
             </View>

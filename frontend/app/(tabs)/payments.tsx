@@ -4,10 +4,13 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { paymentApi, PaymentRecord, PaymentSummary } from "../../api/payments";
 import CustomAlert from "../../components/CustomAlert";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 function AnimatedBar({ percentage, color }: { percentage: number; color: string }) {
+  const { colors, isDark, toggleTheme } = useTheme();
   return (
-    <View className="bg-[#2A2A2A] rounded-full h-2 overflow-hidden">
+    <View style={{ backgroundColor: colors.bgInput }} className="rounded-full h-2 overflow-hidden">
       <View
         className="h-full rounded-full"
         style={{
@@ -20,6 +23,8 @@ function AnimatedBar({ percentage, color }: { percentage: number; color: string 
 }
 
 export default function PaymentsScreen() {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t, lang, setLanguage } = useLanguage();
   const [records, setRecords] = useState<PaymentRecord[]>([]);
   const [summary, setSummary] = useState<PaymentSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,12 +32,13 @@ export default function PaymentsScreen() {
   const [statusFilter, setStatusFilter] = useState<"all" | "odendi" | "bekliyor">("all");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [listPage, setListPage] = useState(0);
   const [toggleAlert, setToggleAlert] = useState<{ visible: boolean; record: PaymentRecord | null }>({ visible: false, record: null });
 
   const statusOptions = [
-    { label: "Tüm Durumlar", value: "all" },
-    { label: "Ödendi", value: "odendi" },
-    { label: "Bekliyor", value: "bekliyor" },
+    { label: t("pay.allStatus"), value: "all" },
+    { label: t("pay.paid"), value: "odendi" },
+    { label: t("pay.pending"), value: "bekliyor" },
   ];
 
   const fetchData = useCallback(async () => {
@@ -45,7 +51,7 @@ export default function PaymentsScreen() {
       setRecords(paymentsRes.data.content);
       setSummary(summaryRes.data);
     } catch {
-      Alert.alert("Hata", "Ödeme verileri yüklenemedi.");
+      Alert.alert(t("common.error"), t("pay.errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -54,6 +60,10 @@ export default function PaymentsScreen() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    setListPage(0);
+  }, [searchQuery, timeFilter, statusFilter]);
 
   const parseDate = (tarih: string): Date => {
     const sep = tarih.includes(".") ? "." : "/";
@@ -100,7 +110,7 @@ export default function PaymentsScreen() {
       const summaryRes = await paymentApi.getSummary();
       setSummary(summaryRes.data);
     } catch {
-      Alert.alert("Hata", "Ödeme durumu güncellenemedi.");
+      Alert.alert(t("common.error"), t("pay.errorUpdate"));
     }
   };
 
@@ -108,41 +118,53 @@ export default function PaymentsScreen() {
     return `₺${amount.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   };
 
+  const LIST_SIZE = 10;
+  const listTotalPages = Math.ceil(filteredServices.length / LIST_SIZE);
+  const pagedServices = filteredServices.slice(listPage * LIST_SIZE, (listPage + 1) * LIST_SIZE);
+
   if (loading) {
     return (
-      <View className="flex-1 bg-[#0A0A0A] items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-400 text-sm mt-3">Yükleniyor...</Text>
+      <View style={{ backgroundColor: colors.bg }} className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.textSecondary }} className="text-sm mt-3">{t("pay.loading")}</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-[#0A0A0A]" indicatorStyle="white">
+    <ScrollView style={{ backgroundColor: colors.bg }} className="flex-1" indicatorStyle={colors.indicatorBg}>
       <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
         <View className="flex-row items-center justify-between mb-1">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back-outline" size={24} color="#3B82F6" />
+              <Ionicons name="arrow-back-outline" size={24} color={colors.primary} />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-white tracking-tight">
-              Ödeme Yönetimi
+            <Text style={{ color: colors.text }} className="text-2xl font-bold tracking-tight">
+              {t("pay.title")}
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/dashboard")}>
-            <Ionicons name="home-outline" size={24} color="#3B82F6" />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity onPress={() => setLanguage(lang === "tr" ? "en" : "tr")} style={{ backgroundColor: colors.bgCard2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
+              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{lang === "tr" ? "EN" : "TR"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleTheme}>
+              <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={22} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/dashboard")}>
+              <Ionicons name="home-outline" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
-        <Text className="text-gray-500 text-sm mb-5">
-          Ödemelerinizi görüntüleyin ve yönetin
+        <Text style={{ color: colors.textMuted }} className="text-sm mb-5">
+          {t("pay.subtitle")}
         </Text>
 
-        <View className="bg-[#1A1A1A] rounded-2xl p-4 mb-4">
+        <View style={{ backgroundColor: colors.bgCard }} className="rounded-2xl p-4 mb-4">
           <View className="flex-row items-center mb-4">
-            <View className="w-10 h-10 bg-[#F59E0B]/10 rounded-xl items-center justify-center">
-              <Ionicons name="card" size={20} color="#F59E0B" />
+            <View style={{ backgroundColor: colors.warning + '15' }} className="w-10 h-10 rounded-xl items-center justify-center">
+              <Ionicons name="card" size={20} color={colors.warning} />
             </View>
-            <Text className="text-white text-lg font-bold ml-3">ÖDEME DURUMU</Text>
+            <Text style={{ color: colors.text }} className="text-lg font-bold ml-3">{t("pay.status")}</Text>
           </View>
 
           <View className="flex-col gap-3">
@@ -157,64 +179,65 @@ export default function PaymentsScreen() {
                 <>
                   <View className="mb-2">
                     <View className="flex-row items-center justify-between mb-1">
-                      <Text className="text-gray-400 text-xs font-medium">Alınan Ödeme</Text>
-                      <Text className="text-white text-xs font-bold">{formatAmount(paid)}</Text>
+                      <Text style={{ color: colors.textSecondary }} className="text-xs font-medium">{t("pay.receivedPayment")}</Text>
+                      <Text style={{ color: colors.primary }} className="text-xs font-bold">{formatAmount(paid)}</Text>
                     </View>
-                    <AnimatedBar percentage={paidPct} color="#3B82F6" />
+                    <AnimatedBar percentage={paidPct} color={colors.primary} />
                   </View>
 
                   <View className="mb-2">
                     <View className="flex-row items-center justify-between mb-1">
-                      <Text className="text-gray-400 text-xs font-medium">Bekleyen Ödeme</Text>
-                      <Text className="text-[#F59E0B] text-xs font-bold">{formatAmount(pending)}</Text>
+                      <Text style={{ color: colors.textSecondary }} className="text-xs font-medium">{t("pay.pendingPayment")}</Text>
+                      <Text style={{ color: colors.warning }} className="text-xs font-bold">{formatAmount(pending)}</Text>
                     </View>
-                    <AnimatedBar percentage={pendingPct} color="#F59E0B" />
+                    <AnimatedBar percentage={pendingPct} color={colors.warning} />
                   </View>
 
                   <View className="mb-2">
                     <View className="flex-row items-center justify-between mb-1">
-                      <Text className="text-gray-400 text-xs font-medium">Tahmini Toplam Ödeme</Text>
-                      <Text className="text-[#22C55E] text-xs font-bold">{formatAmount(total)}</Text>
+                      <Text style={{ color: colors.textSecondary }} className="text-xs font-medium">{t("pay.estimatedTotal")}</Text>
+                      <Text style={{ color: colors.success }} className="text-xs font-bold">{formatAmount(total)}</Text>
                     </View>
-                    <AnimatedBar percentage={100} color="#22C55E" />
+                    <AnimatedBar percentage={100} color={colors.success} />
                   </View>
                 </>
               );
             })()}
 
-            <View className="mt-2 pt-2 border-t border-[#2A2A2A] gap-1.5">
+            <View style={{ borderColor: colors.border }} className="mt-2 pt-2 border-t gap-1.5">
               <View className="flex-row items-center justify-between">
-                <Text className="text-gray-300 text-sm">Alınan Toplam ({summary?.paidCount || 0})</Text>
-                <Text className="text-white text-base font-bold">{formatAmount(summary?.paidTotal || 0)}</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-sm">{t("pay.receivedTotal")} ({summary?.paidCount || 0})</Text>
+                <Text style={{ color: colors.primary }} className="text-base font-bold">{formatAmount(summary?.paidTotal || 0)}</Text>
               </View>
               <View className="flex-row items-center justify-between">
-                <Text className="text-gray-300 text-sm">Bekleyen Toplam ({summary?.pendingCount || 0})</Text>
-                <Text className="text-[#F59E0B] text-base font-bold">{formatAmount(summary?.pendingTotal || 0)}</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-sm">{t("pay.pendingTotal")} ({summary?.pendingCount || 0})</Text>
+                <Text style={{ color: colors.warning }} className="text-base font-bold">{formatAmount(summary?.pendingTotal || 0)}</Text>
               </View>
               <View className="flex-row items-center justify-between pt-1">
-                <Text className="text-gray-300 text-sm">Tahmini Kasa</Text>
-                <Text className="text-[#22C55E] text-lg font-bold">{formatAmount(summary?.total || 0)}</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-sm">{t("pay.estimatedCash")}</Text>
+                <Text style={{ color: colors.success }} className="text-lg font-bold">{formatAmount(summary?.total || 0)}</Text>
               </View>
             </View>
           </View>
         </View>
 
-        <View className="bg-[#111] rounded-xl border border-[#2A2A2A] p-3 flex-1 min-h-[500px]">
-          <Text className="text-white text-xs font-bold mb-3">SON SERVİSLER</Text>
+        <View style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} className="rounded-xl border p-3 flex-1 min-h-[500px]">
+          <Text style={{ color: colors.text }} className="text-xs font-bold mb-3">{t("pay.list")}</Text>
 
           <View className="flex-row flex-wrap gap-2 mb-3 items-center">
-            <View className="flex-row items-center h-8 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-2">
-              <Ionicons name="search-outline" size={14} color="#6B7280" />
+            <View style={{ backgroundColor: colors.bgCard, borderColor: colors.border }} className="flex-row items-center h-8 rounded-lg px-2">
+              <Ionicons name="search-outline" size={14} color={colors.textMuted} />
               <TextInput
-                className="w-28 text-white text-xs ml-1.5"
-                placeholder="Ara..."
-                placeholderTextColor="#6B7280"
+                style={{ color: colors.text }}
+                className="w-28 text-xs ml-1.5"
+                placeholder={t("pay.search")}
+                placeholderTextColor={colors.textMuted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchQuery("")}>
-                  <Ionicons name="close-circle" size={14} color="#6B7280" />
+                  <Ionicons name="close-circle" size={14} color={colors.textMuted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -223,30 +246,33 @@ export default function PaymentsScreen() {
               <TouchableOpacity
                 key={f}
                 className={`px-3 h-8 rounded-lg items-center justify-center ${
-                  timeFilter === f ? "bg-[#3B82F6]" : "bg-[#1A1A1A] border border-[#2A2A2A]"
+                  timeFilter === f ? "" : "border"
                 }`}
+                style={timeFilter === f ? { backgroundColor: colors.primary } : { backgroundColor: colors.bgCard, borderColor: colors.border }}
                 onPress={() => setTimeFilter(f)}
               >
-                <Text className={`text-xs font-medium ${timeFilter === f ? "text-white" : "text-gray-400"}`}>
-                  {f === "all" ? "Tümü" : f === "gun" ? "Bu Gün" : f === "hafta" ? "Bu Hafta" : "Bu Ay"}
+                <Text className="text-xs font-medium" style={{ color: timeFilter === f ? "white" : colors.textSecondary }}>
+                  {f === "all" ? t("pay.all") : f === "gun" ? t("pay.today") : f === "hafta" ? t("pay.thisWeek") : t("pay.thisMonth")}
                 </Text>
               </TouchableOpacity>
             ))}
 
             <View className="relative">
               <TouchableOpacity
-                className="flex-row items-center h-8 px-3 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg"
+                style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
+                className="flex-row items-center h-8 px-3 rounded-lg"
                 onPress={() => setStatusDropdownOpen(true)}
               >
-                <Text className="text-xs text-white mr-2">
+                <Text style={{ color: colors.text }} className="text-xs mr-2">
                   {statusOptions.find((s) => s.value === statusFilter)?.label}
                 </Text>
-                <Ionicons name="chevron-down" size={14} color="#6B7280" />
+                <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity
-              className="h-8 w-8 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
+              className="h-8 w-8 rounded-lg items-center justify-center"
               onPress={() => {
                 setTimeFilter("all");
                 setStatusFilter("all");
@@ -254,7 +280,7 @@ export default function PaymentsScreen() {
                 fetchData();
               }}
             >
-              <Ionicons name="refresh-outline" size={18} color="#6B7280" />
+              <Ionicons name="refresh-outline" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -264,65 +290,92 @@ export default function PaymentsScreen() {
               activeOpacity={1}
               onPress={() => setStatusDropdownOpen(false)}
             >
-              <View className="bg-[#1A1A1A] rounded-2xl w-64 p-4">
-                <Text className="text-white text-lg font-bold mb-3">Durum Seç</Text>
+              <View style={{ backgroundColor: colors.bgCard }} className="rounded-2xl w-64 p-4">
+                <Text style={{ color: colors.text }} className="text-lg font-bold mb-3">{t("pay.selectStatus")}</Text>
                 {statusOptions.map((s) => (
                   <TouchableOpacity
                     key={s.value}
-                    className={`px-3 py-3 border-b border-[#2A2A2A] ${statusFilter === s.value ? "bg-[#3B82F6]/10" : ""}`}
+                    className="px-3 py-3 border-b"
+                    style={{ borderColor: colors.border, backgroundColor: statusFilter === s.value ? colors.primary + '15' : 'transparent' }}
                     onPress={() => {
                       setStatusFilter(s.value as any);
                       setStatusDropdownOpen(false);
                     }}
                   >
-                    <Text className={`text-sm ${statusFilter === s.value ? "text-[#3B82F6] font-semibold" : "text-white"}`}>
+                    <Text className="text-sm" style={{ color: statusFilter === s.value ? colors.primary : colors.text }}>
                       {s.label}
                     </Text>
                   </TouchableOpacity>
                 ))}
                 <TouchableOpacity
-                  className="mt-3 h-10 bg-[#2A2A2A] rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
+                  className="mt-3 h-10 rounded-lg items-center justify-center"
                   onPress={() => setStatusDropdownOpen(false)}
                 >
-                  <Text className="text-gray-300 font-medium">İptal</Text>
+                  <Text style={{ color: colors.textSecondary }} className="font-medium">{t("pay.cancel")}</Text>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
           </Modal>
 
-          <ScrollView className="flex-1" indicatorStyle="white">
+          <ScrollView style={{ maxHeight: 500 }} indicatorStyle={colors.indicatorBg}>
             {filteredServices.length === 0 ? (
               <View className="items-center py-10">
-                <Ionicons name="wallet-outline" size={40} color="#3B3B3B" />
-                <Text className="text-gray-500 text-sm mt-3">Henüz servis kaydı bulunmuyor.</Text>
+                <Ionicons name="wallet-outline" size={40} color={colors.textMuted} />
+                <Text style={{ color: colors.textMuted }} className="text-sm mt-3">{t("pay.noRecords")}</Text>
               </View>
             ) : (
-              filteredServices.map((s) => (
+              pagedServices.map((s) => (
                 <View
                   key={s.id}
-                  className="flex-row items-center justify-between px-1 py-2.5 border-b border-[#2A2A2A]/50"
+                  style={{ borderColor: colors.border }}
+                  className="flex-row items-center justify-between px-1 py-2.5 border-b"
                 >
                   <View className="flex-1">
-                    <Text className="text-white text-sm font-medium">{s.customer}</Text>
-                    <Text className="text-gray-500 text-xs mt-0.5">{s.serviceType || "Servis Raporu"} · {s.tarih}</Text>
+                    <Text style={{ color: colors.text }} className="text-sm font-medium">{s.customer}</Text>
+                    <Text style={{ color: colors.textMuted }} className="text-xs mt-0.5">{s.serviceType || t("pay.serviceReport")} · {s.tarih}</Text>
                   </View>
 
-                  <Text className="text-white text-sm font-semibold mr-3">{formatAmount(s.amount)}</Text>
+                  <Text style={{ color: colors.text }} className="text-sm font-semibold mr-3">{formatAmount(s.amount)}</Text>
 
                   <TouchableOpacity
                     className="flex-row items-center rounded-lg px-2 py-1"
-                    style={{ backgroundColor: s.paid ? "#22C55E15" : "#F59E0B15" }}
+                    style={{ backgroundColor: s.paid ? colors.success + '15' : colors.warning + '15' }}
                     onPress={() => setToggleAlert({ visible: true, record: s })}
                   >
-                    <Ionicons name={s.paid ? "checkmark-circle" : "time"} size={12} color={s.paid ? "#22C55E" : "#F59E0B"} />
-                    <Text className="text-xs font-medium ml-1" style={{ color: s.paid ? "#22C55E" : "#F59E0B" }}>
-                      {s.paid ? "Ödendi" : "Bekliyor"}
+                    <Ionicons name={s.paid ? "checkmark-circle" : "time"} size={12} color={s.paid ? colors.success : colors.warning} />
+                    <Text className="text-xs font-medium ml-1" style={{ color: s.paid ? colors.success : colors.warning }}>
+                      {s.paid ? t("pay.paid") : t("pay.pending")}
                     </Text>
                   </TouchableOpacity>
                 </View>
               ))
             )}
           </ScrollView>
+
+          {listTotalPages > 1 && (
+            <View className="flex-row items-center justify-center gap-3 mt-3 pt-3" style={{ borderColor: colors.border, borderTopWidth: 1 }}>
+              <TouchableOpacity
+                disabled={listPage === 0}
+                onPress={() => setListPage(listPage - 1)}
+                className="px-4 py-2 rounded-lg"
+                style={{ backgroundColor: listPage === 0 ? colors.bgInput : colors.primary, opacity: listPage === 0 ? 0.5 : 1 }}
+              >
+                <Text className="text-sm" style={{ color: "white" }}>{t("pay.previous")}</Text>
+              </TouchableOpacity>
+              <Text className="text-sm" style={{ color: colors.textSecondary }}>
+                {listPage + 1} / {listTotalPages}
+              </Text>
+              <TouchableOpacity
+                disabled={listPage >= listTotalPages - 1}
+                onPress={() => setListPage(listPage + 1)}
+                className="px-4 py-2 rounded-lg"
+                style={{ backgroundColor: listPage >= listTotalPages - 1 ? colors.bgInput : colors.primary, opacity: listPage >= listTotalPages - 1 ? 0.5 : 1 }}
+              >
+                <Text className="text-sm" style={{ color: "white" }}>{t("pay.next")}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
       </View>
@@ -330,16 +383,16 @@ export default function PaymentsScreen() {
       <CustomAlert
         visible={toggleAlert.visible}
         type="confirm"
-        title={toggleAlert.record?.paid ? "Ödemeyi Geri Al" : "Ödendi Olarak İşaretle"}
+        title={toggleAlert.record?.paid ? t("dash.confirmRevert") : t("dash.confirmMarkPaid")}
         message={toggleAlert.record?.paid
-          ? `"${toggleAlert.record?.customer}" ödemesini bekliyor olarak işaretlemek istediğinize emin misiniz?`
-          : `"${toggleAlert.record?.customer}" servisini ödendi olarak işaretlemek istediğinize emin misiniz?`
+          ? t("dash.confirmRevertMessage", { name: toggleAlert.record?.customer || "" })
+          : t("dash.confirmMarkPaidMessage", { name: toggleAlert.record?.customer || "" })
         }
         onClose={() => setToggleAlert({ visible: false, record: null })}
         onConfirm={() => {
           if (toggleAlert.record) handleTogglePaid(toggleAlert.record);
         }}
-        confirmText="Onayla"
+        confirmText={t("common.confirm")}
       />
     </ScrollView>
   );
