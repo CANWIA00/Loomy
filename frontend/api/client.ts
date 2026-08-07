@@ -3,12 +3,23 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { router } from "expo-router";
 
-const BASE_URL =
-  Platform.OS === "web"
-    ? "http://localhost:8080/api"  // Web'de localhost:8080
-    : Platform.OS === "android"
-    ? "http://10.0.2.2:8080/api"   // Android emülatör
-    : "http://192.168.56.1:8080/api";
+// 🌍 Environment variable'dan BASE_URL al, yoksa varsayılanı kullan
+const getBaseUrl = () => {
+  // Web'de Vercel'deki environment variable'ı kullan
+  if (Platform.OS === "web") {
+    return process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
+  }
+  
+  // Mobil (Android/iOS)
+  if (Platform.OS === "android") {
+    return process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8080/api";
+  }
+  
+  // iOS
+  return process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
+};
+
+const BASE_URL = getBaseUrl();
 
 console.log("🌐 [API] Platform:", Platform.OS, "| BaseURL:", BASE_URL);
 
