@@ -1,5 +1,5 @@
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const SENDGRID_FROM = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "Loomy <loomy.app.info@gmail.com>";
+const SENDGRID_FROM = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "Loomy <lommy.app.info@gmail.com>";
 
 function parseFrom(raw: string): { email: string; name: string } {
   const match = raw.trim().match(/^(.+?)\s*<([^>]+)>$/);
