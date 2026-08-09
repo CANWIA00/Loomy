@@ -1,15 +1,44 @@
 import nodemailer from "nodemailer";
+import net from "net";
+import dns from "dns/promises";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  socketOptions: { family: 4 },
-} as any);
+let transporterPromise: Promise<nodemailer.Transporter> | null = null;
+
+async function getTransporter(): Promise<nodemailer.Transporter> {
+  if (!transporterPromise) {
+    transporterPromise = (async () => {
+      const host = process.env.SMTP_HOST || "smtp.gmail.com";
+      const port = Number(process.env.SMTP_PORT) || 587;
+
+      let resolvedHost = host;
+      if (!net.isIP(host)) {
+        try {
+          const addresses = await dns.resolve4(host);
+          if (addresses.length) {
+            resolvedHost = addresses[0];
+          }
+        } catch (err) {
+          console.warn(
+            `[email] IPv4 cozumlemesi basarisiz (${host}): ${(err as Error).message}`
+          );
+        }
+      }
+
+      return nodemailer.createTransport({
+        host: resolvedHost,
+        servername: host,
+        port,
+        secure: false,
+        requireTLS: true,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      } as any);
+    })();
+  }
+  return transporterPromise;
+}
 
 export function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -67,6 +96,8 @@ export async function sendVerificationEmail(
     </body>
     </html>
   `;
+
+  const transporter = await getTransporter();
 
   await transporter.sendMail({
     from: process.env.SMTP_FROM || "Loomy <loomy.app.info@gmail.com>",
