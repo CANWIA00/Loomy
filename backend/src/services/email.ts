@@ -1,50 +1,12 @@
-import nodemailer from "nodemailer";
-import net from "net";
-import dns from "dns/promises";
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const SENDGRID_FROM = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "Loomy <loomy.app.info@gmail.com>";
 
-let transporterPromise: Promise<nodemailer.Transporter> | null = null;
-
-async function getTransporter(): Promise<nodemailer.Transporter> {
-  if (!transporterPromise) {
-    transporterPromise = (async () => {
-      const host = process.env.SMTP_HOST || "smtp.gmail.com";
-      const port = Number(process.env.SMTP_PORT) || 587;
-
-      const hasUser = Boolean(process.env.SMTP_USER);
-      const hasPass = Boolean(process.env.SMTP_PASS);
-      console.log(
-        `[email] transporter kuruluyor -> host=${host} port=${port} SMTP_USER ayarli=${hasUser} SMTP_PASS ayarli=${hasPass}`
-      );
-
-      let resolvedHost = host;
-      if (!net.isIP(host)) {
-        try {
-          const addresses = await dns.resolve4(host);
-          if (addresses.length) {
-            resolvedHost = addresses[0];
-          }
-        } catch (err) {
-          console.warn(
-            `[email] IPv4 cozumlemesi basarisiz (${host}): ${(err as Error).message}`
-          );
-        }
-      }
-      console.log(`[email] baglanilacak IPv4: ${resolvedHost}`);
-
-      return nodemailer.createTransport({
-        host: resolvedHost,
-        servername: host,
-        port,
-        secure: false,
-        requireTLS: true,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      } as any);
-    })();
+function parseFrom(raw: string): { email: string; name: string } {
+  const match = raw.trim().match(/^(.+?)\s*<([^>]+)>$/);
+  if (match) {
+    return { name: match[1].trim(), email: match[2].trim() };
   }
-  return transporterPromise;
+  return { name: "Loomy", email: raw.trim() };
 }
 
 export function generateVerificationCode(): string {
@@ -56,6 +18,10 @@ export async function sendVerificationEmail(
   code: string,
   name: string
 ): Promise<void> {
+  if (!SENDGRID_API_KEY) {
+    throw new Error("SENDGRID_API_KEY env degiskeni ayarlanmamis.");
+  }
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -104,15 +70,32 @@ export async function sendVerificationEmail(
     </html>
   `;
 
-  const transporter = await getTransporter();
+  const from = parseFrom(SENDGRID_FROM);
+  const text = `Merhaba ${name},\n\nE-posta dogrulama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`;
 
-  console.log(`[email] dogrulama maili gonderiliyor -> to=${to} from=${process.env.SMTP_FROM || "Loomy <loomy.app.info@gmail.com>"}`);
-  const info = await transporter.sendMail({
-    from: process.env.SMTP_FROM || "Loomy <loomy.app.info@gmail.com>",
-    to,
-    subject: "Loomy - E-posta Dogrulama Kodu",
-    html,
-    text: `Merhaba ${name},\n\nE-posta dogrulama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`,
+  console.log(`[email] dogrulama maili gonderiliyor -> to=${to} from=${from.email}`);
+  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SENDGRID_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: from.email, name: from.name },
+      subject: "Loomy - E-posta Dogrulama Kodu",
+      content: [
+        { type: "text/plain", value: text },
+        { type: "text/html", value: html },
+      ],
+    }),
   });
-  console.log(`[email] mail GONDERILDI -> messageId=${info.messageId} response=${info.response}`);
+
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`[email] SendGrid hata (${res.status}): ${body}`);
+    throw new Error(`SendGrid gonderim hatasi (${res.status}): ${body}`);
+  }
+
+  console.log(`[email] mail GONDERILDI -> ${to}`);
 }
