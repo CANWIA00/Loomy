@@ -46,14 +46,6 @@ interface ServiceRecordBackend {
   technicianSignature?: string;
 }
 
-export interface ServicePageResponse {
-  content: ServiceRecord[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
-
 function toFrontend(b: ServiceRecordBackend): ServiceRecord {
   let hizmetler: string[] = [];
   let teknik: string[] = [];
@@ -128,22 +120,6 @@ export const serviceApi = {
         content: res.data.content.map(toFrontend),
       },
     };
-  },
-
-  search: async (query: string, page: number = 0, size: number = 50) => {
-    const res = await apiClient.get<{ content: ServiceRecordBackend[]; totalElements: number; totalPages: number; number: number; size: number }>("/services/search", { params: { q: query, page, size } });
-    return {
-      ...res,
-      data: {
-        ...res.data,
-        content: res.data.content.map(toFrontend),
-      },
-    };
-  },
-
-  getById: async (id: number) => {
-    const res = await apiClient.get<ServiceRecordBackend>(`/services/${id}`);
-    return { ...res, data: toFrontend(res.data) };
   },
 
   create: async (data: Omit<ServiceRecord, "id">) => {

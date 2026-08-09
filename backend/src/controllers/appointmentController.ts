@@ -38,22 +38,6 @@ export async function getAppointments(req: AuthRequest, res: Response): Promise<
   }
 }
 
-export async function getAppointmentById(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const id = parseInt(String(req.params.id));
-    const companyId = req.user!.companyId!;
-    const appointment = await prisma.appointment.findFirst({ where: { id, companyId } });
-    if (!appointment) {
-      res.status(404).json({ message: "Randevu bulunamadı." });
-      return;
-    }
-    res.json(mapAppointment(appointment));
-  } catch (error: any) {
-    console.error("GetAppointmentById error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
-  }
-}
-
 export async function createAppointment(req: AuthRequest, res: Response): Promise<void> {
   try {
     const companyId = req.user!.companyId!;

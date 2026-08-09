@@ -3,14 +3,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { router } from "expo-router";
 
-const BASE_URL =
+export const BASE_URL =
   Platform.OS === "web"
-    ? "http://localhost:8080/api"  // Web'de localhost:8080
+    ? "http://localhost:8080/api"
     : Platform.OS === "android"
-    ? "http://10.0.2.2:8080/api"   // Android emülatör
+    ? "http://10.0.2.2:8080/api"
     : "http://192.168.56.1:8080/api";
-
-console.log("🌐 [API] Platform:", Platform.OS, "| BaseURL:", BASE_URL);
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -28,29 +26,31 @@ export const setOnUnauthorized = (callback: (() => void) | null) => {
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
-    console.log("🔑 [INTERCEPTOR] AsyncStorage token:", token ? `${token.substring(0, 20)}...` : "NULL");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(`🚀 [API REQUEST] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data || "");
-    console.log("🔑 [INTERCEPTOR] Authorization header:", config.headers.Authorization ? `${String(config.headers.Authorization).substring(0, 25)}...` : "YOK");
     return config;
   },
   (error) => {
-    console.log("🔴 [API REQUEST ERROR]", error.message);
     return Promise.reject(error);
   }
 );
 
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`✅ [API RESPONSE] ${response.config.method?.toUpperCase()} ${response.config.url} → ${response.status}`, response.data);
     return response;
   },
   async (error) => {
-    console.log(`🔴 [API ERROR] ${error.config?.method?.toUpperCase()} ${error.config?.url} → ${error.response?.status || "NETWORK"}`, error.response?.data || error.message);
-
-    if (error.response?.status === 401) {
+    if (error.response?.status === 403 && error.response?.data?.frozen) {
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+      await AsyncStorage.setItem("frozenNotice", "1");
+      if (onUnauthorized) {
+        onUnauthorized();
+      } else {
+        router.replace("/(auth)/login");
+      }
+    } else if (error.response?.status === 401) {
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
       if (onUnauthorized) {

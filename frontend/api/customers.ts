@@ -8,7 +8,16 @@ export interface Customer {
   phone: string;
   contactPerson: string;
   contactPhone: string;
+  monthlyFee: string;
+  hasPaidMonthly: boolean;
+  lastPaidAt: string | null;
 }
+
+export type CustomerInput = Omit<Customer, "id" | "monthlyFee" | "hasPaidMonthly" | "lastPaidAt"> & {
+  monthlyFee?: string;
+  hasPaidMonthly?: boolean;
+  lastPaidAt?: string | null;
+};
 
 export interface CustomerPageResponse {
   content: Customer[];
@@ -31,7 +40,7 @@ export const customerApi = {
   getById: (id: string) =>
     apiClient.get<Customer>(`/customers/${id}`),
 
-  create: (data: Omit<Customer, "id">) =>
+  create: (data: CustomerInput) =>
     apiClient.post<Customer>("/customers", data),
 
   update: (id: string, data: Partial<Customer>) =>

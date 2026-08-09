@@ -42,6 +42,8 @@ model Company {
   invitationCode   String   @unique
   logoUrl          String?
   profileCompleted Boolean  @default(false)
+  isFrozen         Boolean  @default(false)
+  paidUntil        DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -92,6 +94,9 @@ model Customer {
   phone         String?
   contactPerson String?
   contactPhone  String?
+  monthlyFee    String   @default("0.00")
+  hasPaidMonthly Boolean @default(false)
+  lastPaidAt    DateTime?
   companyId     String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

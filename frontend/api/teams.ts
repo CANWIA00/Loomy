@@ -19,17 +19,11 @@ export const teamApi = {
   getAll: () =>
     apiClient.get<Team[]>("/teams"),
 
-  getById: (id: number) =>
-    apiClient.get<Team>(`/teams/${id}`),
-
   getCompanyUsers: () =>
     apiClient.get<CompanyUser[]>("/teams/company-users"),
 
   create: (data: Omit<Team, "id">) =>
     apiClient.post<Team>("/teams", data),
-
-  update: (id: number, data: Partial<Team>) =>
-    apiClient.put<Team>(`/teams/${id}`, data),
 
   delete: (id: number) =>
     apiClient.delete(`/teams/${id}`),

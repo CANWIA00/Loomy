@@ -17,3 +17,16 @@ export function generateToken(payload: TokenPayload): string {
 export function verifyToken(token: string): TokenPayload {
   return jwt.verify(token, JWT_SECRET) as TokenPayload;
 }
+
+interface DevTokenPayload {
+  dev: boolean;
+}
+
+export function generateDevToken(): string {
+  const payload: DevTokenPayload = { dev: true };
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "12h" });
+}
+
+export function verifyDevToken(token: string): DevTokenPayload {
+  return jwt.verify(token, JWT_SECRET) as DevTokenPayload;
+}

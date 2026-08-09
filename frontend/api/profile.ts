@@ -9,6 +9,7 @@ export interface CompanyDto {
   email: string;
   taxNumber?: string;
   logoUrl?: string;
+  invitationCode?: string;
 }
 
 export interface UserProfile {

@@ -106,6 +106,15 @@ export async function register(req: Request, res: Response): Promise<void> {
         return;
       }
 
+      if (company.isFrozen) {
+        res.status(403).json({
+          message:
+            "Kullanımınız Loomy tarafından donduruldu. Yeni kayıt yapılamaz. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
+          frozen: true,
+        });
+        return;
+      }
+
       const user = await prisma.user.create({
         data: {
           name,
@@ -157,6 +166,15 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 
     if (!user) {
       res.status(404).json({ message: "Kullanici bulunamadi." });
+      return;
+    }
+
+    if (user.company?.isFrozen) {
+      res.status(403).json({
+        message:
+          "Kullanımınız Loomy tarafından donduruldu. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
+        frozen: true,
+      });
       return;
     }
 
@@ -284,6 +302,15 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     if (!user.isActive) {
       res.status(403).json({ message: "Hesabınız devre dışı bırakılmıştır." });
+      return;
+    }
+
+    if (user.company?.isFrozen) {
+      res.status(403).json({
+        message:
+          "Kullanımınız Loomy tarafından donduruldu. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
+        frozen: true,
+      });
       return;
     }
 

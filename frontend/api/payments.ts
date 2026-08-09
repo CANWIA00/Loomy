@@ -31,9 +31,6 @@ export const paymentApi = {
   getAll: (page: number = 0, size: number = 50) =>
     apiClient.get<PaymentPageResponse>("/payments", { params: { page, size } }),
 
-  search: (query: string, page: number = 0, size: number = 50) =>
-    apiClient.get<PaymentPageResponse>("/payments/search", { params: { q: query, page, size } }),
-
   getSummary: () =>
     apiClient.get<PaymentSummary>("/payments/summary"),
 

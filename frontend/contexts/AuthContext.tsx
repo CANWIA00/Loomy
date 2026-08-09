@@ -44,36 +44,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadStoredAuth = useCallback(async () => {
     try {
-      console.log("🔵 [AUTH] loadStoredAuth() çağrıldı");
       const storedToken = await AsyncStorage.getItem("token");
       const storedUser = await AsyncStorage.getItem("user");
-
-      console.log("🔍 [AUTH] Stored token:", storedToken ? `${storedToken.substring(0, 30)}...` : "NULL");
-      console.log("🔍 [AUTH] Stored user:", storedUser ? "VAR" : "NULL");
 
       if (storedToken && storedUser) {
         const parsed: User = JSON.parse(storedUser);
         setToken(storedToken);
         setUser(parsed);
-        console.log("✅ [AUTH] Token ve user state'e yüklendi");
 
         try {
           const response = await authApi.validateToken();
-          console.log("✅ [AUTH] Token geçerli, user güncellendi");
           setUser(response.data);
           await AsyncStorage.setItem("user", JSON.stringify(response.data));
         } catch {
-          console.log("🔴 [AUTH] Token geçersiz, temizleniyor");
           await AsyncStorage.removeItem("token");
           await AsyncStorage.removeItem("user");
           setToken(null);
           setUser(null);
         }
-      } else {
-        console.log("ℹ️ [AUTH] Kayıtlı token/user bulunamadı");
       }
-    } catch (e: any) {
-      console.log("🔴 [AUTH] loadStoredAuth hatası:", e.message);
+    } catch {
+      // silently fail
     } finally {
       setLoading(false);
     }
@@ -84,16 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadStoredAuth]);
 
   const login = async (email: string, password: string) => {
-    console.log("🔵 [AUTH] login() çağrıldı:", email);
-
     const axiosResponse = await authApi.login(email, password);
     const data = axiosResponse.data;
 
-    console.log("🔵 [AUTH] Login response:", JSON.stringify(data));
-
     if (!data.token) {
-      console.log("🔴 [AUTH] Login response'da token YOK!");
-      throw new Error("Token alınamadı. Lütfen tekrar deneyin.");
+      throw new Error("Token alinamadi. Lutfen tekrar deneyin.");
     }
 
     const loggedInUser: User = {
@@ -106,48 +92,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await AsyncStorage.setItem("token", data.token);
-      console.log("✅ [AUTH] Token AsyncStorage'a yazıldı");
-
       await AsyncStorage.setItem("user", JSON.stringify(loggedInUser));
-      console.log("✅ [AUTH] User AsyncStorage'a yazıldı");
     } catch (storageError: any) {
-      console.log("🔴 [AUTH] AsyncStorage yazma hatası:", storageError.message);
       throw new Error("Oturum bilgileri kaydedilemedi: " + storageError.message);
     }
 
     const savedToken = await AsyncStorage.getItem("token");
-    console.log("🔍 [AUTH] AsyncStorage'dan okunan token:", savedToken ? `${savedToken.substring(0, 30)}...` : "NULL");
-
     if (!savedToken) {
-      console.log("🔴 [AUTH] Token AsyncStorage'a yazılmamış!");
-      throw new Error("Token kaydedilemedi. Lütfen tekrar deneyin.");
+      throw new Error("Token kaydedilemedi. Lutfen tekrar deneyin.");
     }
 
     setToken(savedToken);
     setUser(loggedInUser);
-
-    console.log("✅ [AUTH] login() tamamlandı, token state güncellendi");
     return loggedInUser;
   };
 
   const register = async (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => {
-    console.log("🔵 [AUTH] register() çağrıldı:", { email: data.email, name: data.name });
     try {
-      console.log("🚀 [AUTH] API'ye istek gönderiliyor...");
       const axiosResponse = await authApi.register(data);
       const res = axiosResponse.data;
-      console.log("✅ [AUTH] Register response:", JSON.stringify(res));
-
-      if (res.requiresVerification) {
-        console.log("📧 [AUTH] Email doğrulama gerekli");
-        return res;
-      }
-
-      console.log("✅ [AUTH] register() tamamlandı");
       return res;
     } catch (error: any) {
-      console.log("🔴 [AUTH] register() hatası:", error?.message);
-      console.log("🔴 [AUTH] Hata detayı:", error?.response?.data);
       throw error;
     }
   };

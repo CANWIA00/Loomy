@@ -17,15 +17,6 @@ export const appointmentApi = {
   getAll: () =>
     apiClient.get<Appointment[]>("/appointments"),
 
-  getByDate: (date: string) =>
-    apiClient.get<Appointment[]>("/appointments", { params: { date } }),
-
-  getByTeam: (teamId: number) =>
-    apiClient.get<Appointment[]>("/appointments", { params: { teamId } }),
-
-  getById: (id: number) =>
-    apiClient.get<Appointment>(`/appointments/${id}`),
-
   create: (data: {
     customerName: string;
     customerId?: string;

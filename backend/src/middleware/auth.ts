@@ -29,7 +29,14 @@ export async function authenticate(
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, role: true, isActive: true, companyId: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+        companyId: true,
+        company: { select: { isFrozen: true } },
+      },
     });
 
     if (!user) {
@@ -39,6 +46,15 @@ export async function authenticate(
 
     if (!user.isActive) {
       res.status(403).json({ message: "Hesabınız devre dışı bırakılmıştır." });
+      return;
+    }
+
+    if (user.company?.isFrozen) {
+      res.status(403).json({
+        message:
+          "Kullanımınız Loomy tarafından donduruldu. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
+        frozen: true,
+      });
       return;
     }
 
