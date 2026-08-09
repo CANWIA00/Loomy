@@ -4,11 +4,12 @@ import { Platform } from "react-native";
 import { router } from "expo-router";
 
 export const BASE_URL =
-  Platform.OS === "web"
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === "web"
     ? "http://localhost:8080/api"
     : Platform.OS === "android"
     ? "http://10.0.2.2:8080/api"
-    : "http://192.168.56.1:8080/api";
+    : "http://192.168.56.1:8080/api");
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
