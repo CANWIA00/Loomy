@@ -10,6 +10,12 @@ async function getTransporter(): Promise<nodemailer.Transporter> {
       const host = process.env.SMTP_HOST || "smtp.gmail.com";
       const port = Number(process.env.SMTP_PORT) || 587;
 
+      const hasUser = Boolean(process.env.SMTP_USER);
+      const hasPass = Boolean(process.env.SMTP_PASS);
+      console.log(
+        `[email] transporter kuruluyor -> host=${host} port=${port} SMTP_USER ayarli=${hasUser} SMTP_PASS ayarli=${hasPass}`
+      );
+
       let resolvedHost = host;
       if (!net.isIP(host)) {
         try {
@@ -23,6 +29,7 @@ async function getTransporter(): Promise<nodemailer.Transporter> {
           );
         }
       }
+      console.log(`[email] baglanilacak IPv4: ${resolvedHost}`);
 
       return nodemailer.createTransport({
         host: resolvedHost,
@@ -99,11 +106,13 @@ export async function sendVerificationEmail(
 
   const transporter = await getTransporter();
 
-  await transporter.sendMail({
+  console.log(`[email] dogrulama maili gonderiliyor -> to=${to} from=${process.env.SMTP_FROM || "Loomy <loomy.app.info@gmail.com>"}`);
+  const info = await transporter.sendMail({
     from: process.env.SMTP_FROM || "Loomy <loomy.app.info@gmail.com>",
     to,
     subject: "Loomy - E-posta Dogrulama Kodu",
     html,
     text: `Merhaba ${name},\n\nE-posta dogrulama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`,
   });
+  console.log(`[email] mail GONDERILDI -> messageId=${info.messageId} response=${info.response}`);
 }
