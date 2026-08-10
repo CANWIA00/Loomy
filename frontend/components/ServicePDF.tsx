@@ -242,7 +242,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
 <body>
   <div class="content-wrapper">
     <div class="header">
-      <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" style="max-height:40px;max-width:150px;object-fit:contain;" />` : ''}</div>
+      <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" onerror="this.style.display='none'" style="max-height:40px;max-width:150px;object-fit:contain;" />` : ''}</div>
       <div class="title">${t("pdf.title")}</div>
       <div class="date-area">${t("pdf.date")} ${escapeHtml(data.documentDate) || ''}</div>
     </div>

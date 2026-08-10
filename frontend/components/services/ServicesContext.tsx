@@ -17,6 +17,7 @@ interface DeleteAlertState {
 
 interface ServicesContextValue {
   loading: boolean;
+  companyLogo: string | null;
   form: ServiceFormData;
   updateForm: (key: keyof ServiceFormData, value: string) => void;
   toggleService: (item: string) => void;
@@ -123,6 +124,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [shareRecord, setShareRecord] = useState<ServiceRecord | null>(null);
   const technicianSignatureRef = useRef<any>(null);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const companyLogoRef = useRef<string | null>(null);
 
   const fetchRecords = useCallback(async () => {
@@ -156,7 +158,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           technicianSignatureRef.current = typeof sig === 'string' ? JSON.parse(sig) : sig;
         } catch {}
       }
-      if (logo) companyLogoRef.current = logo;
+      if (logo) {
+        companyLogoRef.current = logo;
+        setCompanyLogo(logo);
+      }
     }).catch(() => {});
   }, [fetchRecords, fetchCustomers]);
 
@@ -169,6 +174,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           try {
             technicianSignatureRef.current = typeof sig === 'string' ? JSON.parse(sig) : sig;
           } catch {}
+        }
+        const logo = res.data.company?.logoUrl || null;
+        if (logo) {
+          companyLogoRef.current = logo;
+          setCompanyLogo(logo);
         }
       }).catch(() => {});
     }, [])
@@ -530,6 +540,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const value: ServicesContextValue = {
     loading,
+    companyLogo,
     form,
     updateForm,
     toggleService,

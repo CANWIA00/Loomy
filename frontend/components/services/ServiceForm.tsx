@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -24,6 +24,7 @@ export default function ServiceForm() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const {
+    companyLogo,
     form,
     updateForm,
     toggleService,
@@ -63,9 +64,19 @@ export default function ServiceForm() {
     <>
       <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
         <View className="flex-row items-center justify-between mb-3">
-          <Text className="font-semibold text-base" style={{ color: colors.text }}>
-            {isEditing ? t("svc.editRecord") : t("svc.newRecord")}
-          </Text>
+          <View className="flex-row items-center flex-1">
+            {companyLogo && (
+              <Image
+                source={{ uri: companyLogo }}
+                className="h-9 w-9 mr-2"
+                style={{ borderRadius: 8, backgroundColor: colors.bg }}
+                resizeMode="contain"
+              />
+            )}
+            <Text className="font-semibold text-base" style={{ color: colors.text }}>
+              {isEditing ? t("svc.editRecord") : t("svc.newRecord")}
+            </Text>
+          </View>
           <View className="flex-row items-center gap-2">
             {isEditing && (
               <TouchableOpacity onPress={handleCancelEditing} className="w-7 h-7 rounded-full items-center justify-center" style={{ backgroundColor: colors.bgInput }}>
