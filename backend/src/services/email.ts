@@ -1,6 +1,11 @@
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_FROM = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "Loomy <lommy.app.info@gmail.com>";
 
+console.log(
+  `[email] SENDGRID_API_KEY ayarli: ${SENDGRID_API_KEY ? "EVET (ilk 8 karakter: " + SENDGRID_API_KEY.slice(0, 8) + "...)" : "HAYIR (yok!)"}`
+);
+console.log(`[email] Gonderen (from): ${SENDGRID_FROM}`);
+
 function parseFrom(raw: string): { email: string; name: string } {
   const match = raw.trim().match(/^(.+?)\s*<([^>]+)>$/);
   if (match) {
