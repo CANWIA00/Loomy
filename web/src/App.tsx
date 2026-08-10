@@ -9,7 +9,7 @@ import Faq from "./components/Faq";
 import Cta from "./components/Cta";
 import Footer from "./components/Footer";
 
-export const APP_URL = "https://app.loomy.app";
+export const APP_URL = "https://loomy-omega.vercel.app";
 export const CONTACT_EMAIL = "lommy.app.info@gmail.com";
 
 export default function App() {
