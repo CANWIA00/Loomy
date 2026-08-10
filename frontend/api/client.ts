@@ -18,8 +18,6 @@ const apiClient = axios.create({
   },
 });
 
-console.log("[api] BASE_URL:", BASE_URL);
-
 let onUnauthorized: (() => void) | null = null;
 
 export const setOnUnauthorized = (callback: (() => void) | null) => {
@@ -32,7 +30,6 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(`[api] REQUEST ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data);
     return config;
   },
   (error) => {
@@ -42,15 +39,9 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`[api] RESPONSE ${response.config.method?.toUpperCase()} ${response.config.url} -> ${response.status}`, response.data);
     return response;
   },
   async (error) => {
-    console.error(
-      `[api] ERROR ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
-      error.response ? `status=${error.response.status} data=${JSON.stringify(error.response.data)}` : error.message,
-      "| isNetworkError:", !error.response
-    );
     if (error.response?.status === 403 && error.response?.data?.frozen) {
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("user");

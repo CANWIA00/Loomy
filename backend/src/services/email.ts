@@ -1,11 +1,6 @@
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_FROM = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "Loomy <lommy.app.info@gmail.com>";
 
-console.log(
-  `[email] SENDGRID_API_KEY ayarli: ${SENDGRID_API_KEY ? "EVET (ilk 8 karakter: " + SENDGRID_API_KEY.slice(0, 8) + "...)" : "HAYIR (yok!)"}`
-);
-console.log(`[email] Gonderen (from): ${SENDGRID_FROM}`);
-
 function parseFrom(raw: string): { email: string; name: string } {
   const match = raw.trim().match(/^(.+?)\s*<([^>]+)>$/);
   if (match) {
@@ -78,7 +73,6 @@ export async function sendVerificationEmail(
   const from = parseFrom(SENDGRID_FROM);
   const text = `Merhaba ${name},\n\nE-posta dogrulama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`;
 
-  console.log(`[email] dogrulama maili gonderiliyor -> to=${to} from=${from.email}`);
   const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
     method: "POST",
     headers: {
@@ -98,9 +92,6 @@ export async function sendVerificationEmail(
 
   if (!res.ok) {
     const body = await res.text();
-    console.error(`[email] SendGrid hata (${res.status}): ${body}`);
     throw new Error(`SendGrid gonderim hatasi (${res.status}): ${body}`);
   }
-
-  console.log(`[email] mail GONDERILDI -> ${to}`);
 }

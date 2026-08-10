@@ -23,15 +23,6 @@ app.use(cors({
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-  res.on("finish", () => {
-    console.log(
-      `[req] ${req.method} ${req.originalUrl} -> ${res.statusCode}`
-    );
-  });
-  next();
-});
-
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });

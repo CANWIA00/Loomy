@@ -6,13 +6,6 @@ import { AuthRequest } from "../middleware/auth";
 import { generateVerificationCode, sendVerificationEmail } from "../services/email";
 
 export async function register(req: Request, res: Response): Promise<void> {
-  console.log("[register] yeni kayit istegi geldi:", {
-    name: req.body?.name,
-    email: req.body?.email,
-    phone: req.body?.phone,
-    inviteCode: req.body?.inviteCode,
-  });
-
   try {
     const { name, email, phone, password, inviteCode } = req.body;
 
@@ -91,19 +84,7 @@ export async function register(req: Request, res: Response): Promise<void> {
         },
       });
 
-      console.log(`[register] ADMIN kodu olusturuldu -> ${email} | kod: ${verificationCode}`);
-
-      try {
-        await sendVerificationEmail(email, verificationCode, name);
-        console.log(`[register] ADMIN dogrulama maili BASARIYLA gonderildi -> ${email}`);
-      } catch (err: any) {
-        console.error("[register] ADMIN dogrulama maili GONDERILEMEDI:", err);
-        res.status(500).json({
-          message: "Dogrulama kodu gonderilemedi: " + err.message,
-          verificationCode,
-        });
-        return;
-      }
+      await sendVerificationEmail(email, verificationCode, name);
 
       res.status(201).json({
         requiresVerification: true,
@@ -146,19 +127,7 @@ export async function register(req: Request, res: Response): Promise<void> {
         },
       });
 
-      console.log(`[register] USER kodu olusturuldu -> ${email} | kod: ${verificationCode}`);
-
-      try {
-        await sendVerificationEmail(email, verificationCode, name);
-        console.log(`[register] USER dogrulama maili BASARIYLA gonderildi -> ${email}`);
-      } catch (err: any) {
-        console.error("[register] USER dogrulama maili GONDERILEMEDI:", err);
-        res.status(500).json({
-          message: "Dogrulama kodu gonderilemedi: " + err.message,
-          verificationCode,
-        });
-        return;
-      }
+      await sendVerificationEmail(email, verificationCode, name);
 
       res.status(201).json({
         requiresVerification: true,
@@ -297,19 +266,7 @@ export async function resendVerification(req: Request, res: Response): Promise<v
       },
     });
 
-    console.log(`[resend] yeni kod uretildi -> ${email} | kod: ${verificationCode}`);
-
-    try {
-      await sendVerificationEmail(email, verificationCode, user.name);
-      console.log(`[resend] dogrulama maili BASARIYLA gonderildi -> ${email}`);
-    } catch (err: any) {
-      console.error("[resend] dogrulama maili GONDERILEMEDI:", err);
-      res.status(500).json({
-        message: "Dogrulama kodu gonderilemedi: " + err.message,
-        verificationCode,
-      });
-      return;
-    }
+    await sendVerificationEmail(email, verificationCode, user.name);
 
     res.json({ message: "Yeni dogrulama kodu e-posta adresinize gonderildi." });
   } catch (error: any) {
