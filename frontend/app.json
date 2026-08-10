@@ -20,7 +20,9 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/loomy-dark.png"
+      "favicon": "./assets/loomy-dark.png",
+      "themeColor": "#181828",
+      "backgroundColor": "#181828"
     },
     "plugins": [
       "expo-router",
