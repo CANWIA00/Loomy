@@ -3,12 +3,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useCustomers } from "../CustomersContext";
-import { formatAmount, formatDate } from "../types";
 
 export default function CustomerDetailModal() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const { selectedCustomer, setSelectedCustomer, handleEdit, setTogglePayment } = useCustomers();
+  const { selectedCustomer, setSelectedCustomer, handleEdit } = useCustomers();
 
   return (
     <Modal visible={!!selectedCustomer} transparent animationType="fade" onRequestClose={() => setSelectedCustomer(null)}>
@@ -78,45 +77,6 @@ export default function CustomerDetailModal() {
                     <Text className="text-xs" style={{ color: colors.textMuted }}>{t("cst.address")}</Text>
                     <Text className="text-sm font-medium" style={{ color: colors.text }}>{selectedCustomer.address || "-"}</Text>
                   </View>
-                </View>
-
-                <View className="rounded-xl p-4 mt-1" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1 }}>
-                  <View className="flex-row items-center justify-between mb-3">
-                    <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("cst.paymentTitle")}</Text>
-                    <View
-                      className="flex-row items-center rounded-lg px-2 py-1"
-                      style={{ backgroundColor: selectedCustomer.hasPaidMonthly ? colors.success + '15' : colors.warning + '15' }}
-                    >
-                      <Ionicons name={selectedCustomer.hasPaidMonthly ? "checkmark-circle" : "time"} size={14} color={selectedCustomer.hasPaidMonthly ? colors.success : colors.warning} />
-                      <Text className="text-xs font-medium ml-1" style={{ color: selectedCustomer.hasPaidMonthly ? colors.success : colors.warning }}>
-                        {selectedCustomer.hasPaidMonthly ? t("cst.paid") : t("cst.pending")}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-xs" style={{ color: colors.textMuted }}>{t("cst.monthlyFee")}</Text>
-                    <Text className="text-sm font-bold" style={{ color: colors.text }}>{formatAmount(selectedCustomer.monthlyFee)}</Text>
-                  </View>
-                  <View className="flex-row items-center justify-between mb-3">
-                    <Text className="text-xs" style={{ color: colors.textMuted }}>{t("cst.lastPaidAt")}</Text>
-                    <Text className="text-sm font-medium" style={{ color: colors.text }}>{formatDate(selectedCustomer.lastPaidAt)}</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    className="flex-row items-center justify-center h-10 rounded-lg gap-2"
-                    style={{ backgroundColor: selectedCustomer.hasPaidMonthly ? colors.warning + '15' : colors.success + '15' }}
-                    onPress={() => setTogglePayment({ visible: true, customer: selectedCustomer })}
-                  >
-                    <Ionicons
-                      name={selectedCustomer.hasPaidMonthly ? "refresh-outline" : "checkmark-circle-outline"}
-                      size={16}
-                      color={selectedCustomer.hasPaidMonthly ? colors.warning : colors.success}
-                    />
-                    <Text className="text-sm font-semibold" style={{ color: selectedCustomer.hasPaidMonthly ? colors.warning : colors.success }}>
-                      {selectedCustomer.hasPaidMonthly ? t("cst.markPending") : t("cst.markPaid")}
-                    </Text>
-                  </TouchableOpacity>
                 </View>
               </View>
 

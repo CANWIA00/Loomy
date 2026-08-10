@@ -23,9 +23,6 @@ function CustomersScreenInner() {
     alertMessage,
     alertOnConfirm,
     setAlertOnConfirm,
-    togglePayment,
-    setTogglePayment,
-    handleTogglePayment,
   } = useCustomers();
 
   return (
@@ -60,23 +57,6 @@ function CustomersScreenInner() {
         onConfirm={alertOnConfirm}
         confirmText={alertType === "confirm" ? t("cst.delete") : undefined}
         confirmColor={alertType === "confirm" ? colors.danger : undefined}
-      />
-
-      <CustomAlert
-        visible={togglePayment.visible}
-        type="confirm"
-        title={togglePayment.customer?.hasPaidMonthly ? t("cst.confirmMarkPending") : t("cst.confirmMarkPaid")}
-        message={togglePayment.customer?.hasPaidMonthly
-          ? t("cst.confirmMarkPendingMessage", { name: togglePayment.customer?.companyName || "" })
-          : t("cst.confirmMarkPaidMessage", { name: togglePayment.customer?.companyName || "" })
-        }
-        onClose={() => setTogglePayment({ visible: false, customer: null })}
-        onConfirm={() => {
-          if (togglePayment.customer) {
-            handleTogglePayment(togglePayment.customer, !togglePayment.customer.hasPaidMonthly);
-          }
-        }}
-        confirmText={t("common.confirm")}
       />
     </>
   );

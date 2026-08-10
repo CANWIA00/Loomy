@@ -24,10 +24,6 @@ export default function CustomerForm() {
     setNewContact,
     newContactPhone,
     setNewContactPhone,
-    newMonthlyFee,
-    setNewMonthlyFee,
-    newHasPaidMonthly,
-    setNewHasPaidMonthly,
     handleSave,
     loading,
     setMapSelectorVisible,
@@ -128,38 +124,6 @@ export default function CustomerForm() {
             onChangeText={(v) => setNewContactPhone(v.replace(/[^0-9]/g, ""))}
           />
 
-          <View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1 }}>
-            <Text className="text-sm font-bold mb-3" style={{ color: colors.text }}>{t("cst.paymentTitle")}</Text>
-            <TextInput
-              className="rounded-lg px-4 py-3 text-sm mb-3"
-              style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-              placeholder={t("cst.monthlyFee")}
-              placeholderTextColor={colors.textMuted}
-              keyboardType="decimal-pad"
-              value={newMonthlyFee}
-              onChangeText={(v) => setNewMonthlyFee(v.replace(/[^0-9.,]/g, ""))}
-            />
-            <TouchableOpacity
-              onPress={() => setNewHasPaidMonthly(!newHasPaidMonthly)}
-              className="flex-row items-center justify-between rounded-lg px-3 py-3"
-              style={{ backgroundColor: colors.bgCard }}
-            >
-              <View className="flex-row items-center gap-2 flex-1">
-                <Ionicons
-                  name={newHasPaidMonthly ? "checkmark-circle" : "time"}
-                  size={18}
-                  color={newHasPaidMonthly ? colors.success : colors.warning}
-                />
-                <Text className="text-sm" style={{ color: colors.textSecondary }}>{t("cst.paidThisMonth")}</Text>
-              </View>
-              <View
-                className="w-11 h-6 rounded-full px-0.5"
-                style={{ backgroundColor: newHasPaidMonthly ? colors.success : colors.bgInput, justifyContent: "center", alignItems: newHasPaidMonthly ? "flex-end" : "flex-start" }}
-              >
-                <View className="w-5 h-5 rounded-full" style={{ backgroundColor: "white" }} />
-              </View>
-            </TouchableOpacity>
-          </View>
           <TouchableOpacity
             onPress={handleSave}
             disabled={loading}

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { customerApi, type Customer } from "../../api/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { PAGE_SIZE, type TogglePaymentState } from "./types";
+import { PAGE_SIZE } from "./types";
 
 interface CustomersContextValue {
   loading: boolean;
@@ -28,10 +28,6 @@ interface CustomersContextValue {
   setNewContact: (v: string) => void;
   newContactPhone: string;
   setNewContactPhone: (v: string) => void;
-  newMonthlyFee: string;
-  setNewMonthlyFee: (v: string) => void;
-  newHasPaidMonthly: boolean;
-  setNewHasPaidMonthly: (v: boolean) => void;
   resetForm: () => void;
   handleSave: () => Promise<void>;
   handleEdit: (id: string) => Promise<void>;
@@ -49,10 +45,6 @@ interface CustomersContextValue {
   alertMessage: string;
   alertOnConfirm: (() => void) | undefined;
   setAlertOnConfirm: (v: (() => void) | undefined) => void;
-
-  togglePayment: TogglePaymentState;
-  setTogglePayment: (v: TogglePaymentState) => void;
-  handleTogglePayment: (customer: Customer, paid: boolean) => Promise<void>;
 }
 
 const CustomersContext = createContext<CustomersContextValue | undefined>(undefined);
@@ -74,8 +66,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
   const [newPhone, setNewPhone] = useState("");
   const [newContact, setNewContact] = useState("");
   const [newContactPhone, setNewContactPhone] = useState("");
-  const [newMonthlyFee, setNewMonthlyFee] = useState("");
-  const [newHasPaidMonthly, setNewHasPaidMonthly] = useState(false);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -91,7 +81,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [alertOnConfirm, setAlertOnConfirm] = useState<(() => void) | undefined>(undefined);
-  const [togglePayment, setTogglePayment] = useState<TogglePaymentState>({ visible: false, customer: null });
 
   function showAlert(type: "success" | "error" | "confirm", title: string, message: string, onConfirm?: () => void) {
     setAlertType(type);
@@ -99,23 +88,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     setAlertMessage(message);
     setAlertOnConfirm(() => onConfirm);
     setAlertVisible(true);
-  }
-
-  async function handleTogglePayment(customer: Customer, paid: boolean) {
-    setLoading(true);
-    try {
-      await customerApi.update(customer.id, {
-        hasPaidMonthly: paid,
-        lastPaidAt: paid ? new Date().toISOString() : null,
-      });
-      showAlert("success", t("common.success"), paid ? t("cst.successMarkPaid") : t("cst.successMarkPending"));
-      setTogglePayment({ visible: false, customer: null });
-      fetchCustomers(page, search.trim() || undefined);
-    } catch (error: any) {
-      showAlert("error", t("common.error"), t("cst.errorPayment"));
-    } finally {
-      setLoading(false);
-    }
   }
 
   const fetchCustomers = useCallback(async (pageNum: number = 0, searchQuery?: string) => {
@@ -157,8 +129,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     setNewPhone("");
     setNewContact("");
     setNewContactPhone("");
-    setNewMonthlyFee("");
-    setNewHasPaidMonthly(false);
     setEditingCustomer(null);
   }
 
@@ -175,9 +145,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
       phone: newPhone.trim(),
       contactPerson: newContact.trim(),
       contactPhone: newContactPhone.trim(),
-      monthlyFee: newMonthlyFee.trim() ? newMonthlyFee.trim().replace(",", ".") : "0.00",
-      hasPaidMonthly: newHasPaidMonthly,
-      lastPaidAt: newHasPaidMonthly ? new Date().toISOString() : null,
     };
 
     setLoading(true);
@@ -226,8 +193,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
       setNewPhone(c.phone);
       setNewContact(c.contactPerson);
       setNewContactPhone(c.contactPhone);
-      setNewMonthlyFee(c.monthlyFee || "0.00");
-      setNewHasPaidMonthly(c.hasPaidMonthly);
       setFormOpen(true);
     } catch (error: any) {
       showAlert("error", t("common.error"), t("cst.errorEdit"));
@@ -260,10 +225,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     setNewContact,
     newContactPhone,
     setNewContactPhone,
-    newMonthlyFee,
-    setNewMonthlyFee,
-    newHasPaidMonthly,
-    setNewHasPaidMonthly,
     resetForm,
     handleSave,
     handleEdit,
@@ -279,9 +240,6 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     alertMessage,
     alertOnConfirm,
     setAlertOnConfirm,
-    togglePayment,
-    setTogglePayment,
-    handleTogglePayment,
   };
 
   return <CustomersContext.Provider value={value}>{children}</CustomersContext.Provider>;

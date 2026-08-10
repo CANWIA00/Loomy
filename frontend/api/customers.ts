@@ -8,16 +8,9 @@ export interface Customer {
   phone: string;
   contactPerson: string;
   contactPhone: string;
-  monthlyFee: string;
-  hasPaidMonthly: boolean;
-  lastPaidAt: string | null;
 }
 
-export type CustomerInput = Omit<Customer, "id" | "monthlyFee" | "hasPaidMonthly" | "lastPaidAt"> & {
-  monthlyFee?: string;
-  hasPaidMonthly?: boolean;
-  lastPaidAt?: string | null;
-};
+export type CustomerInput = Omit<Customer, "id">;
 
 export interface CustomerPageResponse {
   content: Customer[];

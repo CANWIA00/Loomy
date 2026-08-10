@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCustomers } from "./CustomersContext";
-import { formatAmount } from "./types";
 
 export default function CustomerListSection() {
   const { colors } = useTheme();
@@ -63,18 +62,6 @@ export default function CustomerListSection() {
                   <Text className="text-base font-bold" style={{ color: colors.text }}>{c.companyName}</Text>
                   <Text className="text-sm mt-0.5" style={{ color: colors.textSecondary }}>{c.contactPerson}</Text>
                   <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{c.phone}</Text>
-                  <View className="flex-row items-center gap-2 mt-1.5">
-                    <View
-                      className="flex-row items-center rounded-lg px-2 py-0.5"
-                      style={{ backgroundColor: c.hasPaidMonthly ? colors.success + '15' : colors.warning + '15' }}
-                    >
-                      <Ionicons name={c.hasPaidMonthly ? "checkmark-circle" : "time"} size={12} color={c.hasPaidMonthly ? colors.success : colors.warning} />
-                      <Text className="text-xs font-medium ml-1" style={{ color: c.hasPaidMonthly ? colors.success : colors.warning }}>
-                        {c.hasPaidMonthly ? t("cst.paid") : t("cst.pending")}
-                      </Text>
-                    </View>
-                    <Text className="text-xs" style={{ color: colors.textMuted }}>{formatAmount(c.monthlyFee)}</Text>
-                  </View>
                 </View>
                 <View className="flex-row gap-2">
                   <TouchableOpacity

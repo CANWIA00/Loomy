@@ -131,9 +131,6 @@ export async function createCustomer(
       phone,
       contactPerson,
       contactPhone,
-      monthlyFee,
-      hasPaidMonthly,
-      lastPaidAt,
     } = req.body;
     const companyId = req.user!.companyId!;
 
@@ -150,9 +147,6 @@ export async function createCustomer(
         phone: phone?.trim() || null,
         contactPerson: contactPerson?.trim() || null,
         contactPhone: contactPhone?.trim() || null,
-        monthlyFee: monthlyFee ?? "0.00",
-        hasPaidMonthly: hasPaidMonthly ?? false,
-        lastPaidAt: lastPaidAt ? new Date(lastPaidAt) : null,
         companyId,
       },
     });
@@ -178,9 +172,6 @@ export async function updateCustomer(
       phone,
       contactPerson,
       contactPhone,
-      monthlyFee,
-      hasPaidMonthly,
-      lastPaidAt,
     } = req.body;
 
     const existing = await prisma.customer.findFirst({
@@ -201,9 +192,6 @@ export async function updateCustomer(
         phone: phone?.trim() ?? existing.phone,
         contactPerson: contactPerson?.trim() ?? existing.contactPerson,
         contactPhone: contactPhone?.trim() ?? existing.contactPhone,
-        monthlyFee: monthlyFee ?? existing.monthlyFee,
-        hasPaidMonthly: hasPaidMonthly ?? existing.hasPaidMonthly,
-        lastPaidAt: lastPaidAt ? new Date(lastPaidAt) : lastPaidAt === null ? null : existing.lastPaidAt,
       },
     });
 
