@@ -435,31 +435,32 @@ export default function ServiceForm() {
             <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.technician")}</Text>
             <View className="w-full h-10 border rounded-lg px-3 items-center justify-center flex-row" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
               <Ionicons name="person-outline" size={14} color={colors.primary} />
-              <Text className="text-sm ml-1.5" style={{ color: colors.text }}>{form.technician || "-"}</Text>
+              <Text className="text-sm ml-1.5 flex-1" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>{form.technician || "-"}</Text>
             </View>
           </View>
-          <View className="flex-1">
-            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.documentDate")}</Text>
-            <View className="flex-row items-center">
-              <TextInput
-                className="flex-1 h-10 border rounded-lg px-3 text-sm"
-                style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-                placeholder="GG/AA/YYYY"
-                placeholderTextColor={colors.textMuted}
-                value={form.documentDate}
-                onChangeText={(v) => updateForm("documentDate", formatDateInput(v))}
-              />
-              <TouchableOpacity
-                className="h-10 w-10 items-center justify-center"
-                onPress={() => {
-                  const now = new Date();
-                  const tarih = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
-                  updateForm("documentDate", tarih);
-                }}
-              >
-                <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-              </TouchableOpacity>
-            </View>
+        </View>
+
+        <View className="mb-3">
+          <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.documentDate")}</Text>
+          <View className="flex-row items-center">
+            <TextInput
+              className="flex-1 h-10 border rounded-lg px-3 text-sm"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder="GG/AA/YYYY"
+              placeholderTextColor={colors.textMuted}
+              value={form.documentDate}
+              onChangeText={(v) => updateForm("documentDate", formatDateInput(v))}
+            />
+            <TouchableOpacity
+              className="h-10 w-10 items-center justify-center ml-1"
+              onPress={() => {
+                const now = new Date();
+                const tarih = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+                updateForm("documentDate", tarih);
+              }}
+            >
+              <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
           </View>
         </View>
 
