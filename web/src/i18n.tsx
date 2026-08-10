@@ -11,6 +11,9 @@ const tr = {
     contact: "İletişim",
     openApp: "Uygulamayı Aç",
   },
+  install: {
+    button: "Uygulamayı İndir",
+  },
   hero: {
     badge: "İşletme yönetimi yeniden tanımlanıyor",
     title1: "İşletmenizi tek",
@@ -178,6 +181,9 @@ const en: Dictionary = {
     faq: "FAQ",
     contact: "Contact",
     openApp: "Open App",
+  },
+  install: {
+    button: "Install App",
   },
   hero: {
     badge: "Business management, redefined",

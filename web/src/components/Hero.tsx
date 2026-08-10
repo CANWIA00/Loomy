@@ -1,5 +1,6 @@
 import { useLanguage } from "../i18n";
 import { APP_URL } from "../App";
+import InstallApp from "./InstallApp";
 
 const lines = ["indigo", "violet", "teal", "indigo"];
 
@@ -26,6 +27,7 @@ export default function Hero() {
           <a className="btn btn-secondary" href="#how-it-works">
             {t.hero.ctaSecondary}
           </a>
+          <InstallApp className="btn-secondary" />
         </div>
 
         <div className="hero-stats">

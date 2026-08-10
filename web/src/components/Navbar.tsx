@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLanguage, type Lang } from "../i18n";
 import { APP_URL } from "../App";
 import { BurgerIcon, CloseIcon } from "../icons";
+import InstallApp from "./InstallApp";
 
 export default function Navbar() {
   const { lang, setLang, t } = useLanguage();
@@ -56,6 +57,8 @@ export default function Navbar() {
           <a className="btn btn-primary nav-cta" href={APP_URL}>
             {t.nav.openApp}
           </a>
+
+          <InstallApp className="btn-secondary nav-cta" />
 
           <button
             type="button"
