@@ -86,7 +86,7 @@ export async function getAllCustomersSimple(
     const customers = await prisma.customer.findMany({
       where: { companyId },
       orderBy: { companyName: "asc" },
-      select: { id: true, companyName: true, contactPerson: true, phone: true, address: true },
+      select: { id: true, companyName: true, contactPerson: true, phone: true, contactPhone: true, address: true },
     });
     res.json(customers);
   } catch (error: any) {

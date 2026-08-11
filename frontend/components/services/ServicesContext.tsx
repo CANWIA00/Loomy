@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Linking, Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 import { useFocusEffect } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -385,46 +385,33 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     return true;
   });
 
+  const buildPdfData = (record: ServiceRecord): PdfData => ({
+    customerName: record.customer,
+    documentDate: record.tarih,
+    serviceAddress: record.adres,
+    phone: record.telefon,
+    services: record.hizmetler || [],
+    technical: record.teknik || [],
+    fee: record.ucret,
+    technician: record.teknisyen,
+    startTime: record.baslangic,
+    endTime: record.bitis,
+    details: record.detaylar,
+    internalIp: record.dahiliIp,
+    externalIp: record.hariciIp,
+    signature: record.signature || null,
+    technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
+    companyLogo: companyLogoRef.current,
+  });
+
   const openServicePDF = (record: ServiceRecord) => {
-    const pdfData: PdfData = {
-      customerName: record.customer,
-      serviceAddress: record.adres,
-      startTime: record.baslangic,
-      endTime: record.bitis,
-      phone: record.telefon,
-      internalIp: record.dahiliIp,
-      externalIp: record.hariciIp,
-      details: record.detaylar,
-      fee: record.ucret,
-      technician: record.teknisyen,
-      documentDate: record.tarih,
-      services: record.hizmetler || [],
-      technical: record.teknik || [],
-      signature: record.signature || null,
-      technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
-      companyLogo: companyLogoRef.current,
-    };
+    const pdfData = buildPdfData(record);
     setPdfPreviewData(pdfData);
     setTimeout(() => handleDownloadPDF(), 100);
   };
 
   const handleViewService = (record: ServiceRecord) => {
-    const pdfData: PdfData = {
-      customerName: record.customer,
-      documentDate: record.tarih,
-      serviceAddress: record.adres,
-      phone: record.telefon,
-      services: record.hizmetler || [],
-      technical: record.teknik || [],
-      fee: record.ucret,
-      technician: record.teknisyen,
-      startTime: record.baslangic,
-      endTime: record.bitis,
-      details: record.detaylar,
-      signature: record.signature || null,
-      technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
-      companyLogo: companyLogoRef.current,
-    };
+    const pdfData = buildPdfData(record);
     const html = generateServicePDFHtml(pdfData, t);
     setPdfPreviewHtml(html);
     setPdfPreviewData(pdfData);
@@ -478,10 +465,6 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const buildShareText = (record: ServiceRecord) => {
-    return `${t("svc.shareTitle")}\n\n${t("svc.colCustomer")}: ${record.customer}\n${t("svc.colService")}: ${record.service}\n${t("svc.colDate")}: ${record.tarih}\n${t("svc.address")}: ${record.adres}\n${t("svc.customerPhone")}: ${record.telefon}\n${t("svc.details")}: ${record.detaylar}\n${t("svc.serviceFee")}: ₺${record.ucret}`;
-  };
-
   const openPhonePicker = (record: ServiceRecord, method: "whatsapp" | "sms") => {
     const options: PhoneOption[] = [];
     const add = (phone: string | undefined, label: string) => {
@@ -491,7 +474,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       }
     };
     add(record.telefon, t("svc.phoneService"));
-    const cust = record.customerId ? customerList.find((c) => c.id === record.customerId) : undefined;
+    let cust = record.customerId ? customerList.find((c) => c.id === record.customerId) : undefined;
+    if (!cust) {
+      cust = customerList.find((c) => c.companyName.trim().toLowerCase() === (record.customer || "").trim().toLowerCase());
+    }
     if (cust) {
       add(cust.phone, t("svc.phoneMain"));
       add(cust.contactPhone, t("svc.phoneContact"));
@@ -514,27 +500,49 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     else shareViaSMS(pending.record, phone);
   };
 
+  const sharePdf = async (record: ServiceRecord) => {
+    try {
+      const html = generateServicePDFHtml(buildPdfData(record), t);
+      if (Platform.OS === "web") {
+        const printWindow = window.open("", "_blank", "width=800,height=600");
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+        } else {
+          Alert.alert(t("svc.error"), t("svc.errorPopup"));
+        }
+      } else {
+        const { uri } = await Print.printToFileAsync({
+          html: html,
+          base64: false,
+        });
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: t("svc.pdfDialogTitle"),
+          UTI: "com.adobe.pdf",
+        });
+      }
+    } catch (error) {
+      Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
+    }
+    setShareModalVisible(false);
+  };
+
   const shareViaWhatsApp = (record: ServiceRecord, phone?: string) => {
     const target = (phone || record.telefon)?.trim();
     if (!target) {
       Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
       return;
     }
-    const number = target.replace(/\s/g, "").replace(/^0/, "90");
-    const text = encodeURIComponent(buildShareText(record));
-    Linking.openURL(`whatsapp://send?phone=${number}&text=${text}`).catch(() =>
-      Alert.alert(t("svc.error"), t("svc.shareError"))
-    );
-    setShareModalVisible(false);
+    sharePdf(record);
   };
 
   const shareViaEmail = (record: ServiceRecord) => {
-    const subject = encodeURIComponent(`${t("svc.shareTitle")} - ${record.customer}`);
-    const body = encodeURIComponent(buildShareText(record));
-    Linking.openURL(`mailto:?subject=${subject}&body=${body}`).catch(() =>
-      Alert.alert(t("svc.error"), t("svc.shareError"))
-    );
-    setShareModalVisible(false);
+    sharePdf(record);
   };
 
   const shareViaSMS = (record: ServiceRecord, phone?: string) => {
@@ -543,17 +551,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
       return;
     }
-    const number = target.replace(/\s/g, "").replace(/^0/, "90");
-    const text = encodeURIComponent(buildShareText(record));
-    Linking.openURL(`sms:${number}?body=${text}`).catch(() =>
-      Alert.alert(t("svc.error"), t("svc.shareError"))
-    );
-    setShareModalVisible(false);
+    sharePdf(record);
   };
 
   const shareViaSystem = (record: ServiceRecord) => {
-    Sharing.shareAsync(buildShareText(record)).catch(() => {});
-    setShareModalVisible(false);
+    sharePdf(record);
   };
 
   const openShareModal = (record: ServiceRecord) => {
