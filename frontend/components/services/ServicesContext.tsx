@@ -3,6 +3,8 @@ import { Alert, Platform } from "react-native";
 import { useFocusEffect } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system/legacy";
+import * as IntentLauncher from "expo-intent-launcher";
 import { generateServicePDFHtml } from "../ServicePDF";
 import { profileApi } from "../../api/profile";
 import { serviceApi, ServiceRecord } from "../../api/services";
@@ -500,31 +502,43 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     else shareViaSMS(pending.record, phone);
   };
 
+  const buildPdfHtml = (record: ServiceRecord) => generateServicePDFHtml(buildPdfData(record), t);
+
+  const printPdfWeb = (html: string) => {
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    } else {
+      Alert.alert(t("svc.error"), t("svc.errorPopup"));
+    }
+  };
+
+  const printPdfToFile = async (html: string) => {
+    const { uri } = await Print.printToFileAsync({ html, base64: false });
+    return uri;
+  };
+
+  const sharePdfFileNative = async (uri: string) => {
+    await Sharing.shareAsync(uri, {
+      mimeType: "application/pdf",
+      dialogTitle: t("svc.pdfDialogTitle"),
+      UTI: "com.adobe.pdf",
+    });
+  };
+
   const sharePdf = async (record: ServiceRecord) => {
     try {
-      const html = generateServicePDFHtml(buildPdfData(record), t);
+      const html = buildPdfHtml(record);
       if (Platform.OS === "web") {
-        const printWindow = window.open("", "_blank", "width=800,height=600");
-        if (printWindow) {
-          printWindow.document.write(html);
-          printWindow.document.close();
-          printWindow.focus();
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
-        } else {
-          Alert.alert(t("svc.error"), t("svc.errorPopup"));
-        }
+        printPdfWeb(html);
       } else {
-        const { uri } = await Print.printToFileAsync({
-          html: html,
-          base64: false,
-        });
-        await Sharing.shareAsync(uri, {
-          mimeType: "application/pdf",
-          dialogTitle: t("svc.pdfDialogTitle"),
-          UTI: "com.adobe.pdf",
-        });
+        const uri = await printPdfToFile(html);
+        await sharePdfFileNative(uri);
       }
     } catch (error) {
       Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
@@ -532,13 +546,38 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setShareModalVisible(false);
   };
 
-  const shareViaWhatsApp = (record: ServiceRecord, phone?: string) => {
+  const shareViaWhatsApp = async (record: ServiceRecord, phone?: string) => {
     const target = (phone || record.telefon)?.trim();
     if (!target) {
       Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
       return;
     }
-    sharePdf(record);
+    setShareModalVisible(false);
+    try {
+      const html = buildPdfHtml(record);
+      if (Platform.OS === "web") {
+        printPdfWeb(html);
+        return;
+      }
+      const uri = await printPdfToFile(html);
+      if (Platform.OS === "android") {
+        try {
+          const contentUri = await FileSystem.getContentUriAsync(uri);
+          await IntentLauncher.startActivityAsync("android.intent.action.SEND", {
+            type: "application/pdf",
+            packageName: "com.whatsapp",
+            extra: {
+              "android.intent.extra.STREAM": contentUri,
+              "android.intent.extra.TEXT": `${t("svc.shareTitle")} - ${record.customer}`,
+            },
+          });
+          return;
+        } catch {}
+      }
+      await sharePdfFileNative(uri);
+    } catch (error) {
+      Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
+    }
   };
 
   const shareViaEmail = (record: ServiceRecord) => {

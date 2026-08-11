@@ -63,71 +63,58 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
 <head>
   <meta charset="UTF-8" />
   <style>
-    @page { margin: 20px; size: A4; }
+    @page { margin: 12mm; size: A4; }
     html, body {
-      height: 100%;
       margin: 0;
       padding: 0;
     }
     body {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
+      font-size: 10px;
       color: #222238;
-      padding: 20px;
-      box-sizing: border-box;
-      position: relative;
-      min-height: 100vh;
     }
     .content-wrapper {
       padding-bottom: 0;
-    }
-    .bottom-fixed {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      padding: 0 20px 6px 20px;
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #222238;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
     }
     .logo-area {
-      min-width: 100px;
+      min-width: 90px;
       display: flex;
       align-items: center;
     }
     .title {
-      font-size: 20px;
+      font-size: 17px;
       font-weight: bold;
       text-align: center;
       flex: 1;
     }
     .date-area {
-      font-size: 12px;
+      font-size: 10px;
       text-align: right;
-      min-width: 100px;
+      min-width: 90px;
     }
     .section {
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
     .section-title {
-      font-size: 12px;
+      font-size: 10px;
       font-weight: bold;
       text-transform: uppercase;
       border-bottom: 1px solid #222238;
-      padding-bottom: 4px;
-      margin-bottom: 10px;
+      padding-bottom: 2px;
+      margin-bottom: 5px;
     }
     .two-column {
       display: flex;
-      gap: 20px;
-      margin-bottom: 16px;
+      gap: 24px;
+      margin-bottom: 8px;
     }
     .two-column .section {
       flex: 1;
@@ -136,11 +123,11 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .info-list {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
     }
     .info-item {
-      font-size: 11px;
-      line-height: 1.6;
+      font-size: 10px;
+      line-height: 1.45;
     }
     .label {
       font-weight: bold;
@@ -151,19 +138,19 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .checkbox-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4px 16px;
+      gap: 1px 14px;
     }
     .checkbox-item {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      line-height: 1.6;
+      gap: 5px;
+      font-size: 10px;
+      line-height: 1.45;
     }
     .checkbox-box {
       display: inline-block;
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border: 1.5px solid #222238;
       border-radius: 2px;
       flex-shrink: 0;
@@ -177,8 +164,8 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       position: absolute;
       left: 3px;
       top: 1px;
-      width: 4px;
-      height: 7px;
+      width: 3px;
+      height: 6px;
       border: solid white;
       border-width: 0 1.5px 1.5px 0;
       transform: rotate(45deg);
@@ -187,20 +174,20 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       font-weight: normal;
     }
     .details-content {
-      font-size: 11px;
-      line-height: 1.6;
+      font-size: 10px;
+      line-height: 1.45;
       white-space: pre-wrap;
     }
     .fee-content {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
-      line-height: 1.6;
+      line-height: 1.5;
     }
     .signature-section {
       display: flex;
-      gap: 40px;
-      margin: 0;
-      padding: 4px 0 40px 0;
+      gap: 36px;
+      margin-top: 10px;
+      padding-top: 2px;
     }
     .signature-box {
       flex: 1;
@@ -212,30 +199,31 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .signature-line {
       width: 100%;
       border-bottom: 1px solid #222238;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .signature-label {
-      font-size: 10px;
+      font-size: 9px;
       color: #666;
       margin-bottom: 2px;
     }
     .signature-name {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .signature-svg {
       text-align: center;
     }
     .footer {
-      padding: 6px 20px 8px 20px;
+      margin-top: 10px;
       border-top: 1px solid #ccc;
+      padding-top: 4px;
       text-align: center;
     }
     .footer-text {
-      font-size: 9px;
+      font-size: 8px;
       color: #888;
-      line-height: 1.5;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -301,27 +289,25 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     </div>
   </div>
 
-  <div class="bottom-fixed">
-    <div class="signature-section">
-      <div class="signature-box">
-        <div class="signature-label">${t("pdf.customerSignatureLabel")}</div>
-        <div class="signature-line"></div>
-        <div class="signature-name">${escapeHtml(data.customerName || '')}</div>
-        ${data.signature ? `<div class="signature-svg">${renderSignatureSvg(data.signature)}</div>` : ''}
-      </div>
-      <div class="signature-box">
-        <div class="signature-label">${t("pdf.technicianSignatureLabel")}</div>
-        <div class="signature-line"></div>
-        <div class="signature-name">${escapeHtml(data.technician || '')}</div>
-        ${data.technicianSignature ? `<div class="signature-svg">${renderSignatureSvg(data.technicianSignature)}</div>` : ''}
-      </div>
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-label">${t("pdf.customerSignatureLabel")}</div>
+      <div class="signature-line"></div>
+      <div class="signature-name">${escapeHtml(data.customerName || '')}</div>
+      ${data.signature ? `<div class="signature-svg">${renderSignatureSvg(data.signature)}</div>` : ''}
     </div>
+    <div class="signature-box">
+      <div class="signature-label">${t("pdf.technicianSignatureLabel")}</div>
+      <div class="signature-line"></div>
+      <div class="signature-name">${escapeHtml(data.technician || '')}</div>
+      ${data.technicianSignature ? `<div class="signature-svg">${renderSignatureSvg(data.technicianSignature)}</div>` : ''}
+    </div>
+  </div>
 
-    <div class="footer">
-      <div class="footer-text">${t("pdf.companyNameLabel")}</div>
-      <div class="footer-text">${t("pdf.companyAddressLabel")}</div>
-      <div class="footer-text">Tel: 0232 365 20 87 &nbsp;&nbsp; Gsm: 0 533 368 03 13</div>
-    </div>
+  <div class="footer">
+    <div class="footer-text">${t("pdf.companyNameLabel")}</div>
+    <div class="footer-text">${t("pdf.companyAddressLabel")}</div>
+    <div class="footer-text">Tel: 0232 365 20 87 &nbsp;&nbsp; Gsm: 0 533 368 03 13</div>
   </div>
 
 </body>
