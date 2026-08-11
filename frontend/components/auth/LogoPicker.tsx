@@ -1,5 +1,6 @@
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
+import SvgAwareImage from "../SvgAwareImage";
 
 interface LogoPickerProps {
   uri: string;
@@ -17,10 +18,9 @@ export default function LogoPicker({ uri, onPress, label, hint }: LogoPickerProp
         {label}
       </Text>
       <TouchableOpacity onPress={onPress} className="mt-1">
-        <Image
-          source={{ uri }}
-          className="w-20 h-20 rounded-xl"
-          style={{ backgroundColor: colors.bgInput }}
+        <SvgAwareImage
+          uri={uri}
+          style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.bgInput }}
           resizeMode="cover"
         />
       </TouchableOpacity>

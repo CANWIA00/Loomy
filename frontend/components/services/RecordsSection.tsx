@@ -21,7 +21,7 @@ export default function RecordsSection() {
     filterCustomer,
     setFilterCustomer,
     resetFilters,
-    openShareModal,
+    handleShare,
     handleViewService,
     openServicePDF,
     handleEdit,
@@ -129,7 +129,7 @@ export default function RecordsSection() {
                 {k.service}
               </Text>
               <View className="flex-row items-center justify-end gap-2.5">
-                <TouchableOpacity onPress={() => openShareModal(k)}>
+                <TouchableOpacity onPress={() => handleShare(k)}>
                   <Ionicons name="share-social-outline" size={20} color={colors.purple} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })}>

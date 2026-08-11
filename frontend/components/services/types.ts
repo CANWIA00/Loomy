@@ -68,6 +68,7 @@ export interface PdfData {
   signature: any;
   technicianSignature: any;
   companyLogo: string | null;
+  companyStamp: string | null;
 }
 
 export type RecordFilter = "all" | "gun" | "ay" | "yil";

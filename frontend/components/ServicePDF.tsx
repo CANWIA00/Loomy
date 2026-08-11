@@ -75,6 +75,12 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     }
     .content-wrapper {
       padding-bottom: 0;
+      min-height: 270mm;
+      display: flex;
+      flex-direction: column;
+    }
+    .section-push {
+      margin-top: auto;
     }
     .header {
       display: flex;
@@ -186,7 +192,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .signature-section {
       display: flex;
       gap: 36px;
-      margin-top: 10px;
+      margin-top: 30px;
       padding-top: 2px;
     }
     .signature-box {
@@ -212,6 +218,10 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       margin-bottom: 4px;
     }
     .signature-svg {
+      text-align: center;
+    }
+    .signature-stamp {
+      margin-top: 6px;
       text-align: center;
     }
     .footer {
@@ -279,7 +289,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     </div>
   </div>
 
-  <div class="section">
+  <div class="section section-push">
     <div class="section-title">${t("pdf.serviceFee")}</div>
     <div class="fee-content">
       ${data.fee && data.fee !== "0" && data.fee !== "0.00" ?
@@ -301,6 +311,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       <div class="signature-line"></div>
       <div class="signature-name">${escapeHtml(data.technician || '')}</div>
       ${data.technicianSignature ? `<div class="signature-svg">${renderSignatureSvg(data.technicianSignature)}</div>` : ''}
+      ${data.companyStamp ? `<div class="signature-stamp"><img src="${data.companyStamp}" onerror="this.style.display='none'" style="width:46mm;height:16mm;object-fit:contain;" /></div>` : ''}
     </div>
   </div>
 

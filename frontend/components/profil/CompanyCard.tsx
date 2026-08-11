@@ -1,9 +1,11 @@
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useProfil } from "./ProfilContext";
+import { removeWhiteBackground } from "../../utils/image";
+import SvgAwareImage from "../SvgAwareImage";
 
 export default function CompanyCard() {
   const { colors } = useTheme();
@@ -28,6 +30,8 @@ export default function CompanyCard() {
     setEditCompanyTaxNumber,
     editCompanyLogo,
     setEditCompanyLogo,
+    editCompanyStamp,
+    setEditCompanyStamp,
     handleCopyInviteCode,
   } = useProfil();
 
@@ -60,6 +64,20 @@ export default function CompanyCard() {
     });
     if (!result.canceled && result.assets[0].base64) {
       setEditCompanyLogo(`data:image/png;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const pickStamp = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+    if (!result.canceled && result.assets[0].base64) {
+      const processed = await removeWhiteBackground(`data:image/png;base64,${result.assets[0].base64}`);
+      setEditCompanyStamp(processed);
     }
   };
 
@@ -100,8 +118,8 @@ export default function CompanyCard() {
             <Ionicons name="image-outline" size={24} color={colors.textMuted} />
           </View>
         ) : company.logoUrl ? (
-          <Image
-            source={{ uri: company.logoUrl }}
+          <SvgAwareImage
+            uri={company.logoUrl}
             style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.bgInput }}
             resizeMode="cover"
           />
@@ -223,10 +241,43 @@ export default function CompanyCard() {
               )}
             </View>
             {editCompanyLogo && (
-              <Image source={{ uri: editCompanyLogo }} style={{ width: "100%", height: 64, borderRadius: 8, marginTop: 8, backgroundColor: colors.bgInput }} resizeMode="contain" />
+              <SvgAwareImage uri={editCompanyLogo} style={{ width: "100%", height: 64, borderRadius: 8, marginTop: 8, backgroundColor: colors.bgInput }} resizeMode="contain" />
             )}
           </View>
         )}
+        <View>
+          <Text style={labelStyle}>{t("prf.stamp")}</Text>
+          {editingCompany && (
+            <View className="flex-row items-center gap-3 mb-2">
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: colors.bgInput, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.primary + "4D", flexDirection: "row", alignItems: "center", gap: 8 }}
+                onPress={pickStamp}
+                disabled={saving}
+              >
+                <Ionicons name="image-outline" size={18} color={colors.primary} />
+                <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                  {editCompanyStamp ? t("prf.stampSelected") : t("prf.stampSelect")}
+                </Text>
+              </TouchableOpacity>
+              {editCompanyStamp && (
+                <TouchableOpacity onPress={() => setEditCompanyStamp(null)} disabled={saving}>
+                  <Ionicons name="close-circle" size={20} color={colors.danger} />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+          {(editingCompany ? editCompanyStamp || company.stampUrl : company.stampUrl) ? (
+            <SvgAwareImage
+              uri={(editingCompany ? editCompanyStamp || company.stampUrl : company.stampUrl) as string}
+              style={{ width: "100%", height: 90, borderRadius: 8, backgroundColor: colors.bgInput }}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={{ height: 90, borderRadius: 8, borderWidth: 1, borderStyle: "dashed", borderColor: colors.textMuted + "55", backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="image-outline" size={26} color={colors.textMuted} />
+            </View>
+          )}
+        </View>
       </View>
     </View>
   );

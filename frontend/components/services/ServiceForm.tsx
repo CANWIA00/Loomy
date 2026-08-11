@@ -1,9 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useServices } from "./ServicesContext";
 import { serviceKeys, technicalKeys } from "./types";
+import SvgAwareImage from "../SvgAwareImage";
 
 const formatTimeInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 4);
@@ -78,10 +79,9 @@ export default function ServiceForm() {
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center flex-1">
             {companyLogo && (
-              <Image
-                source={{ uri: companyLogo }}
-                className="h-9 w-9 mr-2"
-                style={{ borderRadius: 8, backgroundColor: colors.bg }}
+              <SvgAwareImage
+                uri={companyLogo}
+                style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: colors.bg }}
                 resizeMode="contain"
               />
             )}

@@ -1,6 +1,58 @@
 import { Response } from "express";
 import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
+import { Jimp } from "jimp";
+import ImageTracer from "imagetracerjs";
+
+async function imageToSvgDataUri(dataUri: string): Promise<string> {
+  try {
+    const base64 = dataUri.split(",")[1];
+    const buffer = Buffer.from(base64, "base64");
+    const image = await Jimp.read(buffer);
+
+    const maxSize = 600;
+    if (image.bitmap.width > maxSize || image.bitmap.height > maxSize) {
+      if (image.bitmap.width >= image.bitmap.height) {
+        image.resize({ w: maxSize });
+      } else {
+        image.resize({ h: maxSize });
+      }
+    }
+
+    image.scan((_x, _y, idx) => {
+      const { data } = image.bitmap;
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
+      if (r >= 235 && g >= 235 && b >= 235) {
+        data[idx + 3] = 0;
+      }
+    });
+
+    const imagedata = {
+      width: image.bitmap.width,
+      height: image.bitmap.height,
+      data: Uint8Array.from(image.bitmap.data),
+    };
+    const svg = ImageTracer.imagedataToSVG(imagedata, {
+      pathomit: 4,
+      numberofcolors: 8,
+      colorquantcycles: 3,
+    });
+
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  } catch (error) {
+    console.error("imageToSvgDataUri error:", error);
+    return dataUri;
+  }
+}
+
+async function toSvgDataUri(url?: string): Promise<string | undefined> {
+  if (url && url.startsWith("data:image") && !url.startsWith("data:image/svg")) {
+    return imageToSvgDataUri(url);
+  }
+  return url;
+}
 
 export async function getProfile(
   req: AuthRequest,
@@ -27,6 +79,7 @@ export async function getProfile(
             taxNumber: true,
             invitationCode: true,
             logoUrl: true,
+            stampUrl: true,
             profileCompleted: true,
             _count: { select: { users: true } },
           },
@@ -93,7 +146,7 @@ export async function updateCompany(
   res: Response
 ): Promise<void> {
   try {
-    const { name, address, phone, email, taxNumber, logoUrl } = req.body;
+    const { name, address, phone, email, taxNumber, logoUrl, stampUrl } = req.body;
 
     if (!name) {
       res.status(400).json({ message: "Şirket adı zorunludur." });
@@ -110,6 +163,9 @@ export async function updateCompany(
       return;
     }
 
+    const processedLogoUrl = await toSvgDataUri(logoUrl);
+    const processedStampUrl = await toSvgDataUri(stampUrl);
+
     const company = await prisma.company.update({
       where: { id: user.companyId },
       data: {
@@ -118,7 +174,8 @@ export async function updateCompany(
         phone,
         email,
         taxNumber,
-        logoUrl,
+        logoUrl: processedLogoUrl,
+        stampUrl: processedStampUrl,
         profileCompleted: true,
       },
       select: {
@@ -130,6 +187,7 @@ export async function updateCompany(
         taxNumber: true,
         invitationCode: true,
         logoUrl: true,
+        stampUrl: true,
         profileCompleted: true,
       },
     });

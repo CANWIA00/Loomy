@@ -9,6 +9,7 @@ export interface CompanyDto {
   email: string;
   taxNumber?: string;
   logoUrl?: string;
+  stampUrl?: string;
   invitationCode?: string;
 }
 
@@ -30,6 +31,7 @@ export interface UpdateCompanyRequest {
   email: string;
   taxNumber: string;
   logoUrl: string;
+  stampUrl: string;
 }
 
 export const profileApi = {

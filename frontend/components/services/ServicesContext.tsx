@@ -3,9 +3,8 @@ import { Alert, Platform } from "react-native";
 import { useFocusEffect } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system/legacy";
-import * as IntentLauncher from "expo-intent-launcher";
 import { generateServicePDFHtml } from "../ServicePDF";
+import { shareWebPdf } from "../../utils/webPdf";
 import { profileApi } from "../../api/profile";
 import { serviceApi, ServiceRecord } from "../../api/services";
 import { customerApi, Customer } from "../../api/customers";
@@ -15,17 +14,6 @@ import { initialForm, initialNewCustomerForm, type ServiceFormData, type NewCust
 interface DeleteAlertState {
   visible: boolean;
   record: ServiceRecord | null;
-}
-
-interface PhoneOption {
-  id: string;
-  label: string;
-  phone: string;
-}
-
-interface PendingShare {
-  record: ServiceRecord;
-  method: "whatsapp" | "sms";
 }
 
 interface ServicesContextValue {
@@ -69,20 +57,7 @@ interface ServicesContextValue {
   filterCustomer: string;
   setFilterCustomer: (v: string) => void;
   resetFilters: () => void;
-  openShareModal: (record: ServiceRecord) => void;
-  shareModalVisible: boolean;
-  setShareModalVisible: (v: boolean) => void;
-  shareRecord: ServiceRecord | null;
-  phonePickerVisible: boolean;
-  setPhonePickerVisible: (v: boolean) => void;
-  phoneOptions: PhoneOption[];
-  pendingShare: PendingShare | null;
-  openPhonePicker: (record: ServiceRecord, method: "whatsapp" | "sms") => void;
-  confirmShareWithPhone: (phone: string) => void;
-  shareViaWhatsApp: (record: ServiceRecord, phone?: string) => void;
-  shareViaEmail: (record: ServiceRecord) => void;
-  shareViaSMS: (record: ServiceRecord, phone?: string) => void;
-  shareViaSystem: (record: ServiceRecord) => void;
+  handleShare: (record: ServiceRecord) => void;
   handleViewService: (record: ServiceRecord) => void;
   openServicePDF: (record: ServiceRecord) => void;
   handleEdit: (record: ServiceRecord) => void;
@@ -140,14 +115,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const originalFormRef = useRef<ServiceFormData | null>(null);
   const [saveAlertVisible, setSaveAlertVisible] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<DeleteAlertState>({ visible: false, record: null });
-  const [shareModalVisible, setShareModalVisible] = useState(false);
-  const [shareRecord, setShareRecord] = useState<ServiceRecord | null>(null);
-  const [phonePickerVisible, setPhonePickerVisible] = useState(false);
-  const [phoneOptions, setPhoneOptions] = useState<PhoneOption[]>([]);
-  const [pendingShare, setPendingShare] = useState<PendingShare | null>(null);
   const technicianSignatureRef = useRef<any>(null);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const companyLogoRef = useRef<string | null>(null);
+  const companyStampRef = useRef<string | null>(null);
 
   const fetchRecords = useCallback(async () => {
     try {
@@ -170,6 +141,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       const name = res.data.user?.name || "";
       const sig = res.data.user?.signature;
       const logo = res.data.company?.logoUrl || null;
+      const stamp = res.data.company?.stampUrl || null;
       setHasSignature(!!sig);
       if (name) {
         currentUserName.current = name;
@@ -183,6 +155,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       if (logo) {
         companyLogoRef.current = logo;
         setCompanyLogo(logo);
+      }
+      if (stamp) {
+        companyStampRef.current = stamp;
       }
     }).catch(() => {});
   }, [fetchRecords, fetchCustomers]);
@@ -198,9 +173,13 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           } catch {}
         }
         const logo = res.data.company?.logoUrl || null;
+        const stamp = res.data.company?.stampUrl || null;
         if (logo) {
           companyLogoRef.current = logo;
           setCompanyLogo(logo);
+        }
+        if (stamp) {
+          companyStampRef.current = stamp;
         }
       }).catch(() => {});
     }, [])
@@ -404,6 +383,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     signature: record.signature || null,
     technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
     companyLogo: companyLogoRef.current,
+    companyStamp: companyStampRef.current,
   });
 
   const openServicePDF = (record: ServiceRecord) => {
@@ -467,56 +447,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const openPhonePicker = (record: ServiceRecord, method: "whatsapp" | "sms") => {
-    const options: PhoneOption[] = [];
-    const add = (phone: string | undefined, label: string) => {
-      if (phone && phone.trim()) {
-        const trimmed = phone.trim();
-        options.push({ id: `${label}-${trimmed}`, label, phone: trimmed });
-      }
-    };
-    add(record.telefon, t("svc.phoneService"));
-    let cust = record.customerId ? customerList.find((c) => c.id === record.customerId) : undefined;
-    if (!cust) {
-      cust = customerList.find((c) => c.companyName.trim().toLowerCase() === (record.customer || "").trim().toLowerCase());
-    }
-    if (cust) {
-      add(cust.phone, t("svc.phoneMain"));
-      add(cust.contactPhone, t("svc.phoneContact"));
-    }
-    if (options.length === 0) {
-      Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
-      return;
-    }
-    setPendingShare({ record, method });
-    setPhoneOptions(options);
-    setPhonePickerVisible(true);
-  };
-
-  const confirmShareWithPhone = (phone: string) => {
-    const pending = pendingShare;
-    setPhonePickerVisible(false);
-    setPendingShare(null);
-    if (!pending) return;
-    if (pending.method === "whatsapp") shareViaWhatsApp(pending.record, phone);
-    else shareViaSMS(pending.record, phone);
-  };
-
   const buildPdfHtml = (record: ServiceRecord) => generateServicePDFHtml(buildPdfData(record), t);
-
-  const printPdfWeb = (html: string) => {
-    const printWindow = window.open("", "_blank", "width=800,height=600");
-    if (printWindow) {
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
-    } else {
-      Alert.alert(t("svc.error"), t("svc.errorPopup"));
-    }
-  };
 
   const printPdfToFile = async (html: string) => {
     const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -531,11 +462,12 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const sharePdf = async (record: ServiceRecord) => {
+  const handleShare = async (record: ServiceRecord) => {
     try {
       const html = buildPdfHtml(record);
       if (Platform.OS === "web") {
-        printPdfWeb(html);
+        const fileName = `${record.customer || "servis"} - ${record.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
+        await shareWebPdf(html, fileName);
       } else {
         const uri = await printPdfToFile(html);
         await sharePdfFileNative(uri);
@@ -543,63 +475,6 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
     }
-    setShareModalVisible(false);
-  };
-
-  const shareViaWhatsApp = async (record: ServiceRecord, phone?: string) => {
-    const target = (phone || record.telefon)?.trim();
-    if (!target) {
-      Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
-      return;
-    }
-    setShareModalVisible(false);
-    try {
-      const html = buildPdfHtml(record);
-      if (Platform.OS === "web") {
-        printPdfWeb(html);
-        return;
-      }
-      const uri = await printPdfToFile(html);
-      if (Platform.OS === "android") {
-        try {
-          const contentUri = await FileSystem.getContentUriAsync(uri);
-          await IntentLauncher.startActivityAsync("android.intent.action.SEND", {
-            type: "application/pdf",
-            packageName: "com.whatsapp",
-            extra: {
-              "android.intent.extra.STREAM": contentUri,
-              "android.intent.extra.TEXT": `${t("svc.shareTitle")} - ${record.customer}`,
-            },
-          });
-          return;
-        } catch {}
-      }
-      await sharePdfFileNative(uri);
-    } catch (error) {
-      Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
-    }
-  };
-
-  const shareViaEmail = (record: ServiceRecord) => {
-    sharePdf(record);
-  };
-
-  const shareViaSMS = (record: ServiceRecord, phone?: string) => {
-    const target = (phone || record.telefon)?.trim();
-    if (!target) {
-      Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
-      return;
-    }
-    sharePdf(record);
-  };
-
-  const shareViaSystem = (record: ServiceRecord) => {
-    sharePdf(record);
-  };
-
-  const openShareModal = (record: ServiceRecord) => {
-    setShareRecord(record);
-    setShareModalVisible(true);
   };
 
   const clearCustomerSelection = () => {
@@ -686,20 +561,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     filterCustomer,
     setFilterCustomer,
     resetFilters,
-    openShareModal,
-    shareModalVisible,
-    setShareModalVisible,
-    shareRecord,
-    phonePickerVisible,
-    setPhonePickerVisible,
-    phoneOptions,
-    pendingShare,
-    openPhonePicker,
-    confirmShareWithPhone,
-    shareViaWhatsApp,
-    shareViaEmail,
-    shareViaSMS,
-    shareViaSystem,
+    handleShare,
     handleViewService,
     openServicePDF,
     handleEdit,

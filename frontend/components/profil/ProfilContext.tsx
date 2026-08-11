@@ -41,6 +41,10 @@ interface ProfilContextValue {
   setEditCompanyLogoUrl: (v: string) => void;
   editCompanyLogo: string | null;
   setEditCompanyLogo: (v: string | null) => void;
+  editCompanyStampUrl: string;
+  setEditCompanyStampUrl: (v: string) => void;
+  editCompanyStamp: string | null;
+  setEditCompanyStamp: (v: string | null) => void;
   startEditingCompany: () => void;
   cancelEditingCompany: () => void;
   handleUpdateCompany: () => void;
@@ -85,6 +89,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
   const [editCompanyTaxNumber, setEditCompanyTaxNumber] = useState("");
   const [editCompanyLogoUrl, setEditCompanyLogoUrl] = useState("");
   const [editCompanyLogo, setEditCompanyLogo] = useState<string | null>(null);
+  const [editCompanyStampUrl, setEditCompanyStampUrl] = useState("");
+  const [editCompanyStamp, setEditCompanyStamp] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [signatureModalVisible, setSignatureModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -208,6 +214,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyTaxNumber(company?.taxNumber || "");
     setEditCompanyLogoUrl(company?.logoUrl || "");
     setEditCompanyLogo(null);
+    setEditCompanyStampUrl(company?.stampUrl || "");
+    setEditCompanyStamp(null);
     setEditingCompany(true);
   };
 
@@ -220,6 +228,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyTaxNumber("");
     setEditCompanyLogoUrl("");
     setEditCompanyLogo(null);
+    setEditCompanyStampUrl("");
+    setEditCompanyStamp(null);
   };
 
   const handleUpdateCompany = async () => {
@@ -237,6 +247,7 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
         email: editCompanyEmail.trim(),
         taxNumber: editCompanyTaxNumber.trim(),
         logoUrl: editCompanyLogo || editCompanyLogoUrl.trim(),
+        stampUrl: editCompanyStamp || editCompanyStampUrl.trim(),
       });
 
       setProfile((prev) => prev ? { ...prev, company: response.data } : prev);
@@ -281,6 +292,10 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyLogoUrl,
     editCompanyLogo,
     setEditCompanyLogo,
+    editCompanyStampUrl,
+    setEditCompanyStampUrl,
+    editCompanyStamp,
+    setEditCompanyStamp,
     startEditingCompany,
     cancelEditingCompany,
     handleUpdateCompany,

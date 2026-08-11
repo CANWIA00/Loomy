@@ -41,6 +41,7 @@ model Company {
   taxNumber        String?
   invitationCode   String   @unique
   logoUrl          String?
+  stampUrl         String?
   profileCompleted Boolean  @default(false)
   isFrozen         Boolean  @default(false)
   paidUntil        DateTime?

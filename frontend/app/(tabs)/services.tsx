@@ -8,7 +8,6 @@ import ServiceForm from "../../components/services/ServiceForm";
 import RecordsSection from "../../components/services/RecordsSection";
 import SignatureModal from "../../components/services/modals/SignatureModal";
 import SignatureRequiredModal from "../../components/services/modals/SignatureRequiredModal";
-import ShareModal from "../../components/services/modals/ShareModal";
 import PdfPreviewModal from "../../components/services/modals/PdfPreviewModal";
 import MapSelector from "../../components/MapSelector";
 import CustomAlert from "../../components/CustomAlert";
@@ -93,7 +92,6 @@ function ServicesScreenInner() {
 
       <SignatureModal />
       <SignatureRequiredModal />
-      <ShareModal />
       <PdfPreviewModal />
     </>
   );
