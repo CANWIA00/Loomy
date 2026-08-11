@@ -269,11 +269,11 @@ export default function CompanyCard() {
           {(editingCompany ? editCompanyStamp || company.stampUrl : company.stampUrl) ? (
             <SvgAwareImage
               uri={(editingCompany ? editCompanyStamp || company.stampUrl : company.stampUrl) as string}
-              style={{ width: "100%", height: 90, borderRadius: 8, backgroundColor: colors.bgInput }}
+              style={{ width: 110, height: 110, borderRadius: 8, alignSelf: "flex-start", backgroundColor: colors.bgInput }}
               resizeMode="contain"
             />
           ) : (
-            <View style={{ height: 90, borderRadius: 8, borderWidth: 1, borderStyle: "dashed", borderColor: colors.textMuted + "55", backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center" }}>
+            <View style={{ height: 110, borderRadius: 8, borderWidth: 1, borderStyle: "dashed", borderColor: colors.textMuted + "55", backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center" }}>
               <Ionicons name="image-outline" size={26} color={colors.textMuted} />
             </View>
           )}

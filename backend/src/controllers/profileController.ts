@@ -26,7 +26,12 @@ async function imageToSvgDataUri(dataUri: string): Promise<string> {
       const b = data[idx + 2];
       if (r >= 235 && g >= 235 && b >= 235) {
         data[idx + 3] = 0;
+        return;
       }
+      const darken = (v: number) => Math.max(0, Math.min(255, Math.round((v - 128) * 1.4 + 128)));
+      data[idx] = darken(r);
+      data[idx + 1] = darken(g);
+      data[idx + 2] = darken(b);
     });
 
     const imagedata = {
