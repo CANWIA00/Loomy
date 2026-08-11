@@ -143,6 +143,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.errorUpdate": "Güncelleme sırasında bir sorun oluştu.",
     "svc.errorDelete": "Servis kaydı silinemedi.",
     "svc.errorRequired": "Müşteri adı zorunludur.",
+    "svc.errorTimeEqual": "Başlangıç ve bitiş saati aynı olamaz.",
     "svc.errorCompanyRequired": "Şirket adı zorunludur.",
     "svc.errorCustomerAdd": "Müşteri eklenirken bir sorun oluştu.",
     "svc.noSignature": "Servis kaydı oluşturmak veya güncellemek için lütfen profil sayfasından kendi imzanızı kaydedin.",
@@ -153,6 +154,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.shareTitle": "Servis Kaydı",
     "svc.shareOther": "Diğer",
     "svc.shareError": "Paylaşım sırasında bir hata oluştu.",
+    "svc.sharePhoneTitle": "Numara Seç",
+    "svc.phoneService": "Servis kaydı telefonu",
+    "svc.phoneMain": "Ana telefon",
+    "svc.phoneContact": "İrtibat telefonu",
+    "svc.phoneNotFound": "Bu kayıt için telefon numarası bulunamadı.",
 
     // Customers
     "cst.title": "Müşteri Yönetimi",
@@ -724,6 +730,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.errorUpdate": "An error occurred while updating.",
     "svc.errorDelete": "Could not delete service record.",
     "svc.errorRequired": "Customer name is required.",
+    "svc.errorTimeEqual": "Start and end time cannot be the same.",
     "svc.errorCompanyRequired": "Company name is required.",
     "svc.errorCustomerAdd": "An error occurred while adding customer.",
     "svc.noSignature": "To create or update a service record, please save your signature from the profile page.",
@@ -734,6 +741,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.shareTitle": "Service Record",
     "svc.shareOther": "Other",
     "svc.shareError": "An error occurred while sharing.",
+    "svc.sharePhoneTitle": "Select Number",
+    "svc.phoneService": "Service record phone",
+    "svc.phoneMain": "Main phone",
+    "svc.phoneContact": "Contact phone",
+    "svc.phoneNotFound": "No phone number found for this record.",
 
     // Customers
     "cst.title": "Customer Management",

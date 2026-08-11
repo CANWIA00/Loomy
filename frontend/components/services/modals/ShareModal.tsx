@@ -11,10 +11,13 @@ export default function ShareModal() {
     shareModalVisible,
     setShareModalVisible,
     shareRecord,
-    shareViaWhatsApp,
+    openPhonePicker,
     shareViaEmail,
-    shareViaSMS,
     shareViaSystem,
+    phonePickerVisible,
+    setPhonePickerVisible,
+    phoneOptions,
+    confirmShareWithPhone,
   } = useServices();
 
   const close = () => setShareModalVisible(false);
@@ -39,7 +42,7 @@ export default function ShareModal() {
             <TouchableOpacity
               className="flex-row items-center gap-3 p-4 rounded-xl"
               style={{ backgroundColor: "#25D36615", borderColor: "#25D36640", borderWidth: 1 }}
-              onPress={() => shareRecord && shareViaWhatsApp(shareRecord)}
+              onPress={() => shareRecord && openPhonePicker(shareRecord, "whatsapp")}
             >
               <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
               <Text style={{ color: colors.text }} className="text-sm font-medium">WhatsApp</Text>
@@ -55,7 +58,7 @@ export default function ShareModal() {
             <TouchableOpacity
               className="flex-row items-center gap-3 p-4 rounded-xl"
               style={{ backgroundColor: colors.success + "15", borderColor: colors.success + "40", borderWidth: 1 }}
-              onPress={() => shareRecord && shareViaSMS(shareRecord)}
+              onPress={() => shareRecord && openPhonePicker(shareRecord, "sms")}
             >
               <Ionicons name="chatbubble-outline" size={22} color={colors.success} />
               <Text style={{ color: colors.text }} className="text-sm font-medium">SMS</Text>
@@ -71,6 +74,35 @@ export default function ShareModal() {
           </View>
         </View>
       </View>
+
+      <Modal visible={phonePickerVisible} transparent animationType="fade" onRequestClose={() => setPhonePickerVisible(false)}>
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+          <View className="rounded-2xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}>
+            <View className="flex-row justify-between items-center mb-5">
+              <Text style={{ color: colors.text }} className="text-lg font-bold">{t("svc.sharePhoneTitle")}</Text>
+              <TouchableOpacity onPress={() => setPhonePickerVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            <View className="gap-3">
+              {phoneOptions.map((opt) => (
+                <TouchableOpacity
+                  key={opt.id}
+                  className="flex-row items-center gap-3 p-4 rounded-xl"
+                  style={{ backgroundColor: colors.bgInput, borderColor: colors.border, borderWidth: 1 }}
+                  onPress={() => confirmShareWithPhone(opt.phone)}
+                >
+                  <Ionicons name="call-outline" size={20} color={colors.primary} />
+                  <View className="flex-1">
+                    <Text style={{ color: colors.text }} className="text-sm font-medium">{opt.phone}</Text>
+                    <Text style={{ color: colors.textMuted }} className="text-xs mt-0.5">{opt.label}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 }

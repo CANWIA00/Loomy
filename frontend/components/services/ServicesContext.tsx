@@ -15,6 +15,17 @@ interface DeleteAlertState {
   record: ServiceRecord | null;
 }
 
+interface PhoneOption {
+  id: string;
+  label: string;
+  phone: string;
+}
+
+interface PendingShare {
+  record: ServiceRecord;
+  method: "whatsapp" | "sms";
+}
+
 interface ServicesContextValue {
   loading: boolean;
   companyLogo: string | null;
@@ -60,9 +71,15 @@ interface ServicesContextValue {
   shareModalVisible: boolean;
   setShareModalVisible: (v: boolean) => void;
   shareRecord: ServiceRecord | null;
-  shareViaWhatsApp: (record: ServiceRecord) => void;
+  phonePickerVisible: boolean;
+  setPhonePickerVisible: (v: boolean) => void;
+  phoneOptions: PhoneOption[];
+  pendingShare: PendingShare | null;
+  openPhonePicker: (record: ServiceRecord, method: "whatsapp" | "sms") => void;
+  confirmShareWithPhone: (phone: string) => void;
+  shareViaWhatsApp: (record: ServiceRecord, phone?: string) => void;
   shareViaEmail: (record: ServiceRecord) => void;
-  shareViaSMS: (record: ServiceRecord) => void;
+  shareViaSMS: (record: ServiceRecord, phone?: string) => void;
   shareViaSystem: (record: ServiceRecord) => void;
   handleViewService: (record: ServiceRecord) => void;
   openServicePDF: (record: ServiceRecord) => void;
@@ -123,6 +140,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [deleteAlert, setDeleteAlert] = useState<DeleteAlertState>({ visible: false, record: null });
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [shareRecord, setShareRecord] = useState<ServiceRecord | null>(null);
+  const [phonePickerVisible, setPhonePickerVisible] = useState(false);
+  const [phoneOptions, setPhoneOptions] = useState<PhoneOption[]>([]);
+  const [pendingShare, setPendingShare] = useState<PendingShare | null>(null);
   const technicianSignatureRef = useRef<any>(null);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const companyLogoRef = useRef<string | null>(null);
@@ -215,6 +235,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     if (!requireSignature()) return;
     if (!form.customerName) {
       Alert.alert(t("svc.warning"), t("svc.errorRequired"));
+      return;
+    }
+    if (form.startTime && form.startTime === form.endTime) {
+      Alert.alert(t("svc.warning"), t("svc.errorTimeEqual"));
       return;
     }
     setSaveAlertVisible(true);
@@ -458,10 +482,47 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     return `${t("svc.shareTitle")}\n\n${t("svc.colCustomer")}: ${record.customer}\n${t("svc.colService")}: ${record.service}\n${t("svc.colDate")}: ${record.tarih}\n${t("svc.address")}: ${record.adres}\n${t("svc.customerPhone")}: ${record.telefon}\n${t("svc.details")}: ${record.detaylar}\n${t("svc.serviceFee")}: ₺${record.ucret}`;
   };
 
-  const shareViaWhatsApp = (record: ServiceRecord) => {
-    const phone = record.telefon?.replace(/\s/g, "").replace(/^0/, "90");
+  const openPhonePicker = (record: ServiceRecord, method: "whatsapp" | "sms") => {
+    const options: PhoneOption[] = [];
+    const add = (phone: string | undefined, label: string) => {
+      if (phone && phone.trim()) {
+        const trimmed = phone.trim();
+        options.push({ id: `${label}-${trimmed}`, label, phone: trimmed });
+      }
+    };
+    add(record.telefon, t("svc.phoneService"));
+    const cust = record.customerId ? customerList.find((c) => c.id === record.customerId) : undefined;
+    if (cust) {
+      add(cust.phone, t("svc.phoneMain"));
+      add(cust.contactPhone, t("svc.phoneContact"));
+    }
+    if (options.length === 0) {
+      Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
+      return;
+    }
+    setPendingShare({ record, method });
+    setPhoneOptions(options);
+    setPhonePickerVisible(true);
+  };
+
+  const confirmShareWithPhone = (phone: string) => {
+    const pending = pendingShare;
+    setPhonePickerVisible(false);
+    setPendingShare(null);
+    if (!pending) return;
+    if (pending.method === "whatsapp") shareViaWhatsApp(pending.record, phone);
+    else shareViaSMS(pending.record, phone);
+  };
+
+  const shareViaWhatsApp = (record: ServiceRecord, phone?: string) => {
+    const target = (phone || record.telefon)?.trim();
+    if (!target) {
+      Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
+      return;
+    }
+    const number = target.replace(/\s/g, "").replace(/^0/, "90");
     const text = encodeURIComponent(buildShareText(record));
-    Linking.openURL(`whatsapp://send?phone=${phone}&text=${text}`).catch(() =>
+    Linking.openURL(`whatsapp://send?phone=${number}&text=${text}`).catch(() =>
       Alert.alert(t("svc.error"), t("svc.shareError"))
     );
     setShareModalVisible(false);
@@ -476,10 +537,15 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setShareModalVisible(false);
   };
 
-  const shareViaSMS = (record: ServiceRecord) => {
-    const phone = record.telefon?.replace(/\s/g, "").replace(/^0/, "90");
+  const shareViaSMS = (record: ServiceRecord, phone?: string) => {
+    const target = (phone || record.telefon)?.trim();
+    if (!target) {
+      Alert.alert(t("svc.error"), t("svc.phoneNotFound"));
+      return;
+    }
+    const number = target.replace(/\s/g, "").replace(/^0/, "90");
     const text = encodeURIComponent(buildShareText(record));
-    Linking.openURL(`sms:${phone}?body=${text}`).catch(() =>
+    Linking.openURL(`sms:${number}?body=${text}`).catch(() =>
       Alert.alert(t("svc.error"), t("svc.shareError"))
     );
     setShareModalVisible(false);
@@ -583,6 +649,12 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     shareModalVisible,
     setShareModalVisible,
     shareRecord,
+    phonePickerVisible,
+    setPhonePickerVisible,
+    phoneOptions,
+    pendingShare,
+    openPhonePicker,
+    confirmShareWithPhone,
     shareViaWhatsApp,
     shareViaEmail,
     shareViaSMS,
