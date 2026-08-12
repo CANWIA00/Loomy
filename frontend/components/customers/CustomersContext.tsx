@@ -18,6 +18,8 @@ interface CustomersContextValue {
   editingCustomer: Customer | null;
   newCompany: string;
   setNewCompany: (v: string) => void;
+  newSubscriberNo: string;
+  setNewSubscriberNo: (v: string) => void;
   newAddress: string;
   setNewAddress: (v: string) => void;
   newEmail: string;
@@ -61,6 +63,7 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [newCompany, setNewCompany] = useState("");
+  const [newSubscriberNo, setNewSubscriberNo] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
@@ -124,6 +127,7 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
 
   function resetForm() {
     setNewCompany("");
+    setNewSubscriberNo("");
     setNewAddress("");
     setNewEmail("");
     setNewPhone("");
@@ -140,6 +144,7 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
 
     const data = {
       companyName: newCompany.trim(),
+      subscriberNo: newSubscriberNo.trim(),
       address: newAddress.trim(),
       email: newEmail.trim(),
       phone: newPhone.trim(),
@@ -188,6 +193,7 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
       const c = response.data;
       setEditingCustomer(c);
       setNewCompany(c.companyName);
+      setNewSubscriberNo(c.subscriberNo);
       setNewAddress(c.address);
       setNewEmail(c.email);
       setNewPhone(c.phone);
@@ -215,6 +221,8 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     editingCustomer,
     newCompany,
     setNewCompany,
+    newSubscriberNo,
+    setNewSubscriberNo,
     newAddress,
     setNewAddress,
     newEmail,

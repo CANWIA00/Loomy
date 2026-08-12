@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { getCurrentAddress } from "../utils/location";
 
 interface MapSelectorProps {
   visible: boolean;
@@ -26,24 +27,15 @@ function WebMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
   const handleCurrentLocation = async () => {
     setLoading(true);
     try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000 })
-      );
-      const { latitude, longitude } = pos.coords;
-      let adres = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=tr`
-        );
-        const data = await res.json();
-        if (data?.display_name) {
-          adres = data.display_name;
-        }
-      } catch {}
+      const adres = await getCurrentAddress();
       onSelect(adres);
       onClose();
-    } catch {
-      Alert.alert(t("common.error"), t("map.errorLocation"));
+    } catch (e: any) {
+      if (e?.message === "PERMISSION_DENIED") {
+        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
+      } else {
+        Alert.alert(t("common.error"), t("map.errorLocation"));
+      }
     } finally {
       setLoading(false);
     }
@@ -97,22 +89,15 @@ function MobileMapSelector({ visible, onSelect, onClose }: MapSelectorProps) {
   const handleCurrentLocation = async () => {
     setLoading(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
-        return;
-      }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      const { latitude, longitude } = loc.coords;
-      let adres = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-      const [geo] = await Location.reverseGeocodeAsync({ latitude, longitude });
-      if (geo) {
-        adres = [geo.street, geo.district, geo.city, geo.region].filter(Boolean).join(", ") || adres;
-      }
+      const adres = await getCurrentAddress();
       onSelect(adres);
       onClose();
-    } catch {
-      Alert.alert(t("common.error"), t("map.errorLocationMobile"));
+    } catch (e: any) {
+      if (e?.message === "PERMISSION_DENIED") {
+        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
+      } else {
+        Alert.alert(t("common.error"), t("map.errorLocationMobile"));
+      }
     } finally {
       setLoading(false);
     }

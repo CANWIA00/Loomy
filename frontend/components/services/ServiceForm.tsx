@@ -1,10 +1,12 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal } from "react-native";
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useServices } from "./ServicesContext";
 import { serviceKeys, technicalKeys } from "./types";
 import SvgAwareImage from "../SvgAwareImage";
+import { getCurrentAddress } from "../../utils/location";
 
 const formatTimeInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 4);
@@ -61,6 +63,24 @@ export default function ServiceForm() {
     createNewCustomer,
     setMapSelectorVisible,
   } = useServices();
+
+  const [locatingNewAddress, setLocatingNewAddress] = useState(false);
+
+  const handleLocateNewAddress = async () => {
+    setLocatingNewAddress(true);
+    try {
+      const adres = await getCurrentAddress();
+      updateNewCustomerForm("address", adres);
+    } catch (e: any) {
+      if (e?.message === "PERMISSION_DENIED") {
+        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
+      } else {
+        Alert.alert(t("common.error"), t("map.errorLocation"));
+      }
+    } finally {
+      setLocatingNewAddress(false);
+    }
+  };
 
   const serviceList = serviceKeys.map((k) => t(`svc.list.${k}`));
   const technicalList = technicalKeys.map((k) => t(`svc.tech.${k}`));
@@ -210,15 +230,38 @@ export default function ServiceForm() {
                 value={newCustomerForm.companyName}
                 onChangeText={(v) => updateNewCustomerForm("companyName", v)}
               />
-              <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.address")}</Text>
+              <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.subscriberNo")}</Text>
               <TextInput
                 className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
                 style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-                placeholder={t("svc.serviceAddressPlaceholder")}
+                placeholder={t("svc.subscriberNo")}
                 placeholderTextColor={colors.textMuted}
-                value={newCustomerForm.address}
-                onChangeText={(v) => updateNewCustomerForm("address", v)}
+                keyboardType="numeric"
+                value={newCustomerForm.subscriberNo}
+                onChangeText={(v) => updateNewCustomerForm("subscriberNo", v)}
               />
+              <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.address")}</Text>
+              <View className="relative mb-3">
+                <TextInput
+                  className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
+                  style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                  placeholder={t("svc.serviceAddressPlaceholder")}
+                  placeholderTextColor={colors.textMuted}
+                  value={newCustomerForm.address}
+                  onChangeText={(v) => updateNewCustomerForm("address", v)}
+                />
+                <TouchableOpacity
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  onPress={handleLocateNewAddress}
+                  disabled={locatingNewAddress}
+                >
+                  {locatingNewAddress ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Ionicons name="locate-outline" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              </View>
               <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.email")}</Text>
               <TextInput
                 className="w-full h-10 border rounded-lg px-3 text-sm mb-3"

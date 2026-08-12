@@ -32,6 +32,16 @@ export default function CustomerDetailModal() {
               </View>
 
               <View className="gap-3">
+                {selectedCustomer.subscriberNo ? (
+                  <View className="flex-row">
+                    <Ionicons name="card-outline" size={16} color={colors.textMuted} style={{ width: 24, marginTop: 2 }} />
+                    <View className="flex-1 ml-1">
+                      <Text className="text-xs" style={{ color: colors.textMuted }}>{t("cst.subscriberNo")}</Text>
+                      <Text className="text-sm font-medium" style={{ color: colors.text }}>{selectedCustomer.subscriberNo}</Text>
+                    </View>
+                  </View>
+                ) : null}
+
                 <View className="flex-row">
                   <Ionicons name="person-outline" size={16} color={colors.textMuted} style={{ width: 24, marginTop: 2 }} />
                   <View className="flex-1 ml-1">

@@ -90,6 +90,7 @@ model ServiceRecord {
 model Customer {
   id            String   @id @default(uuid())
   companyName   String
+  subscriberNo  String?
   address       String?
   email         String?
   phone         String?

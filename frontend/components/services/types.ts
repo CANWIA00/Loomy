@@ -35,6 +35,7 @@ export const initialForm: ServiceFormData = {
 
 export interface NewCustomerFormData {
   companyName: string;
+  subscriberNo: string;
   address: string;
   email: string;
   phone: string;
@@ -44,6 +45,7 @@ export interface NewCustomerFormData {
 
 export const initialNewCustomerForm: NewCustomerFormData = {
   companyName: "",
+  subscriberNo: "",
   address: "",
   email: "",
   phone: "",

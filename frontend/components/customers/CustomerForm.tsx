@@ -14,6 +14,8 @@ export default function CustomerForm() {
     resetForm,
     newCompany,
     setNewCompany,
+    newSubscriberNo,
+    setNewSubscriberNo,
     newAddress,
     setNewAddress,
     newEmail,
@@ -71,6 +73,15 @@ export default function CustomerForm() {
             placeholderTextColor={colors.textMuted}
             value={newCompany}
             onChangeText={setNewCompany}
+          />
+          <TextInput
+            className="rounded-lg px-4 py-3 text-sm mb-3"
+            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
+            placeholder={t("cst.subscriberNo")}
+            placeholderTextColor={colors.textMuted}
+            keyboardType="numeric"
+            value={newSubscriberNo}
+            onChangeText={setNewSubscriberNo}
           />
           <View className="relative mb-3">
             <TextInput

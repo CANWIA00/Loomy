@@ -49,6 +49,7 @@ export async function searchCustomers(
       OR: [
         { companyName: { contains: q, mode: "insensitive" as const } },
         { contactPerson: { contains: q, mode: "insensitive" as const } },
+        { subscriberNo: { contains: q } },
         { email: { contains: q, mode: "insensitive" as const } },
         { phone: { contains: q } },
       ],
@@ -126,6 +127,7 @@ export async function createCustomer(
   try {
     const {
       companyName,
+      subscriberNo,
       address,
       email,
       phone,
@@ -142,6 +144,7 @@ export async function createCustomer(
     const customer = await prisma.customer.create({
       data: {
         companyName: companyName.trim(),
+        subscriberNo: subscriberNo?.trim() || null,
         address: address?.trim() || null,
         email: email?.trim() || null,
         phone: phone?.trim() || null,
@@ -167,6 +170,7 @@ export async function updateCustomer(
     const companyId = req.user!.companyId!;
     const {
       companyName,
+      subscriberNo,
       address,
       email,
       phone,
@@ -187,6 +191,7 @@ export async function updateCustomer(
       where: { id },
       data: {
         companyName: companyName?.trim() || existing.companyName,
+        subscriberNo: subscriberNo?.trim() ?? existing.subscriberNo,
         address: address?.trim() ?? existing.address,
         email: email?.trim() ?? existing.email,
         phone: phone?.trim() ?? existing.phone,

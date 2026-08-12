@@ -3,6 +3,7 @@ import apiClient from "./client";
 export interface Customer {
   id: string;
   companyName: string;
+  subscriberNo: string;
   address: string;
   email: string;
   phone: string;
