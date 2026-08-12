@@ -1,5 +1,12 @@
+import nodemailer from "nodemailer";
+
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_FROM = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "Loomy <lommy.app.info@gmail.com>";
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_SECURE = process.env.SMTP_SECURE === "true";
 
 function parseFrom(raw: string): { email: string; name: string } {
   const match = raw.trim().match(/^(.+?)\s*<([^>]+)>$/);
@@ -18,8 +25,10 @@ export async function sendVerificationEmail(
   code: string,
   name: string
 ): Promise<void> {
-  if (!SENDGRID_API_KEY) {
-    throw new Error("SENDGRID_API_KEY env degiskeni ayarlanmamis.");
+  if (!SENDGRID_API_KEY && !(SMTP_HOST && SMTP_USER && SMTP_PASS)) {
+    throw new Error(
+      "E-posta gondermek icin SENDGRID_API_KEY veya SMTP_HOST/SMTP_USER/SMTP_PASS ortam degiskenleri ayarlanmali."
+    );
   }
 
   const html = `
@@ -72,6 +81,24 @@ export async function sendVerificationEmail(
 
   const from = parseFrom(SENDGRID_FROM);
   const text = `Merhaba ${name},\n\nE-posta dogrulama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`;
+
+  if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+
+    await transporter.sendMail({
+      from: `${from.name} <${from.email}>`,
+      to,
+      subject: "Loomy - E-posta Dogrulama Kodu",
+      text,
+      html,
+    });
+    return;
+  }
 
   const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
     method: "POST",
