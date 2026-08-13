@@ -43,7 +43,7 @@ export default function TeamsSection() {
               <Ionicons name="add" size={16} color="white" />
               <Text className="text-xs font-semibold ml-1" style={{ color: "white" }}>{t("sch.newTeam")}</Text>
             </TouchableOpacity>
-          )}>
+          )}
       ) : (
         <View className="flex-row flex-wrap gap-4">
           {teams.map((team) => (
