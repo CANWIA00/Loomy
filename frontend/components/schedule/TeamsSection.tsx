@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -44,6 +44,7 @@ export default function TeamsSection() {
               <Text className="text-xs font-semibold ml-1" style={{ color: "white" }}>{t("sch.newTeam")}</Text>
             </TouchableOpacity>
           )}
+        </View>
       ) : (
         <View className="flex-row flex-wrap gap-4">
           {teams.map((team) => (
@@ -69,9 +70,9 @@ export default function TeamsSection() {
                   </TouchableOpacity>
                 )}
               </View>
-              <View className="mt-2 flex-col gap-1 text-xs" style={{ color: colors.textMuted }}>
-                <Text>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
-                <Text>{team.members.length} {t("sch.members")}</Text>
+              <View className="mt-2 flex-col gap-1">
+                <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
+                <Text className="text-xs" style={{ color: colors.textMuted }}>{team.members.length} {t("sch.members")}</Text>
               </View>
               <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
                 <Text className="text-xs" style={{ color: colors.textSecondary }}>
