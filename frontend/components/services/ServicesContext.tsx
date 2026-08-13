@@ -19,6 +19,7 @@ interface DeleteAlertState {
 
 interface ServicesContextValue {
   loading: boolean;
+  refreshRecords: () => void;
   companyLogo: string | null;
   form: ServiceFormData;
   updateForm: (key: keyof ServiceFormData, value: string) => void;
@@ -135,14 +136,18 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     try {
       const res = await serviceApi.getAll(0, 100);
       setRecords(res.data.content);
-    } catch {}
+    } catch (e: any) {
+      console.warn("fetchRecords failed:", e?.message || e);
+    }
   }, []);
 
   const fetchCustomers = useCallback(async () => {
     try {
       const res = await customerApi.getAllSimple();
       setCustomerList(res.data);
-    } catch {}
+    } catch (e: any) {
+      console.warn("fetchCustomers failed:", e?.message || e);
+    }
   }, []);
 
   const fetchTemplates = useCallback(async () => {
@@ -153,7 +158,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         if (prev && res.data.some((t) => t.id === prev)) return prev;
         return res.data.find((t) => t.isDefault)?.id || res.data[0]?.id || null;
       });
-    } catch {}
+    } catch (e: any) {
+      console.warn("fetchTemplates failed:", e?.message || e);
+    }
   }, []);
 
   useEffect(() => {
@@ -187,6 +194,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   useFocusEffect(
     useCallback(() => {
+      fetchRecords();
       fetchTemplates();
       profileApi.getProfile().then((res) => {
         const sig = res.data.user?.signature;
@@ -206,7 +214,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           companyStampRef.current = stamp;
         }
       }).catch(() => {});
-    }, [])
+    }, [fetchRecords, fetchTemplates])
   );
 
   const requireSignature = (): boolean => {
@@ -612,6 +620,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const value: ServicesContextValue = {
     loading,
+    refreshRecords: fetchRecords,
     companyLogo,
     form,
     updateForm,

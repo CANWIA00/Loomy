@@ -1,4 +1,4 @@
-const CACHE = "loomy-v1";
+const CACHE = "loomy-v2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -17,7 +17,12 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
 
   if (request.method !== "GET") return;
-  if (!request.url.startsWith(self.location.origin)) return;
+
+  const url = new URL(request.url);
+  if (!url.origin.startsWith(self.location.origin)) return;
+
+  // API responses must always come fresh from the network.
+  if (url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
     (async () => {

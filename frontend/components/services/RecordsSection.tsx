@@ -24,6 +24,7 @@ export default function RecordsSection() {
     filterTemplate,
     setFilterTemplate,
     resetFilters,
+    refreshRecords,
     handleShare,
     handleViewService,
     openServicePDF,
@@ -55,7 +56,16 @@ export default function RecordsSection() {
     <>
       <View className="flex-row items-center justify-between mb-3">
         <Text className="font-semibold text-base" style={{ color: colors.text }}>{t("svc.allRecords")}</Text>
-        <Text className="text-xs" style={{ color: colors.textMuted }}>{filteredRecords.length} {t("svc.showing")}</Text>
+        <View className="flex-row items-center gap-3">
+          <TouchableOpacity
+            className="w-7 h-7 rounded-full items-center justify-center"
+            style={{ backgroundColor: colors.bgInput }}
+            onPress={() => refreshRecords()}
+          >
+            <Ionicons name="refresh-outline" size={15} color={colors.primary} />
+          </TouchableOpacity>
+          <Text className="text-xs" style={{ color: colors.textMuted }}>{filteredRecords.length} {t("svc.showing")}</Text>
+        </View>
       </View>
 
       <View className="flex-row flex-wrap gap-2 mb-4 items-center">
