@@ -826,7 +826,7 @@ export default function ServiceForm() {
                 style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
                 placeholder={t("svc.subscriberNo")}
                 placeholderTextColor={colors.textMuted}
-                keyboardType="numeric"
+                keyboardType="default"
                 value={newCustomerForm.subscriberNo}
                 onChangeText={(v) => updateNewCustomerForm("subscriberNo", v)}
               />

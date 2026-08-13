@@ -79,7 +79,7 @@ export default function CustomerForm() {
             style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
             placeholder={t("cst.subscriberNo")}
             placeholderTextColor={colors.textMuted}
-            keyboardType="numeric"
+            keyboardType="default"
             value={newSubscriberNo}
             onChangeText={setNewSubscriberNo}
           />
