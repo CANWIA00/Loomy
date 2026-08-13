@@ -17,10 +17,14 @@ export interface ServiceRecord {
   teknisyen: string;
   hizmetler: string[];
   teknik: string[];
+  customChips?: Record<string, string[]>;
+  customValues?: Record<string, string>;
   imzali?: boolean;
   odendi?: boolean;
   signature?: string[];
   technicianSignature?: any;
+  templateName?: string;
+  templateConfig?: any;
 }
 
 interface ServiceRecordBackend {
@@ -40,10 +44,14 @@ interface ServiceRecordBackend {
   technician?: string;
   services: string;
   technical: string;
+  customChips?: string;
+  customValues?: string;
   signed: boolean;
   paid: boolean;
   signature?: string;
   technicianSignature?: string;
+  templateName?: string;
+  templateConfig?: string;
 }
 
 function toFrontend(b: ServiceRecordBackend): ServiceRecord {
@@ -62,6 +70,18 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
   if (b.technicianSignature) {
     try { techSigParsed = JSON.parse(b.technicianSignature); } catch { techSigParsed = b.technicianSignature; }
   }
+  let customChipsParsed: Record<string, string[]> | undefined = undefined;
+  if (b.customChips) {
+    try { customChipsParsed = JSON.parse(b.customChips); } catch {}
+  }
+  let customValuesParsed: Record<string, string> | undefined = undefined;
+  if (b.customValues) {
+    try { customValuesParsed = JSON.parse(b.customValues); } catch {}
+  }
+  let templateConfigParsed: any = undefined;
+  if (b.templateConfig) {
+    try { templateConfigParsed = JSON.parse(b.templateConfig); } catch {}
+  }
   return {
     id: b.id,
     tarih: b.documentDate,
@@ -79,10 +99,14 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
     teknisyen: b.technician || "",
     hizmetler,
     teknik,
+    customChips: customChipsParsed,
+    customValues: customValuesParsed,
     imzali: b.signed,
     odendi: b.paid,
     signature: signatureParsed,
     technicianSignature: techSigParsed,
+    templateName: b.templateName || undefined,
+    templateConfig: templateConfigParsed,
   };
 }
 
@@ -103,10 +127,14 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.teknisyen !== undefined) data.technician = f.teknisyen;
   if (f.hizmetler !== undefined) data.services = f.hizmetler;
   if (f.teknik !== undefined) data.technical = f.teknik;
+  if (f.customChips !== undefined) data.customChips = f.customChips;
+  if (f.customValues !== undefined) data.customValues = f.customValues;
   if (f.imzali !== undefined) data.signed = f.imzali;
   if (f.odendi !== undefined) data.paid = f.odendi;
   if (f.signature !== undefined) data.signature = JSON.stringify(f.signature);
   if (f.technicianSignature !== undefined) data.technicianSignature = JSON.stringify(f.technicianSignature);
+  if (f.templateName !== undefined) data.templateName = f.templateName;
+  if (f.templateConfig !== undefined) data.templateConfig = f.templateConfig;
   return data;
 }
 
@@ -134,4 +162,10 @@ export const serviceApi = {
 
   delete: (id: number) =>
     apiClient.delete(`/services/${id}`),
+
+  countByTemplate: (name: string) =>
+    apiClient.post<{ count: number }>("/services/count-by-template", { name }),
+
+  applyTemplateConfig: (oldName: string, newName: string, templateConfig: any) =>
+    apiClient.put<{ updated: number }>("/services/apply-template-config", { oldName, newName, templateConfig }),
 };

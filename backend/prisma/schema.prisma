@@ -52,6 +52,7 @@ model Company {
   adminKeys      AdminKey[]
   customers      Customer[]
   serviceRecords ServiceRecord[]
+  serviceTemplates ServiceFormTemplate[]
   teams          Team[]
   appointments   Appointment[]
 }
@@ -73,10 +74,14 @@ model ServiceRecord {
   technician   String?
   services     String   @default("[]")
   technical    String   @default("[]")
+  customChips  String?
+  customValues String?
   signed       Boolean  @default(false)
   paid         Boolean  @default(false)
   signature    String?
   technicianSignature String?
+  templateName String?
+  templateConfig String?
   companyId    String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -85,6 +90,21 @@ model ServiceRecord {
 
   @@index([companyId])
   @@index([customerId])
+}
+
+model ServiceFormTemplate {
+  id         String   @id @default(uuid())
+  companyId  String
+  name       String
+  fields     String   @default("[]")
+  chipGroups String   @default("[]")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
 
 model Customer {

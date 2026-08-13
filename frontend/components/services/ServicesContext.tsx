@@ -8,8 +8,9 @@ import { shareWebPdf } from "../../utils/webPdf";
 import { profileApi } from "../../api/profile";
 import { serviceApi, ServiceRecord } from "../../api/services";
 import { customerApi, Customer } from "../../api/customers";
+import { templateApi, ServiceTemplate } from "../../api/templates";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { initialForm, initialNewCustomerForm, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter } from "./types";
+import { initialForm, initialNewCustomerForm, defaultTemplateConfig, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig } from "./types";
 
 interface DeleteAlertState {
   visible: boolean;
@@ -21,8 +22,9 @@ interface ServicesContextValue {
   companyLogo: string | null;
   form: ServiceFormData;
   updateForm: (key: keyof ServiceFormData, value: string) => void;
-  toggleService: (item: string) => void;
-  toggleTechnical: (item: string) => void;
+  updateCustomField: (key: string, value: string) => void;
+  toggleChip: (groupKey: string, item: string) => void;
+  setGroupValue: (groupKey: string, labels: string[]) => void;
   isEditing: boolean;
   handleCancelEditing: () => void;
   handleClear: () => void;
@@ -56,6 +58,8 @@ interface ServicesContextValue {
   setFilterDocument: (v: string) => void;
   filterCustomer: string;
   setFilterCustomer: (v: string) => void;
+  filterTemplate: string;
+  setFilterTemplate: (v: string) => void;
   resetFilters: () => void;
   handleShare: (record: ServiceRecord) => void;
   handleViewService: (record: ServiceRecord) => void;
@@ -75,6 +79,10 @@ interface ServicesContextValue {
   pdfZoom: number;
   setPdfZoom: React.Dispatch<React.SetStateAction<number>>;
   handleDownloadPDF: () => void;
+  templates: ServiceTemplate[];
+  activeTemplate: ServiceTemplate | null;
+  selectTemplate: (id: string) => void;
+  templateConfig: ServiceTemplateConfig;
 }
 
 const ServicesContext = createContext<ServicesContextValue | undefined>(undefined);
@@ -95,6 +103,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [filterDate, setFilterDate] = useState("");
   const [filterDocument, setFilterDocument] = useState("");
   const [filterCustomer, setFilterCustomer] = useState("");
+  const [filterTemplate, setFilterTemplate] = useState("");
   const [customerList, setCustomerList] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [newCustomerModal, setNewCustomerModal] = useState(false);
@@ -119,6 +128,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
+  const [templates, setTemplates] = useState<ServiceTemplate[]>([]);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
 
   const fetchRecords = useCallback(async () => {
     try {
@@ -134,9 +145,21 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
+  const fetchTemplates = useCallback(async () => {
+    try {
+      const res = await templateApi.getAll();
+      setTemplates(res.data);
+      setActiveTemplateId((prev) => {
+        if (prev && res.data.some((t) => t.id === prev)) return prev;
+        return res.data.find((t) => t.isDefault)?.id || res.data[0]?.id || null;
+      });
+    } catch {}
+  }, []);
+
   useEffect(() => {
     fetchRecords();
     fetchCustomers();
+    fetchTemplates();
     profileApi.getProfile().then((res) => {
       const name = res.data.user?.name || "";
       const sig = res.data.user?.signature;
@@ -164,6 +187,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   useFocusEffect(
     useCallback(() => {
+      fetchTemplates();
       profileApi.getProfile().then((res) => {
         const sig = res.data.user?.signature;
         setHasSignature(!!sig);
@@ -196,21 +220,48 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const updateForm = (key: keyof ServiceFormData, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const toggleService = (item: string) =>
+  const updateCustomField = (key: string, value: string) =>
     setForm((prev) => ({
       ...prev,
-      services: prev.services.includes(item)
-        ? prev.services.filter((h) => h !== item)
-        : [...prev.services, item],
+      customValues: { ...prev.customValues, [key]: value },
     }));
 
-  const toggleTechnical = (item: string) =>
-    setForm((prev) => ({
-      ...prev,
-      technical: prev.technical.includes(item)
-        ? prev.technical.filter((t) => t !== item)
-        : [...prev.technical, item],
-    }));
+  const toggleChip = (groupKey: string, item: string) =>
+    setForm((prev) => {
+      if (groupKey === "services") {
+        return {
+          ...prev,
+          services: prev.services.includes(item)
+            ? prev.services.filter((t) => t !== item)
+            : [...prev.services, item],
+        };
+      }
+      if (groupKey === "technical") {
+        return {
+          ...prev,
+          technical: prev.technical.includes(item)
+            ? prev.technical.filter((t) => t !== item)
+            : [...prev.technical, item],
+        };
+      }
+      const current = prev.customChips[groupKey] || [];
+      return {
+        ...prev,
+        customChips: {
+          ...prev.customChips,
+          [groupKey]: current.includes(item)
+            ? current.filter((t) => t !== item)
+            : [...current, item],
+        },
+      };
+    });
+
+  const setGroupValue = (groupKey: string, labels: string[]) =>
+    setForm((prev) => {
+      if (groupKey === "services") return { ...prev, services: labels };
+      if (groupKey === "technical") return { ...prev, technical: labels };
+      return { ...prev, customChips: { ...prev.customChips, [groupKey]: labels } };
+    });
 
   const handleSave = () => {
     if (!requireSignature()) return;
@@ -244,7 +295,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           tarih: form.documentDate || new Date().toLocaleDateString(locale),
           hizmetler: form.services,
           teknik: form.technical,
+          customChips: form.customChips,
+          customValues: form.customValues,
           service: form.services.join(", ") || "-",
+          templateName: activeTemplate?.name || undefined,
+          templateConfig: templateSnapshot(templateConfig),
         });
         Alert.alert(t("svc.success"), t("svc.successUpdated"));
         setIsEditing(false);
@@ -294,12 +349,18 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       documentDate: record.tarih || "",
       services: record.hizmetler || [],
       technical: record.teknik || [],
+      customChips: record.customChips || {},
+      customValues: record.customValues || {},
     };
     originalFormRef.current = { ...editForm };
     setForm(editForm);
     setEditingId(record.id);
     setIsEditing(true);
     setShowForm(true);
+    if (record.templateName) {
+      const tpl = templates.find((t) => t.name === record.templateName);
+      if (tpl) setActiveTemplateId(tpl.id);
+    }
   };
 
   const handleSignatureSave = async (paths: any[]) => {
@@ -321,9 +382,13 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         teknisyen: form.technician || "-",
         hizmetler: form.services,
         teknik: form.technical,
+        customChips: form.customChips,
+        customValues: form.customValues,
         imzali: paths.length > 0,
         signature: paths,
         technicianSignature: technicianSignatureRef.current || null,
+        templateName: activeTemplate?.name || undefined,
+        templateConfig: templateSnapshot(templateConfig),
       });
       Alert.alert(t("svc.success"), t("svc.successCreated"));
 
@@ -353,6 +418,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   };
 
   const filteredRecords = records.filter((k) => {
+    if (filterTemplate && k.templateName !== filterTemplate) return false;
     if (filterDate && k.tarih !== filterDate) return false;
     if (filterDocument && !`${k.customer} - ${k.tarih}`.toLowerCase().includes(filterDocument.toLowerCase())) return false;
     if (filterCustomer && !k.customer.toLowerCase().includes(filterCustomer.toLowerCase())) return false;
@@ -380,10 +446,14 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     details: record.detaylar,
     internalIp: record.dahiliIp,
     externalIp: record.hariciIp,
+    customChips: record.customChips || {},
+    customValues: record.customValues || {},
     signature: record.signature || null,
     technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
     companyLogo: companyLogoRef.current,
     companyStamp: companyStampRef.current,
+    templateName: record.templateName || null,
+    templateConfig: record.templateConfig || null,
   });
 
   const openServicePDF = (record: ServiceRecord) => {
@@ -394,7 +464,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const handleViewService = (record: ServiceRecord) => {
     const pdfData = buildPdfData(record);
-    const html = generateServicePDFHtml(pdfData, t);
+    const html = generateServicePDFHtml(pdfData, t, locale.startsWith("tr") ? "tr" : "en");
     setPdfPreviewHtml(html);
     setPdfPreviewData(pdfData);
     setPdfZoom(60);
@@ -409,7 +479,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       }
 
       if (Platform.OS === "web") {
-        const html = generateServicePDFHtml(pdfPreviewData, t);
+        const html = generateServicePDFHtml(pdfPreviewData, t, locale.startsWith("tr") ? "tr" : "en");
         const printWindow = window.open("", "_blank", "width=800,height=600");
         if (printWindow) {
           printWindow.document.write(html);
@@ -422,7 +492,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           Alert.alert(t("svc.error"), t("svc.errorPopup"));
         }
       } else {
-        const html = generateServicePDFHtml(pdfPreviewData, t);
+        const html = generateServicePDFHtml(pdfPreviewData, t, locale.startsWith("tr") ? "tr" : "en");
         const { uri } = await Print.printToFileAsync({
           html: html,
           base64: false,
@@ -447,7 +517,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const buildPdfHtml = (record: ServiceRecord) => generateServicePDFHtml(buildPdfData(record), t);
+  const buildPdfHtml = (record: ServiceRecord) =>
+    generateServicePDFHtml(buildPdfData(record), t, locale.startsWith("tr") ? "tr" : "en");
 
   const printPdfToFile = async (html: string) => {
     const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -517,16 +588,36 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setFilterDate("");
     setFilterDocument("");
     setFilterCustomer("");
+    setFilterTemplate("");
     setFilter("all");
   };
+
+  const activeTemplate =
+    templates.find((t) => t.id === activeTemplateId) ||
+    templates.find((t) => t.isDefault) ||
+    templates[0] ||
+    null;
+
+  const templateConfig: ServiceTemplateConfig = activeTemplate
+    ? { fields: activeTemplate.fields, chipGroups: activeTemplate.chipGroups }
+    : defaultTemplateConfig();
+
+  const selectTemplate = (id: string) => {
+    setActiveTemplateId(id);
+    setForm((prev) => ({ ...prev, services: [], technical: [], customChips: {}, customValues: {} }));
+  };
+
+  const templateSnapshot = (config: ServiceTemplateConfig) =>
+    JSON.parse(JSON.stringify(config)) as ServiceTemplateConfig;
 
   const value: ServicesContextValue = {
     loading,
     companyLogo,
     form,
     updateForm,
-    toggleService,
-    toggleTechnical,
+    updateCustomField,
+    toggleChip,
+    setGroupValue,
     isEditing,
     handleCancelEditing,
     handleClear,
@@ -560,6 +651,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setFilterDocument,
     filterCustomer,
     setFilterCustomer,
+    filterTemplate,
+    setFilterTemplate,
     resetFilters,
     handleShare,
     handleViewService,
@@ -579,6 +672,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     pdfZoom,
     setPdfZoom,
     handleDownloadPDF,
+    templates,
+    activeTemplate,
+    selectTemplate,
+    templateConfig,
   };
 
   return <ServicesContext.Provider value={value}>{children}</ServicesContext.Provider>;

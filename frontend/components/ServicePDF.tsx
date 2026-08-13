@@ -44,7 +44,7 @@ function renderSignatureSvg(signature: any): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" style="max-width:100%;max-height:40px;">${paths}</svg>`;
 }
 
-export function generateServicePDFHtml(data: any, t: (key: string, params?: Record<string, string>) => string): string {
+export function generateServicePDFHtml(data: any, t: (key: string, params?: Record<string, string>) => string, lang: "tr" | "en" = "tr"): string {
   const serviceList = [
     t("svc.list.alarm"), t("svc.list.fire"), t("svc.list.cctv"), t("svc.list.ahm"),
     t("svc.list.wiring"), t("svc.list.assembly"), t("svc.list.commissioning"), t("svc.list.docCheck"),
@@ -56,6 +56,69 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     t("svc.tech.signalTest"), t("svc.tech.battery"),
     t("svc.tech.wirelessPil"), t("svc.tech.gprs"),
   ];
+
+  const renderChipSections = (): string => {
+    const cfg = data.templateConfig;
+    const groups = cfg && Array.isArray(cfg.chipGroups) && cfg.chipGroups.length ? cfg.chipGroups : null;
+
+    if (groups) {
+      return groups
+        .filter((g: any) => g.enabled !== false)
+        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+        .map((g: any) => {
+          const title = (lang === "tr" ? g.labelTr : g.labelEn) || g.labelTr || g.labelEn || "";
+          const values =
+            g.key === "services"
+              ? data.services || []
+              : g.key === "technical"
+                ? data.technical || []
+                : (data.customChips || {})[g.key] || [];
+          const items = (g.options || [])
+            .map((o: any) => {
+              const label = (lang === "tr" ? o.labelTr : o.labelEn) || o.labelTr || o.labelEn || "";
+              const checked = values.includes(o.labelTr) || values.includes(o.labelEn);
+              return checkbox(checked, escapeHtml(label));
+            })
+            .join("");
+          return `<div class="section"><div class="section-title">${escapeHtml(title)}</div><div class="checkbox-grid">${items}</div></div>`;
+        })
+        .join("");
+    }
+
+    return `
+  <div class="section">
+    <div class="section-title">${t("pdf.serviceServices")}</div>
+    <div class="checkbox-grid">
+      ${serviceList.map(h => checkbox(data.services?.includes(h) || false, h)).join('')}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">${t("pdf.technicalServices")}</div>
+    <div class="checkbox-grid">
+      ${technicalList.map(h => checkbox(data.technical?.includes(h) || false, h)).join('')}
+    </div>
+  </div>
+`;
+  };
+
+  const renderCustomFields = (): string => {
+    const cfg = data.templateConfig;
+    const fields = cfg && Array.isArray(cfg.fields) ? cfg.fields : [];
+    const customFields = fields.filter((f: any) => String(f.key || "").startsWith("custom_") && f.enabled !== false);
+    if (!customFields.length) return "";
+    const items = customFields
+      .map((f: any) => {
+        const label = (lang === "tr" ? f.labelTr : f.labelEn) || f.labelTr || f.labelEn || "";
+        const value = (data.customValues || {})[f.key] || "";
+        if (!value) return "";
+        return `<div class="info-item"><span class="label">${escapeHtml(label)}</span> <span class="value">${escapeHtml(value)}</span></div>`;
+      })
+      .filter(Boolean)
+      .join("");
+    if (!items) return "";
+    return `<div class="section"><div class="section-title">${t("pdf.additionalInfo")}</div><div class="info-list">${items}</div></div>`;
+  };
 
   return `
 <!DOCTYPE html>
@@ -268,19 +331,9 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">${t("pdf.serviceServices")}</div>
-    <div class="checkbox-grid">
-      ${serviceList.map(h => checkbox(data.services?.includes(h) || false, h)).join('')}
-    </div>
-  </div>
+  ${renderChipSections()}
 
-  <div class="section">
-    <div class="section-title">${t("pdf.technicalServices")}</div>
-    <div class="checkbox-grid">
-      ${technicalList.map(h => checkbox(data.technical?.includes(h) || false, h)).join('')}
-    </div>
-  </div>
+  ${renderCustomFields()}
 
   <div class="section">
     <div class="section-title">${t("pdf.detailsNotes")}</div>

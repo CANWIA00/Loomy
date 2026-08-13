@@ -42,7 +42,8 @@ export async function createServiceRecord(
     const {
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
-      fee, technician, services, technical, signed, signature, technicianSignature, paid,
+      fee, technician, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
+      templateName, templateConfig,
     } = req.body;
     const companyId = req.user!.companyId!;
 
@@ -68,10 +69,14 @@ export async function createServiceRecord(
         technician: technician || null,
         services: JSON.stringify(services || []),
         technical: JSON.stringify(technical || []),
+        customChips: customChips ? JSON.stringify(customChips) : null,
+        customValues: customValues ? JSON.stringify(customValues) : null,
         signed: signed || false,
         paid: paid || false,
         signature: signature || null,
         technicianSignature: technicianSignature || null,
+        templateName: templateName || null,
+        templateConfig: templateConfig ? JSON.stringify(templateConfig) : null,
         companyId,
       },
     });
@@ -93,7 +98,8 @@ export async function updateServiceRecord(
     const {
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
-      fee, technician, services, technical, signed, signature, technicianSignature, paid,
+      fee, technician, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
+      templateName, templateConfig,
     } = req.body;
 
     const existing = await prisma.serviceRecord.findFirst({
@@ -123,16 +129,66 @@ export async function updateServiceRecord(
         technician: technician ?? existing.technician,
         services: services ? JSON.stringify(services) : existing.services,
         technical: technical ? JSON.stringify(technical) : existing.technical,
+        customChips: customChips ? JSON.stringify(customChips) : existing.customChips,
+        customValues: customValues ? JSON.stringify(customValues) : existing.customValues,
         signed: signed ?? existing.signed,
         paid: paid ?? existing.paid,
         signature: signature ?? existing.signature,
         technicianSignature: technicianSignature ?? existing.technicianSignature,
+        templateName: templateName ?? existing.templateName,
+        templateConfig: templateConfig ? JSON.stringify(templateConfig) : existing.templateConfig,
       },
     });
 
     res.json(record);
   } catch (error: any) {
     console.error("UpdateServiceRecord error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function countServiceRecordsByTemplate(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const { name } = req.body;
+    const companyId = req.user!.companyId!;
+    const count = name
+      ? await prisma.serviceRecord.count({ where: { companyId, templateName: name } })
+      : 0;
+    res.json({ count });
+  } catch (error: any) {
+    console.error("CountServiceRecordsByTemplate error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function applyTemplateConfigToRecords(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const { oldName, newName, templateConfig } = req.body;
+    const companyId = req.user!.companyId!;
+
+    if (!oldName || !newName) {
+      res.status(400).json({ message: "Şablon adı zorunludur." });
+      return;
+    }
+
+    const names = Array.from(new Set([oldName, newName].filter(Boolean)));
+    const result = await prisma.serviceRecord.updateMany({
+      where: { companyId, templateName: { in: names } },
+      data: {
+        templateName: newName,
+        ...(templateConfig ? { templateConfig: JSON.stringify(templateConfig) } : {}),
+      },
+    });
+
+    res.json({ updated: result.count });
+  } catch (error: any) {
+    console.error("ApplyTemplateConfigToRecords error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });
   }
 }

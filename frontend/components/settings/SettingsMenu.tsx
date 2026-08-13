@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface SettingsMenuProps {
   onPrivacyPress: () => void;
@@ -11,18 +12,24 @@ interface SettingsMenuProps {
 export default function SettingsMenu({ onPrivacyPress }: SettingsMenuProps) {
   const { colors } = useTheme();
   const { lang, t, setLanguage } = useLanguage();
+  const { user } = useAuth();
 
-  const items = [
-    { icon: "person" as const, label: t("set.profileInfo") },
+  const isAdmin = user?.role === "ADMIN";
+
+  const items: { icon: any; label: string; right?: string }[] = [
+    { icon: "person", label: t("set.profileInfo") },
     {
-      icon: "globe" as const,
+      icon: "globe",
       label: t("set.language"),
       right: lang === "tr" ? t("set.turkish") : t("set.english"),
     },
-    { icon: "shield-checkmark" as const, label: t("set.privacy") },
-    { icon: "help-circle" as const, label: t("set.help") },
+    ...(isAdmin
+      ? [{ icon: "construct" as any, label: t("tpl.menuLabel"), right: t("tpl.menuRight") }]
+      : []),
+    { icon: "shield-checkmark", label: t("set.privacy") },
+    { icon: "help-circle", label: t("set.help") },
     {
-      icon: "information-circle" as const,
+      icon: "information-circle",
       label: t("set.version"),
       right: "v1.0.0",
     },
@@ -31,6 +38,7 @@ export default function SettingsMenu({ onPrivacyPress }: SettingsMenuProps) {
   const handlePress = (label: string) => {
     if (label === t("set.profileInfo")) router.push("/(tabs)/profil");
     if (label === t("set.language")) setLanguage(lang === "tr" ? "en" : "tr");
+    if (label === t("tpl.menuLabel")) router.push("/templates");
     if (label === t("set.privacy")) onPrivacyPress();
   };
 

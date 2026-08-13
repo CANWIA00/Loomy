@@ -11,9 +11,11 @@ type CustomAlertProps = {
   onConfirm?: () => void;
   confirmText?: string;
   confirmColor?: string;
+  cancelText?: string;
+  thirdButton?: { text: string; onPress: () => void; color?: string };
 };
 
-export default function CustomAlert({ visible, type, title, message, onClose, onConfirm, confirmText, confirmColor }: CustomAlertProps) {
+export default function CustomAlert({ visible, type, title, message, onClose, onConfirm, confirmText, confirmColor, cancelText, thirdButton }: CustomAlertProps) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const isError = type === "error";
@@ -41,7 +43,34 @@ export default function CustomAlert({ visible, type, title, message, onClose, on
             {message}
           </Text>
 
-          {isConfirm ? (
+          {isConfirm && thirdButton ? (
+            <View className="flex-row gap-2 w-full">
+              <TouchableOpacity
+                className="flex-1 h-11 rounded-lg items-center justify-center"
+                style={{ backgroundColor: thirdButton.color || colors.danger }}
+                onPress={thirdButton.onPress}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: "white" }} className="font-semibold text-sm">{thirdButton.text}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 h-11 rounded-lg items-center justify-center"
+                style={{ backgroundColor: colors.bgInput }}
+                onPress={onClose}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: colors.textSecondary }} className="font-semibold text-sm">{cancelText || t("common.cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 h-11 rounded-lg items-center justify-center"
+                style={{ backgroundColor: confirmColor || colors.primary }}
+                onPress={() => { onClose(); onConfirm?.(); }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: "white" }} className="font-semibold text-sm">{confirmText || t("common.confirm")}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : isConfirm ? (
             <View className="flex-row gap-3 w-full">
               <TouchableOpacity
                 className="flex-1 h-11 rounded-lg items-center justify-center"
@@ -49,7 +78,7 @@ export default function CustomAlert({ visible, type, title, message, onClose, on
                 onPress={onClose}
                 activeOpacity={0.8}
               >
-                <Text style={{ color: colors.textSecondary }} className="font-semibold text-base">{t("common.cancel")}</Text>
+                <Text style={{ color: colors.textSecondary }} className="font-semibold text-base">{cancelText || t("common.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 h-11 rounded-lg items-center justify-center"
