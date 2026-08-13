@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 8080;
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"],
 }));
 
 app.use(express.json({ limit: "15mb" }));
