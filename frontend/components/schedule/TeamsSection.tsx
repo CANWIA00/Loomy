@@ -28,19 +28,36 @@ export default function TeamsSection() {
         )}
       </View>
 
-      <View className="flex-row flex-wrap gap-3">
+      {teams.length === 0 ? (
+        <View className="rounded-2xl border border-dashed p-6 items-center justify-center" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
+          <Ionicons name="people-outline" size={36} color={colors.textMuted} />
+          <Text className="text-sm text-center mt-3 leading-5" style={{ color: colors.textSecondary }}>
+            {t("sch.noTeams")}
+          </Text>
+          {isAdmin && (
+            <TouchableOpacity
+              className="flex-row items-center h-9 px-4 rounded-lg mt-4"
+              style={{ backgroundColor: colors.primary }}
+              onPress={openTeamModal}
+            >
+              <Ionicons name="add" size={16} color="white" />
+              <Text className="text-xs font-semibold ml-1" style={{ color: "white" }}>{t("sch.newTeam")}</Text>
+            </TouchableOpacity>
+          )}>
+      ) : (
+      <View className="flex-row flex-wrap gap-4">
         {teams.map((team) => (
           <View
             key={team.id}
-            className="w-[48%] md:w-[32%] lg:w-[24%] rounded-2xl p-4 h-64"
+            className="w-full md:w-[48%] lg:w-[32%] rounded-2xl p-3 mb-4"
             style={{ backgroundColor: colors.bgCard }}
           >
-            <View className="flex-row items-center gap-3 mb-3">
+            <View className="flex-row items-center gap-2 mb-2">
               <View
-                className="w-10 h-10 rounded-xl items-center justify-center"
+                className="w-8 h-8 rounded-xl items-center justify-center"
                 style={{ backgroundColor: `${team.color}20` }}
               >
-                <Ionicons name="people" size={20} color={team.color} />
+                <Ionicons name="people" size={16} color={team.color} />
               </View>
               <View className="flex-1">
                 <Text className="font-semibold text-sm" style={{ color: colors.text }}>{team.name}</Text>
@@ -48,32 +65,14 @@ export default function TeamsSection() {
               </View>
               {isAdmin && (
                 <TouchableOpacity onPress={() => requestDeleteTeam(team.id)} activeOpacity={0.7}>
-                  <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                  <Ionicons name="trash-outline" size={14} color={colors.danger} />
                 </TouchableOpacity>
               )}
             </View>
-            <ScrollView className="flex-1 mb-2" indicatorStyle={colors.indicatorBg as any} nestedScrollEnabled>
-              <View className="mb-3">
-                <Text className="text-xs font-medium mb-2" style={{ color: colors.textSecondary }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
-                <View className="flex-row items-center py-1 border-b" style={{ borderColor: colors.border + '4D' }}>
-                  <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: team.color }}>
-                    <Text className="text-white text-[10px] font-bold">{team.leader.charAt(0)}</Text>
-                  </View>
-                  <Text className="text-xs font-medium mr-1" style={{ color: colors.warning }}>{team.leader}</Text>
-                  <Text className="text-xs" style={{ color: colors.warning }}>👑</Text>
-                </View>
-                {team.members.map((personel, idx) => (
-                  <View key={idx} className="flex-row items-center py-1 border-b" style={{ borderColor: colors.border + '4D' }}>
-                    <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
-                      <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>
-                        {personel.charAt(0)}
-                      </Text>
-                    </View>
-                    <Text className="text-xs" style={{ color: colors.textSecondary }}>{personel}</Text>
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
+            <View className="mt-2 flex-col gap-1 text-xs" style={{ color: colors.textMuted }}>
+              <Text>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
+              <Text>{team.members.length} {t("sch.members")}</Text>
+            </View>
             <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
               <Text className="text-xs" style={{ color: colors.textSecondary }}>
                 {appointments.filter((a) => a.ekipId === team.id).length} {t("sch.assignments")}
@@ -102,6 +101,7 @@ export default function TeamsSection() {
           </View>
         ))}
       </View>
+      )}
     </View>
   );
 }
