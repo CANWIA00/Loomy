@@ -38,7 +38,6 @@ interface ScheduleContextValue {
   setListTeamFilter: (v: string) => void;
 
   serviceTypes: string[];
-  durationOptions: { label: string; value: string }[];
 
   alert: AlertState;
   setAlertVisible: (v: boolean) => void;
@@ -70,6 +69,8 @@ interface ScheduleContextValue {
   setTimeInput: (v: string) => void;
   selectedDuration: string;
   setSelectedDuration: (v: string) => void;
+  customDurationText: string;
+  setCustomDurationText: (v: string) => void;
   selectedTeamId: number;
   setSelectedTeamId: (v: number) => void;
   selectedService: string;
@@ -169,6 +170,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [customerSearch, setCustomerSearch] = useState("");
   const [timeInput, setTimeInput] = useState("09:00");
   const [selectedDuration, setSelectedDuration] = useState("1saat");
+  const [customDurationText, setCustomDurationText] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState(0);
   const [selectedService, setSelectedService] = useState("Alarm");
   const [notlar, setNotlar] = useState("");
@@ -200,13 +202,6 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const serviceTypes = [
     t("sch.serviceTypes.alarm"), t("sch.serviceTypes.fire"), t("sch.serviceTypes.cctv"), t("sch.serviceTypes.assembly"),
     t("sch.serviceTypes.wiring"), t("sch.serviceTypes.commissioning"), t("sch.serviceTypes.maintenance"), t("sch.serviceTypes.repair"),
-  ];
-
-  const durationOptions = [
-    { label: t("dur.30min"), value: "30dk" },
-    { label: t("dur.1hour"), value: "1saat" },
-    { label: t("dur.1.5hour"), value: "1.5saat" },
-    { label: t("dur.2hour"), value: "2saat" },
   ];
 
   const loadData = useCallback(async () => {
@@ -327,6 +322,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setCustomerSearch("");
     setTimeInput("09:00");
     setSelectedDuration("1saat");
+    setCustomDurationText("");
     setSelectedService(serviceTypes[0] || "Alarm");
     setSelectedTeamId(teams[0]?.id || 0);
     setNotlar("");
@@ -365,6 +361,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setDateInputText(`${dd}/${mm}/${yyyy}`);
     setTimeInput(atama.startTime);
     setSelectedDuration(atama.duration);
+    setCustomDurationText(String(durationToMs(atama.duration) / (60 * 60 * 1000)));
     setSelectedService(atama.tur);
     setSelectedTeamId(atama.ekipId);
     setNotlar(atama.notes || "");
@@ -544,7 +541,6 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     listTeamFilter,
     setListTeamFilter,
     serviceTypes,
-    durationOptions,
     alert,
     setAlertVisible: (v: boolean) => setAlert((prev) => ({ ...prev, visible: v })),
     teamModalVisible,
@@ -572,6 +568,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setTimeInput,
     selectedDuration,
     setSelectedDuration,
+    customDurationText,
+    setCustomDurationText,
     selectedTeamId,
     setSelectedTeamId,
     selectedService,

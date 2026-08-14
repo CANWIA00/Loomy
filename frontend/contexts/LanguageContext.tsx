@@ -465,6 +465,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "dur.1hour": "1 saat",
     "dur.1.5hour": "1.5 saat",
     "dur.2hour": "2 saat",
+    "dur.custom": "Özel Süre (saat)",
 
     // Days short
     "dayShort.mon": "Pzt",
@@ -1123,6 +1124,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "dur.1hour": "1 hour",
     "dur.1.5hour": "1.5 hours",
     "dur.2hour": "2 hours",
+    "dur.custom": "Custom (hours)",
 
     // Days short
     "dayShort.mon": "Mon",

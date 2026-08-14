@@ -42,6 +42,8 @@ export default function AppointmentModal() {
     setTimeInput,
     selectedDuration,
     setSelectedDuration,
+    customDurationText,
+    setCustomDurationText,
     selectedTeamId,
     setSelectedTeamId,
     selectedService,
@@ -51,7 +53,6 @@ export default function AppointmentModal() {
     openCustomerSelect,
     openServiceSelect,
     teams,
-    durationOptions,
   } = useSchedule();
 
   const formatTimeInput = (text: string) => {
@@ -59,6 +60,21 @@ export default function AppointmentModal() {
     let formatted = digits;
     if (digits.length > 2) formatted = digits.slice(0, 2) + ":" + digits.slice(2);
     setTimeInput(formatted);
+  };
+
+  const stepDuration = (delta: number) => {
+    const current = parseFloat(customDurationText);
+    const base = isNaN(current) || current <= 0 ? 1 : current;
+    const next = Math.min(24, Math.max(0.5, Math.round((base + delta) * 10) / 10));
+    const text = String(next);
+    setCustomDurationText(text);
+    setSelectedDuration(`${text}saat`);
+  };
+
+  const handleCustomDurationChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+    setCustomDurationText(cleaned);
+    setSelectedDuration(cleaned ? `${cleaned}saat` : "1saat");
   };
 
   const setToday = () => {
@@ -132,22 +148,30 @@ export default function AppointmentModal() {
 
         <View className="mb-3">
           <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.duration")}</Text>
-          <View className="flex-row gap-1.5 flex-wrap">
-            {durationOptions.map((s) => (
-              <TouchableOpacity
-                key={s.value}
-                className={`px-3 h-8 rounded-lg items-center justify-center border`}
-                style={{
-                  backgroundColor: selectedDuration === s.value ? colors.primary + '33' : colors.bg,
-                  borderColor: selectedDuration === s.value ? colors.primary : colors.border,
-                }}
-                onPress={() => setSelectedDuration(s.value)}
-              >
-                <Text className="text-xs" style={{ color: selectedDuration === s.value ? colors.primary : colors.textSecondary }}>
-                  {s.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              className="h-10 w-11 items-center justify-center rounded-lg border"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+              onPress={() => stepDuration(-0.5)}
+            >
+              <Ionicons name="remove" size={20} color={colors.primary} />
+            </TouchableOpacity>
+            <TextInput
+              className="flex-1 h-10 border rounded-lg px-3 text-sm text-center"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("dur.custom")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="decimal-pad"
+              value={customDurationText}
+              onChangeText={handleCustomDurationChange}
+            />
+            <TouchableOpacity
+              className="h-10 w-11 items-center justify-center rounded-lg border"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+              onPress={() => stepDuration(0.5)}
+            >
+              <Ionicons name="add" size={20} color={colors.primary} />
+            </TouchableOpacity>
           </View>
         </View>
 

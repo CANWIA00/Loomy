@@ -1,9 +1,9 @@
 export const durationToMs = (duration: string): number => {
+  if (duration === "tümgün") return 24 * 60 * 60 * 1000;
+  const hours = /^(\d+(\.\d+)?)saat$/.exec(duration);
+  if (hours) return parseFloat(hours[1]) * 60 * 60 * 1000;
   const map: Record<string, number> = {
     "30dk": 30 * 60 * 1000,
-    "1saat": 60 * 60 * 1000,
-    "1.5saat": 90 * 60 * 1000,
-    "2saat": 120 * 60 * 1000,
   };
   return map[duration] || 60 * 60 * 1000;
 };
