@@ -193,12 +193,12 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
       const c = response.data;
       setEditingCustomer(c);
       setNewCompany(c.companyName);
-      setNewSubscriberNo(c.subscriberNo);
-      setNewAddress(c.address);
-      setNewEmail(c.email);
-      setNewPhone(c.phone);
-      setNewContact(c.contactPerson);
-      setNewContactPhone(c.contactPhone);
+      setNewSubscriberNo(c.subscriberNo ?? "");
+      setNewAddress(c.address ?? "");
+      setNewEmail(c.email ?? "");
+      setNewPhone(c.phone ?? "");
+      setNewContact(c.contactPerson ?? "");
+      setNewContactPhone(c.contactPhone ?? "");
       setFormOpen(true);
     } catch (error: any) {
       showAlert("error", t("common.error"), t("cst.errorEdit"));
