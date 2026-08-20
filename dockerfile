@@ -17,4 +17,4 @@ RUN cd backend && npx prisma generate && npm run build
 EXPOSE 8080
 
 WORKDIR /app/backend
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
