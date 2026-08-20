@@ -26,6 +26,8 @@ model User {
   inviteCode          String
   companyId           String?
   signature           String?
+  resetCode           String?
+  resetCodeExpires    DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

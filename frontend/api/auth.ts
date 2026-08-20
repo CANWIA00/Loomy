@@ -61,6 +61,12 @@ export const authApi = {
   deleteAccount: () =>
     apiClient.delete("/auth/account"),
 
+  forgotPassword: (email: string) =>
+    apiClient.post("/auth/forgot-password", { email }),
+
+  resetPassword: (email: string, code: string, newPassword: string) =>
+    apiClient.post("/auth/reset-password", { email, code, newPassword }),
+
   completeCompanyProfile: (data: CompanyRequestDto) =>
     apiClient.put("/profile/my-company", data),
 };

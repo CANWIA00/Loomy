@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "../prisma";
 import { generateToken } from "../services/jwt";
 import { AuthRequest } from "../middleware/auth";
-import { generateVerificationCode, sendVerificationEmail } from "../services/email";
+import { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from "../services/email";
 
 export async function register(req: Request, res: Response): Promise<void> {
   try {
@@ -400,5 +400,104 @@ export async function deleteAccount(req: AuthRequest, res: Response): Promise<vo
   } catch (error: any) {
     console.error("Delete account error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ message: "E-posta adresi zorunludur." });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "Bu e-posta adresi ile kayitli hesap bulunamadi." });
+      return;
+    }
+
+    if (!user.isActive) {
+      res.status(403).json({ message: "Hesabiniz devre disi birakilmistir." });
+      return;
+    }
+
+    const resetCode = generateVerificationCode();
+    const resetCodeExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetCode,
+        resetCodeExpires,
+      },
+    });
+
+    await sendPasswordResetEmail(email, resetCode, user.name);
+
+    res.json({ message: "Sifre sifirlama kodu e-posta adresinize gonderildi." });
+  } catch (error: any) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Sunucu hatasi: " + error.message });
+  }
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  try {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      res.status(400).json({ message: "E-posta, kod ve yeni sifre zorunludur." });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({ message: "Sifre en az 6 karakter olmalidir." });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "Kullanici bulunamadi." });
+      return;
+    }
+
+    if (!user.resetCode || !user.resetCodeExpires) {
+      res.status(400).json({ message: "Sifre sifirlama kodu bulunamadi. Lutfen yeni bir kod isteyin." });
+      return;
+    }
+
+    if (new Date() > user.resetCodeExpires) {
+      res.status(400).json({ message: "Sifre sifirlama kodunun suresi dolmus. Lutfen yeni bir kod isteyin." });
+      return;
+    }
+
+    if (user.resetCode !== code.trim()) {
+      res.status(400).json({ message: "Gecersiz sifre sifirlama kodu." });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetCode: null,
+        resetCodeExpires: null,
+      },
+    });
+
+    res.json({ message: "Sifreniz basariyla sifirlandi. Artik yeni sifrenizle giris yapabilirsiniz." });
+  } catch (error: any) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Sunucu hatasi: " + error.message });
   }
 }

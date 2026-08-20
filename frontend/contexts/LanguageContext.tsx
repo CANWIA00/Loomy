@@ -406,6 +406,31 @@ const translations: Record<Lang, Record<string, string>> = {
     "login.errorLogin": "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
     "login.error": "Hata",
 
+    // Forgot Password
+    "forgot.subtitle": "Şifremi Unuttum",
+    "forgot.description": "E-posta adresinizi girin, size şifre sıfırlama kodu gönderelim.",
+    "forgot.email": "E-posta",
+    "forgot.sendCode": "Kodu Gönder",
+    "forgot.backToLogin": "Giriş sayfasına dön",
+    "forgot.successTitle": "Kodu Gönderildi",
+    "forgot.successMessage": "Şifre sıfırlama kodu e-posta adresinize gönderildi.",
+    "forgot.errorEmail": "E-posta alanı boş olamaz.",
+    "forgot.errorGeneric": "Şifre sıfırlama isteği sırasında bir hata oluştu.",
+
+    // Reset Password
+    "reset.title": "Şifre Sıfırlama",
+    "reset.subtitle": "E-posta adresinize gönderilen 6 haneli kodu ve yeni şifrenizi girin",
+    "reset.emailSent": "Sıfırlama kodu {email} adresine gönderildi",
+    "reset.newPassword": "Yeni Şifre",
+    "reset.confirmPassword": "Şifre Tekrar",
+    "reset.resetButton": "Şifreyi Sıfırla",
+    "reset.success": "Şifreniz başarıyla sıfırlandı!",
+    "reset.errorEmptyCode": "Doğrulama kodu boş olamaz.",
+    "reset.errorEmptyPassword": "Yeni şifre boş olamaz.",
+    "reset.errorPasswordLength": "Şifre en az 6 karakter olmalıdır.",
+    "reset.errorPasswordMatch": "Şifreler eşleşmiyor.",
+    "reset.errorGeneric": "Şifre sıfırlama sırasında bir hata oluştu.",
+
     // Common
     "common.confirm": "Onayla",
     "common.cancel": "İptal",
@@ -1064,6 +1089,31 @@ const translations: Record<Lang, Record<string, string>> = {
     "login.errorPassword": "Password cannot be empty.",
     "login.errorLogin": "Login failed. Please check your credentials.",
     "login.error": "Error",
+
+    // Forgot Password
+    "forgot.subtitle": "Forgot Password",
+    "forgot.description": "Enter your email address and we'll send you a password reset code.",
+    "forgot.email": "Email",
+    "forgot.sendCode": "Send Code",
+    "forgot.backToLogin": "Back to Login",
+    "forgot.successTitle": "Code Sent",
+    "forgot.successMessage": "Password reset code has been sent to your email.",
+    "forgot.errorEmail": "Email cannot be empty.",
+    "forgot.errorGeneric": "An error occurred while requesting password reset.",
+
+    // Reset Password
+    "reset.title": "Reset Password",
+    "reset.subtitle": "Enter the 6-digit code sent to your email and your new password",
+    "reset.emailSent": "Reset code sent to {email}",
+    "reset.newPassword": "New Password",
+    "reset.confirmPassword": "Confirm Password",
+    "reset.resetButton": "Reset Password",
+    "reset.success": "Your password has been successfully reset!",
+    "reset.errorEmptyCode": "Verification code cannot be empty.",
+    "reset.errorEmptyPassword": "New password cannot be empty.",
+    "reset.errorPasswordLength": "Password must be at least 6 characters.",
+    "reset.errorPasswordMatch": "Passwords do not match.",
+    "reset.errorGeneric": "An error occurred during password reset.",
 
     // Common
     "common.confirm": "Confirm",
