@@ -20,28 +20,40 @@ function checkbox(checked: boolean, label: string): string {
 }
 
 function renderSignatureSvg(signature: any): string {
-  if (!signature || !Array.isArray(signature) || signature.length === 0) return '';
+  if (!signature || !Array.isArray(signature)) return '';
+  const strokes = signature.filter((p: any) => Array.isArray(p) && p.length > 0);
+  if (!strokes.length) return '';
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  signature.forEach((path: any[]) => {
+  let hasPoint = false;
+  strokes.forEach((path: any[]) => {
     path.forEach((p: any) => {
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y > maxY) maxY = p.y;
+      if (p && typeof p.x === 'number' && typeof p.y === 'number' && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+        hasPoint = true;
+      }
     });
   });
-  const w = maxX - minX || 1;
-  const h = maxY - minY || 1;
+  if (!hasPoint) return '';
+  const w = (maxX - minX) || 1;
+  const h = (maxY - minY) || 1;
   const pad = 10;
-  const svgW = w + pad * 2;
-  const svgH = h + pad * 2;
-  const paths = signature.map((points: any[]) => {
-    const d = points.map((p: any, i: number) =>
-      i === 0 ? `M ${p.x - minX + pad} ${p.y - minY + pad}` : `L ${p.x - minX + pad} ${p.y - minY + pad}`
-    ).join(' ');
-    return `<path d="${d}" stroke="#222238" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const svgW = Math.ceil(w + pad * 2);
+  const svgH = Math.ceil(h + pad * 2);
+  const paths = strokes.map((points: any[]) => {
+    let d = '';
+    let started = false;
+    points.forEach((p: any) => {
+      if (!p || typeof p.x !== 'number' || typeof p.y !== 'number' || !Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
+      const cmd = started ? ' L' : 'M';
+      d += `${cmd} ${(p.x - minX + pad).toFixed(2)} ${(p.y - minY + pad).toFixed(2)}`;
+      started = true;
+    });
+    return d ? `<path d="${d}" stroke="#222238" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : '';
   }).join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" style="max-width:100%;max-height:40px;">${paths}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">${paths}</svg>`;
 }
 
 export function generateServicePDFHtml(data: any, t: (key: string, params?: Record<string, string>) => string, lang: "tr" | "en" = "tr"): string {
@@ -257,6 +269,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       gap: 36px;
       margin-top: 30px;
       padding-top: 2px;
+      page-break-inside: avoid;
     }
     .signature-box {
       flex: 1;
@@ -282,6 +295,13 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     }
     .signature-svg {
       text-align: center;
+      margin-top: 2px;
+    }
+    .signature-svg svg {
+      max-width: 100%;
+      max-height: 42px;
+      height: auto;
+      width: auto;
     }
     .signature-stamp {
       margin-top: 6px;
@@ -303,7 +323,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
 <body>
   <div class="content-wrapper">
     <div class="header">
-      <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" onerror="this.style.display='none'" style="max-height:40px;max-width:150px;object-fit:contain;" />` : ''}</div>
+      <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" onerror="this.style.display='none'" style="display:block;max-height:42px;max-width:150px;object-fit:contain;" />` : ''}</div>
       <div class="title">${t("pdf.title")}</div>
       <div class="date-area">${t("pdf.date")} ${escapeHtml(data.documentDate) || ''}</div>
     </div>

@@ -5,6 +5,7 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { generateServicePDFHtml } from "../ServicePDF";
 import { shareWebPdf } from "../../utils/webPdf";
+import { embedImage } from "../../utils/pdfAssets";
 import { profileApi } from "../../api/profile";
 import { serviceApi, ServiceRecord } from "../../api/services";
 import { customerApi, Customer } from "../../api/customers";
@@ -400,19 +401,6 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       });
       Alert.alert(t("svc.success"), t("svc.successCreated"));
 
-      if (paths.length > 0) {
-        try {
-          const profileRes = await profileApi.getProfile();
-          const userName = profileRes.data.user?.name || "";
-          const userPhone = profileRes.data.user?.phone || "";
-          await profileApi.updateUser({
-            name: userName,
-            phone: userPhone,
-            signature: JSON.stringify(paths),
-          });
-        } catch {}
-      }
-
       fetchRecords();
     } catch {
       Alert.alert(t("svc.error"), t("svc.errorSave"));
@@ -464,14 +452,23 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     templateConfig: record.templateConfig || null,
   });
 
-  const openServicePDF = (record: ServiceRecord) => {
-    const pdfData = buildPdfData(record);
+  const resolvePdfData = async (record: ServiceRecord): Promise<PdfData> => {
+    const base = buildPdfData(record);
+    const [companyLogo, companyStamp] = await Promise.all([
+      embedImage(base.companyLogo),
+      embedImage(base.companyStamp),
+    ]);
+    return { ...base, companyLogo, companyStamp };
+  };
+
+  const openServicePDF = async (record: ServiceRecord) => {
+    const pdfData = await resolvePdfData(record);
     setPdfPreviewData(pdfData);
     setTimeout(() => handleDownloadPDF(), 100);
   };
 
-  const handleViewService = (record: ServiceRecord) => {
-    const pdfData = buildPdfData(record);
+  const handleViewService = async (record: ServiceRecord) => {
+    const pdfData = await resolvePdfData(record);
     const html = generateServicePDFHtml(pdfData, t, locale.startsWith("tr") ? "tr" : "en");
     setPdfPreviewHtml(html);
     setPdfPreviewData(pdfData);
@@ -525,8 +522,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const buildPdfHtml = (record: ServiceRecord) =>
-    generateServicePDFHtml(buildPdfData(record), t, locale.startsWith("tr") ? "tr" : "en");
+  const buildPdfHtml = async (record: ServiceRecord) => {
+    const pdfData = await resolvePdfData(record);
+    return generateServicePDFHtml(pdfData, t, locale.startsWith("tr") ? "tr" : "en");
+  };
 
   const printPdfToFile = async (html: string) => {
     const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -543,7 +542,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const handleShare = async (record: ServiceRecord) => {
     try {
-      const html = buildPdfHtml(record);
+      const html = await buildPdfHtml(record);
       if (Platform.OS === "web") {
         const fileName = `${record.customer || "servis"} - ${record.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
         await shareWebPdf(html, fileName);
