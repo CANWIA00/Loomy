@@ -464,7 +464,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const openServicePDF = async (record: ServiceRecord) => {
     const pdfData = await resolvePdfData(record);
     setPdfPreviewData(pdfData);
-    setTimeout(() => handleDownloadPDF(), 100);
+    await performDownloadPDF(pdfData);
   };
 
   const handleViewService = async (record: ServiceRecord) => {
@@ -476,28 +476,14 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setPdfPreviewVisible(true);
   };
 
-  const handleDownloadPDF = async () => {
+  const performDownloadPDF = async (data: PdfData) => {
     try {
-      if (!pdfPreviewData) {
-        Alert.alert(t("svc.error"), t("svc.errorPdfData"));
-        return;
-      }
+      const html = generateServicePDFHtml(data, t, locale.startsWith("tr") ? "tr" : "en");
 
       if (Platform.OS === "web") {
-        const html = generateServicePDFHtml(pdfPreviewData, t, locale.startsWith("tr") ? "tr" : "en");
-        const printWindow = window.open("", "_blank", "width=800,height=600");
-        if (printWindow) {
-          printWindow.document.write(html);
-          printWindow.document.close();
-          printWindow.focus();
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
-        } else {
-          Alert.alert(t("svc.error"), t("svc.errorPopup"));
-        }
+        const fileName = `${data.customerName || "servis"} - ${data.documentDate || ""}`.replace(/[\\/:*?"<>|]+/g, "-");
+        await shareWebPdf(html, fileName);
       } else {
-        const html = generateServicePDFHtml(pdfPreviewData, t, locale.startsWith("tr") ? "tr" : "en");
         const { uri } = await Print.printToFileAsync({
           html: html,
           base64: false,
@@ -511,6 +497,14 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
     }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!pdfPreviewData) {
+      Alert.alert(t("svc.error"), t("svc.errorPdfData"));
+      return;
+    }
+    await performDownloadPDF(pdfPreviewData);
   };
 
   const handleDelete = async (record: ServiceRecord) => {

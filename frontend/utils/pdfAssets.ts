@@ -1,8 +1,10 @@
 const cache = new Map<string, string>();
 
 async function fetchToDataUrl(src: string): Promise<string | null> {
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), 6000) : null;
   try {
-    const res = await fetch(src);
+    const res = await fetch(src, controller ? { signal: controller.signal } : undefined);
     if (!res.ok) return null;
     const blob = await res.blob();
     if (!blob || !blob.size) return null;
@@ -14,6 +16,8 @@ async function fetchToDataUrl(src: string): Promise<string | null> {
     });
   } catch {
     return null;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
