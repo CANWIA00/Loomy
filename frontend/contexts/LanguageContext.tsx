@@ -664,6 +664,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "pdf.technicianSignatureLabel": "Teknisyen Adı & Soyadı / İmza",
     "pdf.companyNameLabel": "1D GÜVENLİK VE İLETİŞİM SİSTEMLERİ TİCARET LTD. ŞTİ.",
     "pdf.companyAddressLabel": "Goncalar Mah. Ali Alp Böke Cad. No: 150 C Karşıyaka - İZMİR",
+    "pdf.privacyNoteTitle": "GİZLİLİK NOTU (KVKK)",
+    "pdf.privacyNoteBody": "Bu belge, 6698 sayılı KVKK kapsamında gizli olup, yalnızca ilgili müşteri içindir. Yetkisiz paylaşımı yasaktır.",
 
     // Profile extra
     "prf.errorLoad": "Profil bilgileri yüklenemedi.",
@@ -1348,6 +1350,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "pdf.technicianSignatureLabel": "Technician Name & Surname / Signature",
     "pdf.companyNameLabel": "1D SECURITY AND COMMUNICATION SYSTEMS TRADE LTD.",
     "pdf.companyAddressLabel": "Goncalar Mah. Ali Alp Böke Cad. No: 150 C Karşıyaka - IZMIR",
+    "pdf.privacyNoteTitle": "PRIVACY NOTICE (KVKK)",
+    "pdf.privacyNoteBody": "This document is confidential under Law No. 6698 (KVKK) and is intended solely for the relevant customer. Unauthorized disclosure is prohibited.",
 
     // Profile extra
     "prf.errorLoad": "Profile information could not be loaded.",

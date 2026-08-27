@@ -318,6 +318,26 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       color: #888;
       line-height: 1.4;
     }
+    .privacy-note {
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 6px 8px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .privacy-title {
+      font-size: 8.5px;
+      font-weight: bold;
+      color: #555;
+      letter-spacing: 0.5px;
+    }
+    .privacy-body {
+      font-size: 8px;
+      color: #666;
+      line-height: 1.4;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -392,6 +412,11 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     <div class="footer-text">${t("pdf.companyNameLabel")}</div>
     <div class="footer-text">${t("pdf.companyAddressLabel")}</div>
     <div class="footer-text">Tel: 0232 365 20 87 &nbsp;&nbsp; Gsm: 0 533 368 03 13</div>
+  </div>
+
+  <div class="privacy-note">
+    <div class="privacy-title">${t("pdf.privacyNoteTitle")}</div>
+    <div class="privacy-body">${t("pdf.privacyNoteBody")}</div>
   </div>
 
 </body>
