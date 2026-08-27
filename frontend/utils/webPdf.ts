@@ -73,3 +73,19 @@ async function shareWebPdfFile(html: string, fileName: string): Promise<void> {
 export async function shareWebPdf(html: string, fileName: string): Promise<void> {
   await shareWebPdfFile(html, fileName);
 }
+
+async function downloadWebPdfFile(html: string, fileName: string): Promise<void> {
+  const blob = await htmlToPdfBlob(html);
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${fileName}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+export async function downloadWebPdf(html: string, fileName: string): Promise<void> {
+  await downloadWebPdfFile(html, fileName);
+}

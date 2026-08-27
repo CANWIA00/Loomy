@@ -4,7 +4,7 @@ import { useFocusEffect } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { generateServicePDFHtml } from "../ServicePDF";
-import { shareWebPdf } from "../../utils/webPdf";
+import { shareWebPdf, downloadWebPdf } from "../../utils/webPdf";
 import { embedImage } from "../../utils/pdfAssets";
 import { profileApi } from "../../api/profile";
 import { serviceApi, ServiceRecord } from "../../api/services";
@@ -482,7 +482,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
       if (Platform.OS === "web") {
         const fileName = `${data.customerName || "servis"} - ${data.documentDate || ""}`.replace(/[\\/:*?"<>|]+/g, "-");
-        await shareWebPdf(html, fileName);
+        await downloadWebPdf(html, fileName);
       } else {
         const { uri } = await Print.printToFileAsync({
           html: html,
