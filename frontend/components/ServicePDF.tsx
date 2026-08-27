@@ -319,24 +319,21 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       line-height: 1.4;
     }
     .privacy-note {
-      margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      padding: 6px 8px;
+      margin-top: 6px;
       text-align: center;
+      opacity: 0.55;
       page-break-inside: avoid;
     }
     .privacy-title {
-      font-size: 8.5px;
+      font-size: 7px;
       font-weight: bold;
-      color: #555;
-      letter-spacing: 0.5px;
+      color: #888;
     }
     .privacy-body {
-      font-size: 8px;
-      color: #666;
-      line-height: 1.4;
-      margin-top: 2px;
+      font-size: 7px;
+      color: #888;
+      line-height: 1.35;
+      margin-top: 1px;
     }
   </style>
 </head>
