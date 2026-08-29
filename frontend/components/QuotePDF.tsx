@@ -75,9 +75,6 @@ export function generateQuotePDFHtml(
       display: flex;
       flex-direction: column;
     }
-    .section-push {
-      margin-top: auto;
-    }
     .company-header {
       display: flex;
       justify-content: space-between;
@@ -216,34 +213,6 @@ export function generateQuotePDFHtml(
       white-space: pre-wrap;
       color: #333;
     }
-    .signature-section {
-      display: flex;
-      gap: 36px;
-      margin-top: 40px;
-      padding-top: 2px;
-    }
-    .signature-box {
-      flex: 1;
-    }
-    .signature-line {
-      width: 100%;
-      border-bottom: 1px solid #222238;
-      margin-bottom: 4px;
-    }
-    .signature-label {
-      font-size: 9px;
-      color: #666;
-      margin-bottom: 2px;
-    }
-    .signature-stamp {
-      margin-top: 6px;
-      text-align: left;
-    }
-    .signature-stamp img {
-      width: 46mm;
-      height: 16mm;
-      object-fit: contain;
-    }
     .footer {
       margin-top: 10px;
       border-top: 1px solid #ccc;
@@ -265,7 +234,7 @@ export function generateQuotePDFHtml(
         <div class="company-name">${escapeHtml(data.companyName)}</div>
       </div>
       <div class="title-area">
-        <div class="title">${lang === "tr" ? "TEKLİF" : "QUOTE"}</div>
+        <div class="title">${escapeHtml(data.companyName)} ${lang === "tr" ? "Teklif Belgesi" : "Quote Document"}</div>
         <div class="title-date">${t("qot.date")} ${escapeHtml(data.documentDate) || ""}</div>
         ${data.validUntil ? `<div class="title-date">${t("qot.validUntil")} ${escapeHtml(data.validUntil)}</div>` : ""}
       </div>
@@ -315,7 +284,7 @@ export function generateQuotePDFHtml(
       </table>
     </div>
 
-    <div class="section section-push">
+    <div class="section">
       <div class="total-section">
         <table class="total-table">
           <tbody>
@@ -330,18 +299,6 @@ export function generateQuotePDFHtml(
       <div class="section-title">${t("qot.notes")}</div>
       <div class="notes-content">${escapeHtml(data.notes)}</div>
     </div>` : ""}
-
-    <div class="signature-section">
-      <div class="signature-box">
-        <div class="signature-label">${t("qot.approvedBy")}</div>
-        <div class="signature-line"></div>
-      </div>
-      <div class="signature-box">
-        <div class="signature-label">${t("qot.companyStampLabel")}</div>
-        <div class="signature-line"></div>
-        ${data.companyStamp ? `<div class="signature-stamp"><img src="${data.companyStamp}" onerror="this.style.display='none'" /></div>` : ""}
-      </div>
-    </div>
 
     <div class="footer">
       <div class="footer-text">${escapeHtml(data.companyName)}${data.companyPhone ? ` &nbsp; Tel: ${escapeHtml(data.companyPhone)}` : ""}</div>
