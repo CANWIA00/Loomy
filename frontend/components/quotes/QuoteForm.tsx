@@ -36,8 +36,12 @@ function FieldLabel({ children }: { children: ReactNode }) {
 }
 
 function DateField({
-  label, value, onChange, placeholder,
-}: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  label, value, onChange, placeholder, quickOptions = [], base = "",
+}: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+  quickOptions?: { label: string; days: number; months: number }[];
+  base?: string;
+}) {
   const { colors } = useTheme();
   return (
     <View className="mb-3 flex-1">
@@ -61,6 +65,16 @@ function DateField({
         >
           <Ionicons name="calendar-outline" size={20} color={colors.primary} />
         </TouchableOpacity>
+        {quickOptions.map((opt) => (
+          <TouchableOpacity
+            key={opt.label}
+            className="ml-1 items-center justify-center rounded-full border px-2.5 h-10"
+            style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
+            onPress={() => onChange(computeValidUntil(base, opt.days, opt.months))}
+          >
+            <Text className="text-xs font-medium" style={{ color: colors.primary }}>{opt.label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
@@ -260,28 +274,19 @@ export default function QuoteForm() {
 
         <View className="flex-row gap-3">
           <DateField label={t("qot.documentDate")} value={form.documentDate} onChange={(v) => updateForm("documentDate", v)} placeholder={t("qot.datePlaceholder")} />
-          <DateField label={t("qot.validUntil")} value={form.validUntil} onChange={(v) => updateForm("validUntil", v)} placeholder={t("qot.datePlaceholder")} />
-        </View>
-
-        <View className="mb-3">
-          <FieldLabel>{t("qot.quickValidity")}</FieldLabel>
-          <View className="flex-row flex-wrap gap-2">
-            {[
-              { key: "qot.valid1Day", days: 1, months: 0 },
-              { key: "qot.valid1Week", days: 7, months: 0 },
-              { key: "qot.valid2Week", days: 14, months: 0 },
-              { key: "qot.valid1Month", days: 0, months: 1 },
-            ].map((opt) => (
-              <TouchableOpacity
-                key={opt.key}
-                className="flex-row items-center h-8 px-3 rounded-full border"
-                style={{ backgroundColor: colors.bg, borderColor: colors.border }}
-                onPress={() => updateForm("validUntil", computeValidUntil(form.documentDate, opt.days, opt.months))}
-              >
-                <Text className="text-xs font-medium" style={{ color: colors.primary }}>{t(opt.key)}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <DateField
+            label={t("qot.validUntil")}
+            value={form.validUntil}
+            onChange={(v) => updateForm("validUntil", v)}
+            placeholder={t("qot.datePlaceholder")}
+            base={form.documentDate}
+            quickOptions={[
+              { label: t("qot.valid1Day"), days: 1, months: 0 },
+              { label: t("qot.valid1Week"), days: 7, months: 0 },
+              { label: t("qot.valid2Week"), days: 14, months: 0 },
+              { label: t("qot.valid1Month"), days: 0, months: 1 },
+            ]}
+          />
         </View>
 
         <View className="mt-3 mb-2">
