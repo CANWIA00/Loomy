@@ -75,6 +75,9 @@ export function generateQuotePDFHtml(
       display: flex;
       flex-direction: column;
     }
+    .section-push {
+      margin-top: auto;
+    }
     .company-header {
       display: flex;
       justify-content: space-between;
@@ -213,17 +216,6 @@ export function generateQuotePDFHtml(
       white-space: pre-wrap;
       color: #333;
     }
-    .footer {
-      margin-top: 10px;
-      border-top: 1px solid #ccc;
-      padding-top: 4px;
-      text-align: center;
-    }
-    .footer-text {
-      font-size: 8px;
-      color: #888;
-      line-height: 1.4;
-    }
   </style>
 </head>
 <body>
@@ -294,14 +286,9 @@ export function generateQuotePDFHtml(
       </div>
     </div>
 
-    ${data.notes ? `
-    <div class="section">
+    <div class="section section-push">
       <div class="section-title">${t("qot.notes")}</div>
       <div class="notes-content">${escapeHtml(data.notes)}</div>
-    </div>` : ""}
-
-    <div class="footer">
-      <div class="footer-text">${escapeHtml(data.companyName)}${data.companyPhone ? ` &nbsp; Tel: ${escapeHtml(data.companyPhone)}` : ""}</div>
     </div>
   </div>
 </body>
