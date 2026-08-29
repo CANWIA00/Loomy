@@ -42,19 +42,24 @@ function renderSignatureSvg(signature: any): string {
   const pad = 10;
   const svgW = Math.ceil(w + pad * 2);
   const svgH = Math.ceil(h + pad * 2);
-  const paths = strokes.map((points: any[]) => {
+  const segs: Array<{ x1: number; y1: number; x2: number; y2: number; width: number }> = [];
+  strokes.forEach((points: any[]) => {
     const pts = points.filter((p: any) => p && typeof p.x === 'number' && typeof p.y === 'number' && Number.isFinite(p.x) && Number.isFinite(p.y));
-    if (pts.length < 2) return '';
-    const path = pts.map((p: any) => ({ x: p.x - minX + pad, y: p.y - minY + pad }));
-    let d = `M ${path[0].x.toFixed(2)} ${path[0].y.toFixed(2)}`;
-    for (let i = 1; i < path.length - 1; i++) {
-      const mid = { x: (path[i].x + path[i + 1].x) / 2, y: (path[i].y + path[i + 1].y) / 2 };
-      d += ` Q ${path[i].x.toFixed(2)} ${path[i].y.toFixed(2)} ${mid.x.toFixed(2)} ${mid.y.toFixed(2)}`;
+    if (pts.length < 2) return;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = { x: pts[i].x - minX + pad, y: pts[i].y - minY + pad };
+      const b = { x: pts[i + 1].x - minX + pad, y: pts[i + 1].y - minY + pad };
+      const d = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+      const width = Math.max(0.9, Math.min(2.6, 2.1 + 34 / d));
+      segs.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y, width });
     }
-    const last = path[path.length - 1];
-    d += ` L ${last.x.toFixed(2)} ${last.y.toFixed(2)}`;
-    return `<path d="${d}" stroke="#222238" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-  }).join('');
+  });
+  for (let i = 1; i < segs.length - 1; i++) {
+    segs[i].width = (segs[i - 1].width + segs[i].width + segs[i + 1].width) / 3;
+  }
+  const paths = segs
+    .map((s) => `<path d="M ${s.x1.toFixed(2)} ${s.y1.toFixed(2)} L ${s.x2.toFixed(2)} ${s.y2.toFixed(2)}" stroke="#222238" stroke-width="${s.width.toFixed(2)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`)
+    .join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">${paths}</svg>`;
 }
 

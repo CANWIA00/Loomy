@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import type { ReactElement } from "react";
 import { View, Text, TouchableOpacity, Alert, PanResponder } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -41,11 +42,9 @@ export default function SignaturePad({ onSave }: SignaturePadProps) {
     }),
   ).current;
 
-  const pointsToPath = (points: { x: number; y: number }[]) => {
-    if (points.length === 0) return "";
-    return points
-      .map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`))
-      .join(" ");
+  const strokeWidthFor = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    const d = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+    return Math.max(1, Math.min(4, 2.8 + 60 / d));
   };
 
   const handleClear = () => {
@@ -75,12 +74,42 @@ export default function SignaturePad({ onSave }: SignaturePadProps) {
           <Text className="text-sm absolute" style={{ color: colors.textMuted }}>{t("svc.signHere")}</Text>
         )}
         <Svg width="100%" height="100%" viewBox={`0 0 ${containerSize.width} ${containerSize.height}`}>
-          {paths.map((points, i) => (
-            <Path key={i} d={pointsToPath(points)} stroke={colors.primary} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          ))}
-          {currentPointsRef.current.length > 0 && (
-            <Path d={pointsToPath(currentPointsRef.current)} stroke={colors.primary} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          )}
+          {paths.flatMap((points, si) => {
+            const segs: ReactElement[] = [];
+            for (let i = 0; i < points.length - 1; i++) {
+              segs.push(
+                <Path
+                  key={`${si}-${i}`}
+                  d={`M ${points[i].x} ${points[i].y} L ${points[i + 1].x} ${points[i + 1].y}`}
+                  stroke={colors.primary}
+                  strokeWidth={strokeWidthFor(points[i], points[i + 1])}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              );
+            }
+            return segs;
+          })}
+          {currentPointsRef.current.length > 1 &&
+            (() => {
+              const segs: ReactElement[] = [];
+              const pts = currentPointsRef.current;
+              for (let i = 0; i < pts.length - 1; i++) {
+                segs.push(
+                  <Path
+                    key={`cur-${i}`}
+                    d={`M ${pts[i].x} ${pts[i].y} L ${pts[i + 1].x} ${pts[i + 1].y}`}
+                    stroke={colors.primary}
+                    strokeWidth={strokeWidthFor(pts[i], pts[i + 1])}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                );
+              }
+              return segs;
+            })()}
         </Svg>
       </View>
       <View className="flex-row gap-3 mt-4">
