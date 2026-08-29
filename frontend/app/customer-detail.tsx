@@ -9,6 +9,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import ScreenHeader from "../components/ScreenHeader";
+import CustomAlert from "../components/CustomAlert";
 import { customerApi, type Customer } from "../api/customers";
 import { serviceApi, type ServiceRecord } from "../api/services";
 import { quoteApi, type QuoteRecord } from "../api/quotes";
@@ -348,6 +349,7 @@ export default function CustomerDetailScreen() {
 
   const [preview, setPreview] = useState<{ html: string; data: PdfData | QuotePdfData } | null>(null);
   const [previewZoom, setPreviewZoom] = useState(60);
+  const [toggleAlert, setToggleAlert] = useState<{ visible: boolean; record: PaymentRecord | null }>({ visible: false, record: null });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -809,7 +811,7 @@ export default function CustomerDetailScreen() {
                             </View>
                             <Text className="text-xs font-semibold mr-3" style={{ color: colors.text }}>{money(pm.amount)} ₺</Text>
                             <TouchableOpacity
-                              onPress={() => handleTogglePayment(pm)}
+                              onPress={() => setToggleAlert({ visible: true, record: pm })}
                               className="px-3 py-1.5 rounded-full"
                               style={{ backgroundColor: (pm.paid ? colors.success : colors.warning) + "20" }}
                             >
@@ -841,6 +843,20 @@ export default function CustomerDetailScreen() {
         setZoom={setPreviewZoom}
         onClose={() => setPreview(null)}
         onDownload={handlePreviewDownload}
+      />
+      <CustomAlert
+        visible={toggleAlert.visible}
+        type="confirm"
+        title={toggleAlert.record?.paid ? t("dash.confirmRevert") : t("dash.confirmMarkPaid")}
+        message={toggleAlert.record?.paid
+          ? t("dash.confirmRevertMsg", { name: toggleAlert.record?.customer || "" })
+          : t("dash.confirmMarkPaidMsg", { name: toggleAlert.record?.customer || "" })
+        }
+        onClose={() => setToggleAlert({ visible: false, record: null })}
+        onConfirm={() => {
+          if (toggleAlert.record) handleTogglePayment(toggleAlert.record);
+        }}
+        confirmText={t("common.confirm")}
       />
     </>
   );
