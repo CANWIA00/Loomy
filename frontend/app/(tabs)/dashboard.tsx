@@ -6,6 +6,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import CustomAlert from "../../components/CustomAlert";
 import { DashboardProvider, useDashboard } from "../../components/dashboard/DashboardContext";
 import ServicesCard from "../../components/dashboard/ServicesCard";
+import QuotesCard from "../../components/dashboard/QuotesCard";
 import CustomersCard from "../../components/dashboard/CustomersCard";
 import PlanCard from "../../components/dashboard/PlanCard";
 import PaymentsCard from "../../components/dashboard/PaymentsCard";
@@ -44,6 +45,8 @@ function DashboardScreenInner() {
 
         <View className="flex-col gap-4">
           <ServicesCard />
+
+          {isAdmin && <QuotesCard />}
 
           <View className="flex-col md:flex-row gap-4">
             <CustomersCard />
