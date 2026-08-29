@@ -91,8 +91,8 @@ export default function QuoteRecordsSection() {
         <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
           <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
           <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
-          <Text className="w-24 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
-          <View className="flex-row items-center justify-end" />
+          <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
+          <View className="w-32 ml-3" />
         </View>
 
         <ScrollView nestedScrollEnabled className="max-h-96" indicatorStyle={colors.indicatorBg as any}>
@@ -108,10 +108,10 @@ export default function QuoteRecordsSection() {
                 <Text className="flex-1 text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
                   {k.customer}
                 </Text>
-                <Text className="w-24 text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
+                <Text className="w-28 text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
                   {sum.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
                 </Text>
-                <View className="flex-row items-center justify-end gap-2.5">
+                <View className="w-32 ml-3 flex-row items-center justify-end gap-2.5">
                   <TouchableOpacity onPress={() => handleShare(k)}>
                     <Ionicons name="share-social-outline" size={20} color={colors.purple} />
                   </TouchableOpacity>
