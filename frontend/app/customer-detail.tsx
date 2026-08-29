@@ -7,6 +7,7 @@ import * as Sharing from "expo-sharing";
 import { WebView } from "react-native-webview";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useAuth } from "../contexts/AuthContext";
 import ScreenHeader from "../components/ScreenHeader";
 import { customerApi, type Customer } from "../api/customers";
 import { serviceApi, type ServiceRecord } from "../api/services";
@@ -324,6 +325,7 @@ export default function CustomerDetailScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { t, locale } = useLanguage();
+  const isAdmin = useAuth().user?.role === "ADMIN";
   const params = useLocalSearchParams<{ id?: string; name?: string }>();
   const id = params.id || "";
   const name = params.name || "";
@@ -583,6 +585,15 @@ export default function CustomerDetailScreen() {
     await publishPdf(html, fileName, dialogTitle, true);
   };
 
+  const handleTogglePayment = async (pm: PaymentRecord) => {
+    try {
+      await paymentApi.updateStatus(pm.id, !pm.paid);
+      setPayments((prev) => prev.map((p) => (p.id === pm.id ? { ...p, paid: !p.paid } : p)));
+    } catch {
+      Alert.alert(t("common.warning"), t("pay.errorUpdate"));
+    }
+  };
+
   return (
     <>
       <ScrollView className="flex-1" style={{ backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg as any}>
@@ -668,74 +679,82 @@ export default function CustomerDetailScreen() {
                   )}
                 </View>
 
-                <View className="mb-6">
-                  <SectionHeader icon="document-text-outline" title={t("cst.quotes")} count={quotes.length} />
-                  {quotes.length === 0 ? (
-                    <Text className="text-sm" style={{ color: colors.textMuted }}>{t("cst.noQuoteRecords")}</Text>
-                  ) : (
-                    <View className="rounded-2xl border overflow-hidden" style={{ borderColor: colors.borderAlt }}>
-                      {quotes.map((q, i) => (
-                        <View
-                          key={q.id}
-                          className="flex-row items-center px-4 py-2.5"
-                          style={{ borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.borderAlt, backgroundColor: colors.bgCard }}
-                        >
-                          <TouchableOpacity
-                            className="flex-1 flex-row items-center py-0.5"
-                            activeOpacity={0.7}
-                            onPress={() => setDetail({ kind: "quote", record: q })}
+                {isAdmin && (
+                  <View className="mb-6">
+                    <SectionHeader icon="document-text-outline" title={t("cst.quotes")} count={quotes.length} />
+                    {quotes.length === 0 ? (
+                      <Text className="text-sm" style={{ color: colors.textMuted }}>{t("cst.noQuoteRecords")}</Text>
+                    ) : (
+                      <View className="rounded-2xl border overflow-hidden" style={{ borderColor: colors.borderAlt }}>
+                        {quotes.map((q, i) => (
+                          <View
+                            key={q.id}
+                            className="flex-row items-center px-4 py-2.5"
+                            style={{ borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.borderAlt, backgroundColor: colors.bgCard }}
+                          >
+                            <TouchableOpacity
+                              className="flex-1 flex-row items-center py-0.5"
+                              activeOpacity={0.7}
+                              onPress={() => setDetail({ kind: "quote", record: q })}
+                            >
+                              <View className="flex-1">
+                                <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{q.customer}</Text>
+                                <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{q.tarih}</Text>
+                              </View>
+                              <Text className="text-xs font-semibold mr-1" style={{ color: colors.primary }}>{money(quoteTotal(q))} ₺</Text>
+                              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                            </TouchableOpacity>
+                            <View className="flex-row items-center gap-3 ml-3">
+                              <TouchableOpacity onPress={() => handleShareQuote(q)}>
+                                <Ionicons name="share-social-outline" size={20} color={colors.purple} />
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={() => handleViewQuote(q)}>
+                                <Ionicons name="eye-outline" size={20} color={colors.primary} />
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={() => handleDownloadQuote(q)}>
+                                <Ionicons name="download-outline" size={20} color={colors.warning} />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {isAdmin && (
+                  <View className="mb-4">
+                    <SectionHeader icon="card-outline" title={t("cst.payments")} count={payments.length} />
+                    {payments.length === 0 ? (
+                      <Text className="text-sm" style={{ color: colors.textMuted }}>{t("cst.noPayments")}</Text>
+                    ) : (
+                      <View className="rounded-2xl border overflow-hidden" style={{ borderColor: colors.borderAlt }}>
+                        {payments.map((pm, i) => (
+                          <View
+                            key={pm.id}
+                            className="flex-row items-center px-4 py-3"
+                            style={{ borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.borderAlt, backgroundColor: colors.bgCard }}
                           >
                             <View className="flex-1">
-                              <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{q.customer}</Text>
-                              <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{q.tarih}</Text>
+                              <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{pm.serviceType || pm.customer}</Text>
+                              <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{pm.tarih}</Text>
                             </View>
-                            <Text className="text-xs font-semibold mr-1" style={{ color: colors.primary }}>{money(quoteTotal(q))} ₺</Text>
-                            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                          </TouchableOpacity>
-                          <View className="flex-row items-center gap-3 ml-3">
-                            <TouchableOpacity onPress={() => handleShareQuote(q)}>
-                              <Ionicons name="share-social-outline" size={20} color={colors.purple} />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => handleViewQuote(q)}>
-                              <Ionicons name="eye-outline" size={20} color={colors.primary} />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => handleDownloadQuote(q)}>
-                              <Ionicons name="download-outline" size={20} color={colors.warning} />
+                            <Text className="text-xs font-semibold mr-3" style={{ color: colors.text }}>{money(pm.amount)} ₺</Text>
+                            <TouchableOpacity
+                              onPress={() => handleTogglePayment(pm)}
+                              className="px-3 py-1.5 rounded-full"
+                              style={{ backgroundColor: (pm.paid ? colors.success : colors.warning) + "20" }}
+                            >
+                              <Text className="text-[10px] font-semibold" style={{ color: pm.paid ? colors.success : colors.warning }}>
+                                {pm.paid ? t("cst.paid") : t("cst.pending")}
+                              </Text>
                             </TouchableOpacity>
                           </View>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-
-                <View className="mb-4">
-                  <SectionHeader icon="card-outline" title={t("cst.payments")} count={payments.length} />
-                  {payments.length === 0 ? (
-                    <Text className="text-sm" style={{ color: colors.textMuted }}>{t("cst.noPayments")}</Text>
-                  ) : (
-                    <View className="rounded-2xl border overflow-hidden" style={{ borderColor: colors.borderAlt }}>
-                      {payments.map((pm, i) => (
-                        <View
-                          key={pm.id}
-                          className="flex-row items-center px-4 py-3"
-                          style={{ borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.borderAlt, backgroundColor: colors.bgCard }}
-                        >
-                          <View className="flex-1">
-                            <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{pm.serviceType || pm.customer}</Text>
-                            <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{pm.tarih}</Text>
-                          </View>
-                          <Text className="text-xs font-semibold mr-3" style={{ color: colors.text }}>{money(pm.amount)} ₺</Text>
-                          <View className="px-2 py-1 rounded-full" style={{ backgroundColor: (pm.paid ? colors.success : colors.warning) + "20" }}>
-                            <Text className="text-[10px] font-semibold" style={{ color: pm.paid ? colors.success : colors.warning }}>
-                              {pm.paid ? t("cst.paid") : t("cst.pending")}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
               </>
             )}
           </View>
