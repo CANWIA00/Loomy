@@ -57,6 +57,7 @@ model Company {
   serviceTemplates ServiceFormTemplate[]
   teams          Team[]
   appointments   Appointment[]
+  quoteRecords   QuoteRecord[]
 }
 
 model ServiceRecord {
@@ -163,6 +164,27 @@ model Appointment {
 
   @@index([companyId])
   @@index([teamId])
+}
+
+model QuoteRecord {
+  id           Int      @id @default(autoincrement())
+  documentDate String
+  customerName String
+  customerId   String?
+  email        String?
+  phone        String?
+  address      String?
+  notes        String?
+  lines        String   @default("[]") // JSON string: [{name, details, quantity, unitPrice}]
+  validUntil   String?
+  companyId    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([customerId])
 }
 
 model AdminKey {

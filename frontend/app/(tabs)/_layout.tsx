@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 const allTabs: Record<string, { titleKey: string; icon: string; adminOnly?: boolean }> = {
   dashboard: { titleKey: "tab.home", icon: "home" },
   services: { titleKey: "tab.services", icon: "construct" },
+  quotes: { titleKey: "tab.quotes", icon: "document-text", adminOnly: true },
   customers: { titleKey: "tab.customers", icon: "people" },
   schedule: { titleKey: "tab.schedule", icon: "calendar" },
   payments: { titleKey: "tab.payments", icon: "card", adminOnly: true },
