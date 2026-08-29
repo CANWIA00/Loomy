@@ -46,17 +46,17 @@ function DateField({
   return (
     <View className="mb-3 flex-1">
       <FieldLabel>{label}</FieldLabel>
-      <View className="flex-row items-center">
+      <View className="flex-row items-center border rounded-lg px-2" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
         <TextInput
-          className="flex-1 h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          className="flex-1 h-11 px-1 text-sm"
+          style={{ color: colors.text }}
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           value={value}
           onChangeText={(v) => onChange(formatDateInput(v))}
         />
         <TouchableOpacity
-          className="h-10 w-10 items-center justify-center ml-1"
+          className="h-11 w-10 items-center justify-center"
           onPress={() => {
             const now = new Date();
             const tarih = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
@@ -66,20 +66,22 @@ function DateField({
           <Ionicons name="calendar-outline" size={20} color={colors.primary} />
         </TouchableOpacity>
         {quickOptions.length > 0 && (
-          <Text className="ml-1" style={{ color: colors.textMuted }}>/</Text>
+          <View className="flex-row items-center pr-1">
+            <Text className="mx-1" style={{ color: colors.textMuted }}>/</Text>
+            {quickOptions.map((opt, i) => (
+              <TouchableOpacity
+                key={opt.label}
+                onPress={() => onChange(computeValidUntil(base, opt.days, opt.months))}
+                style={{ paddingVertical: 8 }}
+              >
+                <View className="flex-row items-center">
+                  {i > 0 && <Text className="mx-1" style={{ color: colors.textMuted }}>/</Text>}
+                  <Text className="text-xs font-medium" style={{ color: colors.primary }}>{opt.label}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
-        {quickOptions.map((opt, i) => (
-          <TouchableOpacity
-            key={opt.label}
-            className="h-10 justify-center"
-            onPress={() => onChange(computeValidUntil(base, opt.days, opt.months))}
-          >
-            <View className="flex-row items-center">
-              {i > 0 && <Text className="mx-1" style={{ color: colors.textMuted }}>/</Text>}
-              <Text className="text-xs font-medium" style={{ color: colors.primary }}>{opt.label}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
       </View>
     </View>
   );
