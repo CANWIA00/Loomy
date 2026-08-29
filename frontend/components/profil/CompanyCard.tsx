@@ -1,4 +1,4 @@
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -92,27 +92,15 @@ export default function CompanyCard() {
           <Ionicons name="business-outline" size={20} color={colors.primary} />
           <Text style={{ color: colors.text, fontWeight: "600" }}>{t("prf.companyInfo")}</Text>
         </View>
-        {isAdmin && (
-          <View className="flex-row items-center gap-2">
-            {editingCompany ? (
-              <>
-                <TouchableOpacity onPress={cancelEditingCompany} disabled={saving}>
-                  <Ionicons name="close-circle-outline" size={22} color={colors.danger} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleUpdateCompany} disabled={saving}>
-                  <Ionicons
-                    name={saving ? "hourglass-outline" : "checkmark-circle"}
-                    size={22}
-                    color={saving ? colors.textMuted : colors.success}
-                  />
-                </TouchableOpacity>
-              </>
-            ) : (
-              <TouchableOpacity onPress={startEditingCompany}>
-                <Ionicons name="create-outline" size={22} color={colors.primary} />
-              </TouchableOpacity>
-            )}
-          </View>
+        {isAdmin && !editingCompany && (
+          <TouchableOpacity
+            className="flex-row items-center px-3 py-1.5 rounded-lg gap-1.5"
+            style={{ backgroundColor: colors.primary + "15" }}
+            onPress={startEditingCompany}
+          >
+            <Ionicons name="create-outline" size={16} color={colors.primary} />
+            <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "600" }}>{t("common.edit")}</Text>
+          </TouchableOpacity>
         )}
       </View>
 
@@ -317,6 +305,26 @@ export default function CompanyCard() {
           )}
         </View>
       </View>
+
+      {editingCompany && (
+        <View className="flex-row gap-3 mt-5">
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 13, alignItems: "center" }}
+            onPress={cancelEditingCompany}
+            disabled={saving}
+          >
+            <Text style={{ color: colors.danger, fontSize: 14, fontWeight: "600" }}>{t("common.cancel")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ flex: 2, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+            onPress={handleUpdateCompany}
+            disabled={saving}
+          >
+            {saving && <ActivityIndicator size="small" color="#fff" />}
+            <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>{t("common.save")}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
