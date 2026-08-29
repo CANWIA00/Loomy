@@ -117,6 +117,11 @@ export function generateCustomerHistoryPDFHtml(
       padding-bottom: 8px;
       margin-bottom: 12px;
     }
+    .company-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
     .company-logo {
       max-height: 48px;
       max-width: 140px;
@@ -125,6 +130,7 @@ export function generateCustomerHistoryPDFHtml(
     .header-title { flex: 1; text-align: center; }
     .title { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
     .title-sub { font-size: 12px; font-weight: bold; letter-spacing: 1px; margin-top: 2px; }
+    .title-area { flex: 1; text-align: right; }
     .title-date { font-size: 9px; color: #444; margin-top: 2px; text-align: right; }
     .section { margin-bottom: 10px; }
     .section-title {
@@ -166,14 +172,14 @@ export function generateCustomerHistoryPDFHtml(
 </head>
 <body>
   <div class="company-header">
-    <div>
+    <div class="company-left">
       ${data.companyLogo ? `<img class="company-logo" src="${data.companyLogo}" onerror="this.style.display='none'" />` : ""}
     </div>
     <div class="header-title">
       <div class="title">${escapeHtml(data.companyName)}</div>
       <div class="title-sub">${lang === "tr" ? "Müşteri Geçmişi" : "Customer History"}</div>
     </div>
-    <div class="header-title">
+    <div class="title-area">
       <div class="title-date">${t("cst.detail")}</div>
       <div class="title-date">${t("cst.recordDate")}: ${escapeHtml(data.documentDate)}</div>
     </div>
