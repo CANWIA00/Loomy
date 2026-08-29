@@ -318,6 +318,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "cst.amount": "Tutar",
     "cst.confirmDeleteRecord": "Bu kaydı silmek istediğinize emin misiniz?",
     "cst.recordDeleted": "Kayıt silindi.",
+    "cst.historyDownload": "İndir",
+    "cst.historyTitle": "Müşteri Geçmişi",
 
     // Schedule
     "sch.title": "Plan Yönetimi",
@@ -1129,6 +1131,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "cst.amount": "Amount",
     "cst.confirmDeleteRecord": "Are you sure you want to delete this record?",
     "cst.recordDeleted": "Record deleted.",
+    "cst.historyDownload": "Download",
+    "cst.historyTitle": "Customer History",
 
     // Schedule
     "sch.title": "Schedule Management",

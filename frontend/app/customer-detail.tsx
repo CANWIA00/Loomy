@@ -16,6 +16,7 @@ import { paymentApi, type PaymentRecord } from "../api/payments";
 import { profileApi } from "../api/profile";
 import { generateServicePDFHtml } from "../components/ServicePDF";
 import { generateQuotePDFHtml } from "../components/QuotePDF";
+import { generateCustomerHistoryPDFHtml, type CustomerHistoryPdfData } from "../components/CustomerHistoryPDF";
 import { shareWebPdf, downloadWebPdf } from "../utils/webPdf";
 import { embedImage } from "../utils/pdfAssets";
 import type { PdfData } from "../components/services/types";
@@ -594,6 +595,48 @@ export default function CustomerDetailScreen() {
     }
   };
 
+  const resolveHistoryPdf = async (): Promise<CustomerHistoryPdfData> => {
+    const logo = await embedImage(companyLogoRef.current);
+    return {
+      companyName: companyInfoRef.current.name,
+      companyLogo: logo,
+      customerName: customer?.companyName || name || "?",
+      customerPhone: customer?.phone || customer?.contactPhone || "",
+      customerAddress: customer?.address || "",
+      customerSubscriberNo: customer?.subscriberNo || "",
+      documentDate: new Date().toLocaleDateString(locale),
+      services: services.map((s) => ({
+        tarih: s.tarih,
+        service: s.service || s.customer,
+        teknisyen: s.teknisyen,
+        fee: s.ucret,
+      })),
+      quotes: quotes.map((q) => ({
+        tarih: q.tarih,
+        customer: q.customer,
+        total: quoteTotal(q),
+        validUntil: q.validUntil,
+      })),
+      payments: payments.map((p) => ({
+        tarih: p.tarih,
+        serviceType: p.serviceType || p.customer,
+        amount: p.amount,
+        paid: p.paid,
+      })),
+    };
+  };
+
+  const runHistoryPdf = async (download: boolean) => {
+    try {
+      const data = await resolveHistoryPdf();
+      const html = generateCustomerHistoryPDFHtml(data, t, pdfLang);
+      const fileName = `${data.customerName || "musteri"} - gecmis`.replace(/[\\/:*?"<>|]+/g, "-");
+      await publishPdf(html, fileName, t("cst.historyTitle"), download);
+    } catch (error) {
+      Alert.alert(t("common.warning"), t("svc.errorPdfCreate") + (error as any).message);
+    }
+  };
+
   return (
     <>
       <ScrollView className="flex-1" style={{ backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg as any}>
@@ -638,6 +681,31 @@ export default function CustomerDetailScreen() {
                     </View>
                   </View>
                 )}
+
+                <View className="flex-row items-center gap-3 mb-6">
+                  <View className="flex-1 flex-row items-center gap-2">
+                    <View className="w-8 h-8 rounded-lg items-center justify-center" style={{ backgroundColor: colors.primary + "15" }}>
+                      <Ionicons name="time-outline" size={16} color={colors.primary} />
+                    </View>
+                    <Text className="text-base font-bold" style={{ color: colors.text }}>{t("cst.historyTitle")}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => runHistoryPdf(false)}
+                    className="h-9 px-3 rounded-lg flex-row items-center gap-1.5"
+                    style={{ backgroundColor: colors.bgCard, borderColor: colors.borderAlt, borderWidth: 1 }}
+                  >
+                    <Ionicons name="share-social-outline" size={16} color={colors.purple} />
+                    <Text className="text-xs font-semibold" style={{ color: colors.text }}>{t("svc.share")}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => runHistoryPdf(true)}
+                    className="h-9 px-3 rounded-lg flex-row items-center gap-1.5"
+                    style={{ backgroundColor: colors.primary }}
+                  >
+                    <Ionicons name="download-outline" size={16} color="#fff" />
+                    <Text className="text-xs font-semibold" style={{ color: "#fff" }}>{t("cst.historyDownload")}</Text>
+                  </TouchableOpacity>
+                </View>
 
                 <View className="mb-6">
                   <SectionHeader icon="construct-outline" title={t("cst.serviceReports")} count={services.length} />
