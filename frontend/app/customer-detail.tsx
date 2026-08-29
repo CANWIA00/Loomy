@@ -649,9 +649,6 @@ export default function CustomerDetailScreen() {
                               <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{s.service || s.customer}</Text>
                               <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{s.tarih}</Text>
                             </View>
-                            <Text className="text-xs mr-1" style={{ color: s.odendi ? colors.success : colors.warning }}>
-                              {s.odendi ? t("cst.paid") : t("cst.pending")}
-                            </Text>
                             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                           </TouchableOpacity>
                           <View className="flex-row items-center gap-3 ml-3">
