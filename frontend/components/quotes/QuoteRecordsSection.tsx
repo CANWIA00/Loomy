@@ -92,7 +92,7 @@ export default function QuoteRecordsSection() {
           <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
           <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
           <Text className="w-24 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
-          <View className="w-28 flex-row items-center justify-end" />
+          <View className="flex-row items-center justify-end" />
         </View>
 
         <ScrollView nestedScrollEnabled className="max-h-96" indicatorStyle={colors.indicatorBg as any}>
@@ -111,7 +111,7 @@ export default function QuoteRecordsSection() {
                 <Text className="w-24 text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
                   {sum.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
                 </Text>
-                <View className="w-28 flex-row items-center justify-end gap-2.5">
+                <View className="flex-row items-center justify-end gap-2.5">
                   <TouchableOpacity onPress={() => handleShare(k)}>
                     <Ionicons name="share-social-outline" size={20} color={colors.purple} />
                   </TouchableOpacity>
