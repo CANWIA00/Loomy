@@ -1,5 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCustomers } from "./CustomersContext";
@@ -7,6 +8,7 @@ import { useCustomers } from "./CustomersContext";
 export default function CustomerListSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const router = useRouter();
   const {
     customers,
     loading,
@@ -18,7 +20,6 @@ export default function CustomerListSection() {
     fetchCustomers,
     handleEdit,
     handleDelete,
-    setSelectedCustomer,
   } = useCustomers();
 
   return (
@@ -49,7 +50,7 @@ export default function CustomerListSection() {
               key={c.id}
               className="rounded-2xl p-4 mb-3"
               style={{ backgroundColor: colors.bgCard }}
-              onPress={() => setSelectedCustomer(c)}
+              onPress={() => router.push(`/customer-detail?id=${encodeURIComponent(c.id)}&name=${encodeURIComponent(c.companyName)}` as any)}
               activeOpacity={0.7}
             >
               <View className="flex-row items-center">
@@ -78,6 +79,7 @@ export default function CustomerListSection() {
                   >
                     <Ionicons name="trash-outline" size={18} color={colors.danger} />
                   </TouchableOpacity>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textMuted} style={{ alignSelf: "center" }} />
                 </View>
               </View>
             </TouchableOpacity>

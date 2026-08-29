@@ -17,6 +17,7 @@ function RootLayoutInner() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="templates" />
         <Stack.Screen name="dev" />
+        <Stack.Screen name="customer-detail" />
       </Stack>
     </SafeAreaView>
   );
