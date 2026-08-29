@@ -71,48 +71,44 @@ export function generateQuotePDFHtml(
     }
     .content-wrapper {
       padding-bottom: 0;
-      min-height: 270mm;
-      display: flex;
-      flex-direction: column;
-    }
-    .section-push {
-      margin-top: auto;
     }
     .company-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
+      gap: 10px;
       border-bottom: 2px solid #222238;
       padding-bottom: 8px;
       margin-bottom: 12px;
     }
     .company-left {
+      flex: 1;
       display: flex;
       align-items: center;
-      gap: 10px;
     }
     .company-logo {
       max-height: 48px;
       max-width: 140px;
       object-fit: contain;
     }
-    .company-name {
-      font-size: 16px;
-      font-weight: bold;
-    }
-    .company-meta {
-      font-size: 9px;
-      color: #444;
-      line-height: 1.4;
-      margin-top: 2px;
-    }
-    .title-area {
-      text-align: right;
+    .header-title {
+      flex: 1;
+      text-align: center;
     }
     .title {
       font-size: 18px;
       font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .title-sub {
+      font-size: 12px;
+      font-weight: bold;
       letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .title-area {
+      flex: 1;
+      text-align: right;
     }
     .title-date {
       font-size: 9px;
@@ -223,10 +219,12 @@ export function generateQuotePDFHtml(
     <div class="company-header">
       <div class="company-left">
         ${data.companyLogo ? `<img class="company-logo" src="${data.companyLogo}" onerror="this.style.display='none'" />` : ""}
-        <div class="company-name">${escapeHtml(data.companyName)}</div>
+      </div>
+      <div class="header-title">
+        <div class="title">${escapeHtml(data.companyName)}</div>
+        <div class="title-sub">${lang === "tr" ? "Servis Teklifi" : "Service Quote"}</div>
       </div>
       <div class="title-area">
-        <div class="title">${escapeHtml(data.companyName)} ${lang === "tr" ? "Teklif Belgesi" : "Quote Document"}</div>
         <div class="title-date">${t("qot.date")} ${escapeHtml(data.documentDate) || ""}</div>
         ${data.validUntil ? `<div class="title-date">${t("qot.validUntil")} ${escapeHtml(data.validUntil)}</div>` : ""}
       </div>
@@ -259,6 +257,11 @@ export function generateQuotePDFHtml(
     </div>
 
     <div class="section">
+      <div class="section-title">${t("qot.notes")}</div>
+      <div class="notes-content">${escapeHtml(data.notes)}</div>
+    </div>
+
+    <div class="section">
       <div class="section-title">${t("qot.items")}</div>
       <table class="items-table">
         <thead>
@@ -284,11 +287,6 @@ export function generateQuotePDFHtml(
           </tbody>
         </table>
       </div>
-    </div>
-
-    <div class="section section-push">
-      <div class="section-title">${t("qot.notes")}</div>
-      <div class="notes-content">${escapeHtml(data.notes)}</div>
     </div>
   </div>
 </body>
