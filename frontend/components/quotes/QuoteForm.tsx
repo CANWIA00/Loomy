@@ -65,14 +65,19 @@ function DateField({
         >
           <Ionicons name="calendar-outline" size={20} color={colors.primary} />
         </TouchableOpacity>
-        {quickOptions.map((opt) => (
+        {quickOptions.length > 0 && (
+          <Text className="ml-1" style={{ color: colors.textMuted }}>/</Text>
+        )}
+        {quickOptions.map((opt, i) => (
           <TouchableOpacity
             key={opt.label}
-            className="ml-1 items-center justify-center rounded-full border px-2.5 h-10"
-            style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
+            className="h-10 justify-center"
             onPress={() => onChange(computeValidUntil(base, opt.days, opt.months))}
           >
-            <Text className="text-xs font-medium" style={{ color: colors.primary }}>{opt.label}</Text>
+            <View className="flex-row items-center">
+              {i > 0 && <Text className="mx-1" style={{ color: colors.textMuted }}>/</Text>}
+              <Text className="text-xs font-medium" style={{ color: colors.primary }}>{opt.label}</Text>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
