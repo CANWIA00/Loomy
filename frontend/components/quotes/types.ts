@@ -2,9 +2,13 @@ import type { QuoteLine } from "../../api/quotes";
 
 export interface QuoteFormData {
   customerName: string;
+  contactPerson: string;
   email: string;
   phone: string;
+  fax: string;
+  website: string;
   address: string;
+  subscriberNo: string;
   documentDate: string;
   validUntil: string;
   notes: string;
@@ -15,9 +19,13 @@ export const emptyLine = (): QuoteLine => ({ name: "", details: "", quantity: 1,
 
 export const initialQuoteForm: QuoteFormData = {
   customerName: "",
+  contactPerson: "",
   email: "",
   phone: "",
+  fax: "",
+  website: "",
   address: "",
+  subscriberNo: "",
   documentDate: "",
   validUntil: "",
   notes: "",
@@ -26,17 +34,23 @@ export const initialQuoteForm: QuoteFormData = {
 
 export interface QuotePdfData {
   customerName: string;
+  contactPerson: string;
   documentDate: string;
   validUntil: string;
   email: string;
   phone: string;
+  fax: string;
+  website: string;
   address: string;
+  subscriberNo: string;
   notes: string;
   lines: QuoteLine[];
   companyName: string;
   companyAddress: string;
   companyPhone: string;
   companyEmail: string;
+  companyFax: string;
+  companyWebsite: string;
   companyTaxNumber: string;
   companyLogo: string | null;
   companyStamp: string | null;

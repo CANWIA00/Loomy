@@ -83,6 +83,8 @@ export async function getProfile(
             address: true,
             phone: true,
             email: true,
+            fax: true,
+            website: true,
             taxNumber: true,
             invitationCode: true,
             logoUrl: true,
@@ -153,7 +155,7 @@ export async function updateCompany(
   res: Response
 ): Promise<void> {
   try {
-    const { name, address, phone, email, taxNumber, logoUrl, stampUrl } = req.body;
+    const { name, address, phone, email, fax, website, taxNumber, logoUrl, stampUrl } = req.body;
 
     if (!name) {
       res.status(400).json({ message: "Şirket adı zorunludur." });
@@ -180,6 +182,8 @@ export async function updateCompany(
         address,
         phone,
         email,
+        fax,
+        website,
         taxNumber,
         logoUrl: processedLogoUrl,
         stampUrl: processedStampUrl,
@@ -191,6 +195,8 @@ export async function updateCompany(
         address: true,
         phone: true,
         email: true,
+        fax: true,
+        website: true,
         taxNumber: true,
         invitationCode: true,
         logoUrl: true,

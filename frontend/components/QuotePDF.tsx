@@ -262,15 +262,7 @@ export function generateQuotePDFHtml(
     <div class="company-header">
       <div class="company-left">
         ${data.companyLogo ? `<img class="company-logo" src="${data.companyLogo}" onerror="this.style.display='none'" />` : ""}
-        <div>
-          <div class="company-name">${escapeHtml(data.companyName)}</div>
-          <div class="company-meta">
-            ${data.companyAddress ? `${escapeHtml(data.companyAddress)}<br/>` : ""}
-            ${data.companyPhone ? `${lang === "tr" ? "Tel" : "Phone"}: ${escapeHtml(data.companyPhone)}` : ""}
-            ${data.companyEmail ? ` &nbsp; ${escapeHtml(data.companyEmail)}` : ""}
-            ${data.companyTaxNumber ? `<br/>${lang === "tr" ? "Vergi No" : "Tax No"}: ${escapeHtml(data.companyTaxNumber)}` : ""}
-          </div>
-        </div>
+        <div class="company-name">${escapeHtml(data.companyName)}</div>
       </div>
       <div class="title-area">
         <div class="title">${lang === "tr" ? "TEKLİF" : "QUOTE"}</div>
@@ -279,13 +271,29 @@ export function generateQuotePDFHtml(
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">${t("qot.customerInfo")}</div>
-      <div class="info-list">
-        <div class="info-item"><span class="label">${t("qot.customerName")}</span> <span class="value">${escapeHtml(data.customerName)}</span></div>
-        ${data.address ? `<div class="info-item"><span class="label">${t("qot.address")}</span> <span class="value">${escapeHtml(data.address)}</span></div>` : ""}
-        ${data.phone ? `<div class="info-item"><span class="label">${t("qot.phone")}</span> <span class="value">${escapeHtml(data.phone)}</span></div>` : ""}
-        ${data.email ? `<div class="info-item"><span class="label">${t("qot.email")}</span> <span class="value">${escapeHtml(data.email)}</span></div>` : ""}
+    <div class="two-column">
+      <div class="section">
+        <div class="section-title">${t("qot.companyInfo")}</div>
+        <div class="info-list">
+          <div class="info-item"><span class="label">${t("qot.address")}</span> <span class="value">${escapeHtml(data.companyAddress) || ""}</span></div>
+          <div class="info-item"><span class="label">${t("qot.companyPhone")}</span> <span class="value">${escapeHtml(data.companyPhone) || ""}</span></div>
+          <div class="info-item"><span class="label">${t("qot.companyFax")}</span> <span class="value">${escapeHtml(data.companyFax) || ""}</span></div>
+          <div class="info-item"><span class="label">${t("qot.companyEmail")}</span> <span class="value">${escapeHtml(data.companyEmail) || ""}</span></div>
+          <div class="info-item"><span class="label">${t("qot.companyWebsite")}</span> <span class="value">${escapeHtml(data.companyWebsite) || ""}</span></div>
+          ${data.companyTaxNumber ? `<div class="info-item"><span class="label">${t("qot.companyTax")}</span> <span class="value">${escapeHtml(data.companyTaxNumber)}</span></div>` : ""}
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">${t("qot.customerInfo")}</div>
+        <div class="info-list">
+          <div class="info-item"><span class="label">${t("qot.customerName")}</span> <span class="value">${escapeHtml(data.customerName)}</span></div>
+          ${data.contactPerson ? `<div class="info-item"><span class="label">${t("qot.contactPerson")}</span> <span class="value">${escapeHtml(data.contactPerson)}</span></div>` : ""}
+          ${data.phone ? `<div class="info-item"><span class="label">${t("qot.phone")}</span> <span class="value">${escapeHtml(data.phone)}</span></div>` : ""}
+          ${data.fax ? `<div class="info-item"><span class="label">${t("qot.fax")}</span> <span class="value">${escapeHtml(data.fax)}</span></div>` : ""}
+          ${data.address ? `<div class="info-item"><span class="label">${t("qot.address")}</span> <span class="value">${escapeHtml(data.address)}</span></div>` : ""}
+          ${data.website ? `<div class="info-item"><span class="label">${t("qot.website")}</span> <span class="value">${escapeHtml(data.website)}</span></div>` : ""}
+          ${data.subscriberNo ? `<div class="info-item"><span class="label">${t("qot.subscriberNo")}</span> <span class="value">${escapeHtml(data.subscriberNo)}</span></div>` : ""}
+        </div>
       </div>
     </div>
 

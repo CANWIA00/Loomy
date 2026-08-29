@@ -26,6 +26,10 @@ export default function CompanyCard() {
     setEditCompanyPhone,
     editCompanyEmail,
     setEditCompanyEmail,
+    editCompanyFax,
+    setEditCompanyFax,
+    editCompanyWebsite,
+    setEditCompanyWebsite,
     editCompanyTaxNumber,
     setEditCompanyTaxNumber,
     editCompanyLogo,
@@ -202,6 +206,40 @@ export default function CompanyCard() {
             />
           ) : (
             <Text style={{ color: colors.text, fontSize: 14 }}>{company.email}</Text>
+          )}
+        </View>
+        <View>
+          <Text style={labelStyle}>{t("prf.companyFax")}</Text>
+          {editingCompany ? (
+            <TextInput
+              style={inputStyle}
+              value={editCompanyFax}
+              onChangeText={setEditCompanyFax}
+              editable={!saving}
+              keyboardType="phone-pad"
+              placeholder={t("prf.companyFax")}
+              placeholderTextColor={colors.textMuted}
+            />
+          ) : (
+            <Text style={{ color: colors.text, fontSize: 14 }}>{company.fax || "-"}</Text>
+          )}
+        </View>
+        <View>
+          <Text style={labelStyle}>{t("prf.companyWebsite")}</Text>
+          {editingCompany ? (
+            <TextInput
+              style={inputStyle}
+              value={editCompanyWebsite}
+              onChangeText={setEditCompanyWebsite}
+              editable={!saving}
+              keyboardType="url"
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder={t("prf.companyWebsite")}
+              placeholderTextColor={colors.textMuted}
+            />
+          ) : (
+            <Text style={{ color: colors.text, fontSize: 14 }}>{company.website || "-"}</Text>
           )}
         </View>
         <View>

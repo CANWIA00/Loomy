@@ -68,6 +68,28 @@ export default function CustomerDetailModal() {
                   {selectedCustomer.contactPhone && <Ionicons name="chevron-forward" size={16} color={colors.primary} style={{ marginTop: 2 }} />}
                 </TouchableOpacity>
 
+                <View className="flex-row">
+                  <Ionicons name="print-outline" size={16} color={colors.textMuted} style={{ width: 24, marginTop: 2 }} />
+                  <View className="flex-1 ml-1">
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>{t("cst.fax")}</Text>
+                    <Text className="text-sm font-medium" style={{ color: colors.text }}>{selectedCustomer.fax || "-"}</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity className="flex-row" onPress={() => {
+                  if (selectedCustomer.website) {
+                    const url = selectedCustomer.website.match(/^https?:\/\//i) ? selectedCustomer.website : `https://${selectedCustomer.website}`;
+                    Linking.openURL(url);
+                  }
+                }}>
+                  <Ionicons name="globe-outline" size={16} color={colors.textMuted} style={{ width: 24, marginTop: 2 }} />
+                  <View className="flex-1 ml-1">
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>{t("cst.website")}</Text>
+                    <Text className="text-sm font-medium" style={{ color: selectedCustomer.website ? colors.primary : colors.text }}>{selectedCustomer.website || "-"}</Text>
+                  </View>
+                  {selectedCustomer.website && <Ionicons name="chevron-forward" size={16} color={colors.primary} style={{ marginTop: 2 }} />}
+                </TouchableOpacity>
+
                 <TouchableOpacity className="flex-row" onPress={() => {
                   if (selectedCustomer.email) {
                     Linking.openURL(`https://mail.google.com/mail/?view=cm&fs=1&to=${selectedCustomer.email}`);

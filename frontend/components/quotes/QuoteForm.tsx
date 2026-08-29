@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
+import type { Customer } from "../../api/customers";
 import { formatMoney, round2, KDV_RATE } from "./types";
 
 const formatDateInput = (v: string) => {
@@ -80,8 +81,7 @@ export default function QuoteForm() {
   const kdv = round2(subTotal * KDV_RATE);
   const grandTotal = round2(subTotal + kdv);
 
-  const selectFromList = (m: { id: string; companyName: string; address?: string; phone?: string; email?: string }) =>
-    selectCustomer(m.id, m.companyName, m.address || "", m.phone || "", m.email || "");
+  const selectFromList = (m: Customer) => selectCustomer(m);
 
   const openCustomerModal = () => {
     setCustomerSearch("");
@@ -152,6 +152,31 @@ export default function QuoteForm() {
 
         <View className="flex-row gap-3 mb-3">
           <View className="flex-1">
+            <FieldLabel>{t("qot.contactPerson")}</FieldLabel>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.contactPersonPlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              value={form.contactPerson}
+              onChangeText={(v) => updateForm("contactPerson", v)}
+            />
+          </View>
+          <View className="flex-1">
+            <FieldLabel>{t("qot.subscriberNo")}</FieldLabel>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.subscriberNoPlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              value={form.subscriberNo}
+              onChangeText={(v) => updateForm("subscriberNo", v)}
+            />
+          </View>
+        </View>
+
+        <View className="flex-row gap-3 mb-3">
+          <View className="flex-1">
             <FieldLabel>{t("qot.email")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -172,6 +197,35 @@ export default function QuoteForm() {
               placeholderTextColor={colors.textMuted}
               value={form.address}
               onChangeText={(v) => updateForm("address", v)}
+            />
+          </View>
+        </View>
+
+        <View className="flex-row gap-3 mb-3">
+          <View className="flex-1">
+            <FieldLabel>{t("qot.fax")}</FieldLabel>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.faxPlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              value={form.fax}
+              onChangeText={(v) => updateForm("fax", v)}
+            />
+          </View>
+          <View className="flex-1">
+            <FieldLabel>{t("qot.website")}</FieldLabel>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.websitePlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="url"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={form.website}
+              onChangeText={(v) => updateForm("website", v)}
             />
           </View>
         </View>

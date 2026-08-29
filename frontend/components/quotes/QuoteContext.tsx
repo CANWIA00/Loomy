@@ -34,7 +34,7 @@ interface QuoteContextValue {
   customerList: Customer[];
   selectedCustomerId: string | null;
   clearCustomerSelection: () => void;
-  selectCustomer: (id: string, name: string, address: string, phone: string, email: string) => void;
+  selectCustomer: (c: Customer) => void;
   customerSelectModal: boolean;
   setCustomerSelectModal: (v: boolean) => void;
   customerSearch: string;
@@ -92,11 +92,13 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const [deleteAlert, setDeleteAlert] = useState<DeleteAlertState>({ visible: false, record: null });
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
-  const companyInfoRef = useRef<{ name: string; address: string; phone: string; email: string; taxNumber: string }>({
+  const companyInfoRef = useRef<{ name: string; address: string; phone: string; email: string; fax: string; website: string; taxNumber: string }>({
     name: "",
     address: "",
     phone: "",
     email: "",
+    fax: "",
+    website: "",
     taxNumber: "",
   });
 
@@ -128,6 +130,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           address: company.address || "",
           phone: company.phone || "",
           email: company.email || "",
+          fax: company.fax || "",
+          website: company.website || "",
           taxNumber: company.taxNumber || "",
         };
         companyLogoRef.current = company.logoUrl || null;
@@ -203,9 +207,13 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         tarih: dataToSave.documentDate || new Date().toLocaleDateString(locale),
         customer: dataToSave.customerName,
         customerId: selectedCustomerId || undefined,
+        contactPerson: dataToSave.contactPerson,
         email: dataToSave.email,
         telefon: dataToSave.phone,
+        fax: dataToSave.fax,
+        website: dataToSave.website,
         adres: dataToSave.address,
+        subscriberNo: dataToSave.subscriberNo,
         notlar: dataToSave.notes,
         validUntil: dataToSave.validUntil,
         lines: dataToSave.lines,
@@ -240,9 +248,13 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const handleEdit = (record: QuoteRecord) => {
     setForm({
       customerName: record.customer || "",
+      contactPerson: record.contactPerson || "",
       email: record.email || "",
       phone: record.telefon || "",
+      fax: record.fax || "",
+      website: record.website || "",
       address: record.adres || "",
+      subscriberNo: record.subscriberNo || "",
       documentDate: record.tarih || "",
       validUntil: record.validUntil || "",
       notes: record.notlar || "",
@@ -269,17 +281,23 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const buildPdfData = (record: QuoteRecord): QuotePdfData => ({
     customerName: record.customer,
+    contactPerson: record.contactPerson,
     documentDate: record.tarih,
     validUntil: record.validUntil,
     email: record.email,
     phone: record.telefon,
+    fax: record.fax,
+    website: record.website,
     address: record.adres,
+    subscriberNo: record.subscriberNo,
     notes: record.notlar,
     lines: record.lines || [],
     companyName: companyInfoRef.current.name,
     companyAddress: companyInfoRef.current.address,
     companyPhone: companyInfoRef.current.phone,
     companyEmail: companyInfoRef.current.email,
+    companyFax: companyInfoRef.current.fax,
+    companyWebsite: companyInfoRef.current.website,
     companyTaxNumber: companyInfoRef.current.taxNumber,
     companyLogo: companyLogoRef.current,
     companyStamp: companyStampRef.current,
@@ -369,13 +387,33 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const clearCustomerSelection = () => {
     setSelectedCustomerId(null);
-    setForm((prev) => ({ ...prev, customerName: "", address: "", phone: "", email: "" }));
+    setForm((prev) => ({
+      ...prev,
+      customerName: "",
+      contactPerson: "",
+      address: "",
+      phone: "",
+      email: "",
+      fax: "",
+      website: "",
+      subscriberNo: "",
+    }));
   };
 
-  const selectCustomer = (id: string, name: string, address: string, phone: string, email: string) => {
-    setSelectedCustomerId(id);
+  const selectCustomer = (c: Customer) => {
+    setSelectedCustomerId(c.id);
     setCustomerSelectModal(false);
-    setForm((prev) => ({ ...prev, customerName: name, address, phone, email }));
+    setForm((prev) => ({
+      ...prev,
+      customerName: c.companyName || "",
+      contactPerson: c.contactPerson || "",
+      address: c.address || "",
+      phone: c.phone || "",
+      email: c.email || "",
+      fax: c.fax || "",
+      website: c.website || "",
+      subscriberNo: c.subscriberNo || "",
+    }));
   };
 
   const resetFilters = () => {

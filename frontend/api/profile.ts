@@ -7,6 +7,8 @@ export interface CompanyDto {
   address: string;
   phone: string;
   email: string;
+  fax: string;
+  website: string;
   taxNumber?: string;
   logoUrl?: string;
   stampUrl?: string;
@@ -29,6 +31,8 @@ export interface UpdateCompanyRequest {
   address: string;
   phone: string;
   email: string;
+  fax: string;
+  website: string;
   taxNumber: string;
   logoUrl: string;
   stampUrl: string;

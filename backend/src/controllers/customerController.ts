@@ -87,7 +87,7 @@ export async function getAllCustomersSimple(
     const customers = await prisma.customer.findMany({
       where: { companyId },
       orderBy: { companyName: "asc" },
-      select: { id: true, companyName: true, contactPerson: true, phone: true, contactPhone: true, address: true },
+      select: { id: true, companyName: true, subscriberNo: true, contactPerson: true, phone: true, contactPhone: true, fax: true, website: true, address: true, email: true },
     });
     res.json(customers);
   } catch (error: any) {
@@ -131,6 +131,8 @@ export async function createCustomer(
       address,
       email,
       phone,
+      fax,
+      website,
       contactPerson,
       contactPhone,
     } = req.body;
@@ -148,6 +150,8 @@ export async function createCustomer(
         address: address?.trim() || null,
         email: email?.trim() || null,
         phone: phone?.trim() || null,
+        fax: fax?.trim() || null,
+        website: website?.trim() || null,
         contactPerson: contactPerson?.trim() || null,
         contactPhone: contactPhone?.trim() || null,
         companyId,
@@ -174,6 +178,8 @@ export async function updateCustomer(
       address,
       email,
       phone,
+      fax,
+      website,
       contactPerson,
       contactPhone,
     } = req.body;
@@ -195,6 +201,8 @@ export async function updateCustomer(
         address: address?.trim() ?? existing.address,
         email: email?.trim() ?? existing.email,
         phone: phone?.trim() ?? existing.phone,
+        fax: fax?.trim() ?? existing.fax,
+        website: website?.trim() ?? existing.website,
         contactPerson: contactPerson?.trim() ?? existing.contactPerson,
         contactPhone: contactPhone?.trim() ?? existing.contactPhone,
       },

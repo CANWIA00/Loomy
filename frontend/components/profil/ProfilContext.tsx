@@ -35,6 +35,10 @@ interface ProfilContextValue {
   setEditCompanyPhone: (v: string) => void;
   editCompanyEmail: string;
   setEditCompanyEmail: (v: string) => void;
+  editCompanyFax: string;
+  setEditCompanyFax: (v: string) => void;
+  editCompanyWebsite: string;
+  setEditCompanyWebsite: (v: string) => void;
   editCompanyTaxNumber: string;
   setEditCompanyTaxNumber: (v: string) => void;
   editCompanyLogoUrl: string;
@@ -86,6 +90,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
   const [editCompanyAddress, setEditCompanyAddress] = useState("");
   const [editCompanyPhone, setEditCompanyPhone] = useState("");
   const [editCompanyEmail, setEditCompanyEmail] = useState("");
+  const [editCompanyFax, setEditCompanyFax] = useState("");
+  const [editCompanyWebsite, setEditCompanyWebsite] = useState("");
   const [editCompanyTaxNumber, setEditCompanyTaxNumber] = useState("");
   const [editCompanyLogoUrl, setEditCompanyLogoUrl] = useState("");
   const [editCompanyLogo, setEditCompanyLogo] = useState<string | null>(null);
@@ -211,6 +217,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyAddress(company?.address || "");
     setEditCompanyPhone(company?.phone || "");
     setEditCompanyEmail(company?.email || "");
+    setEditCompanyFax(company?.fax || "");
+    setEditCompanyWebsite(company?.website || "");
     setEditCompanyTaxNumber(company?.taxNumber || "");
     setEditCompanyLogoUrl(company?.logoUrl || "");
     setEditCompanyLogo(null);
@@ -225,6 +233,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyAddress("");
     setEditCompanyPhone("");
     setEditCompanyEmail("");
+    setEditCompanyFax("");
+    setEditCompanyWebsite("");
     setEditCompanyTaxNumber("");
     setEditCompanyLogoUrl("");
     setEditCompanyLogo(null);
@@ -245,6 +255,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
         address: editCompanyAddress.trim(),
         phone: editCompanyPhone.trim(),
         email: editCompanyEmail.trim(),
+        fax: editCompanyFax.trim(),
+        website: editCompanyWebsite.trim(),
         taxNumber: editCompanyTaxNumber.trim(),
         logoUrl: editCompanyLogo || editCompanyLogoUrl.trim(),
         stampUrl: editCompanyStamp || editCompanyStampUrl.trim(),
@@ -286,6 +298,10 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyPhone,
     editCompanyEmail,
     setEditCompanyEmail,
+    editCompanyFax,
+    setEditCompanyFax,
+    editCompanyWebsite,
+    setEditCompanyWebsite,
     editCompanyTaxNumber,
     setEditCompanyTaxNumber,
     editCompanyLogoUrl,

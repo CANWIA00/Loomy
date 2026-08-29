@@ -40,6 +40,8 @@ model Company {
   address          String?
   phone            String?
   email            String?
+  fax              String?
+  website          String?
   taxNumber        String?
   invitationCode   String   @unique
   logoUrl          String?
@@ -117,6 +119,8 @@ model Customer {
   address       String?
   email         String?
   phone         String?
+  fax           String?
+  website       String?
   contactPerson String?
   contactPhone  String?
   companyId     String
@@ -167,19 +171,23 @@ model Appointment {
 }
 
 model QuoteRecord {
-  id           Int      @id @default(autoincrement())
-  documentDate String
-  customerName String
-  customerId   String?
-  email        String?
-  phone        String?
-  address      String?
-  notes        String?
-  lines        String   @default("[]") // JSON string: [{name, details, quantity, unitPrice}]
-  validUntil   String?
-  companyId    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  documentDate  String
+  customerName  String
+  customerId    String?
+  contactPerson String?
+  email         String?
+  phone         String?
+  fax           String?
+  website       String?
+  address       String?
+  subscriberNo  String?
+  notes         String?
+  lines         String   @default("[]") // JSON string: [{name, details, quantity, unitPrice}]
+  validUntil    String?
+  companyId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id])
 

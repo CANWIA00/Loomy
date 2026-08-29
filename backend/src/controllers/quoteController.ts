@@ -40,7 +40,7 @@ export async function createQuoteRecord(
 ): Promise<void> {
   try {
     const {
-      documentDate, customerName, customerId, email, phone, address,
+      documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
       notes, lines, validUntil,
     } = req.body;
     const companyId = req.user!.companyId!;
@@ -55,8 +55,12 @@ export async function createQuoteRecord(
         documentDate: documentDate || new Date().toLocaleDateString("tr-TR"),
         customerName: customerName.trim(),
         customerId: customerId || null,
+        contactPerson: contactPerson || null,
         email: email || null,
         phone: phone || null,
+        fax: fax || null,
+        website: website || null,
+        subscriberNo: subscriberNo || null,
         address: address || null,
         notes: notes || null,
         lines: JSON.stringify(lines || []),
@@ -80,7 +84,7 @@ export async function updateQuoteRecord(
     const id = parseInt(String(req.params.id));
     const companyId = req.user!.companyId!;
     const {
-      documentDate, customerName, customerId, email, phone, address,
+      documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
       notes, lines, validUntil,
     } = req.body;
 
@@ -99,8 +103,12 @@ export async function updateQuoteRecord(
         documentDate: documentDate ?? existing.documentDate,
         customerName: customerName?.trim() ?? existing.customerName,
         customerId: customerId ?? existing.customerId,
+        contactPerson: contactPerson ?? existing.contactPerson,
         email: email ?? existing.email,
         phone: phone ?? existing.phone,
+        fax: fax ?? existing.fax,
+        website: website ?? existing.website,
+        subscriberNo: subscriberNo ?? existing.subscriberNo,
         address: address ?? existing.address,
         notes: notes ?? existing.notes,
         lines: lines ? JSON.stringify(lines) : existing.lines,

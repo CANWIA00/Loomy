@@ -26,6 +26,10 @@ export default function CustomerForm() {
     setNewContact,
     newContactPhone,
     setNewContactPhone,
+    newFax,
+    setNewFax,
+    newWebsite,
+    setNewWebsite,
     handleSave,
     loading,
     setMapSelectorVisible,
@@ -133,6 +137,26 @@ export default function CustomerForm() {
             keyboardType="phone-pad"
             value={newContactPhone}
             onChangeText={(v) => setNewContactPhone(v.replace(/[^0-9]/g, ""))}
+          />
+          <TextInput
+            className="rounded-lg px-4 py-3 text-sm mb-3"
+            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
+            placeholder={t("cst.fax")}
+            placeholderTextColor={colors.textMuted}
+            keyboardType="phone-pad"
+            value={newFax}
+            onChangeText={(v) => setNewFax(v.replace(/[^0-9]/g, ""))}
+          />
+          <TextInput
+            className="rounded-lg px-4 py-3 text-sm mb-4"
+            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
+            placeholder={t("cst.website")}
+            placeholderTextColor={colors.textMuted}
+            keyboardType="url"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={newWebsite}
+            onChangeText={setNewWebsite}
           />
 
           <TouchableOpacity

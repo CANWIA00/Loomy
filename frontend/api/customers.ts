@@ -7,6 +7,8 @@ export interface Customer {
   address: string;
   email: string;
   phone: string;
+  fax?: string;
+  website?: string;
   contactPerson: string;
   contactPhone: string;
 }

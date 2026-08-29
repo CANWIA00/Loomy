@@ -30,6 +30,10 @@ interface CustomersContextValue {
   setNewContact: (v: string) => void;
   newContactPhone: string;
   setNewContactPhone: (v: string) => void;
+  newFax: string;
+  setNewFax: (v: string) => void;
+  newWebsite: string;
+  setNewWebsite: (v: string) => void;
   resetForm: () => void;
   handleSave: () => Promise<void>;
   handleEdit: (id: string) => Promise<void>;
@@ -69,6 +73,8 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
   const [newPhone, setNewPhone] = useState("");
   const [newContact, setNewContact] = useState("");
   const [newContactPhone, setNewContactPhone] = useState("");
+  const [newFax, setNewFax] = useState("");
+  const [newWebsite, setNewWebsite] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -133,6 +139,8 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     setNewPhone("");
     setNewContact("");
     setNewContactPhone("");
+    setNewFax("");
+    setNewWebsite("");
     setEditingCustomer(null);
   }
 
@@ -150,6 +158,8 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
       phone: newPhone.trim(),
       contactPerson: newContact.trim(),
       contactPhone: newContactPhone.trim(),
+      fax: newFax.trim(),
+      website: newWebsite.trim(),
     };
 
     setLoading(true);
@@ -199,6 +209,8 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
       setNewPhone(c.phone ?? "");
       setNewContact(c.contactPerson ?? "");
       setNewContactPhone(c.contactPhone ?? "");
+      setNewFax(c.fax ?? "");
+      setNewWebsite(c.website ?? "");
       setFormOpen(true);
     } catch (error: any) {
       showAlert("error", t("common.error"), t("cst.errorEdit"));
@@ -233,6 +245,10 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     setNewContact,
     newContactPhone,
     setNewContactPhone,
+    newFax,
+    setNewFax,
+    newWebsite,
+    setNewWebsite,
     resetForm,
     handleSave,
     handleEdit,
