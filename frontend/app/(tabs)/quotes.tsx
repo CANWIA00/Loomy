@@ -18,11 +18,12 @@ function QuotesScreenInner() {
     deleteAlert,
     setDeleteAlert,
     handleDelete,
+    scrollRef,
   } = useQuotes();
 
   return (
     <>
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg as any}>
+      <ScrollView ref={scrollRef as any} className="flex-1" style={{ backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg as any}>
         <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
           <ScreenHeader title={t("qot.title")} subtitle={t("qot.subtitle")} />
 

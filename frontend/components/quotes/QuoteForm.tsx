@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -13,6 +13,21 @@ const formatDateInput = (v: string) => {
   if (digits.length > 2) formatted = digits.slice(0, 2) + "/" + digits.slice(2);
   if (digits.length > 4) formatted = digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
   return formatted;
+};
+
+const computeValidUntil = (documentDate: string, daysToAdd = 0, monthsToAdd = 0) => {
+  let base = new Date();
+  if (documentDate) {
+    const parts = documentDate.split("/");
+    const day = Number(parts[0]);
+    const month = Number(parts[1]);
+    const year = Number(parts[2]);
+    if (day && month && year) base = new Date(year, month - 1, day);
+  }
+  const d = new Date(base);
+  if (daysToAdd) d.setDate(d.getDate() + daysToAdd);
+  if (monthsToAdd) d.setMonth(d.getMonth() + monthsToAdd);
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 };
 
 function FieldLabel({ children }: { children: ReactNode }) {
@@ -64,6 +79,7 @@ export default function QuoteForm() {
     handleCancelEditing,
     handleClear,
     handleSave,
+    scrollRef,
     customerList,
     selectedCustomerId,
     clearCustomerSelection,
@@ -75,6 +91,18 @@ export default function QuoteForm() {
   } = useQuotes();
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const addBtnRef = useRef<View>(null);
+
+  const handleAddLine = () => {
+    addLine();
+    setTimeout(() => {
+      addBtnRef.current?.measureLayout(
+        scrollRef.current as any,
+        (x, y) => { scrollRef.current?.scrollTo({ y: y - 80, animated: true }); },
+        () => {}
+      );
+    }, 150);
+  };
 
   const validLines = form.lines.filter((l) => l.name || l.details);
   const subTotal = round2(validLines.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0));
@@ -235,18 +263,29 @@ export default function QuoteForm() {
           <DateField label={t("qot.validUntil")} value={form.validUntil} onChange={(v) => updateForm("validUntil", v)} placeholder={t("qot.datePlaceholder")} />
         </View>
 
-        <View className="mt-3 mb-2">
-          <View className="flex-row items-center justify-between mb-1.5">
-            <Text className="text-sm font-semibold" style={{ color: colors.text }}>{t("qot.items")}</Text>
-            <TouchableOpacity
-              className="flex-row items-center h-7 px-2.5 rounded-lg"
-              style={{ backgroundColor: colors.primary + "15" }}
-              onPress={addLine}
-            >
-              <Ionicons name="add" size={14} color={colors.primary} />
-              <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("qot.addItem")}</Text>
-            </TouchableOpacity>
+        <View className="mb-3">
+          <FieldLabel>{t("qot.quickValidity")}</FieldLabel>
+          <View className="flex-row flex-wrap gap-2">
+            {[
+              { key: "qot.valid1Day", days: 1, months: 0 },
+              { key: "qot.valid1Week", days: 7, months: 0 },
+              { key: "qot.valid2Week", days: 14, months: 0 },
+              { key: "qot.valid1Month", days: 0, months: 1 },
+            ].map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                className="flex-row items-center h-8 px-3 rounded-full border"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+                onPress={() => updateForm("validUntil", computeValidUntil(form.documentDate, opt.days, opt.months))}
+              >
+                <Text className="text-xs font-medium" style={{ color: colors.primary }}>{t(opt.key)}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
+        </View>
+
+        <View className="mt-3 mb-2">
+          <Text className="text-sm font-semibold mb-1.5" style={{ color: colors.text }}>{t("qot.items")}</Text>
 
           {form.lines.map((line, idx) => {
             const lineTotal = round2((Number(line.quantity) || 0) * (Number(line.unitPrice) || 0));
@@ -312,6 +351,16 @@ export default function QuoteForm() {
               </View>
             );
           })}
+
+          <TouchableOpacity
+            ref={addBtnRef}
+            className="flex-row items-center justify-center h-10 rounded-xl border border-dashed mt-1"
+            style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
+            onPress={handleAddLine}
+          >
+            <Ionicons name="add" size={16} color={colors.primary} />
+            <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("qot.addItem")}</Text>
+          </TouchableOpacity>
         </View>
 
         <View className="rounded-xl p-3 mb-3" style={{ backgroundColor: colors.bg }}>

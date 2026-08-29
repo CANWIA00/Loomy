@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert, Platform, type ScrollView } from "react-native";
 import { useFocusEffect } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -25,6 +25,7 @@ interface QuoteContextValue {
   updateLine: (index: number, key: "name" | "details" | "quantity" | "unitPrice", value: string) => void;
   addLine: () => void;
   removeLine: (index: number) => void;
+  scrollRef: React.RefObject<ScrollView | null>;
   isEditing: boolean;
   handleCancelEditing: () => void;
   handleClear: () => void;
@@ -92,6 +93,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const [deleteAlert, setDeleteAlert] = useState<DeleteAlertState>({ visible: false, record: null });
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const companyInfoRef = useRef<{ name: string; address: string; phone: string; email: string; fax: string; website: string; taxNumber: string }>({
     name: "",
     address: "",
@@ -430,6 +432,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     updateLine,
     addLine,
     removeLine,
+    scrollRef,
     isEditing,
     handleCancelEditing,
     handleClear,
