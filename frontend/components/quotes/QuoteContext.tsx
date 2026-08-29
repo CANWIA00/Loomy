@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert, Platform, type ScrollView } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { generateQuotePDFHtml } from "../QuotePDF";
@@ -267,6 +267,17 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setIsEditing(true);
     setShowForm(true);
   };
+
+  const handledEditIdRef = useRef<string>("");
+  const searchParams = useLocalSearchParams<{ edit?: string }>();
+  const editParamId = typeof searchParams.edit === "string" ? searchParams.edit : "";
+  useEffect(() => {
+    if (!editParamId || handledEditIdRef.current === editParamId) return;
+    const rec = records.find((r) => String(r.id) === editParamId);
+    if (!rec) return;
+    handledEditIdRef.current = editParamId;
+    handleEdit(rec);
+  }, [editParamId, records, handleEdit]);
 
   const filteredRecords = records.filter((k) => {
     if (filterDate && k.tarih !== filterDate) return false;

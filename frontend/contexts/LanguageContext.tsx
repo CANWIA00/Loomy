@@ -313,6 +313,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "cst.details": "Detaylar",
     "cst.notes": "Notlar",
     "cst.quoteItems": "Ürünler",
+    "cst.payments": "Ödemeler",
+    "cst.noPayments": "Bu müşteri için ödeme bulunamadı",
+    "cst.amount": "Tutar",
+    "cst.confirmDeleteRecord": "Bu kaydı silmek istediğinize emin misiniz?",
+    "cst.recordDeleted": "Kayıt silindi.",
 
     // Schedule
     "sch.title": "Plan Yönetimi",
@@ -1119,6 +1124,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "cst.details": "Details",
     "cst.notes": "Notes",
     "cst.quoteItems": "Items",
+    "cst.payments": "Payments",
+    "cst.noPayments": "No payments found for this customer",
+    "cst.amount": "Amount",
+    "cst.confirmDeleteRecord": "Are you sure you want to delete this record?",
+    "cst.recordDeleted": "Record deleted.",
 
     // Schedule
     "sch.title": "Schedule Management",
