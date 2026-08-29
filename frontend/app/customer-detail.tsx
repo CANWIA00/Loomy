@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import ScreenHeader from "../components/ScreenHeader";
 import { customerApi, type Customer } from "../api/customers";
 import { serviceApi, type ServiceRecord } from "../api/services";
 import { quoteApi, type QuoteRecord } from "../api/quotes";
@@ -293,19 +294,13 @@ export default function CustomerDetailScreen() {
 
   return (
     <>
-      <View className="flex-1" style={{ backgroundColor: colors.bg }}>
-        <View className="flex-row items-center px-4 pt-2 pb-3 border-b" style={{ borderColor: colors.border }}>
-          <TouchableOpacity onPress={() => router.back()} className="w-9 h-9 items-center justify-center">
-            <Ionicons name="arrow-back" size={24} color={colors.primary} />
-          </TouchableOpacity>
-          <Text className="flex-1 text-lg font-bold ml-1" style={{ color: colors.text }} numberOfLines={1}>
-            {customer?.companyName || name || t("cst.detail")}
-          </Text>
-        </View>
-
-        <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }} indicatorStyle={colors.indicatorBg as any}>
-          <View className="w-full max-w-6xl mx-auto px-4 pt-4">
-            {loading ? (
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg as any}>
+        <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
+          <ScreenHeader
+            title={customer?.companyName || name || t("cst.detail")}
+            subtitle={t("cst.detail")}
+          />
+          {loading ? (
               <View className="items-center py-10">
                 <ActivityIndicator size="large" color={colors.primary} />
                 <Text className="text-sm mt-3" style={{ color: colors.textMuted }}>{t("cst.loadingRecords")}</Text>
@@ -425,7 +420,6 @@ export default function CustomerDetailScreen() {
             )}
           </View>
         </ScrollView>
-      </View>
 
       <RecordDetailModal
         payload={detail}
