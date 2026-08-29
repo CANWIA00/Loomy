@@ -1,7 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Modal, ActivityIndicator, Alert } from "react-native";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import { WebView } from "react-native-webview";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import ScreenHeader from "../components/ScreenHeader";
@@ -9,6 +12,13 @@ import { customerApi, type Customer } from "../api/customers";
 import { serviceApi, type ServiceRecord } from "../api/services";
 import { quoteApi, type QuoteRecord } from "../api/quotes";
 import { paymentApi, type PaymentRecord } from "../api/payments";
+import { profileApi } from "../api/profile";
+import { generateServicePDFHtml } from "../components/ServicePDF";
+import { generateQuotePDFHtml } from "../components/QuotePDF";
+import { shareWebPdf, downloadWebPdf } from "../utils/webPdf";
+import { embedImage } from "../utils/pdfAssets";
+import type { PdfData } from "../components/services/types";
+import type { QuotePdfData } from "../components/quotes/types";
 
 type DetailPayload =
   | { kind: "service"; record: ServiceRecord }
@@ -177,6 +187,126 @@ function RecordDetailModal({
   );
 }
 
+function PreviewPdfModal({
+  visible,
+  html,
+  zoom,
+  setZoom,
+  onClose,
+  onDownload,
+}: {
+  visible: boolean;
+  html: string;
+  zoom: number;
+  setZoom: (z: number) => void;
+  onClose: () => void;
+  onDownload: () => void;
+}) {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1" style={{ backgroundColor: colors.bg }}>
+        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+          <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("svc.serviceForm")}</Text>
+          <TouchableOpacity
+            className="h-9 px-4 rounded-lg items-center justify-center"
+            style={{ backgroundColor: colors.bgInput }}
+            onPress={onClose}
+          >
+            <Text className="text-sm font-medium" style={{ color: colors.text }}>{t("common.close")}</Text>
+          </TouchableOpacity>
+        </View>
+        <View className="flex-1">
+          {Platform.OS === "web" ? (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#e5e5e5",
+                overflow: "auto",
+              } as any}
+            >
+              <div
+                style={{
+                  width: "210mm",
+                  minHeight: "297mm",
+                  backgroundColor: "white",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                  padding: "15mm",
+                  borderRadius: 4,
+                  transform: `scale(${zoom / 100})`,
+                  transformOrigin: "center center",
+                  flexShrink: 0,
+                } as any}
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            </div>
+          ) : (
+            <ScrollView
+              style={{ flex: 1, backgroundColor: "#e5e5e5" }}
+              contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 12 }}
+              showsVerticalScrollIndicator={true}
+            >
+              <View
+                style={{
+                  width: Dimensions.get("window").width - 24,
+                  minHeight: (Dimensions.get("window").width - 24) * 1.414,
+                  backgroundColor: "white",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 12,
+                  elevation: 8,
+                  borderRadius: 4,
+                  padding: 24,
+                }}
+              >
+                <WebView
+                  source={{ html }}
+                  style={{ width: "100%", height: Math.max((Dimensions.get("window").width - 24) * 1.414, 700), backgroundColor: "white" }}
+                  scrollEnabled={false}
+                />
+              </View>
+            </ScrollView>
+          )}
+        </View>
+        <View className="px-4 py-3 border-t" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+          <View className="flex-row items-center justify-center gap-4 mb-3">
+            <TouchableOpacity
+              onPress={() => setZoom(Math.max(20, zoom - 10))}
+              className="w-9 h-9 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.bgInput }}
+            >
+              <Ionicons name="remove" size={20} color={colors.text} />
+            </TouchableOpacity>
+            <Text className="text-sm font-semibold min-w-[50px] text-center" style={{ color: colors.text }}>%{zoom}</Text>
+            <TouchableOpacity
+              onPress={() => setZoom(Math.min(150, zoom + 10))}
+              className="w-9 h-9 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.bgInput }}
+            >
+              <Ionicons name="add" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            className="w-full h-12 rounded-xl items-center justify-center flex-row gap-2"
+            style={{ backgroundColor: colors.primary }}
+            onPress={onDownload}
+          >
+            <Ionicons name="download-outline" size={20} color="white" />
+            <Text className="font-semibold" style={{ color: "white" }}>{t("svc.downloadPdf")}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function SectionHeader({ icon, title, count }: { icon: string; title: string; count: number }) {
   const { colors } = useTheme();
   return (
@@ -193,7 +323,7 @@ function SectionHeader({ icon, title, count }: { icon: string; title: string; co
 export default function CustomerDetailScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const params = useLocalSearchParams<{ id?: string; name?: string }>();
   const id = params.id || "";
   const name = params.name || "";
@@ -205,6 +335,16 @@ export default function CustomerDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [detail, setDetail] = useState<DetailPayload | null>(null);
+
+  const companyLogoRef = useRef<string | null>(null);
+  const companyStampRef = useRef<string | null>(null);
+  const technicianSignatureRef = useRef<any>(null);
+  const companyInfoRef = useRef<{ name: string; address: string; phone: string; email: string; fax: string; website: string; taxNumber: string }>({
+    name: "", address: "", phone: "", email: "", fax: "", website: "", taxNumber: "",
+  });
+
+  const [preview, setPreview] = useState<{ html: string; data: PdfData | QuotePdfData } | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(60);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -221,6 +361,32 @@ export default function CustomerDetailScreen() {
         } as Customer;
       }
       setCustomer(c);
+
+      try {
+        const profile = (await profileApi.getProfile()).data;
+        if (profile) {
+          const company = profile.company;
+          if (company) {
+            companyInfoRef.current = {
+              name: company.name || "",
+              address: company.address || "",
+              phone: company.phone || "",
+              email: company.email || "",
+              fax: company.fax || "",
+              website: company.website || "",
+              taxNumber: company.taxNumber || "",
+            };
+            companyLogoRef.current = company.logoUrl || null;
+            companyStampRef.current = company.stampUrl || null;
+          }
+          const sig = profile.user?.signature;
+          if (sig) {
+            try {
+              technicianSignatureRef.current = typeof sig === "string" ? JSON.parse(sig) : sig;
+            } catch {}
+          }
+        }
+      } catch {}
 
       const customersMatch = (recordCustomer?: string) => {
         if (c && c.id) {
@@ -292,6 +458,131 @@ export default function CustomerDetailScreen() {
     ]);
   };
 
+  const pdfLang = locale.startsWith("tr") ? "tr" : "en";
+
+  const resolveServicePdf = async (s: ServiceRecord): Promise<PdfData> => {
+    const base: PdfData = {
+      customerName: s.customer,
+      documentDate: s.tarih,
+      serviceAddress: s.adres,
+      phone: s.telefon,
+      services: s.hizmetler || [],
+      technical: s.teknik || [],
+      fee: s.ucret,
+      technician: s.teknisyen,
+      startTime: s.baslangic,
+      endTime: s.bitis,
+      details: s.detaylar,
+      internalIp: s.dahiliIp,
+      externalIp: s.hariciIp,
+      customChips: s.customChips || {},
+      customValues: s.customValues || {},
+      signature: s.signature || null,
+      technicianSignature: s.technicianSignature || technicianSignatureRef.current || null,
+      companyLogo: companyLogoRef.current,
+      companyStamp: companyStampRef.current,
+      templateName: s.templateName || null,
+      templateConfig: s.templateConfig || null,
+    };
+    const [logo, stamp] = await Promise.all([embedImage(base.companyLogo), embedImage(base.companyStamp)]);
+    return { ...base, companyLogo: logo, companyStamp: stamp };
+  };
+
+  const resolveQuotePdf = async (q: QuoteRecord): Promise<QuotePdfData> => {
+    const base: QuotePdfData = {
+      customerName: q.customer,
+      contactPerson: q.contactPerson,
+      documentDate: q.tarih,
+      validUntil: q.validUntil,
+      email: q.email,
+      phone: q.telefon,
+      fax: q.fax,
+      website: q.website,
+      address: q.adres,
+      subscriberNo: q.subscriberNo,
+      notes: q.notlar,
+      lines: q.lines || [],
+      companyName: companyInfoRef.current.name,
+      companyAddress: companyInfoRef.current.address,
+      companyPhone: companyInfoRef.current.phone,
+      companyEmail: companyInfoRef.current.email,
+      companyFax: companyInfoRef.current.fax,
+      companyWebsite: companyInfoRef.current.website,
+      companyTaxNumber: companyInfoRef.current.taxNumber,
+      companyLogo: companyLogoRef.current,
+      companyStamp: companyStampRef.current,
+    };
+    const [logo, stamp] = await Promise.all([embedImage(base.companyLogo), embedImage(base.companyStamp)]);
+    return { ...base, companyLogo: logo, companyStamp: stamp };
+  };
+
+  const publishPdf = async (html: string, fileName: string, dialogTitle: string, download: boolean) => {
+    try {
+      if (Platform.OS === "web") {
+        if (download) await downloadWebPdf(html, fileName);
+        else await shareWebPdf(html, fileName);
+      } else {
+        const { uri } = await Print.printToFileAsync({ html, base64: false });
+        await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle, UTI: "com.adobe.pdf" });
+      }
+    } catch (error) {
+      Alert.alert(t("common.warning"), t("svc.errorPdfCreate") + (error as any).message);
+    }
+  };
+
+  const handleShareService = async (s: ServiceRecord) => {
+    const data = await resolveServicePdf(s);
+    const html = generateServicePDFHtml(data, t, pdfLang);
+    const fileName = `${s.customer || "servis"} - ${s.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
+    await publishPdf(html, fileName, t("svc.pdfDialogTitle"), false);
+  };
+
+  const handleDownloadService = async (s: ServiceRecord) => {
+    const data = await resolveServicePdf(s);
+    const html = generateServicePDFHtml(data, t, pdfLang);
+    const fileName = `${s.customer || "servis"} - ${s.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
+    await publishPdf(html, fileName, t("svc.pdfDialogTitle"), true);
+  };
+
+  const handleViewService = async (s: ServiceRecord) => {
+    const data = await resolveServicePdf(s);
+    const html = generateServicePDFHtml(data, t, pdfLang);
+    setPreview({ html, data });
+    setPreviewZoom(60);
+  };
+
+  const handleShareQuote = async (q: QuoteRecord) => {
+    const data = await resolveQuotePdf(q);
+    const html = generateQuotePDFHtml(data, t, pdfLang);
+    const fileName = `${q.customer || "teklif"} - ${q.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
+    await publishPdf(html, fileName, t("qot.pdfDialogTitle"), false);
+  };
+
+  const handleDownloadQuote = async (q: QuoteRecord) => {
+    const data = await resolveQuotePdf(q);
+    const html = generateQuotePDFHtml(data, t, pdfLang);
+    const fileName = `${q.customer || "teklif"} - ${q.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
+    await publishPdf(html, fileName, t("qot.pdfDialogTitle"), true);
+  };
+
+  const handleViewQuote = async (q: QuoteRecord) => {
+    const data = await resolveQuotePdf(q);
+    const html = generateQuotePDFHtml(data, t, pdfLang);
+    setPreview({ html, data });
+    setPreviewZoom(60);
+  };
+
+  const handlePreviewDownload = async () => {
+    if (!preview) return;
+    const { html, data } = preview;
+    const isService = "serviceAddress" in data;
+    const customer = isService ? (data as PdfData).customerName : (data as QuotePdfData).customerName;
+    const date = isService ? (data as PdfData).documentDate : (data as QuotePdfData).documentDate;
+    const fileName = `${customer || (isService ? "servis" : "teklif")} - ${date || ""}`.replace(/[\\/:*?"<>|]+/g, "-");
+    const dialogTitle = isService ? t("svc.pdfDialogTitle") : t("qot.pdfDialogTitle");
+    await publishPdf(html, fileName, dialogTitle, true);
+  };
+
   return (
     <>
       <ScrollView className="flex-1" style={{ backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg as any}>
@@ -344,21 +635,37 @@ export default function CustomerDetailScreen() {
                   ) : (
                     <View className="rounded-2xl border overflow-hidden" style={{ borderColor: colors.borderAlt }}>
                       {services.map((s, i) => (
-                        <TouchableOpacity
+                        <View
                           key={s.id}
-                          className="flex-row items-center px-4 py-3"
+                          className="flex-row items-center px-4 py-2.5"
                           style={{ borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.borderAlt, backgroundColor: colors.bgCard }}
-                          onPress={() => setDetail({ kind: "service", record: s })}
                         >
-                          <View className="flex-1">
-                            <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{s.service || s.customer}</Text>
-                            <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{s.tarih}</Text>
+                          <TouchableOpacity
+                            className="flex-1 flex-row items-center py-0.5"
+                            activeOpacity={0.7}
+                            onPress={() => setDetail({ kind: "service", record: s })}
+                          >
+                            <View className="flex-1">
+                              <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{s.service || s.customer}</Text>
+                              <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{s.tarih}</Text>
+                            </View>
+                            <Text className="text-xs mr-1" style={{ color: s.odendi ? colors.success : colors.warning }}>
+                              {s.odendi ? t("cst.paid") : t("cst.pending")}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                          </TouchableOpacity>
+                          <View className="flex-row items-center gap-3 ml-3">
+                            <TouchableOpacity onPress={() => handleShareService(s)}>
+                              <Ionicons name="share-social-outline" size={20} color={colors.purple} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleViewService(s)}>
+                              <Ionicons name="eye-outline" size={20} color={colors.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDownloadService(s)}>
+                              <Ionicons name="download-outline" size={20} color={colors.warning} />
+                            </TouchableOpacity>
                           </View>
-                          <Text className="text-xs mr-2" style={{ color: s.odendi ? colors.success : colors.warning }}>
-                            {s.odendi ? t("cst.paid") : t("cst.pending")}
-                          </Text>
-                          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                        </TouchableOpacity>
+                        </View>
                       ))}
                     </View>
                   )}
@@ -371,19 +678,35 @@ export default function CustomerDetailScreen() {
                   ) : (
                     <View className="rounded-2xl border overflow-hidden" style={{ borderColor: colors.borderAlt }}>
                       {quotes.map((q, i) => (
-                        <TouchableOpacity
+                        <View
                           key={q.id}
-                          className="flex-row items-center px-4 py-3"
+                          className="flex-row items-center px-4 py-2.5"
                           style={{ borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.borderAlt, backgroundColor: colors.bgCard }}
-                          onPress={() => setDetail({ kind: "quote", record: q })}
                         >
-                          <View className="flex-1">
-                            <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{q.customer}</Text>
-                            <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{q.tarih}</Text>
+                          <TouchableOpacity
+                            className="flex-1 flex-row items-center py-0.5"
+                            activeOpacity={0.7}
+                            onPress={() => setDetail({ kind: "quote", record: q })}
+                          >
+                            <View className="flex-1">
+                              <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{q.customer}</Text>
+                              <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{q.tarih}</Text>
+                            </View>
+                            <Text className="text-xs font-semibold mr-1" style={{ color: colors.primary }}>{money(quoteTotal(q))} ₺</Text>
+                            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                          </TouchableOpacity>
+                          <View className="flex-row items-center gap-3 ml-3">
+                            <TouchableOpacity onPress={() => handleShareQuote(q)}>
+                              <Ionicons name="share-social-outline" size={20} color={colors.purple} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleViewQuote(q)}>
+                              <Ionicons name="eye-outline" size={20} color={colors.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDownloadQuote(q)}>
+                              <Ionicons name="download-outline" size={20} color={colors.warning} />
+                            </TouchableOpacity>
                           </View>
-                          <Text className="text-xs font-semibold mr-2" style={{ color: colors.primary }}>{money(quoteTotal(q))} ₺</Text>
-                          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                        </TouchableOpacity>
+                        </View>
                       ))}
                     </View>
                   )}
@@ -426,6 +749,14 @@ export default function CustomerDetailScreen() {
         onClose={() => setDetail(null)}
         onEdit={handleEditRecord}
         onDelete={handleDeleteRecord}
+      />
+      <PreviewPdfModal
+        visible={!!preview}
+        html={preview?.html || ""}
+        zoom={previewZoom}
+        setZoom={setPreviewZoom}
+        onClose={() => setPreview(null)}
+        onDownload={handlePreviewDownload}
       />
     </>
   );
