@@ -43,15 +43,17 @@ function renderSignatureSvg(signature: any): string {
   const svgW = Math.ceil(w + pad * 2);
   const svgH = Math.ceil(h + pad * 2);
   const paths = strokes.map((points: any[]) => {
-    let d = '';
-    let started = false;
-    points.forEach((p: any) => {
-      if (!p || typeof p.x !== 'number' || typeof p.y !== 'number' || !Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
-      const cmd = started ? ' L' : 'M';
-      d += `${cmd} ${(p.x - minX + pad).toFixed(2)} ${(p.y - minY + pad).toFixed(2)}`;
-      started = true;
-    });
-    return d ? `<path d="${d}" stroke="#222238" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : '';
+    const pts = points.filter((p: any) => p && typeof p.x === 'number' && typeof p.y === 'number' && Number.isFinite(p.x) && Number.isFinite(p.y));
+    if (pts.length < 2) return '';
+    const path = pts.map((p: any) => ({ x: p.x - minX + pad, y: p.y - minY + pad }));
+    let d = `M ${path[0].x.toFixed(2)} ${path[0].y.toFixed(2)}`;
+    for (let i = 1; i < path.length - 1; i++) {
+      const mid = { x: (path[i].x + path[i + 1].x) / 2, y: (path[i].y + path[i + 1].y) / 2 };
+      d += ` Q ${path[i].x.toFixed(2)} ${path[i].y.toFixed(2)} ${mid.x.toFixed(2)} ${mid.y.toFixed(2)}`;
+    }
+    const last = path[path.length - 1];
+    d += ` L ${last.x.toFixed(2)} ${last.y.toFixed(2)}`;
+    return `<path d="${d}" stroke="#222238" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">${paths}</svg>`;
 }

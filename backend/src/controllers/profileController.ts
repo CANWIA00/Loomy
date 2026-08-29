@@ -4,7 +4,7 @@ import { AuthRequest } from "../middleware/auth";
 import { Jimp } from "jimp";
 import ImageTracer from "imagetracerjs";
 
-async function imageToSvgDataUri(dataUri: string): Promise<string> {
+async function imageToSvgDataUri(dataUri: string, applyContrast: boolean): Promise<string> {
   try {
     const base64 = dataUri.split(",")[1];
     const buffer = Buffer.from(base64, "base64");
@@ -28,10 +28,12 @@ async function imageToSvgDataUri(dataUri: string): Promise<string> {
         data[idx + 3] = 0;
         return;
       }
-      const darken = (v: number) => Math.max(0, Math.min(255, Math.round((v - 128) * 1.4 + 128)));
-      data[idx] = darken(r);
-      data[idx + 1] = darken(g);
-      data[idx + 2] = darken(b);
+      if (applyContrast) {
+        const darken = (v: number) => Math.max(0, Math.min(255, Math.round((v - 128) * 1.4 + 128)));
+        data[idx] = darken(r);
+        data[idx + 1] = darken(g);
+        data[idx + 2] = darken(b);
+      }
     });
 
     const imagedata = {
@@ -52,9 +54,9 @@ async function imageToSvgDataUri(dataUri: string): Promise<string> {
   }
 }
 
-async function toSvgDataUri(url?: string): Promise<string | undefined> {
+async function toSvgDataUri(url?: string, applyContrast = true): Promise<string | undefined> {
   if (url && url.startsWith("data:image") && !url.startsWith("data:image/svg")) {
-    return imageToSvgDataUri(url);
+    return imageToSvgDataUri(url, applyContrast);
   }
   return url;
 }
@@ -168,7 +170,7 @@ export async function updateCompany(
       return;
     }
 
-    const processedLogoUrl = await toSvgDataUri(logoUrl);
+    const processedLogoUrl = await toSvgDataUri(logoUrl, false);
     const processedStampUrl = await toSvgDataUri(stampUrl);
 
     const company = await prisma.company.update({
