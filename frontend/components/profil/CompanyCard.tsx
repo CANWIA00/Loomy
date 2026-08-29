@@ -316,7 +316,7 @@ export default function CompanyCard() {
             <Text style={{ color: colors.danger, fontSize: 14, fontWeight: "600" }}>{t("common.cancel")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={{ flex: 2, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+            style={{ flex: 1, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
             onPress={handleUpdateCompany}
             disabled={saving}
           >
