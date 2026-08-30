@@ -370,7 +370,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
         <div class="info-item"><span class="label">${t("pdf.responsiblePersonnel")}</span> <span class="value">${escapeHtml(data.technician) || ''}</span></div>
         <div class="info-item"><span class="label">${t("pdf.startTime")}</span> <span class="value">${escapeHtml(data.startTime) || ''}</span></div>
         <div class="info-item"><span class="label">${t("pdf.endTime")}</span> <span class="value">${escapeHtml(data.endTime) || ''}</span></div>
-        <div class="info-item"><span class="label">${t("pdf.phoneNumber")}</span> <span class="value">${escapeHtml(data.phone) || ''}</span></div>
+        <div class="info-item"><span class="label">${t("pdf.phoneNumber")}</span> <span class="value">${escapeHtml(data.technicianPhone) || ''}</span></div>
       </div>
     </div>
   </div>

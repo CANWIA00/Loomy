@@ -475,6 +475,7 @@ export default function CustomerDetailScreen() {
       technical: s.teknik || [],
       fee: s.ucret,
       technician: s.teknisyen,
+      technicianPhone: s.teknisyenTelefon || "",
       startTime: s.baslangic,
       endTime: s.bitis,
       details: s.detaylar,

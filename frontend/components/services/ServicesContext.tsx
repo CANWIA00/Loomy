@@ -123,6 +123,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const currentUserName = useRef("");
+  const currentUserPhone = useRef("");
   const originalFormRef = useRef<ServiceFormData | null>(null);
   const handledEditIdRef = useRef<string>("");
   const [saveAlertVisible, setSaveAlertVisible] = useState(false);
@@ -179,6 +180,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         currentUserName.current = name;
         setForm((prev) => ({ ...prev, technician: name }));
       }
+      if (res.data.user?.phone) {
+        currentUserPhone.current = res.data.user.phone;
+        setForm((prev) => ({ ...prev, technicianPhone: res.data.user!.phone || "" }));
+      }
       if (sig) {
         try {
           technicianSignatureRef.current = typeof sig === 'string' ? JSON.parse(sig) : sig;
@@ -201,6 +206,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       profileApi.getProfile().then((res) => {
         const sig = res.data.user?.signature;
         setHasSignature(!!sig);
+        if (res.data.user?.phone) {
+          currentUserPhone.current = res.data.user.phone;
+        }
         if (sig) {
           try {
             technicianSignatureRef.current = typeof sig === 'string' ? JSON.parse(sig) : sig;
@@ -302,6 +310,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           detaylar: form.details,
           ucret: form.fee || "0.00",
           teknisyen: form.technician || "-",
+          teknisyenTelefon: form.technicianPhone,
           tarih: form.documentDate || new Date().toLocaleDateString(locale),
           hizmetler: form.services,
           teknik: form.technical,
@@ -315,7 +324,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         setIsEditing(false);
         setEditingId(null);
         originalFormRef.current = null;
-        setForm({ ...initialForm, technician: currentUserName.current || "" });
+        setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
         fetchRecords();
       } catch {
         Alert.alert(t("svc.error"), t("svc.errorUpdate"));
@@ -331,7 +340,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setIsEditing(false);
     setEditingId(null);
     originalFormRef.current = null;
-    setForm({ ...initialForm, technician: currentUserName.current || "" });
+    setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
     setSelectedCustomerId(null);
   };
 
@@ -339,7 +348,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     if (isEditing && originalFormRef.current) {
       setForm({ ...originalFormRef.current });
     } else {
-      setForm({ ...initialForm, technician: currentUserName.current || "" });
+      setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
       setSelectedCustomerId(null);
     }
   };
@@ -356,6 +365,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       details: record.detaylar || "",
       fee: record.ucret || "",
       technician: record.teknisyen || currentUserName.current || "-",
+      technicianPhone: record.teknisyenTelefon || currentUserPhone.current || "",
       documentDate: record.tarih || "",
       services: record.hizmetler || [],
       technical: record.teknik || [],
@@ -400,6 +410,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         detaylar: form.details,
         ucret: form.fee || "0.00",
         teknisyen: form.technician || "-",
+        teknisyenTelefon: form.technicianPhone,
         hizmetler: form.services,
         teknik: form.technical,
         customChips: form.customChips,
@@ -417,7 +428,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       Alert.alert(t("svc.error"), t("svc.errorSave"));
     } finally {
       setLoading(false);
-      setForm({ ...initialForm, technician: currentUserName.current || "" });
+      setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
       setEditingId(null);
       setIsEditing(false);
       setSignatureModal(false);
@@ -448,6 +459,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     technical: record.teknik || [],
     fee: record.ucret,
     technician: record.teknisyen,
+    technicianPhone: record.teknisyenTelefon || "",
     startTime: record.baslangic,
     endTime: record.bitis,
     details: record.detaylar,

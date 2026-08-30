@@ -77,6 +77,7 @@ model ServiceRecord {
   details      String?
   fee          String   @default("0.00")
   technician   String?
+  technicianPhone String?
   services     String   @default("[]")
   technical    String   @default("[]")
   customChips  String?

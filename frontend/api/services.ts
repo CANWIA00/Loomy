@@ -15,6 +15,7 @@ export interface ServiceRecord {
   detaylar: string;
   ucret: string;
   teknisyen: string;
+  teknisyenTelefon?: string;
   hizmetler: string[];
   teknik: string[];
   customChips?: Record<string, string[]>;
@@ -42,6 +43,7 @@ interface ServiceRecordBackend {
   details?: string;
   fee: string;
   technician?: string;
+  technicianPhone?: string;
   services: string;
   technical: string;
   customChips?: string;
@@ -97,6 +99,7 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
     detaylar: b.details || "",
     ucret: b.fee,
     teknisyen: b.technician || "",
+    teknisyenTelefon: b.technicianPhone || "",
     hizmetler,
     teknik,
     customChips: customChipsParsed,
@@ -125,6 +128,7 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.detaylar !== undefined) data.details = f.detaylar;
   if (f.ucret !== undefined) data.fee = f.ucret;
   if (f.teknisyen !== undefined) data.technician = f.teknisyen;
+  if (f.teknisyenTelefon !== undefined) data.technicianPhone = f.teknisyenTelefon;
   if (f.hizmetler !== undefined) data.services = f.hizmetler;
   if (f.teknik !== undefined) data.technical = f.teknik;
   if (f.customChips !== undefined) data.customChips = f.customChips;

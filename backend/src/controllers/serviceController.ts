@@ -42,7 +42,7 @@ export async function createServiceRecord(
     const {
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
-      fee, technician, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
+      fee, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
       templateName, templateConfig,
     } = req.body;
     const companyId = req.user!.companyId!;
@@ -67,6 +67,7 @@ export async function createServiceRecord(
         details: details || null,
         fee: fee || "0.00",
         technician: technician || null,
+        technicianPhone: technicianPhone || null,
         services: JSON.stringify(services || []),
         technical: JSON.stringify(technical || []),
         customChips: customChips ? JSON.stringify(customChips) : null,
@@ -98,7 +99,7 @@ export async function updateServiceRecord(
     const {
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
-      fee, technician, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
+      fee, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
       templateName, templateConfig,
     } = req.body;
 
@@ -127,6 +128,7 @@ export async function updateServiceRecord(
         details: details ?? existing.details,
         fee: fee ?? existing.fee,
         technician: technician ?? existing.technician,
+        technicianPhone: technicianPhone ?? existing.technicianPhone,
         services: services ? JSON.stringify(services) : existing.services,
         technical: technical ? JSON.stringify(technical) : existing.technical,
         customChips: customChips ? JSON.stringify(customChips) : existing.customChips,

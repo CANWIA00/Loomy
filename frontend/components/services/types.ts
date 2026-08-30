@@ -9,6 +9,7 @@ export interface ServiceFormData {
   details: string;
   fee: string;
   technician: string;
+  technicianPhone: string;
   documentDate: string;
   services: string[];
   technical: string[];
@@ -27,6 +28,7 @@ export const initialForm: ServiceFormData = {
   details: "",
   fee: "",
   technician: "",
+  technicianPhone: "",
   documentDate: "",
   services: [],
   technical: [],
@@ -63,6 +65,7 @@ export interface PdfData {
   technical: string[];
   fee: string;
   technician: string;
+  technicianPhone?: string;
   startTime: string;
   endTime: string;
   details: string;
