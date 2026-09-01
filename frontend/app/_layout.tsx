@@ -6,6 +6,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { CurrencyProvider } from "../contexts/CurrencyContext";
+import InstallPwaBanner from "../components/InstallPwaBanner";
 
 function RootLayoutInner() {
   const { colors, isDark } = useTheme();
@@ -20,6 +21,7 @@ function RootLayoutInner() {
         <Stack.Screen name="dev" />
         <Stack.Screen name="customer-detail" />
       </Stack>
+      <InstallPwaBanner />
     </SafeAreaView>
   );
 }

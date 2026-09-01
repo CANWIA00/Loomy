@@ -826,6 +826,16 @@ const translations: Record<Lang, Record<string, string>> = {
     "common.phone": "Telefon",
     "common.password": "Şifre",
     "common.clear": "Temizle",
+
+    // PWA install banner
+    "pwa.installTitle": "Loomy'yi cihaza kur",
+    "pwa.installDesc": "Masaüstüne veya ana ekrana kurun, uygulama gibi tek tıkla açın.",
+    "pwa.install": "Kur",
+    "pwa.iOSTitle": "Ana Ekrana Ekle",
+    "pwa.iOSDesc": "Tarayıcıda Paylaş → Ana Ekrana Ekle ile Loomy'yi ana ekranınıza ekleyin.",
+    "pwa.androidDesc": "Chrome menüsünden (⋮) → \"Uygulama yükle\" veya \"Ana ekrana ekle\" seçeneğini kullanın.",
+    "pwa.desktopDesc": "Tarayıcı adres çubuğundaki kurulum ikonuna (⊕) tıklayıp Loomy'yi kurun.",
+    "pwa.dismiss": "Kapat",
   },
 
   en: {
@@ -1650,6 +1660,16 @@ const translations: Record<Lang, Record<string, string>> = {
     "common.phone": "Phone",
     "common.password": "Password",
     "common.clear": "Clear",
+
+    // PWA install banner
+    "pwa.installTitle": "Install Loomy",
+    "pwa.installDesc": "Install to your desktop or home screen and open it like an app.",
+    "pwa.install": "Install",
+    "pwa.iOSTitle": "Add to Home Screen",
+    "pwa.iOSDesc": "In your browser use Share → Add to Home Screen to add Loomy to your home screen.",
+    "pwa.androidDesc": "Use the Chrome menu (⋮) → \"Install app\" or \"Add to home screen\".",
+    "pwa.desktopDesc": "Click the install icon in the browser address bar (⊕) to install Loomy.",
+    "pwa.dismiss": "Dismiss",
   },
 };
 
