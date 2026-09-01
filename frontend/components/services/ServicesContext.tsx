@@ -118,7 +118,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
   const [pdfPreviewHtml, setPdfPreviewHtml] = useState("");
   const [pdfPreviewData, setPdfPreviewData] = useState<PdfData | null>(null);
-  const [pdfZoom, setPdfZoom] = useState(60);
+  const [pdfZoom, setPdfZoom] = useState(50);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -539,7 +539,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     const html = generateServicePDFHtml(pdfData, t, locale.startsWith("tr") ? "tr" : "en");
     setPdfPreviewHtml(html);
     setPdfPreviewData(pdfData);
-    setPdfZoom(60);
+    setPdfZoom(50);
     setPdfPreviewVisible(true);
   };
 

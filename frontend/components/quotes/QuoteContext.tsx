@@ -88,7 +88,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
   const [pdfPreviewHtml, setPdfPreviewHtml] = useState("");
   const [pdfPreviewData, setPdfPreviewData] = useState<QuotePdfData | null>(null);
-  const [pdfZoom, setPdfZoom] = useState(60);
+  const [pdfZoom, setPdfZoom] = useState(50);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -373,7 +373,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     const pdfData = await resolvePdfData(record);
     setPdfPreviewHtml(generateHtml(pdfData));
     setPdfPreviewData(pdfData);
-    setPdfZoom(60);
+    setPdfZoom(50);
     setPdfPreviewVisible(true);
   };
 
