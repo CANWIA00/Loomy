@@ -20,7 +20,10 @@ function parseRate(value: string | undefined): number | null {
 async function fetchFromTcmb(): Promise<TryRatesData | null> {
   try {
     const res = await fetch("https://www.tcmb.gov.tr/kurlar/today.xml", {
-      headers: { Accept: "application/xml" },
+      headers: {
+        Accept: "application/xml",
+        "User-Agent": "Mozilla/5.0 (ManagementDashboard)",
+      },
     });
     if (!res.ok) throw new Error("tcmb fetch failed");
     const xml = await res.text();
@@ -45,14 +48,16 @@ async function fetchFromTcmb(): Promise<TryRatesData | null> {
 
 async function fetchFromErApi(): Promise<TryRatesData | null> {
   try {
-    const res = await fetch("https://open.er-api.com/v6/latest/TRY");
+    const res = await fetch("https://open.er-api.com/v6/latest/TRY", {
+      headers: { "User-Agent": "Mozilla/5.0 (ManagementDashboard)" },
+    });
     if (!res.ok) throw new Error("er-api fetch failed");
     const data = await res.json();
     if (!data?.rates) throw new Error("er-api empty");
     const rates: Record<string, number> = { TRY: 1 };
     for (const code of SUPPORTED.filter((c) => c !== "TRY")) {
       const r = data.rates[code];
-      if (typeof r === "number" && r > 0) rates[code] = r;
+      if (typeof r === "number" && r > 0) rates[code] = 1 / r;
     }
     if (!rates.USD && !rates.EUR && !rates.GBP) throw new Error("er-api empty rates");
     return {
