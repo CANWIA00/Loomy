@@ -67,7 +67,21 @@ function DashboardIcon() {
   );
 }
 
-const icons = [UsersIcon, WrenchIcon, WalletIcon, CalendarIcon, TeamIcon, DashboardIcon];
+function DocumentIcon() {
+  return (
+    <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6 3.5h9l4 4V20a1 1 0 01-1 1H6a1 1 0 01-1-1V4.5a1 1 0 011-1z"
+        stroke={iconProps.stroke}
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M14 3.5V8h4.5M9 13h6M9 16.5h6" stroke={iconProps.stroke} strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const icons = [UsersIcon, DocumentIcon, WrenchIcon, WalletIcon, CalendarIcon, TeamIcon, DashboardIcon];
 
 export default function Features() {
   const { t } = useLanguage();
