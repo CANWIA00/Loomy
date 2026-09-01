@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLanguage } from "../i18n";
 
-type ScreenKey = "panel" | "quotes" | "services" | "customers";
+type ScreenKey = "panel" | "quotes" | "services" | "customers" | "plan";
 
 const labelColors: Record<string, string> = {
   primary: "amt-primary",
@@ -37,6 +37,8 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M8 10.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3.5L9.5 17v-1.5H8a2 2 0 0 1-2-2v-3z" /><circle cx="14.5" cy="11" r="0.6" fill="currentColor" /></svg>;
     case "person-add":
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="9" cy="8" r="3" /><path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5" /><path d="M14.5 10.5v5M17 13h-5" /></svg>;
+    case "person-remove":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="9" cy="8" r="3" /><path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5" /><path d="M17 13h-5" /></svg>;
     case "sunny":
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19" /></svg>;
     case "moon":
@@ -87,7 +89,7 @@ export default function Showcase() {
   const statusLabels = sc.statuses as Record<string, string>;
   const statusLabel = (state: string) => statusLabels[state] ?? state;
 
-  const activeTab = screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : 3;
+  const activeTab = screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : screen === "customers" ? 3 : 4;
 
   const PayBars = () => {
     const p = sc.panel;
@@ -446,6 +448,182 @@ export default function Showcase() {
       );
     }
 
+    if (screen === "plan") {
+      const pl = sc.plan;
+      const teamColors = ["#6080FF", "#10B981"];
+      const d = new Date();
+      const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      const firstDow = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+      const startOffset = firstDow === 0 ? 6 : firstDow - 1;
+      const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+      const cells: (number | null)[] = [];
+      for (let i = 0; i < totalCells; i++) {
+        const day = i - startOffset + 1;
+        cells.push(day >= 1 && day <= daysInMonth ? day : null);
+      }
+      const eventDays: Record<number, number> = { 1: 1, 3: 1, 5: 2, 9: 4, 15: 1, 22: 2, 27: 1 };
+      const monthLabel = `${pl.months[d.getMonth()]} ${d.getFullYear()}`;
+      return (
+        <>
+          <ScreenHead title={pl.title} />
+          <p className="an-sub">{pl.subtitle}</p>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-primary">
+                <Icon name="people" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{pl.teamsTitle}</strong>
+              </div>
+              <span className="an-btn" style={{ background: "rgba(96,128,255,.14)", color: "#6080FF" }}>
+                <Icon name="plus" size={14} color="#6080FF" />
+                {pl.newTeam}
+              </span>
+            </div>
+            <div className="an-team-grid">
+              {pl.teams.map((team, i) => (
+                <div className="an-team-card" key={team[0]}>
+                  <div className="an-team-top">
+                    <span className="an-team-ic" style={{ background: `${teamColors[i]}22`, color: teamColors[i] }}>
+                      <Icon name="people" size={16} />
+                    </span>
+                    <div className="an-card-title">
+                      <strong className="an-team-name">{team[0]}</strong>
+                      <span className="an-team-sub">{pl.leader} {team[1]}</span>
+                    </div>
+                    <Icon name="trash" size={15} color="#EF4444" />
+                  </div>
+                  <div className="an-team-meta">
+                    <span>{pl.personnelLabel} ({pl.teamMembers[i]})</span>
+                  </div>
+                  <div className="an-team-foot">
+                    <span className="an-team-ass">{pl.teamAssigns[i]}</span>
+                    <span className="an-team-tools">
+                      <span className="an-ib-warn an-ib-mini">
+                        <Icon name="person-remove" size={15} />
+                      </span>
+                      <span className="an-ib-primary an-ib-mini">
+                        <Icon name="person-add" size={15} />
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="an-caltools">
+            <div className="an-calfilters">
+              {[pl.day, pl.week, pl.month].map((f, i) => (
+                <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`}>
+                  {f}
+                </span>
+              ))}
+              <span className="an-fpill an-fpill-sel">
+                <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{pl.allTeams}</strong>
+                <Icon name="chevron-down" size={13} color="#6B7280" />
+              </span>
+              <span className="an-cal-close">
+                <Icon name="close" size={15} />
+              </span>
+              <span className="an-btn an-btn-newplan">
+                <Icon name="plus" size={14} color="#fff" />
+                {pl.newPlan}
+              </span>
+            </div>
+            <div className="an-cal-nav">
+              <span className="an-cal-prev">
+                <Icon name="back" size={15} />
+              </span>
+              <span className="an-cal-label">{monthLabel}</span>
+              <span className="an-cal-next">
+                <Icon name="chevron-fwd" size={15} />
+              </span>
+            </div>
+          </div>
+
+          <div className="an-mgrid">
+            <div className="an-mhead">
+              {pl.dayShorts.map((g) => (
+                <span key={g}>{g}</span>
+              ))}
+            </div>
+            {Array.from({ length: Math.ceil(cells.length / 7) }, (_, r) => (
+              <div className="an-mrow" key={r}>
+                {cells.slice(r * 7, r * 7 + 7).map((day, ci) => {
+                  const dayNum = day as number | null;
+                  const isToday = dayNum === d.getDate();
+                  const count = dayNum ? eventDays[dayNum] ?? 0 : 0;
+                  return (
+                    <div className={`an-mcell${isToday ? " today" : ""}`} key={ci}>
+                      {dayNum !== null && (
+                        <>
+                          <span className="an-mnum">{dayNum}</span>
+                          {count > 0 &&
+                            Array.from({ length: Math.min(count, 3) }, (_, ei) => (
+                              <span
+                                className={`an-m-ev${ei % 2 === 1 ? " teal" : ""}`}
+                                key={ei}
+                              >
+                                {pl.teams[ei % 2][0]}
+                              </span>
+                            ))}
+                          {count > 3 && <span className="an-m-more">+{count - 3} {pl.more}</span>}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          <div className="an-plist">
+            <div className="an-plist-head">
+              <Icon name="card" size={18} color="#6080FF" />
+              <span className="an-plist-title">{pl.planList}</span>
+              <span className="an-plist-count">{pl.listCount}</span>
+            </div>
+            <div className="an-filters">
+              {pl.listFilters.map((f, i) => (
+                <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`} style={{ height: 28, padding: "0 12px" }}>
+                  {f}
+                </span>
+              ))}
+              <span className="an-fpill an-fpill-sel" style={{ height: 28, padding: "0 12px" }}>
+                <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{pl.allTeams}</strong>
+                <Icon name="chevron-down" size={13} color="#6B7280" />
+              </span>
+            </div>
+            {pl.appts.map((a, i) => {
+              const state = a[5];
+              return (
+                <div className={`an-appt${i % 2 === 1 ? " teal" : ""}`} key={a[2]}>
+                  <div className="an-appt-time">
+                    <strong>{a[0]}</strong>
+                    <span>{a[1]}</span>
+                  </div>
+                  <span className="an-appt-div" />
+                  <div className="an-appt-main">
+                    <strong>{a[2]}</strong>
+                    <div className="an-appt-sub">
+                      <span className="an-appt-dot" style={{ background: teamColors[i % 2] }} />
+                      <span>{a[3]}</span>
+                      <span>•</span>
+                      <span>{a[4]}</span>
+                    </div>
+                  </div>
+                  {state === "today" && <span className="an-appt-badge today">{pl.today}</span>}
+                  {state === "past" && <span className="an-appt-badge past">{pl.past}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      );
+    }
+
     const c = sc.customers;
     return (
       <>
@@ -457,30 +635,27 @@ export default function Showcase() {
           <span className="an-cut-count">{c.count}</span>
         </div>
 
-        <div className="an-search">
-          <Icon name="search" size={16} color="#6B7280" />
-          {c.search}
-        </div>
+        <div className="an-search">{c.search}</div>
 
-        {c.rows.map((row, i) => (
-          <div className="an-card an-row" key={i}>
-            <span className="an-avatar an-avatar-lg">{row[0].charAt(0)}</span>
-            <div className="an-rowmain no-sub">
-              <strong>{row[0]}</strong>
-              <span>{row[1]}</span>
-              <span>{row[2]}</span>
-            </div>
-            <div className="an-cust-actions">
-              <span className="an-ib-primary" style={{ width: 36, height: 36, borderRadius: 12 }}>
+        <div className="an-stack" style={{ gap: 12 }}>
+          {c.rows.map((row, i) => (
+            <div className="an-card an-row" key={i}>
+              <span className="an-avatar an-avatar-lg">{row[0].charAt(0)}</span>
+              <div className="an-rowmain no-sub an-cust-main">
+                <strong>{row[0]}</strong>
+                <span>{row[1]}</span>
+                <span>{row[2]}</span>
+              </div>
+              <span className="an-ib-primary an-ib-btn">
                 <Icon name="pencil" size={18} />
               </span>
-              <span className="an-ib-danger" style={{ width: 36, height: 36, borderRadius: 12 }}>
+              <span className="an-ib-danger an-ib-btn">
                 <Icon name="trash" size={18} />
               </span>
               <Icon name="chevron-fwd" size={20} color="#9CA3AF" />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
         <div className="an-pag">
           <span className="an-pag-btn muted">{c.previous}</span>
@@ -496,6 +671,7 @@ export default function Showcase() {
     { key: "quotes", label: sc.quotes.label },
     { key: "services", label: sc.services.label },
     { key: "customers", label: sc.customers.label },
+    { key: "plan", label: sc.plan.label },
   ];
 
   return (
