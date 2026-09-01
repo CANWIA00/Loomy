@@ -1,4 +1,5 @@
 import apiClient from "./client";
+import type { TryRatesData } from "../utils/currencyRates";
 
 export interface QuoteLine {
   name: string;
@@ -23,6 +24,7 @@ export interface QuoteRecord {
   notlar: string;
   lines: QuoteLine[];
   validUntil: string;
+  tryRates?: TryRatesData | null;
 }
 
 interface QuoteRecordBackend {
@@ -40,11 +42,16 @@ interface QuoteRecordBackend {
   notes?: string;
   lines: string;
   validUntil?: string;
+  tryRates?: string;
 }
 
 function toFrontend(b: QuoteRecordBackend): QuoteRecord {
   let lines: QuoteLine[] = [];
   try { lines = JSON.parse(b.lines); } catch {}
+  let tryRates: TryRatesData | null = null;
+  if (b.tryRates) {
+    try { tryRates = JSON.parse(b.tryRates); } catch {}
+  }
   return {
     id: b.id,
     tarih: b.documentDate,
@@ -60,6 +67,7 @@ function toFrontend(b: QuoteRecordBackend): QuoteRecord {
     notlar: b.notes || "",
     lines,
     validUntil: b.validUntil || "",
+    tryRates,
   };
 }
 
@@ -78,6 +86,7 @@ function toBackend(f: Partial<QuoteRecord>): Record<string, any> {
   if (f.notlar !== undefined) data.notes = f.notlar;
   if (f.lines !== undefined) data.lines = f.lines;
   if (f.validUntil !== undefined) data.validUntil = f.validUntil;
+  if (f.tryRates !== undefined) data.tryRates = f.tryRates ? JSON.stringify(f.tryRates) : null;
   return data;
 }
 

@@ -6,6 +6,7 @@ import { useQuotes } from "./QuoteContext";
 import type { QuoteFilter } from "./types";
 import { getCurrencySymbol, round2, formatMoney } from "./types";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import { convertToTry } from "../../utils/currencyRates";
 
 const FILTERS: QuoteFilter[] = ["all", "gun", "ay", "yil"];
 
@@ -108,8 +109,9 @@ export default function QuoteRecordsSection() {
             const totalLabels = Object.keys(currencyTotals)
               .map((cur) => `${round2(currencyTotals[cur]).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`)
               .join(" · ");
+            const savedRates = k.tryRates && k.tryRates.rates && Object.keys(k.tryRates.rates).length ? k.tryRates : null;
             const totalTry = Object.entries(currencyTotals).reduce((s, [cur, val]) => {
-              const conv = convertTry(val, cur);
+              const conv = savedRates ? convertToTry(val, cur, savedRates) : convertTry(val, cur);
               return conv === null ? s : s + conv;
             }, 0);
             return (

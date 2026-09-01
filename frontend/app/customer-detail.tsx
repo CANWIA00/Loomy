@@ -8,6 +8,7 @@ import { WebView } from "react-native-webview";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { convertToTry } from "../utils/currencyRates";
 import { useAuth } from "../contexts/AuthContext";
 import ScreenHeader from "../components/ScreenHeader";
 import CustomAlert from "../components/CustomAlert";
@@ -144,8 +145,9 @@ function RecordDetailModal({
                       <Text className="w-20 text-xs font-semibold text-right" style={{ color: colors.text }}>{t("qot.total")}</Text>
                     </View>
                     {payload.record.lines.map((l, i) => {
+                      const savedRates = payload.record.tryRates && payload.record.tryRates.rates && Object.keys(payload.record.tryRates.rates).length ? payload.record.tryRates : null;
                       const lineTotal = (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
-                      const lineTotalTry = l.currency !== "TRY" ? convertTry(lineTotal, l.currency) : null;
+                      const lineTotalTry = l.currency !== "TRY" ? (savedRates ? convertToTry(lineTotal, l.currency, savedRates) : convertTry(lineTotal, l.currency)) : null;
                       return (
                         <View key={i} className="flex-row py-2 px-3 border-t" style={{ borderColor: colors.borderAlt }}>
                           <Text className="flex-1 text-xs" style={{ color: colors.text }} numberOfLines={1}>{l.name}</Text>
@@ -171,8 +173,9 @@ function RecordDetailModal({
                           {Object.entries(quoteTotalsByCurrency(payload.record)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
                         </Text>
                         {(() => {
+                          const savedRates = payload.record.tryRates && payload.record.tryRates.rates && Object.keys(payload.record.tryRates.rates).length ? payload.record.tryRates : null;
                           const totalTry = Object.entries(quoteTotalsByCurrency(payload.record)).reduce((s, [cur, val]) => {
-                            const conv = convertTry(val, cur);
+                            const conv = savedRates ? convertToTry(val, cur, savedRates) : convertTry(val, cur);
                             return conv === null ? s : s + conv;
                           }, 0);
                           return totalTry > 0 ? (
@@ -814,8 +817,9 @@ export default function CustomerDetailScreen() {
                                   {Object.entries(quoteTotalsByCurrency(q)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
                                 </Text>
                                 {(() => {
+                                  const savedRates = q.tryRates && q.tryRates.rates && Object.keys(q.tryRates.rates).length ? q.tryRates : null;
                                   const totalTry = Object.entries(quoteTotalsByCurrency(q)).reduce((s, [cur, val]) => {
-                                    const conv = convertTry(val, cur);
+                                    const conv = savedRates ? convertToTry(val, cur, savedRates) : convertTry(val, cur);
                                     return conv === null ? s : s + conv;
                                   }, 0);
                                   return totalTry > 0 ? (

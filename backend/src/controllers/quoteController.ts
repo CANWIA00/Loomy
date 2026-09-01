@@ -41,7 +41,7 @@ export async function createQuoteRecord(
   try {
     const {
       documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
-      notes, lines, validUntil,
+      notes, lines, validUntil, tryRates,
     } = req.body;
     const companyId = req.user!.companyId!;
 
@@ -65,6 +65,7 @@ export async function createQuoteRecord(
         notes: notes || null,
         lines: JSON.stringify(lines || []),
         validUntil: validUntil || null,
+        tryRates: tryRates ?? null,
         companyId,
       },
     });
@@ -85,7 +86,7 @@ export async function updateQuoteRecord(
     const companyId = req.user!.companyId!;
     const {
       documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
-      notes, lines, validUntil,
+      notes, lines, validUntil, tryRates,
     } = req.body;
 
     const existing = await prisma.quoteRecord.findFirst({
@@ -113,6 +114,7 @@ export async function updateQuoteRecord(
         notes: notes ?? existing.notes,
         lines: lines ? JSON.stringify(lines) : existing.lines,
         validUntil: validUntil ?? existing.validUntil,
+        tryRates: tryRates ?? existing.tryRates,
       },
     });
 

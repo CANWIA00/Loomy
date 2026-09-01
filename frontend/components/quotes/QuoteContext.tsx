@@ -226,10 +226,15 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         lines: dataToSave.lines,
       };
       if (isEditing && editingId !== null) {
-        await quoteApi.update(editingId, payload);
+        const existingRecord = records.find((r) => r.id === editingId);
+        const updatePayload =
+          existingRecord && !existingRecord.tryRates && rates
+            ? { ...payload, tryRates: rates }
+            : payload;
+        await quoteApi.update(editingId, updatePayload);
         Alert.alert(t("qot.success"), t("qot.successUpdated"));
       } else {
-        await quoteApi.create(payload);
+        await quoteApi.create(rates ? { ...payload, tryRates: rates } : payload);
         Alert.alert(t("qot.success"), t("qot.successCreated"));
       }
       resetForm();
@@ -297,7 +302,10 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     return true;
   });
 
-  const buildPdfData = (record: QuoteRecord): QuotePdfData => ({
+  const buildPdfData = (record: QuoteRecord): QuotePdfData => {
+    const savedRates =
+      record.tryRates && record.tryRates.rates && Object.keys(record.tryRates.rates).length ? record.tryRates : null;
+    return {
     customerName: record.customer,
     contactPerson: record.contactPerson,
     documentDate: record.tarih,
@@ -320,8 +328,9 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     companyTaxNumber: companyInfoRef.current.taxNumber,
     companyLogo: companyLogoRef.current,
     companyStamp: companyStampRef.current,
-    tryRates: rates,
-  });
+    tryRates: savedRates || rates,
+  };
+};
 
   const resolvePdfData = async (record: QuoteRecord): Promise<QuotePdfData> => {
     const base = buildPdfData(record);
