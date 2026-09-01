@@ -107,6 +107,8 @@ button {
   gap: 8px;
   font-size: 15px;
   font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
   border-radius: 12px;
   padding: 14px 26px;
   border: none;
