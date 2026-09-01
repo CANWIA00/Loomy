@@ -4,14 +4,15 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
 import type { QuoteFilter } from "./types";
-import { getCurrencySymbol } from "./types";
-import { round2 } from "./types";
+import { getCurrencySymbol, round2, formatMoney } from "./types";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 const FILTERS: QuoteFilter[] = ["all", "gun", "ay", "yil"];
 
 export default function QuoteRecordsSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { convert: convertTry } = useCurrency();
   const {
     filteredRecords,
     filter,
@@ -107,6 +108,10 @@ export default function QuoteRecordsSection() {
             const totalLabels = Object.keys(currencyTotals)
               .map((cur) => `${round2(currencyTotals[cur]).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`)
               .join(" · ");
+            const totalTry = Object.entries(currencyTotals).reduce((s, [cur, val]) => {
+              const conv = convertTry(val, cur);
+              return conv === null ? s : s + conv;
+            }, 0);
             return (
               <View
                 key={k.id}
@@ -117,9 +122,16 @@ export default function QuoteRecordsSection() {
                 <Text className="flex-1 text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
                   {k.customer}
                 </Text>
-                <Text className="w-28 text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
-                  {totalLabels}
-                </Text>
+                <View className="w-28 items-end">
+                  <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
+                    {totalLabels}
+                  </Text>
+                  {totalTry > 0 && (
+                    <Text className="text-[10px] text-right mt-0.5" style={{ color: colors.textMuted }}>
+                      ≈ {formatMoney(totalTry)} ₺
+                    </Text>
+                  )}
+                </View>
                 <View className="w-32 ml-6 flex-row items-center justify-end gap-2.5">
                   <TouchableOpacity onPress={() => handleShare(k)}>
                     <Ionicons name="share-social-outline" size={20} color={colors.purple} />

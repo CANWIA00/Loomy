@@ -3,9 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView } from "reac
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../api/customers";
 import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol } from "./types";
+
+const formatRate = (rate: number) =>
+  rate.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
 const formatDateInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 8);
@@ -90,6 +94,7 @@ function DateField({
 export default function QuoteForm() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { convert: convertTry, rates, refresh: refreshRates } = useCurrency();
   const {
     form,
     updateForm,
@@ -142,6 +147,12 @@ export default function QuoteForm() {
   });
 
   const currencyKeys = Object.keys(currencyGroups);
+  const totalTry = currencyKeys.reduce((s, cur) => {
+    const conv = convertTry(currencyGroups[cur].grandTotal, cur);
+    return conv === null ? s : s + conv;
+  }, 0);
+  const hasForeignCurrency = currencyKeys.some((cur) => cur !== "TRY");
+  const totalTryAvailable = totalTry > 0 && hasForeignCurrency && !!rates;
 
   const selectFromList = (m: Customer) => selectCustomer(m);
 
@@ -368,6 +379,11 @@ export default function QuoteForm() {
                       value={String(line.unitPrice)}
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
                     />
+                    {line.currency !== "TRY" && convertTry(Number(line.unitPrice) || 0, line.currency) !== null && (
+                      <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
+                        ≈ {formatMoney(convertTry(Number(line.unitPrice) || 0, line.currency)!)} ₺
+                      </Text>
+                    )}
                   </View>
                   <View>
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.currency")}</Text>
@@ -382,6 +398,9 @@ export default function QuoteForm() {
                   </View>
                   <View className="flex-1 items-end justify-end pb-1.5">
                     <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(lineTotal)} {getCurrencySymbol(line.currency)}</Text>
+                    {line.currency !== "TRY" && convertTry(lineTotal, line.currency) !== null && (
+                      <Text className="text-[10px]" style={{ color: colors.textMuted }}>≈ {formatMoney(convertTry(lineTotal, line.currency)!)} ₺</Text>
+                    )}
                   </View>
                 </View>
               </View>
@@ -404,18 +423,73 @@ export default function QuoteForm() {
             <View key={cur}>
               <View className="flex-row justify-between py-0.5">
                 <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.subtotal")} ({cur})</Text>
-                <Text className="text-xs font-semibold" style={{ color: colors.text }}>{formatMoney(currencyGroups[cur].subTotal)} {getCurrencySymbol(cur)}</Text>
+                <View className="items-end">
+                  <Text className="text-xs font-semibold" style={{ color: colors.text }}>
+                    {formatMoney(currencyGroups[cur].subTotal)} {getCurrencySymbol(cur)}
+                  </Text>
+                  {cur !== "TRY" && convertTry(currencyGroups[cur].subTotal, cur) !== null && (
+                    <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                      ≈ {formatMoney(convertTry(currencyGroups[cur].subTotal, cur)!)} ₺
+                    </Text>
+                  )}
+                </View>
               </View>
               <View className="flex-row justify-between py-0.5">
                 <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.kdv")} %{Math.round(KDV_RATE * 100)}</Text>
-                <Text className="text-xs font-semibold" style={{ color: colors.text }}>{formatMoney(currencyGroups[cur].kdv)} {getCurrencySymbol(cur)}</Text>
+                <View className="items-end">
+                  <Text className="text-xs font-semibold" style={{ color: colors.text }}>
+                    {formatMoney(currencyGroups[cur].kdv)} {getCurrencySymbol(cur)}
+                  </Text>
+                  {cur !== "TRY" && convertTry(currencyGroups[cur].kdv, cur) !== null && (
+                    <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                      ≈ {formatMoney(convertTry(currencyGroups[cur].kdv, cur)!)} ₺
+                    </Text>
+                  )}
+                </View>
               </View>
               <View className="flex-row justify-between py-1 mt-1 border-t" style={{ borderColor: colors.border }}>
                 <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("qot.grandTotal")} ({cur})</Text>
-                <Text className="text-sm font-bold" style={{ color: colors.primary }}>{formatMoney(currencyGroups[cur].grandTotal)} {getCurrencySymbol(cur)}</Text>
+                <View className="items-end">
+                  <Text className="text-sm font-bold" style={{ color: colors.primary }}>
+                    {formatMoney(currencyGroups[cur].grandTotal)} {getCurrencySymbol(cur)}
+                  </Text>
+                  {cur !== "TRY" && convertTry(currencyGroups[cur].grandTotal, cur) !== null && (
+                    <Text className="text-[10px] font-medium" style={{ color: colors.textMuted }}>
+                      ≈ {formatMoney(convertTry(currencyGroups[cur].grandTotal, cur)!)} ₺
+                    </Text>
+                  )}
+                </View>
               </View>
             </View>
           ))}
+
+          {rates && (
+            <View className="mt-2 pt-2 border-t" style={{ borderColor: colors.border }}>
+              <View className="flex-row justify-between py-0.5">
+                <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.exchangeRate")}</Text>
+                <Text className="text-xs" style={{ color: colors.textMuted }}>{rates.source}: {rates.rateDate}</Text>
+              </View>
+              {currencyKeys.filter((cur) => cur !== "TRY").map((cur) => (
+                <View key={cur} className="flex-row justify-between py-0.5">
+                  <Text className="text-xs" style={{ color: colors.textSecondary }}>1 {cur}</Text>
+                  <Text className="text-xs font-medium" style={{ color: colors.text }}>
+                    = {formatRate(rates.rates[cur])} ₺
+                  </Text>
+                </View>
+              ))}
+              <TouchableOpacity onPress={refreshRates} className="flex-row items-center justify-center mt-1">
+                <Ionicons name="refresh-outline" size={12} color={colors.primary} />
+                <Text className="text-[11px] font-medium ml-1" style={{ color: colors.primary }}>{t("qot.refreshRates")}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {totalTryAvailable && (
+            <View className="flex-row justify-between py-1 mt-1 border-t" style={{ borderColor: colors.primary }}>
+              <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("qot.grandTotalTry")}</Text>
+              <Text className="text-sm font-bold" style={{ color: colors.primary }}>≈ {formatMoney(totalTry)} ₺</Text>
+            </View>
+          )}
         </View>
 
         <View className="mb-3">

@@ -10,6 +10,7 @@ import { profileApi } from "../../api/profile";
 import { quoteApi, QuoteRecord } from "../../api/quotes";
 import { customerApi, Customer } from "../../api/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import { initialQuoteForm, emptyLine, type QuoteFormData, type QuotePdfData, type QuoteFilter } from "./types";
 
 interface DeleteAlertState {
@@ -73,6 +74,7 @@ export function useQuotes() {
 
 export function QuotesProvider({ children }: { children: ReactNode }) {
   const { t, locale } = useLanguage();
+  const { rates } = useCurrency();
   const [form, setForm] = useState<QuoteFormData>({ ...initialQuoteForm });
   const [records, setRecords] = useState<QuoteRecord[]>([]);
   const [filter, setFilter] = useState<QuoteFilter>("all");
@@ -315,6 +317,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     companyTaxNumber: companyInfoRef.current.taxNumber,
     companyLogo: companyLogoRef.current,
     companyStamp: companyStampRef.current,
+    tryRates: rates,
   });
 
   const resolvePdfData = async (record: QuoteRecord): Promise<QuotePdfData> => {

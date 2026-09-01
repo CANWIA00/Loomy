@@ -7,6 +7,7 @@ import * as Sharing from "expo-sharing";
 import { WebView } from "react-native-webview";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useCurrency } from "../contexts/CurrencyContext";
 import { useAuth } from "../contexts/AuthContext";
 import ScreenHeader from "../components/ScreenHeader";
 import CustomAlert from "../components/CustomAlert";
@@ -86,6 +87,7 @@ function RecordDetailModal({
 }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { convert: convertTry } = useCurrency();
 
   return (
     <Modal visible={!!payload} transparent animationType="fade" onRequestClose={onClose}>
@@ -141,21 +143,45 @@ function RecordDetailModal({
                       <Text className="w-20 text-xs font-semibold text-right" style={{ color: colors.text }}>{t("qot.unitPrice")}</Text>
                       <Text className="w-20 text-xs font-semibold text-right" style={{ color: colors.text }}>{t("qot.total")}</Text>
                     </View>
-                    {payload.record.lines.map((l, i) => (
-                      <View key={i} className="flex-row py-2 px-3 border-t" style={{ borderColor: colors.borderAlt }}>
-                        <Text className="flex-1 text-xs" style={{ color: colors.text }} numberOfLines={1}>{l.name}</Text>
-                        <Text className="w-14 text-xs text-right" style={{ color: colors.textSecondary }}>{l.quantity}</Text>
-                        <Text className="w-20 text-xs text-right" style={{ color: colors.textSecondary }}>{l.unitPrice} {getCurrencySymbol(l.currency)}</Text>
-                        <Text className="w-20 text-xs text-right" style={{ color: colors.text }}>
-                          {((Number(l.quantity) || 0) * (Number(l.unitPrice) || 0)).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {getCurrencySymbol(l.currency)}
-                        </Text>
-                      </View>
-                    ))}
+                    {payload.record.lines.map((l, i) => {
+                      const lineTotal = (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
+                      const lineTotalTry = l.currency !== "TRY" ? convertTry(lineTotal, l.currency) : null;
+                      return (
+                        <View key={i} className="flex-row py-2 px-3 border-t" style={{ borderColor: colors.borderAlt }}>
+                          <Text className="flex-1 text-xs" style={{ color: colors.text }} numberOfLines={1}>{l.name}</Text>
+                          <Text className="w-14 text-xs text-right" style={{ color: colors.textSecondary }}>{l.quantity}</Text>
+                          <Text className="w-20 text-xs text-right" style={{ color: colors.textSecondary }}>{l.unitPrice} {getCurrencySymbol(l.currency)}</Text>
+                          <View className="w-20 items-end">
+                            <Text className="text-xs text-right" style={{ color: colors.text }}>
+                              {lineTotal.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {getCurrencySymbol(l.currency)}
+                            </Text>
+                            {lineTotalTry !== null && (
+                              <Text className="text-[10px] text-right" style={{ color: colors.textMuted }}>
+                                ≈ {round2(lineTotalTry).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                      );
+                    })}
                     <View className="flex-row justify-end py-2 px-3 border-t" style={{ borderColor: colors.border }}>
                       <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("cst.quoteTotal")}: </Text>
-                      <Text className="text-sm font-bold" style={{ color: colors.primary }}>
-                        {Object.entries(quoteTotalsByCurrency(payload.record)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
-                      </Text>
+                      <View className="items-end">
+                        <Text className="text-sm font-bold" style={{ color: colors.primary }}>
+                          {Object.entries(quoteTotalsByCurrency(payload.record)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
+                        </Text>
+                        {(() => {
+                          const totalTry = Object.entries(quoteTotalsByCurrency(payload.record)).reduce((s, [cur, val]) => {
+                            const conv = convertTry(val, cur);
+                            return conv === null ? s : s + conv;
+                          }, 0);
+                          return totalTry > 0 ? (
+                            <Text className="text-xs font-medium" style={{ color: colors.textMuted }}>
+                              ≈ {round2(totalTry).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                            </Text>
+                          ) : null;
+                        })()}
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -337,6 +363,7 @@ export default function CustomerDetailScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { t, locale } = useLanguage();
+  const { convert: convertTry } = useCurrency();
   const isAdmin = useAuth().user?.role === "ADMIN";
   const params = useLocalSearchParams<{ id?: string; name?: string }>();
   const id = params.id || "";
@@ -782,9 +809,22 @@ export default function CustomerDetailScreen() {
                                 <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{q.customer}</Text>
                                 <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{q.tarih}</Text>
                               </View>
-                              <Text className="text-xs font-semibold mr-1" style={{ color: colors.primary }}>
-                                {Object.entries(quoteTotalsByCurrency(q)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
-                              </Text>
+                              <View className="items-end mr-1">
+                                <Text className="text-xs font-semibold" style={{ color: colors.primary }}>
+                                  {Object.entries(quoteTotalsByCurrency(q)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
+                                </Text>
+                                {(() => {
+                                  const totalTry = Object.entries(quoteTotalsByCurrency(q)).reduce((s, [cur, val]) => {
+                                    const conv = convertTry(val, cur);
+                                    return conv === null ? s : s + conv;
+                                  }, 0);
+                                  return totalTry > 0 ? (
+                                    <Text className="text-[10px] font-medium" style={{ color: colors.textMuted }}>
+                                      ≈ {round2(totalTry).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                                    </Text>
+                                  ) : null;
+                                })()}
+                              </View>
                               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                             </TouchableOpacity>
                             <View className="flex-row items-center gap-3 ml-3">

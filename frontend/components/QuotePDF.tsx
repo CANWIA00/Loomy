@@ -1,5 +1,6 @@
 import type { QuotePdfData } from "./quotes/types";
 import { formatMoney, round2, KDV_RATE, getCurrencySymbol } from "./quotes/types";
+import { convertToTry } from "../utils/currencyRates";
 
 function escapeHtml(str: string): string {
   if (!str) return "";
@@ -35,6 +36,8 @@ export function generateQuotePDFHtml(
       const total = round2(l.quantity * l.unitPrice);
       const cur = l.currency || "TRY";
       const sym = getCurrencySymbol(cur);
+      const totalTry = convertToTry(total, cur, data.tryRates);
+      const showTry = cur !== "TRY" && totalTry !== null;
       return `
       <tr>
         <td class="num">${i + 1}</td>
@@ -44,7 +47,7 @@ export function generateQuotePDFHtml(
         </td>
         <td class="num">${l.quantity}</td>
         <td class="num">${formatMoney(l.unitPrice)} ${sym}</td>
-        <td class="num">${formatMoney(total)} ${sym}</td>
+        <td class="num">${formatMoney(total)} ${sym}${showTry ? `<div class="converted">≈ ${formatMoney(totalTry!)} ₺</div>` : ""}</td>
       </tr>`;
     })
     .join("");
@@ -52,21 +55,50 @@ export function generateQuotePDFHtml(
   const totals = Object.keys(currencyGroups)
     .map((cur) => {
       const sym = getCurrencySymbol(cur);
+      const isTry = cur === "TRY";
+      const subTry = isTry ? null : convertToTry(currencyGroups[cur].subTotal, cur, data.tryRates);
+      const kdvTry = isTry ? null : convertToTry(currencyGroups[cur].kdv, cur, data.tryRates);
+      const grandTry = isTry ? null : convertToTry(currencyGroups[cur].grandTotal, cur, data.tryRates);
       return `
     <tr class="total-row">
       <td class="tot-label" colspan="4">${lang === "tr" ? "Ara Toplam" : "Subtotal"} (${cur})</td>
-      <td class="num tot-value">${formatMoney(currencyGroups[cur].subTotal)} ${sym}</td>
+      <td class="num tot-value">${formatMoney(currencyGroups[cur].subTotal)} ${sym}${subTry !== null ? `<div class="converted">≈ ${formatMoney(subTry)} ₺</div>` : ""}</td>
     </tr>
     <tr class="total-row">
       <td class="tot-label" colspan="4">${lang === "tr" ? `KDV (%${Math.round(KDV_RATE * 100)})` : `VAT (${Math.round(KDV_RATE * 100)}%)`}</td>
-      <td class="num tot-value">${formatMoney(currencyGroups[cur].kdv)} ${sym}</td>
+      <td class="num tot-value">${formatMoney(currencyGroups[cur].kdv)} ${sym}${kdvTry !== null ? `<div class="converted">≈ ${formatMoney(kdvTry)} ₺</div>` : ""}</td>
     </tr>
     <tr class="grand-row">
       <td class="tot-label" colspan="4">${lang === "tr" ? "Genel Toplam" : "Grand Total"} (${cur})</td>
-      <td class="num grand-value">${formatMoney(currencyGroups[cur].grandTotal)} ${sym}</td>
+      <td class="num grand-value">${formatMoney(currencyGroups[cur].grandTotal)} ${sym}${grandTry !== null ? `<div class="converted">≈ ${formatMoney(grandTry)} ₺</div>` : ""}</td>
     </tr>`;
     })
     .join(`<tr><td colspan="5" style="height:6px"></td></tr>`);
+
+  const grandTotalTry = Object.keys(currencyGroups).reduce((s, cur) => {
+    const conv = convertToTry(currencyGroups[cur].grandTotal, cur, data.tryRates);
+    return conv === null ? s : s + conv;
+  }, 0);
+  const hasForeignCurrency = Object.keys(currencyGroups).some((cur) => cur !== "TRY");
+  const ratesAvailable = !!data.tryRates && hasForeignCurrency;
+
+  const tryInfoRows = ratesAvailable
+    ? `
+    ${Object.keys(currencyGroups)
+      .filter((cur) => cur !== "TRY")
+      .map(
+        (cur) => `
+    <tr class="total-row">
+      <td class="tot-label" colspan="4">1 ${cur}</td>
+      <td class="num tot-value">${data.tryRates!.rates[cur].toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ₺</td>
+    </tr>`
+      )
+      .join("")}
+    <tr class="grand-row">
+      <td class="tot-label" colspan="4">${lang === "tr" ? "Genel Toplam (₺)" : "Grand Total (₺)"}</td>
+      <td class="num grand-value">≈ ${formatMoney(grandTotalTry)} ₺</td>
+    </tr>`
+    : "";
 
   return `
 <!DOCTYPE html>
@@ -212,6 +244,12 @@ export function generateQuotePDFHtml(
     .total-row .tot-value {
       font-weight: bold;
     }
+    .converted {
+      font-size: 8px;
+      color: #666;
+      font-weight: normal;
+      margin-top: 1px;
+    }
     .grand-row .tot-label {
       font-weight: bold;
       border-top: 1.5px solid #222238;
@@ -299,6 +337,7 @@ export function generateQuotePDFHtml(
         <table class="total-table">
           <tbody>
             ${totals}
+            ${tryInfoRows}
           </tbody>
         </table>
       </div>

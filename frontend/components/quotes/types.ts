@@ -1,4 +1,5 @@
 import type { QuoteLine } from "../../api/quotes";
+import type { TryRatesData } from "../../utils/currencyRates";
 
 export interface CurrencyOption {
   code: string;
@@ -71,6 +72,7 @@ export interface QuotePdfData {
   companyTaxNumber: string;
   companyLogo: string | null;
   companyStamp: string | null;
+  tryRates?: TryRatesData | null;
 }
 
 export type QuoteFilter = "all" | "gun" | "ay" | "yil";

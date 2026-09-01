@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider } from "../contexts/AuthContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
+import { CurrencyProvider } from "../contexts/CurrencyContext";
 
 function RootLayoutInner() {
   const { colors, isDark } = useTheme();
@@ -27,9 +28,11 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <AuthProvider>
-          <RootLayoutInner />
-        </AuthProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <RootLayoutInner />
+          </AuthProvider>
+        </CurrencyProvider>
       </LanguageProvider>
     </ThemeProvider>
   );
