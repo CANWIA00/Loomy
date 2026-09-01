@@ -154,7 +154,10 @@ export default function QuoteForm() {
   const hasForeignCurrency = currencyKeys.some((cur) => cur !== "TRY");
   const totalTryAvailable = totalTry > 0 && hasForeignCurrency && !!rates;
 
-  const selectFromList = (m: Customer) => selectCustomer(m);
+  const selectFromList = (m: Customer) => {
+    selectCustomer(m);
+    setCustomerModalOpen(false);
+  };
 
   const openCustomerModal = () => {
     setCustomerSearch("");
