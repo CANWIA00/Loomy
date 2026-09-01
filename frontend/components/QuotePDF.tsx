@@ -82,8 +82,13 @@ export function generateQuotePDFHtml(
   const hasForeignCurrency = Object.keys(currencyGroups).some((cur) => cur !== "TRY");
   const ratesAvailable = !!data.tryRates && hasForeignCurrency;
 
+  const rateLabel = lang === "tr" ? "Efektif Satış Kuru" : "Effective Selling Rate";
+
   const tryInfoRows = ratesAvailable
     ? `
+    <tr class="total-row">
+      <td class="tot-label" colspan="4">${rateLabel} (${data.tryRates!.source} · ${escapeHtml(data.tryRates!.rateDate)})</td>
+    </tr>
     ${Object.keys(currencyGroups)
       .filter((cur) => cur !== "TRY")
       .map(

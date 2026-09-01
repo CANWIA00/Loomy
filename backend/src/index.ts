@@ -14,6 +14,7 @@ import teamRoutes from "./routes/team";
 import appointmentRoutes from "./routes/appointment";
 import devRoutes from "./routes/dev";
 import translateRoutes from "./routes/translate";
+import currencyRatesRoutes from "./routes/currencyRates";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -41,6 +42,7 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/dev", devRoutes);
 app.use("/api", translateRoutes);
+app.use("/api/rates", currencyRatesRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);

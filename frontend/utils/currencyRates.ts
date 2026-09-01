@@ -1,15 +1,43 @@
+import { BASE_URL } from "../api/client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export interface TryRatesData {
   rates: Record<string, number>;
-  source: "TCMB" | "ER-API";
+  source: "TCMB";
   rateDate: string;
   fetchedAt: number;
+}
+
+export interface TryRatesResult {
+  data: TryRatesData | null;
+  stale: boolean;
 }
 
 const SUPPORTED = ["TRY", "USD", "EUR", "GBP"];
 
 const CACHE_TTL = 30 * 60 * 1000;
+const STORAGE_KEY = "tryRatesCache";
 
 let cache: TryRatesData | null = null;
+let persistedCache: TryRatesData | null | undefined = undefined;
+
+async function loadPersistedOnce(): Promise<TryRatesData | null> {
+  if (persistedCache !== undefined) return persistedCache;
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    persistedCache = raw ? (JSON.parse(raw) as TryRatesData) : null;
+  } catch {
+    persistedCache = null;
+  }
+  return persistedCache;
+}
+
+async function persist(rates: TryRatesData): Promise<void> {
+  persistedCache = rates;
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(rates));
+  } catch {}
+}
 
 function parseRate(value: string | undefined): number | null {
   if (!value) return null;
@@ -17,7 +45,41 @@ function parseRate(value: string | undefined): number | null {
   return isNaN(num) ? null : num;
 }
 
-async function fetchFromTcmb(): Promise<TryRatesData | null> {
+function parseTcmbXml(xml: string): TryRatesData | null {
+  const dateMatch = xml.match(/<Tarih_Date[^>]*Tarih="([^"]+)"/);
+  const rateDate = dateMatch?.[1] || new Date().toLocaleDateString("tr-TR");
+  const rates: Record<string, number> = { TRY: 1 };
+  for (const code of SUPPORTED.filter((c) => c !== "TRY")) {
+    const blockMatch = xml.match(new RegExp(`<Currency[^>]*CurrencyCode="${code}"[^>]*>([\\s\\S]*?)<\\/Currency>`));
+    if (!blockMatch) continue;
+    const block = blockMatch[1];
+    const banknoteSelling = block.match(/<BanknoteSelling>\s*([\d.]+)/);
+    const forexSelling = block.match(/<ForexSelling>\s*([\d.]+)/);
+    const rate = parseRate(banknoteSelling?.[1]) ?? parseRate(forexSelling?.[1]);
+    if (rate) rates[code] = rate;
+  }
+  if (!rates.USD && !rates.EUR && !rates.GBP) return null;
+  return { source: "TCMB", rateDate, rates, fetchedAt: Date.now() };
+}
+
+async function fetchFromBackend(): Promise<TryRatesData | null> {
+  try {
+    const res = await fetch(`${BASE_URL}/rates/tcmb`);
+    if (!res.ok) throw new Error("backend rates failed");
+    const data = await res.json();
+    if (!data?.rates?.USD && !data?.rates?.EUR && !data?.rates?.GBP) throw new Error("backend empty rates");
+    return {
+      source: "TCMB",
+      rateDate: data.rateDate || new Date().toLocaleDateString("tr-TR"),
+      rates: data.rates,
+      fetchedAt: Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchFromTcmbDirect(): Promise<TryRatesData | null> {
   try {
     const res = await fetch("https://www.tcmb.gov.tr/kurlar/today.xml", {
       headers: {
@@ -27,55 +89,30 @@ async function fetchFromTcmb(): Promise<TryRatesData | null> {
     });
     if (!res.ok) throw new Error("tcmb fetch failed");
     const xml = await res.text();
-    const dateMatch = xml.match(/<Tarih_Date[^>]*Tarih="([^"]+)"/);
-    const rateDate = dateMatch?.[1] || new Date().toLocaleDateString("tr-TR");
-    const rates: Record<string, number> = { TRY: 1 };
-    for (const code of SUPPORTED.filter((c) => c !== "TRY")) {
-      const blockMatch = xml.match(new RegExp(`<Currency[^>]*CurrencyCode="${code}"[^>]*>([\\s\\S]*?)<\\/Currency>`));
-      if (!blockMatch) continue;
-      const block = blockMatch[1];
-      const banknoteSelling = block.match(/<BanknoteSelling>\s*([\d.]+)/);
-      const forexSelling = block.match(/<ForexSelling>\s*([\d.]+)/);
-      const rate = parseRate(banknoteSelling?.[1]) ?? parseRate(forexSelling?.[1]);
-      if (rate) rates[code] = rate;
-    }
-    if (!rates.USD && !rates.EUR && !rates.GBP) throw new Error("tcmb empty rates");
-    return { rates, source: "TCMB", rateDate, fetchedAt: Date.now() };
+    return parseTcmbXml(xml);
   } catch {
     return null;
   }
 }
 
-async function fetchFromErApi(): Promise<TryRatesData | null> {
-  try {
-    const res = await fetch("https://open.er-api.com/v6/latest/TRY", {
-      headers: { "User-Agent": "Mozilla/5.0 (ManagementDashboard)" },
-    });
-    if (!res.ok) throw new Error("er-api fetch failed");
-    const data = await res.json();
-    if (!data?.rates) throw new Error("er-api empty");
-    const rates: Record<string, number> = { TRY: 1 };
-    for (const code of SUPPORTED.filter((c) => c !== "TRY")) {
-      const r = data.rates[code];
-      if (typeof r === "number" && r > 0) rates[code] = 1 / r;
-    }
-    if (!rates.USD && !rates.EUR && !rates.GBP) throw new Error("er-api empty rates");
-    return {
-      rates,
-      source: "ER-API",
-      rateDate: new Date().toLocaleDateString("tr-TR"),
-      fetchedAt: Date.now(),
-    };
-  } catch {
-    return null;
+export async function getTryRates(force = false): Promise<TryRatesResult> {
+  if (cache && !force && Date.now() - cache.fetchedAt < CACHE_TTL) {
+    return { data: cache, stale: false };
   }
-}
 
-export async function getTryRates(force = false): Promise<TryRatesData | null> {
-  if (cache && !force && Date.now() - cache.fetchedAt < CACHE_TTL) return cache;
-  const tcmb = await fetchFromTcmb();
-  cache = tcmb ?? (await fetchFromErApi());
-  return cache;
+  const fetched = (await fetchFromBackend()) ?? (await fetchFromTcmbDirect());
+  if (fetched) {
+    cache = fetched;
+    await persist(fetched);
+    return { data: fetched, stale: false };
+  }
+
+  const old = cache ?? (await loadPersistedOnce());
+  if (old) {
+    return { data: old, stale: true };
+  }
+
+  return { data: null, stale: false };
 }
 
 export function convertToTry(amount: number, currency: string, rates?: TryRatesData | null): number | null {

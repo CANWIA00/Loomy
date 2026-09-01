@@ -94,7 +94,7 @@ function DateField({
 export default function QuoteForm() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const { convert: convertTry, rates, refresh: refreshRates } = useCurrency();
+  const { convert: convertTry, rates, refresh: refreshRates, loading: loadingRates, stale: ratesStale } = useCurrency();
   const {
     form,
     updateForm,
@@ -463,11 +463,23 @@ export default function QuoteForm() {
             </View>
           ))}
 
+          {!rates && !loadingRates && (
+            <View className="flex-row items-center justify-center mt-2 pt-2 border-t" style={{ borderColor: colors.border }}>
+              <Ionicons name="alert-circle-outline" size={14} color={colors.warning} />
+              <Text className="text-[11px] ml-1" style={{ color: colors.warning }}>{t("qot.ratesUnavailable")}</Text>
+            </View>
+          )}
+
           {rates && (
             <View className="mt-2 pt-2 border-t" style={{ borderColor: colors.border }}>
               <View className="flex-row justify-between py-0.5">
-                <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.exchangeRate")}</Text>
-                <Text className="text-xs" style={{ color: colors.textMuted }}>{rates.source}: {rates.rateDate}</Text>
+                <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.effectiveSellingRate")}</Text>
+                <View className="flex-row items-center">
+                  {ratesStale && <Ionicons name="warning-outline" size={13} color={colors.warning} style={{ marginRight: 4 }} />}
+                  <Text className="text-xs" style={{ color: ratesStale ? colors.warning : colors.textMuted }}>
+                    {rates.source}: {rates.rateDate}{ratesStale ? ` · ${t("qot.savedRate")}` : ""}
+                  </Text>
+                </View>
               </View>
               {currencyKeys.filter((cur) => cur !== "TRY").map((cur) => (
                 <View key={cur} className="flex-row justify-between py-0.5">
@@ -601,11 +613,25 @@ export default function QuoteForm() {
                   <Text className="text-sm font-medium" style={{ color: colors.text }}>{c.code}</Text>
                   <Text className="text-xs" style={{ color: colors.textMuted }}>{c.label}</Text>
                 </View>
+                {c.code !== "TRY" && rates?.rates[c.code] ? (
+                  <Text className="text-xs font-medium mr-2" style={{ color: colors.textSecondary }}>
+                    1 {c.code} = {formatRate(rates.rates[c.code])} ₺
+                  </Text>
+                ) : null}
                 {form.lines[currencyModalIdx ?? 0]?.currency === c.code && (
                   <Ionicons name="checkmark" size={18} color={colors.primary} />
                 )}
               </TouchableOpacity>
             ))}
+            <View className="flex-row items-center justify-between mt-2 pt-2 border-t" style={{ borderColor: colors.border }}>
+              <Text className="text-[11px]" style={{ color: colors.textMuted }}>
+                {t("qot.effectiveSellingRate")}{rates ? ` · ${rates.rateDate}` : ""}
+              </Text>
+              <TouchableOpacity onPress={refreshRates} className="flex-row items-center">
+                <Ionicons name="refresh-outline" size={13} color={colors.primary} />
+                <Text className="text-[11px] font-medium ml-1" style={{ color: colors.primary }}>{t("qot.refreshRates")}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

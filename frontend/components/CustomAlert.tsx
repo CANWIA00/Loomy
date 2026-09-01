@@ -4,7 +4,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 
 type CustomAlertProps = {
   visible: boolean;
-  type: "success" | "error" | "confirm";
+  type: "success" | "error" | "warning" | "confirm";
   title: string;
   message: string;
   onClose: () => void;
@@ -19,10 +19,11 @@ export default function CustomAlert({ visible, type, title, message, onClose, on
   const { colors } = useTheme();
   const { t } = useLanguage();
   const isError = type === "error";
+  const isWarning = type === "warning";
   const isConfirm = type === "confirm";
 
-  const iconBgColor = isError ? colors.danger + "33" : isConfirm ? colors.warning + "33" : colors.success + "33";
-  const titleColor = isError ? colors.danger : isConfirm ? colors.warning : colors.success;
+  const iconBgColor = isError ? colors.danger + "33" : isWarning ? colors.warning + "33" : isConfirm ? colors.warning + "33" : colors.success + "33";
+  const titleColor = isError ? colors.danger : isWarning ? colors.warning : isConfirm ? colors.warning : colors.success;
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -32,7 +33,7 @@ export default function CustomAlert({ visible, type, title, message, onClose, on
             className="w-16 h-16 rounded-full items-center justify-center mb-4"
             style={{ backgroundColor: iconBgColor }}
           >
-            <Text className="text-3xl">{isError ? "🚫" : isConfirm ? "⚠️" : "✅"}</Text>
+            <Text className="text-3xl">{isError ? "🚫" : isWarning || isConfirm ? "⚠️" : "✅"}</Text>
           </View>
 
           <Text style={{ color: titleColor }} className="text-lg font-bold mb-2">
@@ -92,7 +93,7 @@ export default function CustomAlert({ visible, type, title, message, onClose, on
           ) : (
             <TouchableOpacity
               className="w-full h-11 rounded-lg items-center justify-center"
-              style={{ backgroundColor: isError ? colors.danger : colors.primary }}
+              style={{ backgroundColor: isError ? colors.danger : isWarning ? colors.warning : colors.primary }}
               onPress={onClose}
               activeOpacity={0.8}
             >
