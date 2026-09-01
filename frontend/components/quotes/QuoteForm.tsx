@@ -5,7 +5,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../api/customers";
-import { formatMoney, round2, KDV_RATE } from "./types";
+import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol } from "./types";
 
 const formatDateInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 8);
@@ -112,6 +112,7 @@ export default function QuoteForm() {
   } = useQuotes();
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
   const addBtnRef = useRef<View>(null);
 
   const handleAddLine = () => {
@@ -126,9 +127,21 @@ export default function QuoteForm() {
   };
 
   const validLines = form.lines.filter((l) => l.name || l.details);
-  const subTotal = round2(validLines.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0));
-  const kdv = round2(subTotal * KDV_RATE);
-  const grandTotal = round2(subTotal + kdv);
+
+  const currencyGroups: Record<string, { subTotal: number; kdv: number; grandTotal: number }> = {};
+  validLines.forEach((l) => {
+    const cur = l.currency || "TRY";
+    const lineTotal = (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
+    if (!currencyGroups[cur]) currencyGroups[cur] = { subTotal: 0, kdv: 0, grandTotal: 0 };
+    currencyGroups[cur].subTotal += lineTotal;
+  });
+  Object.keys(currencyGroups).forEach((cur) => {
+    currencyGroups[cur].subTotal = round2(currencyGroups[cur].subTotal);
+    currencyGroups[cur].kdv = round2(currencyGroups[cur].subTotal * KDV_RATE);
+    currencyGroups[cur].grandTotal = round2(currencyGroups[cur].subTotal + currencyGroups[cur].kdv);
+  });
+
+  const currencyKeys = Object.keys(currencyGroups);
 
   const selectFromList = (m: Customer) => selectCustomer(m);
 
@@ -356,8 +369,19 @@ export default function QuoteForm() {
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
                     />
                   </View>
+                  <View>
+                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.currency")}</Text>
+                    <TouchableOpacity
+                      className="h-9 border rounded-lg px-2 flex-row items-center justify-center"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, minWidth: 60 }}
+                      onPress={() => setCurrencyModalIdx(idx)}
+                    >
+                      <Text className="text-sm font-medium" style={{ color: colors.text }}>{line.currency || "TRY"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 4 }} />
+                    </TouchableOpacity>
+                  </View>
                   <View className="flex-1 items-end justify-end pb-1.5">
-                    <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(lineTotal)} ₺</Text>
+                    <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(lineTotal)} {getCurrencySymbol(line.currency)}</Text>
                   </View>
                 </View>
               </View>
@@ -376,18 +400,22 @@ export default function QuoteForm() {
         </View>
 
         <View className="rounded-xl p-3 mb-3" style={{ backgroundColor: colors.bg }}>
-          <View className="flex-row justify-between py-0.5">
-            <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.subtotal")}</Text>
-            <Text className="text-xs font-semibold" style={{ color: colors.text }}>{formatMoney(subTotal)} ₺</Text>
-          </View>
-          <View className="flex-row justify-between py-0.5">
-            <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.kdv")} %{Math.round(KDV_RATE * 100)}</Text>
-            <Text className="text-xs font-semibold" style={{ color: colors.text }}>{formatMoney(kdv)} ₺</Text>
-          </View>
-          <View className="flex-row justify-between py-1 mt-1 border-t" style={{ borderColor: colors.border }}>
-            <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("qot.grandTotal")}</Text>
-            <Text className="text-sm font-bold" style={{ color: colors.primary }}>{formatMoney(grandTotal)} ₺</Text>
-          </View>
+          {currencyKeys.map((cur) => (
+            <View key={cur}>
+              <View className="flex-row justify-between py-0.5">
+                <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.subtotal")} ({cur})</Text>
+                <Text className="text-xs font-semibold" style={{ color: colors.text }}>{formatMoney(currencyGroups[cur].subTotal)} {getCurrencySymbol(cur)}</Text>
+              </View>
+              <View className="flex-row justify-between py-0.5">
+                <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("qot.kdv")} %{Math.round(KDV_RATE * 100)}</Text>
+                <Text className="text-xs font-semibold" style={{ color: colors.text }}>{formatMoney(currencyGroups[cur].kdv)} {getCurrencySymbol(cur)}</Text>
+              </View>
+              <View className="flex-row justify-between py-1 mt-1 border-t" style={{ borderColor: colors.border }}>
+                <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("qot.grandTotal")} ({cur})</Text>
+                <Text className="text-sm font-bold" style={{ color: colors.primary }}>{formatMoney(currencyGroups[cur].grandTotal)} {getCurrencySymbol(cur)}</Text>
+              </View>
+            </View>
+          ))}
         </View>
 
         <View className="mb-3">
@@ -471,6 +499,39 @@ export default function QuoteForm() {
             {customerList.length === 0 && (
               <Text className="text-xs mt-2 text-center" style={{ color: colors.textMuted }}>{t("qot.noCustomers")}</Text>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={currencyModalIdx !== null} transparent animationType="fade" onRequestClose={() => setCurrencyModalIdx(null)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-72 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("qot.currency")}</Text>
+              <TouchableOpacity onPress={() => setCurrencyModalIdx(null)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {CURRENCIES.map((c, i, arr) => (
+              <TouchableOpacity
+                key={c.code}
+                className="flex-row items-center px-3 py-3"
+                style={i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  if (currencyModalIdx !== null) updateLine(currencyModalIdx, "currency", c.code);
+                  setCurrencyModalIdx(null);
+                }}
+              >
+                <Text className="text-base mr-2" style={{ color: colors.text }}>{c.symbol}</Text>
+                <View className="flex-1">
+                  <Text className="text-sm font-medium" style={{ color: colors.text }}>{c.code}</Text>
+                  <Text className="text-xs" style={{ color: colors.textMuted }}>{c.label}</Text>
+                </View>
+                {form.lines[currencyModalIdx ?? 0]?.currency === c.code && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       </Modal>

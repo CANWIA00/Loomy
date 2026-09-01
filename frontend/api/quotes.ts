@@ -5,6 +5,7 @@ export interface QuoteLine {
   details?: string;
   quantity: number;
   unitPrice: number;
+  currency: string;
 }
 
 export interface QuoteRecord {

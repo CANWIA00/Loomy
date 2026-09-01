@@ -4,6 +4,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
 import type { QuoteFilter } from "./types";
+import { getCurrencySymbol } from "./types";
+import { round2 } from "./types";
 
 const FILTERS: QuoteFilter[] = ["all", "gun", "ay", "yil"];
 
@@ -97,7 +99,14 @@ export default function QuoteRecordsSection() {
 
         <ScrollView nestedScrollEnabled className="max-h-96" indicatorStyle={colors.indicatorBg as any}>
           {filteredRecords.map((k) => {
-            const sum = (k.lines || []).reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0);
+            const currencyTotals: Record<string, number> = {};
+            (k.lines || []).forEach((l) => {
+              const cur = l.currency || "TRY";
+              currencyTotals[cur] = (currencyTotals[cur] || 0) + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
+            });
+            const totalLabels = Object.keys(currencyTotals)
+              .map((cur) => `${round2(currencyTotals[cur]).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`)
+              .join(" · ");
             return (
               <View
                 key={k.id}
@@ -109,7 +118,7 @@ export default function QuoteRecordsSection() {
                   {k.customer}
                 </Text>
                 <Text className="w-28 text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
-                  {sum.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                  {totalLabels}
                 </Text>
                 <View className="w-32 ml-6 flex-row items-center justify-end gap-2.5">
                   <TouchableOpacity onPress={() => handleShare(k)}>

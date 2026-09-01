@@ -1,5 +1,22 @@
 import type { QuoteLine } from "../../api/quotes";
 
+export interface CurrencyOption {
+  code: string;
+  symbol: string;
+  label: string;
+}
+
+export const CURRENCIES: CurrencyOption[] = [
+  { code: "TRY", symbol: "₺", label: "Türk Lirası" },
+  { code: "USD", symbol: "$", label: "US Dollar" },
+  { code: "EUR", symbol: "€", label: "Euro" },
+  { code: "GBP", symbol: "£", label: "British Pound" },
+];
+
+export function getCurrencySymbol(code: string): string {
+  return CURRENCIES.find((c) => c.code === code)?.symbol || "₺";
+}
+
 export interface QuoteFormData {
   customerName: string;
   contactPerson: string;
@@ -15,7 +32,7 @@ export interface QuoteFormData {
   lines: QuoteLine[];
 }
 
-export const emptyLine = (): QuoteLine => ({ name: "", details: "", quantity: 1, unitPrice: 0 });
+export const emptyLine = (): QuoteLine => ({ name: "", details: "", quantity: 1, unitPrice: 0, currency: "TRY" });
 
 export const initialQuoteForm: QuoteFormData = {
   customerName: "",

@@ -22,7 +22,7 @@ interface QuoteContextValue {
   refreshRecords: () => void;
   form: QuoteFormData;
   updateForm: (key: keyof QuoteFormData, value: string) => void;
-  updateLine: (index: number, key: "name" | "details" | "quantity" | "unitPrice", value: string) => void;
+  updateLine: (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency", value: string) => void;
   addLine: () => void;
   removeLine: (index: number) => void;
   scrollRef: React.RefObject<ScrollView | null>;
@@ -160,7 +160,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const updateForm = (key: keyof QuoteFormData, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const updateLine = (index: number, key: "name" | "details" | "quantity" | "unitPrice", value: string) =>
+  const updateLine = (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency", value: string) =>
     setForm((prev) => {
       const lines = prev.lines.map((l, i) => {
         if (i !== index) return l;
@@ -189,15 +189,16 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       Alert.alert(t("qot.warning"), t("qot.lineRequired"));
       return;
     }
-    const finalForm = {
-      ...form,
-      lines: validLines.map((l) => ({
-        name: l.name,
-        details: l.details,
-        quantity: Number(l.quantity) || 0,
-        unitPrice: Number(l.unitPrice) || 0,
-      })),
-    };
+      const finalForm = {
+        ...form,
+        lines: validLines.map((l) => ({
+          name: l.name,
+          details: l.details,
+          quantity: Number(l.quantity) || 0,
+          unitPrice: Number(l.unitPrice) || 0,
+          currency: l.currency || "TRY",
+        })),
+      };
     setForm(finalForm);
     persist(finalForm);
   };

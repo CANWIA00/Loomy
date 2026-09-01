@@ -22,10 +22,20 @@ import { shareWebPdf, downloadWebPdf } from "../utils/webPdf";
 import { embedImage } from "../utils/pdfAssets";
 import type { PdfData } from "../components/services/types";
 import type { QuotePdfData } from "../components/quotes/types";
+import { getCurrencySymbol, round2 } from "../components/quotes/types";
 
 type DetailPayload =
   | { kind: "service"; record: ServiceRecord }
   | { kind: "quote"; record: QuoteRecord };
+
+const quoteTotalsByCurrency = (q: QuoteRecord): Record<string, number> => {
+  const totals: Record<string, number> = {};
+  (q.lines || []).forEach((l) => {
+    const cur = l.currency || "TRY";
+    totals[cur] = (totals[cur] || 0) + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
+  });
+  return totals;
+};
 
 const quoteTotal = (q: QuoteRecord) =>
   (q.lines || []).reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0);
@@ -135,16 +145,16 @@ function RecordDetailModal({
                       <View key={i} className="flex-row py-2 px-3 border-t" style={{ borderColor: colors.borderAlt }}>
                         <Text className="flex-1 text-xs" style={{ color: colors.text }} numberOfLines={1}>{l.name}</Text>
                         <Text className="w-14 text-xs text-right" style={{ color: colors.textSecondary }}>{l.quantity}</Text>
-                        <Text className="w-20 text-xs text-right" style={{ color: colors.textSecondary }}>{l.unitPrice}</Text>
+                        <Text className="w-20 text-xs text-right" style={{ color: colors.textSecondary }}>{l.unitPrice} {getCurrencySymbol(l.currency)}</Text>
                         <Text className="w-20 text-xs text-right" style={{ color: colors.text }}>
-                          {((Number(l.quantity) || 0) * (Number(l.unitPrice) || 0)).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                          {((Number(l.quantity) || 0) * (Number(l.unitPrice) || 0)).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {getCurrencySymbol(l.currency)}
                         </Text>
                       </View>
                     ))}
                     <View className="flex-row justify-end py-2 px-3 border-t" style={{ borderColor: colors.border }}>
                       <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("cst.quoteTotal")}: </Text>
                       <Text className="text-sm font-bold" style={{ color: colors.primary }}>
-                        {quoteTotal(payload.record).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                        {Object.entries(quoteTotalsByCurrency(payload.record)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
                       </Text>
                     </View>
                   </View>
@@ -772,7 +782,9 @@ export default function CustomerDetailScreen() {
                                 <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{q.customer}</Text>
                                 <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{q.tarih}</Text>
                               </View>
-                              <Text className="text-xs font-semibold mr-1" style={{ color: colors.primary }}>{money(quoteTotal(q))} ₺</Text>
+                              <Text className="text-xs font-semibold mr-1" style={{ color: colors.primary }}>
+                                {Object.entries(quoteTotalsByCurrency(q)).map(([cur, val]) => `${round2(val).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`).join(" · ")}
+                              </Text>
                               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                             </TouchableOpacity>
                             <View className="flex-row items-center gap-3 ml-3">

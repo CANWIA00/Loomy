@@ -1,5 +1,5 @@
 import type { QuotePdfData } from "./quotes/types";
-import { formatMoney, round2, KDV_RATE } from "./quotes/types";
+import { formatMoney, round2, KDV_RATE, getCurrencySymbol } from "./quotes/types";
 
 function escapeHtml(str: string): string {
   if (!str) return "";
@@ -17,13 +17,24 @@ export function generateQuotePDFHtml(
   lang: "tr" | "en" = "tr"
 ): string {
   const lines = (data.lines || []).filter((l) => l && (l.name || l.details) && l.quantity > 0);
-  const subTotal = round2(lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0));
-  const kdv = round2(subTotal * KDV_RATE);
-  const grandTotal = round2(subTotal + kdv);
+
+  const currencyGroups: Record<string, { subTotal: number; kdv: number; grandTotal: number }> = {};
+  lines.forEach((l) => {
+    const cur = l.currency || "TRY";
+    if (!currencyGroups[cur]) currencyGroups[cur] = { subTotal: 0, kdv: 0, grandTotal: 0 };
+    currencyGroups[cur].subTotal += l.quantity * l.unitPrice;
+  });
+  Object.keys(currencyGroups).forEach((cur) => {
+    currencyGroups[cur].subTotal = round2(currencyGroups[cur].subTotal);
+    currencyGroups[cur].kdv = round2(currencyGroups[cur].subTotal * KDV_RATE);
+    currencyGroups[cur].grandTotal = round2(currencyGroups[cur].subTotal + currencyGroups[cur].kdv);
+  });
 
   const rows = lines
     .map((l, i) => {
       const total = round2(l.quantity * l.unitPrice);
+      const cur = l.currency || "TRY";
+      const sym = getCurrencySymbol(cur);
       return `
       <tr>
         <td class="num">${i + 1}</td>
@@ -32,26 +43,30 @@ export function generateQuotePDFHtml(
           ${l.details ? `<div class="prod-details">${escapeHtml(l.details)}</div>` : ""}
         </td>
         <td class="num">${l.quantity}</td>
-        <td class="num">${formatMoney(l.unitPrice)}</td>
-        <td class="num">${formatMoney(total)}</td>
+        <td class="num">${formatMoney(l.unitPrice)} ${sym}</td>
+        <td class="num">${formatMoney(total)} ${sym}</td>
       </tr>`;
     })
     .join("");
 
-  const totals = `
+  const totals = Object.keys(currencyGroups)
+    .map((cur) => {
+      const sym = getCurrencySymbol(cur);
+      return `
     <tr class="total-row">
-      <td class="tot-label" colspan="4">${lang === "tr" ? "Ara Toplam" : "Subtotal"}</td>
-      <td class="num tot-value">${formatMoney(subTotal)}</td>
+      <td class="tot-label" colspan="4">${lang === "tr" ? "Ara Toplam" : "Subtotal"} (${cur})</td>
+      <td class="num tot-value">${formatMoney(currencyGroups[cur].subTotal)} ${sym}</td>
     </tr>
     <tr class="total-row">
       <td class="tot-label" colspan="4">${lang === "tr" ? `KDV (%${Math.round(KDV_RATE * 100)})` : `VAT (${Math.round(KDV_RATE * 100)}%)`}</td>
-      <td class="num tot-value">${formatMoney(kdv)}</td>
+      <td class="num tot-value">${formatMoney(currencyGroups[cur].kdv)} ${sym}</td>
     </tr>
     <tr class="grand-row">
-      <td class="tot-label" colspan="4">${lang === "tr" ? "Genel Toplam" : "Grand Total"}</td>
-      <td class="num grand-value">${formatMoney(grandTotal)}</td>
-    </tr>
-  `;
+      <td class="tot-label" colspan="4">${lang === "tr" ? "Genel Toplam" : "Grand Total"} (${cur})</td>
+      <td class="num grand-value">${formatMoney(currencyGroups[cur].grandTotal)} ${sym}</td>
+    </tr>`;
+    })
+    .join(`<tr><td colspan="5" style="height:6px"></td></tr>`);
 
   return `
 <!DOCTYPE html>
