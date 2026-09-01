@@ -3,6 +3,7 @@ import { useLanguage } from "./i18n";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Features from "./components/Features";
+import Showcase from "./components/Showcase";
 import HowItWorks from "./components/HowItWorks";
 import Pricing from "./components/Pricing";
 import Faq from "./components/Faq";
@@ -25,6 +26,7 @@ export default function App() {
       <main>
         <Hero />
         <Features />
+        <Showcase />
         <HowItWorks />
         <Pricing />
         <Faq />
