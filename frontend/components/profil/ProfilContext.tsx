@@ -33,6 +33,8 @@ interface ProfilContextValue {
   setEditCompanyAddress: (v: string) => void;
   editCompanyPhone: string;
   setEditCompanyPhone: (v: string) => void;
+  editCompanyGsm: string;
+  setEditCompanyGsm: (v: string) => void;
   editCompanyEmail: string;
   setEditCompanyEmail: (v: string) => void;
   editCompanyFax: string;
@@ -89,6 +91,7 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
   const [editCompanyName, setEditCompanyName] = useState("");
   const [editCompanyAddress, setEditCompanyAddress] = useState("");
   const [editCompanyPhone, setEditCompanyPhone] = useState("");
+  const [editCompanyGsm, setEditCompanyGsm] = useState("");
   const [editCompanyEmail, setEditCompanyEmail] = useState("");
   const [editCompanyFax, setEditCompanyFax] = useState("");
   const [editCompanyWebsite, setEditCompanyWebsite] = useState("");
@@ -216,6 +219,7 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyName(company?.name || "");
     setEditCompanyAddress(company?.address || "");
     setEditCompanyPhone(company?.phone || "");
+    setEditCompanyGsm(company?.gsm || "");
     setEditCompanyEmail(company?.email || "");
     setEditCompanyFax(company?.fax || "");
     setEditCompanyWebsite(company?.website || "");
@@ -232,6 +236,7 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyName("");
     setEditCompanyAddress("");
     setEditCompanyPhone("");
+    setEditCompanyGsm("");
     setEditCompanyEmail("");
     setEditCompanyFax("");
     setEditCompanyWebsite("");
@@ -254,6 +259,7 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
         name: editCompanyName.trim(),
         address: editCompanyAddress.trim(),
         phone: editCompanyPhone.trim(),
+        gsm: editCompanyGsm.trim(),
         email: editCompanyEmail.trim(),
         fax: editCompanyFax.trim(),
         website: editCompanyWebsite.trim(),
@@ -296,6 +302,8 @@ export function ProfilProvider({ children }: { children: ReactNode }) {
     setEditCompanyAddress,
     editCompanyPhone,
     setEditCompanyPhone,
+    editCompanyGsm,
+    setEditCompanyGsm,
     editCompanyEmail,
     setEditCompanyEmail,
     editCompanyFax,

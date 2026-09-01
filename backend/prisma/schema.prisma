@@ -39,6 +39,7 @@ model Company {
   name             String
   address          String?
   phone            String?
+  gsm              String?
   email            String?
   fax              String?
   website          String?

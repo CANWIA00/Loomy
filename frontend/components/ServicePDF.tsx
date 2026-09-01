@@ -19,6 +19,12 @@ function checkbox(checked: boolean, label: string): string {
   `;
 }
 
+function renderCompanyContact(data: any): string {
+  const tel = escapeHtml(data.companyPhone || "0232 365 20 87");
+  const gsm = escapeHtml(data.companyGsm || "0 533 368 03 13");
+  return `<div class="footer-text">Tel: ${tel} &nbsp;&nbsp; Gsm: ${gsm}</div>`;
+}
+
 function renderSignatureSvg(signature: any): string {
   if (!signature || !Array.isArray(signature)) return '';
   const strokes = signature.filter((p: any) => Array.isArray(p) && p.length > 0);
@@ -413,9 +419,9 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
   </div>
 
   <div class="footer">
-    <div class="footer-text">${t("pdf.companyNameLabel")}</div>
-    <div class="footer-text">${t("pdf.companyAddressLabel")}</div>
-    <div class="footer-text">Tel: 0232 365 20 87 &nbsp;&nbsp; Gsm: 0 533 368 03 13</div>
+    <div class="footer-text">${escapeHtml(data.companyName || t("pdf.companyNameLabel"))}</div>
+    <div class="footer-text">${escapeHtml(data.companyAddress || t("pdf.companyAddressLabel"))}</div>
+    ${renderCompanyContact(data)}
   </div>
 
   <div class="privacy-note">

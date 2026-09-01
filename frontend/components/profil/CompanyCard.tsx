@@ -24,6 +24,8 @@ export default function CompanyCard() {
     setEditCompanyAddress,
     editCompanyPhone,
     setEditCompanyPhone,
+    editCompanyGsm,
+    setEditCompanyGsm,
     editCompanyEmail,
     setEditCompanyEmail,
     editCompanyFax,
@@ -178,6 +180,22 @@ export default function CompanyCard() {
             />
           ) : (
             <Text style={{ color: colors.text, fontSize: 14 }}>{company.phone}</Text>
+          )}
+        </View>
+        <View>
+          <Text style={labelStyle}>{t("prf.companyGsm")}</Text>
+          {editingCompany ? (
+            <TextInput
+              style={inputStyle}
+              value={editCompanyGsm}
+              onChangeText={setEditCompanyGsm}
+              editable={!saving}
+              keyboardType="phone-pad"
+              placeholder={t("prf.companyGsm")}
+              placeholderTextColor={colors.textMuted}
+            />
+          ) : (
+            <Text style={{ color: colors.text, fontSize: 14 }}>{company.gsm || "-"}</Text>
           )}
         </View>
         <View>

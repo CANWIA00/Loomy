@@ -132,6 +132,12 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
+  const companyInfoRef = useRef<{ name: string; address: string; phone: string; gsm: string }>({
+    name: "",
+    address: "",
+    phone: "",
+    gsm: "",
+  });
   const [templates, setTemplates] = useState<ServiceTemplate[]>([]);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
 
@@ -175,6 +181,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       const sig = res.data.user?.signature;
       const logo = res.data.company?.logoUrl || null;
       const stamp = res.data.company?.stampUrl || null;
+      const company = res.data.company;
       setHasSignature(!!sig);
       if (name) {
         currentUserName.current = name;
@@ -196,6 +203,14 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       if (stamp) {
         companyStampRef.current = stamp;
       }
+      if (company) {
+        companyInfoRef.current = {
+          name: company.name || "",
+          address: company.address || "",
+          phone: company.phone || "",
+          gsm: company.gsm || "",
+        };
+      }
     }).catch(() => {});
   }, [fetchRecords, fetchCustomers]);
 
@@ -216,12 +231,21 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         }
         const logo = res.data.company?.logoUrl || null;
         const stamp = res.data.company?.stampUrl || null;
+        const company = res.data.company;
         if (logo) {
           companyLogoRef.current = logo;
           setCompanyLogo(logo);
         }
         if (stamp) {
           companyStampRef.current = stamp;
+        }
+        if (company) {
+          companyInfoRef.current = {
+            name: company.name || "",
+            address: company.address || "",
+            phone: company.phone || "",
+            gsm: company.gsm || "",
+          };
         }
       }).catch(() => {});
     }, [fetchRecords, fetchTemplates])
@@ -471,6 +495,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
     companyLogo: companyLogoRef.current,
     companyStamp: companyStampRef.current,
+    companyName: companyInfoRef.current.name,
+    companyAddress: companyInfoRef.current.address,
+    companyPhone: companyInfoRef.current.phone,
+    companyGsm: companyInfoRef.current.gsm,
     templateName: record.templateName || null,
     templateConfig: record.templateConfig || null,
   });

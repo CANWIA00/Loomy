@@ -6,6 +6,7 @@ export interface CompanyDto {
   name: string;
   address: string;
   phone: string;
+  gsm?: string;
   email: string;
   fax: string;
   website: string;
@@ -30,6 +31,7 @@ export interface UpdateCompanyRequest {
   name: string;
   address: string;
   phone: string;
+  gsm?: string;
   email: string;
   fax: string;
   website: string;

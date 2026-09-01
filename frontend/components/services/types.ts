@@ -77,6 +77,10 @@ export interface PdfData {
   technicianSignature: any;
   companyLogo: string | null;
   companyStamp: string | null;
+  companyName?: string;
+  companyAddress?: string;
+  companyPhone?: string;
+  companyGsm?: string;
   templateName?: string | null;
   templateConfig?: any;
 }
