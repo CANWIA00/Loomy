@@ -3,156 +3,277 @@ import { useLanguage } from "../i18n";
 
 type ScreenKey = "panel" | "quotes" | "services" | "customers";
 
-function TabIcon({ name, size = 15 }: { name: string; size?: number }) {
+const labelColors: Record<string, string> = {
+  primary: "amt-primary",
+  warning: "amt-warn",
+  success: "amt-success",
+};
+
+function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?: number; color?: string }) {
   const p = {
     fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.7,
+    stroke: color,
+    strokeWidth: 1.8,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
   };
+  const s = { width: size, height: size, flexShrink: 0 as const };
   switch (name) {
     case "home":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <path d="M3.5 10.5 12 3.5l8.5 7" />
-          <path d="M6 9.5V20h12V9.5" />
-        </svg>
-      );
-    case "wrench":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <path d="M14.5 6.5a4 4 0 0 1 5.5-3.7L17 5.8l1.2 1.2 3-3A4 4 0 1 1 14.5 12l-8 8a2.2 2.2 0 0 1-3.1-3.1l8-8" />
-        </svg>
-      );
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M3.5 10.5 12 3.5l8.5 7" /><path d="M6 9.5V20h12V9.5" /></svg>;
+    case "construct":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M14.5 6.5a4 4 0 0 1 5.5-3.7L17 5.8l1.2 1.2 3-3A4 4 0 1 1 14.5 12l-8 8a2.2 2.2 0 0 1-3.1-3.1l8-8" /></svg>;
     case "doc":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <path d="M6 3.5h8.5L18.5 7V20H6z" />
-          <path d="M14.5 3.5V7h4" />
-        </svg>
-      );
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M7 3.5h6.5L18.5 8.5V20H7V3.5z" /><path d="M13.5 3.5v5h5" /></svg>;
     case "people":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <circle cx="9" cy="8.5" r="3" />
-          <path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5s5.5 1.7 5.5 4.5" />
-          <path d="M15.5 5.8a3 3 0 0 1 0 5.4" />
-        </svg>
-      );
-    case "cog":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" />
-        </svg>
-      );
-    case "search":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <circle cx="11" cy="11" r="6.5" />
-          <path d="m20 20-4.8-4.8" />
-        </svg>
-      );
-    case "clock":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <circle cx="12" cy="12" r="8.5" />
-          <path d="M12 7v5l3.5 2" />
-        </svg>
-      );
-    case "check":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <path d="m5 12.5 4.5 4.5L19 7" />
-        </svg>
-      );
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5s5.5 1.7 5.5 4.5" /><path d="M15.5 5.8a3 3 0 0 1 0 5.4" /></svg>;
     case "calendar":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" {...p}>
-          <rect x="3.5" y="5" width="17" height="16" rx="3" />
-          <path d="M3.5 10h17M8 3v4M16 3v4" />
-        </svg>
-      );
+      return <svg viewBox="0 0 24 24" {...p} style={s}><rect x="3.5" y="5" width="17" height="16" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>;
+    case "card":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><rect x="3" y="5.5" width="18" height="13" rx="3" /><path d="M3 9.5h18" /></svg>;
+    case "settings":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="3" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" /></svg>;
+    case "chatbubbles":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M8 10.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3.5L9.5 17v-1.5H8a2 2 0 0 1-2-2v-3z" /><circle cx="14.5" cy="11" r="0.6" fill="currentColor" /></svg>;
+    case "person-add":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="9" cy="8" r="3" /><path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5" /><path d="M14.5 10.5v5M17 13h-5" /></svg>;
+    case "sunny":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19" /></svg>;
+    case "moon":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4 6.5 6.5 0 0 0 20 13.5Z" /></svg>;
+    case "person-circle":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="9" /><path d="M12 11a2.7 2.7 0 1 0 0-5.4A2.7 2.7 0 0 0 12 11ZM6 19.5c1-2.8 4.5-4 6-4s5 1.2 6 4" /></svg>;
+    case "back":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M15 5l-7 7 7 7" /></svg>;
+    case "refresh":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M20 12a8 8 0 1 1-2.5-5.8" /><path d="M20 4v4h-4" /></svg>;
+    case "search":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.8-4.8" /></svg>;
+    case "check-circle":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12.5 2.5 2.5 5-5.5" /></svg>;
+    case "clock":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3 2" /></svg>;
+    case "chevron-down":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m6 9 6 6 6-6" /></svg>;
+    case "chevron-fwd":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m9 6 6 6-6 6" /></svg>;
+    case "arrow-fwd":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M4 12h15m0 0-5.5-5.5M19 12l-5.5 5.5" /></svg>;
+    case "share":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 3v11" /><circle cx="12" cy="3" r="1.8" /><circle cx="6" cy="15.5" r="1.8" /><circle cx="18" cy="15.5" r="1.8" /><path d="m6.8 14.5 4.4-7M17.2 14.5l-4.4-7" /></svg>;
+    case "trash":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M4 7h16M9 7V5h6v2M6.5 7l1 13h9l1-13M10 11v5M14 11v5" /></svg>;
+    case "eye":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="2.5" /></svg>;
+    case "pencil":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M4 20l4.5-1 11-11-3.5-3.5-11 11L4 20Z" /><path d="m14 5.5 3.5 3.5" /></svg>;
+    case "download":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14" /></svg>;
+    case "plus":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 5v14M5 12h14" /></svg>;
     default:
       return null;
   }
 }
 
-const tabBarIcons = ["home", "wrench", "doc", "people", "cog"];
+const tabBarIcons = ["home", "construct", "doc", "people", "calendar", "card", "settings"];
 
 export default function Showcase() {
   const { t } = useLanguage();
   const [screen, setScreen] = useState<ScreenKey>("panel");
   const sc = t.showcase;
   const statusLabels = sc.statuses as Record<string, string>;
-
   const statusLabel = (state: string) => statusLabels[state] ?? state;
-  const initials = (name: string) =>
-    name
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
 
   const activeTab = screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : 3;
+
+  const PayBars = () => {
+    const p = sc.panel;
+    return (
+      <>
+        {p.payLabels.map((label, i) => (
+          <div className="an-bar-wrap" key={label}>
+            <div className="an-bar-top">
+              <span>{label}</span>
+              <strong className={labelColors[p.payColors[i] ?? "primary"]}>{p.payAmounts[i]}</strong>
+            </div>
+            <div className="an-bar">
+              <i className={p.payColors[i] ?? "primary"} style={{ width: `${p.payPcts[i]}%` }} />
+            </div>
+          </div>
+        ))}
+      </>
+    );
+  };
 
   const renderBody = () => {
     if (screen === "panel") {
       const p = sc.panel;
       return (
         <>
-          <div className="sc-head">
-            <div>
-              <h3 className="sc-greet">{p.greeting}</h3>
-              <p className="sc-sub">{p.subtitle}</p>
+          <div className="an-top">
+            <h3 className="an-title">{p.greeting}</h3>
+            <div className="an-chips">
+              <span className="an-chip">{sc.langBtn}</span>
+              <span className="an-chip" style={{ padding: 0 }}>
+                <Icon name="sunny" size={20} color="#6080FF" />
+              </span>
+              <span style={{ display: "flex" }}>
+                <Icon name="person-circle" size={26} color="#6080FF" />
+              </span>
             </div>
-            <div className="sc-avatar">OY</div>
           </div>
-          <div className="sc-cards">
-            {p.cards.map((card, i) => (
-              <div className="sc-card" key={card}>
-                <strong>{p.values[i]}</strong>
-                <span>{card}</span>
+          <p className="an-sub">{p.subtitle}</p>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-primary">
+                <Icon name="chatbubbles" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{p.servicesTitle}</strong>
+                <span>{p.servicesDesc}</span>
+              </div>
+              <div className="an-btn-row">
+                <span className="an-btn">
+                  <Icon name="person-add" size={14} color="#fff" />
+                  {p.newService}
+                </span>
+                <span className="an-btn">{p.manage}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-primary">
+                <Icon name="doc" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{p.quotesTitle}</strong>
+                <span>{p.quotesDesc}</span>
+              </div>
+              <div className="an-btn-row">
+                <span className="an-btn">
+                  <Icon name="plus" size={14} color="#fff" />
+                  {p.newQuote}
+                </span>
+                <span className="an-btn">{p.manage}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-teal">
+                <Icon name="people" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{p.customersTitle}</strong>
+                <span>{p.customersDesc}</span>
+              </div>
+              <span className="an-btn-round">
+                <Icon name="person-add" size={18} color="#fff" />
+              </span>
+            </div>
+            {p.customers.map((name, i) => (
+              <div className="an-listrow" key={name}>
+                <span className="an-avatar">{name.charAt(0)}</span>
+                <div className="an-rowmain">
+                  <strong>{name}</strong>
+                  <span>{p.customersInfo[i]}</span>
+                </div>
+                <Icon name="chevron-fwd" size={16} color="#303048" />
               </div>
             ))}
           </div>
-          <p className="sc-label">{p.payment}</p>
-          <div className="sc-panel">
-            <div className="sc-pay-row">
-              <span className="sc-dot ok" />
-              {p.received}
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-purple">
+                <Icon name="calendar" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{p.planTitle}</strong>
+              </div>
+              <Icon name="arrow-fwd" size={20} color="#8060FF" />
             </div>
-            <div className="sc-pay-row">
-              <span className="sc-dot warn" />
-              {p.pendingAmount}
+            <div className="an-plan-filters">
+              {p.planFilters.map((f, i) => (
+                <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`} style={{ height: 26, padding: "0 10px" }}>
+                  {f}
+                </span>
+              ))}
+              <span className="an-plan-count">{p.planCount}</span>
             </div>
-            <div className="sc-bar">
-              <i style={{ width: "70%" }} />
-            </div>
-          </div>
-          <div className="sc-today">
-            <TabIcon name="calendar" />
-            {p.today}
-          </div>
-          <p className="sc-label">{p.recent}</p>
-          <div className="sc-list">
-            {p.rows.map((name, i) => {
-              const state = p.states[i];
-              return (
-                <div className="sc-row" key={name}>
-                  <div className={`sc-row-ic ${state === "paid" ? "ic-ok" : "ic-warn"}`}>
-                    <TabIcon name={state === "paid" ? "check" : "clock"} size={14} />
-                  </div>
-                  <div className="sc-row-main">
-                    <strong>{name}</strong>
-                    <span>{p.info[i]}</span>
-                  </div>
-                  <span className={`sc-pill ${state}`}>{statusLabel(state)}</span>
+            <p className="an-plan-date">{p.planDate}</p>
+            {p.planTimes.map((time, i) => (
+              <div className="an-cal" key={time}>
+                <div className="an-cal-top">
+                  <span className="an-cal-time">{time}</span>
+                  <span className="an-cal-cust">{p.planCustomers[i]}</span>
                 </div>
-              );
-            })}
+                <div className="an-cal-bottom">
+                  <span className="an-cal-team">{p.planTeams[i]}</span>
+                  <span className="an-cal-type">{p.planTypes[i]}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-warn">
+                <Icon name="card" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{p.paymentsTitle}</strong>
+              </div>
+            </div>
+            <PayBars />
+            {p.totalsLabels.map((label, i) => (
+              <div className={`an-total-row${i === p.totalsLabels.length - 1 ? " pb" : ""}`} key={label}>
+                <span>{label}</span>
+                <strong className={labelColors[p.payColors[i] ?? "primary"]}>{p.totalsAmounts[i]}</strong>
+              </div>
+            ))}
+          </div>
+
+          <div className="an-card">
+            <p className="an-recent-title">{p.recentTitle}</p>
+            <div className="an-recent">
+              {p.recentCustomers.map((name, i) => {
+                const state = p.recentStates[i];
+                return (
+                  <div className="an-recent-row" key={name}>
+                    <div className="an-rowmain" style={{ marginLeft: 0 }}>
+                      <strong>{name}</strong>
+                      <span>{p.recentInfo[i]}</span>
+                    </div>
+                    <span className={`an-pill ${state}`}>
+                      <Icon name={state === "paid" ? "check-circle" : "clock"} size={12} />
+                      {statusLabel(state)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-danger">
+                <Icon name="settings" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{p.settingsTitle}</strong>
+                <span>{p.settingsDesc}</span>
+              </div>
+              <div className="an-btn-row">
+                <span className="an-btn">{p.editProfile}</span>
+                <span className="an-btn">{p.settingsBtn}</span>
+              </div>
+            </div>
           </div>
         </>
       );
@@ -162,37 +283,76 @@ export default function Showcase() {
       const q = sc.quotes;
       return (
         <>
-          <div className="sc-head">
-            <h3 className="sc-title">{q.label}</h3>
-            <div className="sc-add">+</div>
+          <div className="an-top">
+            <div className="an-head">
+              <span style={{ display: "flex" }}>
+                <Icon name="back" size={22} color="#6080FF" />
+              </span>
+              <h3 className="an-title">{q.title}</h3>
+            </div>
+            <div className="an-chips">
+              <span className="an-chip">{sc.langBtn}</span>
+              <span className="an-chip" style={{ padding: 0 }}>
+                <Icon name="sunny" size={20} color="#6080FF" />
+              </span>
+              <span style={{ display: "flex" }}>
+                <Icon name="home" size={22} color="#6080FF" />
+              </span>
+            </div>
           </div>
-          <div className="sc-search">
-            <TabIcon name="search" size={13} />
-            <span>{q.search}</span>
+          <p className="an-sub">{q.subtitle}</p>
+
+          <div className="an-head" style={{ margin: "12px 0 10px" }}>
+            <span className="an-ib-primary" style={{ width: 24, height: 24, borderRadius: 8 }}>
+              <Icon name="chevron-down" size={16} />
+            </span>
+            <strong style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{q.newQuote}</strong>
           </div>
-          <span className="sc-chip">
-            <TabIcon name="clock" size={12} />
-            {q.currency}
-          </span>
-          <div className="sc-list">
-            {q.rows.map((name, i) => {
-              const state = q.states[i];
-              return (
-                <div className="sc-row" key={name}>
-                  <div className={`sc-row-ic ${state === "approved" ? "ic-ok" : "ic-warn"}`}>
-                    <TabIcon name={state === "approved" ? "check" : "clock"} size={14} />
-                  </div>
-                  <div className="sc-row-main">
-                    <strong>{name}</strong>
-                    <span>{q.info[i]}</span>
-                  </div>
-                  <div className="sc-row-right">
-                    <strong>{q.amounts[i]}</strong>
-                    <span className={`sc-pill ${state}`}>{statusLabel(state)}</span>
-                  </div>
-                </div>
-              );
-            })}
+
+          <div className="an-cut-head">
+            <span className="an-cut-title">{q.allLabel}</span>
+            <div className="an-chips" style={{ gap: 8 }}>
+              <span className="an-refresh">
+                <Icon name="refresh" size={15} />
+              </span>
+              <span className="an-cut-count">{q.count}</span>
+            </div>
+          </div>
+
+          <div className="an-filters">
+            {q.filters.map((f, i) => (
+              <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`}>
+                {f}
+              </span>
+            ))}
+          </div>
+
+          <div className="an-table">
+            <div className="an-tr an-th">
+              <span className="an-c-date">{q.cols[0]}</span>
+              <span className="an-c-main">{q.cols[1]}</span>
+              <span className="an-c-right">{q.cols[2]}</span>
+              <span className="an-c-main" style={{ width: 96, flex: "0 0 96px", textAlign: "right" }}>
+                <Icon name="trash" size={14} color="#303048" />
+              </span>
+            </div>
+            {q.rows.map((date, i) => (
+              <div className="an-tr" key={date}>
+                <span className="an-c-date">{date}</span>
+                <span className="an-c-main">{q.customers[i]}</span>
+                <span className="an-c-right">
+                  <strong>{q.totals[i]}</strong>
+                  <span>{q.tryTotals[i]}</span>
+                </span>
+                <span className="an-actions" style={{ width: 96, flex: "0 0 96px", justifyContent: "flex-end" }}>
+                  <Icon name="share" size={17} color="#8060FF" />
+                  <Icon name="trash" size={17} color="#EF4444" />
+                  <Icon name="eye" size={17} color="#6080FF" />
+                  <Icon name="pencil" size={17} color="#10B981" />
+                  <Icon name="download" size={17} color="#F59E0B" />
+                </span>
+              </div>
+            ))}
           </div>
         </>
       );
@@ -202,30 +362,81 @@ export default function Showcase() {
       const s = sc.services;
       return (
         <>
-          <div className="sc-head">
-            <h3 className="sc-title">{s.label}</h3>
-            <div className="sc-add">+</div>
+          <div className="an-top">
+            <div className="an-head">
+              <span style={{ display: "flex" }}>
+                <Icon name="back" size={22} color="#6080FF" />
+              </span>
+              <h3 className="an-title">{s.title}</h3>
+            </div>
+            <div className="an-chips">
+              <span className="an-chip">{sc.langBtn}</span>
+              <span className="an-chip" style={{ padding: 0 }}>
+                <Icon name="moon" size={20} color="#6080FF" />
+              </span>
+              <span style={{ display: "flex" }}>
+                <Icon name="home" size={22} color="#6080FF" />
+              </span>
+            </div>
           </div>
-          <div className="sc-search">
-            <TabIcon name="search" size={13} />
-            <span>{s.search}</span>
+          <p className="an-sub">{s.subtitle}</p>
+
+          <div className="an-head" style={{ margin: "12px 0 10px" }}>
+            <span className="an-ib-primary" style={{ width: 24, height: 24, borderRadius: 8 }}>
+              <Icon name="chevron-down" size={16} />
+            </span>
+            <strong style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{s.newRecord}</strong>
           </div>
-          <div className="sc-list">
-            {s.rows.map((name, i) => {
-              const state = s.states[i];
-              return (
-                <div className="sc-row" key={name}>
-                  <div className={`sc-row-ic ${state === "paid" ? "ic-ok" : "ic-warn"}`}>
-                    <TabIcon name={state === "paid" ? "check" : "clock"} size={14} />
-                  </div>
-                  <div className="sc-row-main">
-                    <strong>{name}</strong>
-                    <span>{s.info[i]}</span>
-                  </div>
-                  <span className={`sc-pill ${state}`}>{statusLabel(state)}</span>
-                </div>
-              );
-            })}
+
+          <div className="an-cut-head">
+            <span className="an-cut-title">{s.allLabel}</span>
+            <div className="an-chips" style={{ gap: 8 }}>
+              <span className="an-refresh">
+                <Icon name="refresh" size={15} />
+              </span>
+              <span className="an-cut-count">{s.count}</span>
+            </div>
+          </div>
+
+          <div className="an-filters">
+            {s.filters.map((f, i) => (
+              <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`}>
+                {f}
+              </span>
+            ))}
+            <span className="an-fpill">
+              <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{s.filters[0]}</strong>
+              <Icon name="chevron-down" size={13} color="#6B7280" />
+            </span>
+            <span className="an-fpill" style={{ minWidth: 70 }} />
+          </div>
+
+          <div className="an-table">
+            <div className="an-tr an-th">
+              {s.cols.map((c) => (
+                <span className={c === s.cols[0] ? "an-c-date" : c === s.cols[s.cols.length - 1] ? "an-c-tpl" : "an-c-main"} key={c}>
+                  {c}
+                </span>
+              ))}
+            </div>
+            {s.rows.map((row, i) => (
+              <div className="an-tr" key={i}>
+                <span className="an-c-date">{row[0]}</span>
+                <span className="an-c-main">{row[1]}</span>
+                <span className="an-c-main">{row[2]}</span>
+                <span className="an-c-main">{row[3]}</span>
+                <span className="an-c-tpl">
+                  <span className={row[4] === s.rows[2]?.[4] ? "an-tpl none" : "an-tpl"}>{row[4]}</span>
+                </span>
+                <span className="an-actions" style={{ width: 96, flex: "0 0 96px", justifyContent: "flex-end" }}>
+                  <Icon name="share" size={17} color="#8060FF" />
+                  <Icon name="trash" size={17} color="#EF4444" />
+                  <Icon name="eye" size={17} color="#6080FF" />
+                  <Icon name="pencil" size={17} color="#10B981" />
+                  <Icon name="download" size={17} color="#F59E0B" />
+                </span>
+              </div>
+            ))}
           </div>
         </>
       );
@@ -234,25 +445,61 @@ export default function Showcase() {
     const c = sc.customers;
     return (
       <>
-        <div className="sc-head">
-          <h3 className="sc-title">{c.label}</h3>
-          <div className="sc-add">+</div>
+        <div className="an-top">
+          <div className="an-head">
+            <span style={{ display: "flex" }}>
+              <Icon name="back" size={22} color="#6080FF" />
+            </span>
+            <h3 className="an-title">{c.title}</h3>
+          </div>
+          <div className="an-chips">
+            <span className="an-chip">{sc.langBtn}</span>
+            <span className="an-chip" style={{ padding: 0 }}>
+              <Icon name="sunny" size={20} color="#6080FF" />
+            </span>
+            <span style={{ display: "flex" }}>
+              <Icon name="home" size={22} color="#6080FF" />
+            </span>
+          </div>
         </div>
-        <div className="sc-search">
-          <TabIcon name="search" size={13} />
-          <span>{c.search}</span>
+        <p className="an-sub">{c.subtitle}</p>
+
+        <div className="an-cut-head">
+          <span className="an-cut-title">{c.allLabel}</span>
+          <span className="an-cut-count">{c.count}</span>
         </div>
-        <div className="sc-list">
-          {c.rows.map((name, i) => (
-            <div className="sc-row" key={name}>
-              <div className="sc-avatar-sm">{initials(name)}</div>
-              <div className="sc-row-main">
-                <strong>{name}</strong>
-                <span>{c.info[i]}</span>
-              </div>
-              <span className="sc-tag">{c.tags[i]}</span>
+
+        <div className="an-search">
+          <Icon name="search" size={16} color="#6B7280" />
+          {c.search}
+        </div>
+
+        {c.rows.map((row, i) => (
+          <div className="an-card" key={i} style={{ display: "flex", alignItems: "center" }}>
+            <span className="an-avatar an-avatar-lg">{row[0].charAt(0)}</span>
+            <div className="an-rowmain no-sub">
+              <strong>{row[0]}</strong>
+              <span>{row[1]}</span>
+              <span>{row[2]}</span>
             </div>
-          ))}
+            <div className="an-btn-row" style={{ marginLeft: 8 }}>
+              <span className="an-ib-primary" style={{ width: 36, height: 36, borderRadius: 12 }}>
+                <Icon name="pencil" size={18} />
+              </span>
+              <span className="an-ib-danger" style={{ width: 36, height: 36, borderRadius: 12 }}>
+                <Icon name="trash" size={18} />
+              </span>
+              <span style={{ display: "flex", alignItems: "center" }}>
+                <Icon name="chevron-fwd" size={20} color="#9CA3AF" />
+              </span>
+            </div>
+          </div>
+        ))}
+
+        <div className="an-pag">
+          <span className="an-pag-btn muted">{c.previous}</span>
+          <span className="an-pag-txt">{c.page}</span>
+          <span className="an-pag-btn">{c.next}</span>
         </div>
       </>
     );
@@ -285,10 +532,10 @@ export default function Showcase() {
                 </div>
               </div>
               <div className="phone-body">{renderBody()}</div>
-              <div className="phone-tabs">
+              <div className="an-tabbar">
                 {sc.tabs.map((label, i) => (
-                  <div className={`phone-tab ${i === activeTab ? "active" : ""}`} key={label}>
-                    <TabIcon name={tabBarIcons[i]} size={15} />
+                  <div className={`an-tab ${i === activeTab ? "active" : ""}`} key={label}>
+                    <Icon name={tabBarIcons[i]} size={i === activeTab ? 22 : 20} color={i === activeTab ? "#6080FF" : "#6B7280"} />
                     <span>{label}</span>
                   </div>
                 ))}
