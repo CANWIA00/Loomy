@@ -244,6 +244,8 @@ const tr = {
       customers: ["Ayşe Yılmaz", "Mehmet Kaya", "Zeynep Demir"],
       totals: ["18.000,00 ₺", "12.000,00 USD", "4.500,00 ₺"],
       tryTotals: ["≈ ₺18.000", "≈ ₺420.000", "≈ ₺4.500"],
+      filterDate: "Tarih...",
+      filterCustomer: "Müşteri ara...",
     },
     services: {
       label: "Servisler",
@@ -259,6 +261,10 @@ const tr = {
         ["11.09.2026", "Mehmet Kaya · 11.09.2026", "Mehmet Kaya", "Kombi Montaj", "Montaj"],
         ["10.09.2026", "Zeynep Demir · 10.09.2026", "Zeynep Demir", "Arıza Onarım", "Şablon yok"],
       ],
+      filterDate: "Tarih...",
+      filterDoc: "Belge adı...",
+      filterCustomer: "Müşteri ara...",
+      allTemplates: "Şablonlar",
     },
     customers: {
       label: "Müşteriler",
@@ -521,6 +527,8 @@ const en: Dictionary = {
       customers: ["Ayşe Yılmaz", "Mehmet Kaya", "Zeynep Demir"],
       totals: ["18,000.00 ₺", "12,000.00 USD", "4,500.00 ₺"],
       tryTotals: ["≈ ₺18,000", "≈ ₺420,000", "≈ ₺4,500"],
+      filterDate: "Date...",
+      filterCustomer: "Search customer...",
     },
     services: {
       label: "Services",
@@ -536,6 +544,10 @@ const en: Dictionary = {
         ["11.09.2026", "Mehmet Kaya · 11.09.2026", "Mehmet Kaya", "Boiler Installation", "Installation"],
         ["10.09.2026", "Zeynep Demir · 10.09.2026", "Zeynep Demir", "Repair", "No template"],
       ],
+      filterDate: "Date...",
+      filterDoc: "Doc name...",
+      filterCustomer: "Search customer...",
+      allTemplates: "Templates",
     },
     customers: {
       label: "Customers",

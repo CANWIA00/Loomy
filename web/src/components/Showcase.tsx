@@ -71,6 +71,8 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14" /></svg>;
     case "plus":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 5v14M5 12h14" /></svg>;
+    case "close":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M6 6l12 12M18 6 6 18" /></svg>;
     default:
       return null;
   }
@@ -106,6 +108,26 @@ export default function Showcase() {
     );
   };
 
+  const ScreenHead = ({ title }: { title: string }) => (
+    <div className="an-top">
+      <div className="an-head">
+        <span style={{ display: "flex" }}>
+          <Icon name="back" size={22} color="#6080FF" />
+        </span>
+        <h3 className="an-title">{title}</h3>
+      </div>
+      <div className="an-chips">
+        <span className="an-chip">{sc.langBtn}</span>
+        <span className="an-chip" style={{ padding: 0 }}>
+          <Icon name="sunny" size={20} color="#6080FF" />
+        </span>
+        <span style={{ display: "flex" }}>
+          <Icon name="home" size={22} color="#6080FF" />
+        </span>
+      </div>
+    </div>
+  );
+
   const renderBody = () => {
     if (screen === "panel") {
       const p = sc.panel;
@@ -125,8 +147,8 @@ export default function Showcase() {
           </div>
           <p className="an-sub">{p.subtitle}</p>
 
-          <div className="an-card">
-            <div className="an-card-head">
+          <div className="an-stack">
+            <div className="an-card an-row">
               <span className="an-iconbox an-ib-primary">
                 <Icon name="chatbubbles" size={20} />
               </span>
@@ -142,10 +164,8 @@ export default function Showcase() {
                 <span className="an-btn">{p.manage}</span>
               </div>
             </div>
-          </div>
 
-          <div className="an-card">
-            <div className="an-card-head">
+            <div className="an-card an-row">
               <span className="an-iconbox an-ib-primary">
                 <Icon name="doc" size={20} />
               </span>
@@ -161,107 +181,114 @@ export default function Showcase() {
                 <span className="an-btn">{p.manage}</span>
               </div>
             </div>
-          </div>
 
-          <div className="an-card">
-            <div className="an-card-head">
-              <span className="an-iconbox an-ib-teal">
-                <Icon name="people" size={20} />
-              </span>
-              <div className="an-card-title">
-                <strong>{p.customersTitle}</strong>
-                <span>{p.customersDesc}</span>
-              </div>
-              <span className="an-btn-round">
-                <Icon name="person-add" size={18} color="#fff" />
-              </span>
-            </div>
-            {p.customers.map((name, i) => (
-              <div className="an-listrow" key={name}>
-                <span className="an-avatar">{name.charAt(0)}</span>
-                <div className="an-rowmain">
-                  <strong>{name}</strong>
-                  <span>{p.customersInfo[i]}</span>
-                </div>
-                <Icon name="chevron-fwd" size={16} color="#303048" />
-              </div>
-            ))}
-          </div>
-
-          <div className="an-card">
-            <div className="an-card-head">
-              <span className="an-iconbox an-ib-purple">
-                <Icon name="calendar" size={20} />
-              </span>
-              <div className="an-card-title">
-                <strong>{p.planTitle}</strong>
-              </div>
-              <Icon name="arrow-fwd" size={20} color="#8060FF" />
-            </div>
-            <div className="an-plan-filters">
-              {p.planFilters.map((f, i) => (
-                <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`} style={{ height: 26, padding: "0 10px" }}>
-                  {f}
-                </span>
-              ))}
-              <span className="an-plan-count">{p.planCount}</span>
-            </div>
-            <p className="an-plan-date">{p.planDate}</p>
-            {p.planTimes.map((time, i) => (
-              <div className="an-cal" key={time}>
-                <div className="an-cal-top">
-                  <span className="an-cal-time">{time}</span>
-                  <span className="an-cal-cust">{p.planCustomers[i]}</span>
-                </div>
-                <div className="an-cal-bottom">
-                  <span className="an-cal-team">{p.planTeams[i]}</span>
-                  <span className="an-cal-type">{p.planTypes[i]}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="an-card">
-            <div className="an-card-head">
-              <span className="an-iconbox an-ib-warn">
-                <Icon name="card" size={20} />
-              </span>
-              <div className="an-card-title">
-                <strong>{p.paymentsTitle}</strong>
-              </div>
-            </div>
-            <PayBars />
-            {p.totalsLabels.map((label, i) => (
-              <div className={`an-total-row${i === p.totalsLabels.length - 1 ? " pb" : ""}`} key={label}>
-                <span>{label}</span>
-                <strong className={labelColors[p.payColors[i] ?? "primary"]}>{p.totalsAmounts[i]}</strong>
-              </div>
-            ))}
-          </div>
-
-          <div className="an-card">
-            <p className="an-recent-title">{p.recentTitle}</p>
-            <div className="an-recent">
-              {p.recentCustomers.map((name, i) => {
-                const state = p.recentStates[i];
-                return (
-                  <div className="an-recent-row" key={name}>
-                    <div className="an-rowmain" style={{ marginLeft: 0 }}>
-                      <strong>{name}</strong>
-                      <span>{p.recentInfo[i]}</span>
-                    </div>
-                    <span className={`an-pill ${state}`}>
-                      <Icon name={state === "paid" ? "check-circle" : "clock"} size={12} />
-                      {statusLabel(state)}
-                    </span>
+            <div className="an-col2">
+              <div className="an-card">
+                <div className="an-card-head">
+                  <span className="an-iconbox an-ib-teal">
+                    <Icon name="people" size={20} />
+                  </span>
+                  <div className="an-card-title">
+                    <strong>{p.customersTitle}</strong>
+                    <span>{p.customersDesc}</span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                  <span className="an-btn-round">
+                    <Icon name="person-add" size={18} color="#fff" />
+                  </span>
+                </div>
+                {p.customers.map((name, i) => (
+                  <div className="an-listrow" key={name}>
+                    <span className="an-avatar">{name.charAt(0)}</span>
+                    <div className="an-rowmain">
+                      <strong>{name}</strong>
+                      <span>{p.customersInfo[i]}</span>
+                    </div>
+                    <Icon name="chevron-fwd" size={16} color="#303048" />
+                  </div>
+                ))}
+              </div>
 
-          <div className="an-card">
-            <div className="an-card-head">
+              <div className="an-card">
+                <div className="an-card-head">
+                  <span className="an-iconbox an-ib-purple">
+                    <Icon name="calendar" size={20} />
+                  </span>
+                  <div className="an-card-title">
+                    <strong>{p.planTitle}</strong>
+                  </div>
+                  <Icon name="arrow-fwd" size={20} color="#8060FF" />
+                </div>
+                <div className="an-plan-filters">
+                  {p.planFilters.map((f, i) => (
+                    <span
+                      key={f}
+                      className={i === 0 ? "an-fpill-active-purple" : "an-fpill"}
+                      style={{ height: 26, padding: "0 10px" }}
+                    >
+                      {f}
+                    </span>
+                  ))}
+                  <span className="an-plan-count">{p.planCount}</span>
+                </div>
+                <p className="an-plan-date">{p.planDate}</p>
+                {p.planTimes.map((time, i) => (
+                  <div className="an-cal" key={time}>
+                    <div className="an-cal-top">
+                      <span className="an-cal-time">{time}</span>
+                      <span className="an-cal-cust">{p.planCustomers[i]}</span>
+                    </div>
+                    <div className="an-cal-bottom">
+                      <span className="an-cal-team">{p.planTeams[i]}</span>
+                      <span className="an-cal-type">{p.planTypes[i]}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="an-card">
+              <div className="an-card-head">
+                <span className="an-iconbox an-ib-warn">
+                  <Icon name="card" size={20} />
+                </span>
+                <div className="an-card-title">
+                  <strong>{p.paymentsTitle}</strong>
+                </div>
+              </div>
+              <div className="an-pay">
+                <div>
+                  <PayBars />
+                  {p.totalsLabels.map((label, i) => (
+                    <div className={`an-total-row${i === p.totalsLabels.length - 1 ? " pb" : ""}`} key={label}>
+                      <span>{label}</span>
+                      <strong className={labelColors[p.payColors[i] ?? "primary"]}>{p.totalsAmounts[i]}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p className="an-recent-title">{p.recentTitle}</p>
+                  <div className="an-recent">
+                    {p.recentCustomers.map((name, i) => {
+                      const state = p.recentStates[i];
+                      return (
+                        <div className="an-recent-row" key={name}>
+                          <div className="an-rowmain" style={{ marginLeft: 0 }}>
+                            <strong>{name}</strong>
+                            <span>{p.recentInfo[i]}</span>
+                          </div>
+                          <span className={`an-pill ${state}`}>
+                            <Icon name={state === "paid" ? "check-circle" : "clock"} size={12} />
+                            {statusLabel(state)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="an-card an-row">
               <span className="an-iconbox an-ib-danger">
                 <Icon name="settings" size={20} />
               </span>
@@ -283,27 +310,11 @@ export default function Showcase() {
       const q = sc.quotes;
       return (
         <>
-          <div className="an-top">
-            <div className="an-head">
-              <span style={{ display: "flex" }}>
-                <Icon name="back" size={22} color="#6080FF" />
-              </span>
-              <h3 className="an-title">{q.title}</h3>
-            </div>
-            <div className="an-chips">
-              <span className="an-chip">{sc.langBtn}</span>
-              <span className="an-chip" style={{ padding: 0 }}>
-                <Icon name="sunny" size={20} color="#6080FF" />
-              </span>
-              <span style={{ display: "flex" }}>
-                <Icon name="home" size={22} color="#6080FF" />
-              </span>
-            </div>
-          </div>
+          <ScreenHead title={q.title} />
           <p className="an-sub">{q.subtitle}</p>
 
-          <div className="an-head" style={{ margin: "12px 0 10px" }}>
-            <span className="an-ib-primary" style={{ width: 24, height: 24, borderRadius: 8 }}>
+          <div className="an-head an-head-new">
+            <span className="an-chevbox">
               <Icon name="chevron-down" size={16} />
             </span>
             <strong style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{q.newQuote}</strong>
@@ -325,6 +336,11 @@ export default function Showcase() {
                 {f}
               </span>
             ))}
+            <span className="an-inp">{q.filterDate}</span>
+            <span className="an-inp an-inp-grow">{q.filterCustomer}</span>
+            <span className="an-clear">
+              <Icon name="close" size={15} />
+            </span>
           </div>
 
           <div className="an-table">
@@ -332,9 +348,7 @@ export default function Showcase() {
               <span className="an-c-date">{q.cols[0]}</span>
               <span className="an-c-main">{q.cols[1]}</span>
               <span className="an-c-right">{q.cols[2]}</span>
-              <span className="an-c-main" style={{ width: 96, flex: "0 0 96px", textAlign: "right" }}>
-                <Icon name="trash" size={14} color="#303048" />
-              </span>
+              <span className="an-actions an-th-empty" />
             </div>
             {q.rows.map((date, i) => (
               <div className="an-tr" key={date}>
@@ -344,7 +358,7 @@ export default function Showcase() {
                   <strong>{q.totals[i]}</strong>
                   <span>{q.tryTotals[i]}</span>
                 </span>
-                <span className="an-actions" style={{ width: 96, flex: "0 0 96px", justifyContent: "flex-end" }}>
+                <span className="an-actions">
                   <Icon name="share" size={17} color="#8060FF" />
                   <Icon name="trash" size={17} color="#EF4444" />
                   <Icon name="eye" size={17} color="#6080FF" />
@@ -362,27 +376,11 @@ export default function Showcase() {
       const s = sc.services;
       return (
         <>
-          <div className="an-top">
-            <div className="an-head">
-              <span style={{ display: "flex" }}>
-                <Icon name="back" size={22} color="#6080FF" />
-              </span>
-              <h3 className="an-title">{s.title}</h3>
-            </div>
-            <div className="an-chips">
-              <span className="an-chip">{sc.langBtn}</span>
-              <span className="an-chip" style={{ padding: 0 }}>
-                <Icon name="moon" size={20} color="#6080FF" />
-              </span>
-              <span style={{ display: "flex" }}>
-                <Icon name="home" size={22} color="#6080FF" />
-              </span>
-            </div>
-          </div>
+          <ScreenHead title={s.title} />
           <p className="an-sub">{s.subtitle}</p>
 
-          <div className="an-head" style={{ margin: "12px 0 10px" }}>
-            <span className="an-ib-primary" style={{ width: 24, height: 24, borderRadius: 8 }}>
+          <div className="an-head an-head-new">
+            <span className="an-chevbox">
               <Icon name="chevron-down" size={16} />
             </span>
             <strong style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{s.newRecord}</strong>
@@ -404,31 +402,37 @@ export default function Showcase() {
                 {f}
               </span>
             ))}
-            <span className="an-fpill">
-              <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{s.filters[0]}</strong>
+            <span className="an-fpill an-fpill-sel">
+              <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{s.allTemplates}</strong>
               <Icon name="chevron-down" size={13} color="#6B7280" />
             </span>
-            <span className="an-fpill" style={{ minWidth: 70 }} />
+            <span className="an-inp">{s.filterDate}</span>
+            <span className="an-inp">{s.filterDoc}</span>
+            <span className="an-inp an-inp-grow">{s.filterCustomer}</span>
+            <span className="an-clear">
+              <Icon name="close" size={15} />
+            </span>
           </div>
 
           <div className="an-table">
             <div className="an-tr an-th">
-              {s.cols.map((c) => (
-                <span className={c === s.cols[0] ? "an-c-date" : c === s.cols[s.cols.length - 1] ? "an-c-tpl" : "an-c-main"} key={c}>
-                  {c}
-                </span>
-              ))}
+              <span className="an-c-date">{s.cols[0]}</span>
+              <span className="an-c-main" style={{ flex: 1.6 }}>{s.cols[1]}</span>
+              <span className="an-c-main">{s.cols[2]}</span>
+              <span className="an-c-main" style={{ flex: 1.1 }}>{s.cols[3]}</span>
+              <span className="an-c-tpl">{s.cols[4]}</span>
+              <span className="an-actions an-th-empty" />
             </div>
             {s.rows.map((row, i) => (
               <div className="an-tr" key={i}>
                 <span className="an-c-date">{row[0]}</span>
-                <span className="an-c-main">{row[1]}</span>
+                <span className="an-c-main" style={{ flex: 1.6 }}>{row[1]}</span>
                 <span className="an-c-main">{row[2]}</span>
-                <span className="an-c-main">{row[3]}</span>
+                <span className="an-c-main" style={{ flex: 1.1 }}>{row[3]}</span>
                 <span className="an-c-tpl">
                   <span className={row[4] === s.rows[2]?.[4] ? "an-tpl none" : "an-tpl"}>{row[4]}</span>
                 </span>
-                <span className="an-actions" style={{ width: 96, flex: "0 0 96px", justifyContent: "flex-end" }}>
+                <span className="an-actions">
                   <Icon name="share" size={17} color="#8060FF" />
                   <Icon name="trash" size={17} color="#EF4444" />
                   <Icon name="eye" size={17} color="#6080FF" />
@@ -445,23 +449,7 @@ export default function Showcase() {
     const c = sc.customers;
     return (
       <>
-        <div className="an-top">
-          <div className="an-head">
-            <span style={{ display: "flex" }}>
-              <Icon name="back" size={22} color="#6080FF" />
-            </span>
-            <h3 className="an-title">{c.title}</h3>
-          </div>
-          <div className="an-chips">
-            <span className="an-chip">{sc.langBtn}</span>
-            <span className="an-chip" style={{ padding: 0 }}>
-              <Icon name="sunny" size={20} color="#6080FF" />
-            </span>
-            <span style={{ display: "flex" }}>
-              <Icon name="home" size={22} color="#6080FF" />
-            </span>
-          </div>
-        </div>
+        <ScreenHead title={c.title} />
         <p className="an-sub">{c.subtitle}</p>
 
         <div className="an-cut-head">
@@ -475,23 +463,21 @@ export default function Showcase() {
         </div>
 
         {c.rows.map((row, i) => (
-          <div className="an-card" key={i} style={{ display: "flex", alignItems: "center" }}>
+          <div className="an-card an-row" key={i}>
             <span className="an-avatar an-avatar-lg">{row[0].charAt(0)}</span>
             <div className="an-rowmain no-sub">
               <strong>{row[0]}</strong>
               <span>{row[1]}</span>
               <span>{row[2]}</span>
             </div>
-            <div className="an-btn-row" style={{ marginLeft: 8 }}>
+            <div className="an-cust-actions">
               <span className="an-ib-primary" style={{ width: 36, height: 36, borderRadius: 12 }}>
                 <Icon name="pencil" size={18} />
               </span>
               <span className="an-ib-danger" style={{ width: 36, height: 36, borderRadius: 12 }}>
                 <Icon name="trash" size={18} />
               </span>
-              <span style={{ display: "flex", alignItems: "center" }}>
-                <Icon name="chevron-fwd" size={20} color="#9CA3AF" />
-              </span>
+              <Icon name="chevron-fwd" size={20} color="#9CA3AF" />
             </div>
           </div>
         ))}
@@ -522,24 +508,26 @@ export default function Showcase() {
         </div>
 
         <div className="showcase">
-          <div className="phone">
-            <div className="phone-screen">
-              <div className="phone-status">
-                <span>9:41</span>
-                <div className="phone-status-right">
-                  <span className="phone-bars" />
-                  <span className="phone-battery" />
+          <div className="browser">
+            <div className="browser-top">
+              <span className="browser-dots">
+                <i className="r" />
+                <i className="y" />
+                <i className="g" />
+              </span>
+              <span className="browser-url">
+                <Icon name="card" size={14} color="#6B7280" />
+                loomy-omega.vercel.app
+              </span>
+            </div>
+            <div className="browser-body">{renderBody()}</div>
+            <div className="an-tabbar">
+              {sc.tabs.map((label, i) => (
+                <div className={`an-tab ${i === activeTab ? "active" : ""}`} key={label}>
+                  <Icon name={tabBarIcons[i]} size={i === activeTab ? 22 : 20} color={i === activeTab ? "#6080FF" : "#6B7280"} />
+                  <span>{label}</span>
                 </div>
-              </div>
-              <div className="phone-body">{renderBody()}</div>
-              <div className="an-tabbar">
-                {sc.tabs.map((label, i) => (
-                  <div className={`an-tab ${i === activeTab ? "active" : ""}`} key={label}>
-                    <Icon name={tabBarIcons[i]} size={i === activeTab ? 22 : 20} color={i === activeTab ? "#6080FF" : "#6B7280"} />
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 

@@ -271,82 +271,79 @@
 }
 
 .showcase {
-  max-width: 560px;
+  max-width: 720px;
   margin: 0 auto;
   text-align: center;
 }
 
-.phone {
-  width: min(300px, 78vw);
+.browser {
+  width: min(720px, 92vw);
   margin: 0 auto;
-  border-radius: 44px;
-  padding: 12px;
-  background: linear-gradient(160deg, #23232f, #181826);
+  border-radius: 18px;
   border: 1px solid var(--border);
-  box-shadow: 0 50px 120px rgba(0, 0, 0, 0.55);
-  position: relative;
-}
-
-.phone-screen {
   background: #181828;
-  border-radius: 32px;
-  border: 1px solid var(--border);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  height: 580px;
-}
-
-.phone-status {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 18px 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-  opacity: 0.9;
-}
-
-.phone-status-right {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.phone-bars {
-  width: 14px;
-  height: 10px;
-  background: repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 4px);
-  opacity: 0.85;
-}
-
-.phone-battery {
-  width: 20px;
-  height: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 3px;
-  position: relative;
-}
-
-.phone-battery::after {
-  content: "";
-  position: absolute;
-  inset: 1.5px auto 1.5px 1.5px;
-  width: 60%;
-  background: #fff;
-  border-radius: 2px;
-}
-
-.phone-body {
-  flex: 1;
-  padding: 8px 14px 12px;
-  overflow-y: auto;
-  scrollbar-width: none;
   text-align: left;
 }
 
-.phone-body::-webkit-scrollbar {
+.browser-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #222238;
+  border-bottom: 1px solid var(--border);
+}
+
+.browser-dots {
+  display: flex;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.browser-dots i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.browser-dots i.r {
+  background: #f87171;
+}
+
+.browser-dots i.y {
+  background: #fbbf24;
+}
+
+.browser-dots i.g {
+  background: #34d399;
+}
+
+.browser-url {
+  flex: 1;
+  background: #181828;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.browser-body {
+  height: 480px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 16px 22px 10px;
+}
+
+.browser-body::-webkit-scrollbar {
   display: none;
 }
 
@@ -432,7 +429,93 @@
   background: #222238;
   border-radius: 16px;
   padding: 16px;
-  margin-bottom: 14px;
+}
+
+.an-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.an-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.an-col2 {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.an-col2 > .an-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.an-pay {
+  display: flex;
+  gap: 24px;
+}
+
+.an-pay > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.an-head-new {
+  margin: 14px 0 12px;
+}
+
+.an-chevbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(96, 128, 255, 0.14);
+  color: #6080ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.an-inp {
+  height: 30px;
+  min-width: 110px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #181828;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.an-inp-grow {
+  flex: 1;
+}
+
+.an-clear {
+  display: flex;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.an-cust-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.an-fpill-active-purple {
+  background: #8060ff;
+  color: #fff;
+  border-color: transparent;
 }
 
 .an-card-head {
@@ -581,7 +664,7 @@
 }
 
 .an-c-date {
-  width: 72px;
+  width: 90px;
   color: #9ca3af;
   font-size: 11px;
   flex-shrink: 0;
@@ -606,6 +689,7 @@
 }
 
 .an-c-right {
+  width: 120px;
   text-align: right;
   flex-shrink: 0;
   display: flex;
@@ -626,7 +710,7 @@
 }
 
 .an-c-tpl {
-  width: 56px;
+  width: 72px;
   flex-shrink: 0;
   display: flex;
 }
@@ -638,9 +722,16 @@
 }
 
 .an-actions {
+  width: 150px;
+  flex-shrink: 0;
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: flex-end;
+}
+
+.an-th-empty {
+  pointer-events: none;
 }
 
 .an-tpl {
@@ -653,7 +744,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 56px;
+  max-width: 64px;
 }
 
 .an-tpl.none {
