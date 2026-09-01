@@ -305,7 +305,7 @@ export function generateQuotePDFHtml(
     }
     .footer-text {
       font-size: 9px;
-      color: #555;
+      color: #999;
       line-height: 1.5;
       text-align: center;
     }

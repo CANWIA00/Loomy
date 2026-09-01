@@ -340,7 +340,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     }
     .footer-text {
       font-size: 8px;
-      color: #888;
+      color: #999;
       line-height: 1.4;
     }
     .privacy-note {
