@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLanguage } from "../i18n";
 
-type ScreenKey = "panel" | "quotes" | "services" | "customers" | "plan";
+type ScreenKey = "panel" | "quotes" | "services" | "customers" | "plan" | "payments";
 
 const labelColors: Record<string, string> = {
   primary: "amt-primary",
@@ -89,26 +89,35 @@ export default function Showcase() {
   const statusLabels = sc.statuses as Record<string, string>;
   const statusLabel = (state: string) => statusLabels[state] ?? state;
 
-  const activeTab = screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : screen === "customers" ? 3 : 4;
+  const activeTab = screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : screen === "customers" ? 3 : screen === "plan" ? 4 : 5;
 
-  const PayBars = () => {
-    const p = sc.panel;
-    return (
-      <>
-        {p.payLabels.map((label, i) => (
-          <div className="an-bar-wrap" key={label}>
-            <div className="an-bar-top">
-              <span>{label}</span>
-              <strong className={labelColors[p.payColors[i] ?? "primary"]}>{p.payAmounts[i]}</strong>
-            </div>
-            <div className="an-bar">
-              <i className={p.payColors[i] ?? "primary"} style={{ width: `${p.payPcts[i]}%` }} />
-            </div>
-          </div>
-        ))}
-      </>
-    );
+const PayBars = ({
+  data,
+}: {
+  data: {
+    payLabels: readonly string[];
+    payAmounts: readonly string[];
+    payPcts: readonly string[];
+    payColors: readonly string[];
   };
+}) => {
+  const { payLabels, payAmounts, payPcts, payColors } = data;
+  return (
+    <>
+      {payLabels.map((label, i) => (
+        <div className="an-bar-wrap" key={label}>
+          <div className="an-bar-top">
+            <span>{label}</span>
+            <strong className={labelColors[payColors[i] ?? "primary"]}>{payAmounts[i]}</strong>
+          </div>
+          <div className="an-bar">
+            <i className={payColors[i] ?? "primary"} style={{ width: `${payPcts[i]}%` }} />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+};
 
   const ScreenHead = ({ title }: { title: string }) => (
     <div className="an-top">
@@ -259,7 +268,7 @@ export default function Showcase() {
               </div>
               <div className="an-pay">
                 <div>
-                  <PayBars />
+                  <PayBars data={p} />
                   {p.totalsLabels.map((label, i) => (
                     <div className={`an-total-row${i === p.totalsLabels.length - 1 ? " pb" : ""}`} key={label}>
                       <span>{label}</span>
@@ -443,6 +452,80 @@ export default function Showcase() {
                 </span>
               </div>
             ))}
+          </div>
+        </>
+      );
+    }
+
+    if (screen === "payments") {
+      const py = sc.payments;
+      return (
+        <>
+          <ScreenHead title={py.title} />
+          <p className="an-sub">{py.subtitle}</p>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-warn">
+                <Icon name="card" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{py.status}</strong>
+              </div>
+            </div>
+            <PayBars data={py} />
+            {py.totalsLabels.map((label, i) => (
+              <div className={`an-total-row${i === py.totalsLabels.length - 1 ? " pb" : ""}`} key={label}>
+                <span>{label}</span>
+                <strong className={labelColors[py.payColors[i] ?? "primary"]}>{py.totalsAmounts[i]}</strong>
+              </div>
+            ))}
+          </div>
+
+          <div className="an-paylist">
+            <p className="an-paylist-title">{py.list}</p>
+            <div className="an-filters">
+              <span className="an-paysearch">
+                <Icon name="search" size={14} color="#6B7280" />
+                <span className="an-paysearch-text">{py.search}</span>
+                <Icon name="close" size={14} color="#6B7280" />
+              </span>
+              {py.timeFilters.map((f, i) => (
+                <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`} style={{ height: 32, padding: "0 12px" }}>
+                  {f}
+                </span>
+              ))}
+              <span className="an-fpill an-fpill-sel" style={{ height: 32 }}>
+                <strong style={{ color: "#E5E7EB", fontSize: 12, fontWeight: 500 }}>{py.allStatus}</strong>
+                <Icon name="chevron-down" size={13} color="#6B7280" />
+              </span>
+              <span className="an-payref">
+                <Icon name="refresh" size={16} />
+              </span>
+            </div>
+            <div className="an-payblock">
+              {py.rows.map((row, i) => {
+                const state = row[3];
+                return (
+                  <div className="an-payrow" key={i}>
+                    <div className="an-payrow-l">
+                      <strong>{row[0]}</strong>
+                      <span>{row[1]}</span>
+                    </div>
+                    <span className="an-payamt">{row[2]}</span>
+                    <span className={`an-pill ${state}`}>
+                      <Icon name={state === "paid" ? "check-circle" : "clock"} size={12} />
+                      {state === "paid" ? py.paid : py.pending}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="an-pag an-paypag">
+              <span className="an-pag-btn muted">{py.previous}</span>
+              <span className="an-pag-txt">{py.page}</span>
+              <span className="an-pag-btn">{py.next}</span>
+            </div>
           </div>
         </>
       );
@@ -672,6 +755,7 @@ export default function Showcase() {
     { key: "services", label: sc.services.label },
     { key: "customers", label: sc.customers.label },
     { key: "plan", label: sc.plan.label },
+    { key: "payments", label: sc.payments.label },
   ];
 
   return (
