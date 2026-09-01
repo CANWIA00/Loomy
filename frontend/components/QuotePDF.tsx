@@ -30,7 +30,7 @@ function renderCompanyFooter(
   if (data.companyWebsite) extra.push(`Web: ${escapeHtml(data.companyWebsite)}`);
   if (extra.length) lines.push(`<div class="footer-text">${extra.join(" &nbsp;&nbsp; ")}</div>`);
   if (data.companyTaxNumber) lines.push(`<div class="footer-text">${lang === "tr" ? "Vergi No" : "Tax No"}: ${escapeHtml(data.companyTaxNumber)}</div>`);
-  return `<div class="footer">\n${lines.join("\n    ")}\n  </div>`;
+  return `<div class="footer footer-push">\n${lines.join("\n    ")}\n  </div>`;
 }
 
 export function generateQuotePDFHtml(
@@ -144,6 +144,9 @@ export function generateQuotePDFHtml(
     }
     .content-wrapper {
       padding-bottom: 0;
+      min-height: 270mm;
+      display: flex;
+      flex-direction: column;
     }
     .company-header {
       display: flex;
@@ -297,6 +300,9 @@ export function generateQuotePDFHtml(
       padding-top: 6px;
       text-align: center;
     }
+    .footer-push {
+      margin-top: auto;
+    }
     .footer-text {
       font-size: 9px;
       color: #555;
@@ -308,6 +314,7 @@ export function generateQuotePDFHtml(
       padding-top: 6px;
       border-top: 1px solid #eee;
       text-align: center;
+      page-break-inside: avoid;
     }
     .privacy-title {
       font-size: 7px;
