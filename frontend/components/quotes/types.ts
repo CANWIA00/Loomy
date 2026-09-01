@@ -66,6 +66,7 @@ export interface QuotePdfData {
   companyName: string;
   companyAddress: string;
   companyPhone: string;
+  companyGsm?: string;
   companyEmail: string;
   companyFax: string;
   companyWebsite: string;

@@ -96,10 +96,11 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const companyInfoRef = useRef<{ name: string; address: string; phone: string; email: string; fax: string; website: string; taxNumber: string }>({
+  const companyInfoRef = useRef<{ name: string; address: string; phone: string; gsm: string; email: string; fax: string; website: string; taxNumber: string }>({
     name: "",
     address: "",
     phone: "",
+    gsm: "",
     email: "",
     fax: "",
     website: "",
@@ -133,6 +134,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           name: company.name || "",
           address: company.address || "",
           phone: company.phone || "",
+          gsm: company.gsm || "",
           email: company.email || "",
           fax: company.fax || "",
           website: company.website || "",
@@ -311,6 +313,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     companyName: companyInfoRef.current.name,
     companyAddress: companyInfoRef.current.address,
     companyPhone: companyInfoRef.current.phone,
+    companyGsm: companyInfoRef.current.gsm,
     companyEmail: companyInfoRef.current.email,
     companyFax: companyInfoRef.current.fax,
     companyWebsite: companyInfoRef.current.website,

@@ -12,6 +12,27 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
+function renderCompanyFooter(
+  data: Pick<QuotePdfData, "companyName" | "companyAddress" | "companyPhone" | "companyGsm" | "companyEmail" | "companyFax" | "companyWebsite" | "companyTaxNumber">,
+  lang: "tr" | "en",
+  t: (key: string, params?: Record<string, string>) => string
+): string {
+  const lines: string[] = [];
+  lines.push(`<div class="footer-text">${escapeHtml(data.companyName || t("pdf.companyNameLabel"))}</div>`);
+  lines.push(`<div class="footer-text">${escapeHtml(data.companyAddress || t("pdf.companyAddressLabel"))}</div>`);
+  let phone = "";
+  if (data.companyPhone) phone += `Tel: ${escapeHtml(data.companyPhone)}`;
+  if (data.companyGsm) phone += (phone ? " &nbsp;&nbsp; " : "") + `Gsm: ${escapeHtml(data.companyGsm)}`;
+  if (phone) lines.push(`<div class="footer-text">${phone}</div>`);
+  const extra: string[] = [];
+  if (data.companyEmail) extra.push(`Email: ${escapeHtml(data.companyEmail)}`);
+  if (data.companyFax) extra.push(`Fax: ${escapeHtml(data.companyFax)}`);
+  if (data.companyWebsite) extra.push(`Web: ${escapeHtml(data.companyWebsite)}`);
+  if (extra.length) lines.push(`<div class="footer-text">${extra.join(" &nbsp;&nbsp; ")}</div>`);
+  if (data.companyTaxNumber) lines.push(`<div class="footer-text">${lang === "tr" ? "Vergi No" : "Tax No"}: ${escapeHtml(data.companyTaxNumber)}</div>`);
+  return `<div class="footer">\n${lines.join("\n    ")}\n  </div>`;
+}
+
 export function generateQuotePDFHtml(
   data: QuotePdfData,
   t: (key: string, params?: Record<string, string>) => string,
@@ -270,6 +291,35 @@ export function generateQuotePDFHtml(
       white-space: pre-wrap;
       color: #333;
     }
+    .footer {
+      margin-top: 14px;
+      border-top: 1px solid #ddd;
+      padding-top: 6px;
+      text-align: center;
+    }
+    .footer-text {
+      font-size: 9px;
+      color: #555;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .privacy-note {
+      margin-top: 10px;
+      padding-top: 6px;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+    .privacy-title {
+      font-size: 7px;
+      font-weight: bold;
+      color: #888;
+    }
+    .privacy-body {
+      font-size: 7px;
+      color: #888;
+      line-height: 1.4;
+      margin-top: 1px;
+    }
   </style>
 </head>
 <body>
@@ -294,6 +344,7 @@ export function generateQuotePDFHtml(
         <div class="info-list">
           <div class="info-item"><span class="label">${t("qot.address")}</span> <span class="value">${escapeHtml(data.companyAddress) || ""}</span></div>
           <div class="info-item"><span class="label">${t("qot.companyPhone")}</span> <span class="value">${escapeHtml(data.companyPhone) || ""}</span></div>
+          ${data.companyGsm ? `<div class="info-item"><span class="label">${t("qot.companyGsm")}</span> <span class="value">${escapeHtml(data.companyGsm)}</span></div>` : ""}
           <div class="info-item"><span class="label">${t("qot.companyFax")}</span> <span class="value">${escapeHtml(data.companyFax) || ""}</span></div>
           <div class="info-item"><span class="label">${t("qot.companyEmail")}</span> <span class="value">${escapeHtml(data.companyEmail) || ""}</span></div>
           <div class="info-item"><span class="label">${t("qot.companyWebsite")}</span> <span class="value">${escapeHtml(data.companyWebsite) || ""}</span></div>
@@ -346,6 +397,13 @@ export function generateQuotePDFHtml(
           </tbody>
         </table>
       </div>
+    </div>
+
+    ${renderCompanyFooter(data, lang, t)}
+
+    <div class="privacy-note">
+      <div class="privacy-title">${t("pdf.privacyNoteTitle")}</div>
+      <div class="privacy-body">${t("pdf.privacyNoteBody")}</div>
     </div>
   </div>
 </body>

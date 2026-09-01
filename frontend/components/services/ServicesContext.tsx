@@ -132,11 +132,15 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
-  const companyInfoRef = useRef<{ name: string; address: string; phone: string; gsm: string }>({
+  const companyInfoRef = useRef<{ name: string; address: string; phone: string; gsm: string; email: string; fax: string; website: string; taxNumber: string }>({
     name: "",
     address: "",
     phone: "",
     gsm: "",
+    email: "",
+    fax: "",
+    website: "",
+    taxNumber: "",
   });
   const [templates, setTemplates] = useState<ServiceTemplate[]>([]);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
@@ -209,6 +213,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           address: company.address || "",
           phone: company.phone || "",
           gsm: company.gsm || "",
+          email: company.email || "",
+          fax: company.fax || "",
+          website: company.website || "",
+          taxNumber: company.taxNumber || "",
         };
       }
     }).catch(() => {});
@@ -245,6 +253,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
             address: company.address || "",
             phone: company.phone || "",
             gsm: company.gsm || "",
+            email: company.email || "",
+            fax: company.fax || "",
+            website: company.website || "",
+            taxNumber: company.taxNumber || "",
           };
         }
       }).catch(() => {});
@@ -499,6 +511,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     companyAddress: companyInfoRef.current.address,
     companyPhone: companyInfoRef.current.phone,
     companyGsm: companyInfoRef.current.gsm,
+    companyEmail: companyInfoRef.current.email,
+    companyFax: companyInfoRef.current.fax,
+    companyWebsite: companyInfoRef.current.website,
+    companyTaxNumber: companyInfoRef.current.taxNumber,
     templateName: record.templateName || null,
     templateConfig: record.templateConfig || null,
   });

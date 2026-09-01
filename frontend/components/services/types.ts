@@ -81,6 +81,10 @@ export interface PdfData {
   companyAddress?: string;
   companyPhone?: string;
   companyGsm?: string;
+  companyEmail?: string;
+  companyFax?: string;
+  companyWebsite?: string;
+  companyTaxNumber?: string;
   templateName?: string | null;
   templateConfig?: any;
 }

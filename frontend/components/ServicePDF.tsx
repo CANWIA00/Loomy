@@ -19,10 +19,22 @@ function checkbox(checked: boolean, label: string): string {
   `;
 }
 
-function renderCompanyContact(data: any): string {
-  const tel = escapeHtml(data.companyPhone || "0232 365 20 87");
-  const gsm = escapeHtml(data.companyGsm || "0 533 368 03 13");
-  return `<div class="footer-text">Tel: ${tel} &nbsp;&nbsp; Gsm: ${gsm}</div>`;
+function renderCompanyContact(data: any, lang: "tr" | "en"): string {
+  const tel = data.companyPhone || "0232 365 20 87";
+  const gsm = data.companyGsm || "0 533 368 03 13";
+  const lines: string[] = [];
+  let phone = `Tel: ${escapeHtml(tel)}`;
+  if (gsm) phone += ` &nbsp;&nbsp; Gsm: ${escapeHtml(gsm)}`;
+  lines.push(`<div class="footer-text">${phone}</div>`);
+  const extra: string[] = [];
+  if (data.companyEmail) extra.push(`Email: ${escapeHtml(data.companyEmail)}`);
+  if (data.companyFax) extra.push(`Fax: ${escapeHtml(data.companyFax)}`);
+  if (data.companyWebsite) extra.push(`Web: ${escapeHtml(data.companyWebsite)}`);
+  if (extra.length) lines.push(`<div class="footer-text">${extra.join(" &nbsp;&nbsp; ")}</div>`);
+  if (data.companyTaxNumber) {
+    lines.push(`<div class="footer-text">${lang === "tr" ? "Vergi No" : "Tax No"}: ${escapeHtml(data.companyTaxNumber)}</div>`);
+  }
+  return lines.join("\n");
 }
 
 function renderSignatureSvg(signature: any): string {
@@ -421,7 +433,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
   <div class="footer">
     <div class="footer-text">${escapeHtml(data.companyName || t("pdf.companyNameLabel"))}</div>
     <div class="footer-text">${escapeHtml(data.companyAddress || t("pdf.companyAddressLabel"))}</div>
-    ${renderCompanyContact(data)}
+    ${renderCompanyContact(data, lang)}
   </div>
 
   <div class="privacy-note">
