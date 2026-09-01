@@ -337,7 +337,7 @@ export function generateQuotePDFHtml(
       </div>
       <div class="header-title">
         <div class="title">${escapeHtml(data.companyName)}</div>
-        <div class="title-sub">${lang === "tr" ? "Servis Teklifi" : "Service Quote"}</div>
+        <div class="title-sub">${lang === "tr" ? "Teklif" : "Quote"}</div>
       </div>
       <div class="title-area">
         <div class="title-date">${t("qot.date")} ${escapeHtml(data.documentDate) || ""}</div>
