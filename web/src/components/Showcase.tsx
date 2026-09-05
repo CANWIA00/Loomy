@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useLanguage } from "../i18n";
 
-type ScreenKey = "panel" | "quotes" | "services" | "customers" | "plan" | "payments";
+type ScreenKey =
+  | "panel"
+  | "quotes"
+  | "services"
+  | "customers"
+  | "plan"
+  | "payments"
+  | "profil"
+  | "settings";
+
+const screenKeys: ScreenKey[] = ["panel", "services", "quotes", "customers", "plan", "payments", "settings"];
 
 const labelColors: Record<string, string> = {
   primary: "amt-primary",
@@ -45,6 +55,16 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4 6.5 6.5 0 0 0 20 13.5Z" /></svg>;
     case "person-circle":
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="9" /><path d="M12 11a2.7 2.7 0 1 0 0-5.4A2.7 2.7 0 0 0 12 11ZM6 19.5c1-2.8 4.5-4 6-4s5 1.2 6 4" /></svg>;
+    case "person":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="9" r="3.5" /><path d="M5 20c1.2-3.4 6-4.2 7-4.2s5.8.8 7 4.2" /></svg>;
+    case "shield":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 3.5 5 6v5.5c0 4 2.7 6.8 7 9 4.3-2.2 7-5 7-9V6l-7-2.5Z" /><path d="m9 11.5 2 2 4-4.5" /></svg>;
+    case "help":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="9" /><path d="M9.6 9.2a2.5 2.5 0 1 1 3.6 2.3c-.9.5-1.2 1-1.2 2" /><circle cx="12" cy="17" r="0.4" fill="currentColor" /></svg>;
+    case "info":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><circle cx="12" cy="8" r="0.4" fill="currentColor" /></svg>;
+    case "globe":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.8 2.6 4.2 5.5 4.2 9S14.8 18.4 12 21c-2.8-2.6-4.2-5.5-4.2-9S9.2 5.6 12 3Z" /></svg>;
     case "back":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M15 5l-7 7 7 7" /></svg>;
     case "refresh":
@@ -83,13 +103,17 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
 const tabBarIcons = ["home", "construct", "doc", "people", "calendar", "card", "settings"];
 
 export default function Showcase() {
-  const { t } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const [screen, setScreen] = useState<ScreenKey>("panel");
+  const [isDark, setIsDark] = useState(true);
   const sc = t.showcase;
   const statusLabels = sc.statuses as Record<string, string>;
   const statusLabel = (state: string) => statusLabels[state] ?? state;
 
-  const activeTab = screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : screen === "customers" ? 3 : screen === "plan" ? 4 : 5;
+  const toggleTheme = () => setIsDark((d) => !d);
+  const toggleLang = () => setLang(lang === "tr" ? "en" : "tr");
+
+  const activeTab = screen === "profil" ? -1 : screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : screen === "customers" ? 3 : screen === "plan" ? 4 : screen === "payments" ? 5 : 6;
 
 const PayBars = ({
   data,
@@ -122,24 +146,225 @@ const PayBars = ({
   const ScreenHead = ({ title }: { title: string }) => (
     <div className="an-top">
       <div className="an-head">
-        <span style={{ display: "flex" }}>
-          <Icon name="back" size={22} color="#6080FF" />
-        </span>
+        <button className="an-chip" style={{ padding: 0, flexShrink: 0 }} onClick={() => setScreen("panel")}>
+          <Icon name="back" size={22} color="var(--sc-primary)" />
+        </button>
         <h3 className="an-title">{title}</h3>
       </div>
       <div className="an-chips">
-        <span className="an-chip">{sc.langBtn}</span>
-        <span className="an-chip" style={{ padding: 0 }}>
-          <Icon name="sunny" size={20} color="#6080FF" />
-        </span>
-        <span style={{ display: "flex" }}>
-          <Icon name="home" size={22} color="#6080FF" />
-        </span>
+        <button className="an-chip" onClick={toggleLang}>{sc.langBtn}</button>
+        <button className="an-chip" style={{ padding: 0 }} onClick={toggleTheme}>
+          <Icon name={isDark ? "sunny" : "moon"} size={20} color="var(--sc-primary)" />
+        </button>
+        <button className="an-chip" style={{ padding: 0 }} onClick={() => { setScreen("panel"); }}>
+          <Icon name="home" size={22} color="var(--sc-primary)" />
+        </button>
       </div>
     </div>
   );
 
   const renderBody = () => {
+    if (screen === "profil") {
+      const pr = sc.profil;
+      return (
+        <>
+          <ScreenHead title={pr.title} />
+          <div className="an-ph-user">
+            <div className="an-ph-avatar">{pr.userName.charAt(0)}</div>
+            <strong className="an-ph-name">{pr.userName}</strong>
+            <span className="an-ph-mail">{pr.userEmail}</span>
+            <span className="an-fpill an-fpill-active-purple">
+              <Icon name="check-circle" size={14} color="var(--sc-primary-on)" />
+              {pr.admin}
+            </span>
+          </div>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-primary">
+                <Icon name="person-circle" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{pr.info}</strong>
+              </div>
+            </div>
+            <div className="an-profile-rows">
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.name}</span>
+                <span className="an-profile-val">{pr.userName}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.email}</span>
+                <span className="an-profile-val">{pr.userEmail}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.phone}</span>
+                <span className="an-profile-val">{pr.userPhone}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.role}</span>
+                <span className="an-profile-val">
+                  <span className="an-admin-chip">
+                    <Icon name="check-circle" size={13} color="var(--sc-primary)" />
+                    {pr.admin}
+                  </span>
+                </span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.signature}</span>
+                <span className="an-profile-val an-profile-link">{pr.addSignature}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-teal">
+                <Icon name="shield" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{pr.adminPrivileges}</strong>
+              </div>
+            </div>
+            <p className="an-profile-desc">{pr.adminPrivilegesDesc}</p>
+          </div>
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-purple">
+                <Icon name="person" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{pr.companyInfo}</strong>
+              </div>
+            </div>
+            <div className="an-profile-rows">
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.name}</span>
+                <span className="an-profile-val">{pr.companyName}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.invitationCode}</span>
+                <span className="an-profile-val">
+                  <span className="an-token">{pr.invitationCodeVal}</span>
+                </span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.address}</span>
+                <span className="an-profile-val">{pr.companyAddress}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.companyPhone}</span>
+                <span className="an-profile-val">{pr.companyPhoneVal}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.companyGsm}</span>
+                <span className="an-profile-val">{pr.companyGsmVal}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.companyEmail}</span>
+                <span className="an-profile-val">{pr.companyEmailVal}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.companyFax}</span>
+                <span className="an-profile-val">{pr.companyFaxVal}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.companyWebsite}</span>
+                <span className="an-profile-val">{pr.companyWebsiteVal}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.taxNumber}</span>
+                <span className="an-profile-val">{pr.taxNumberVal}</span>
+              </div>
+              <div className="an-profile-row">
+                <span className="an-profile-label">{pr.stamp}</span>
+                <span className="an-profile-val an-profile-link">{pr.stampValue}</span>
+              </div>
+            </div>
+          </div>
+
+          <p className="an-profile-hint">{pr.invitationHint}</p>
+
+          <button className="an-logout">
+            <Icon name="trash" size={16} color="#ef4444" />
+            {pr.logout}
+          </button>
+        </>
+      );
+    }
+
+    if (screen === "settings") {
+      const st = sc.settings;
+      const langVal = lang === "tr" ? st.turkish : st.english;
+      return (
+        <>
+          <ScreenHead title={st.title} />
+          <p className="an-sub">{st.subtitle}</p>
+
+          <div className="an-settings-logo">
+            <div className="an-ph-avatar an-settings-avatar">LM</div>
+            <strong>Loomy</strong>
+            <span>{st.platform}</span>
+          </div>
+
+          <div className="an-settings-card">
+            <button className="an-menu-row" onClick={() => setScreen("profil")}>
+              <span className="an-menu-ic">
+                <Icon name="person" size={17} />
+              </span>
+              <span className="an-menu-label">{st.profileInfo}</span>
+              <span className="an-menu-right">
+                <Icon name="chevron-fwd" size={15} />
+              </span>
+            </button>
+            <button className="an-menu-row" onClick={toggleLang}>
+              <span className="an-menu-ic">
+                <Icon name="globe" size={17} />
+              </span>
+              <span className="an-menu-label">{st.language}</span>
+              <span className="an-menu-right">
+                <span>{langVal}</span>
+                <Icon name="chevron-fwd" size={15} />
+              </span>
+            </button>
+            <button className="an-menu-row" onClick={toggleTheme}>
+              <span className="an-menu-ic">
+                <Icon name="shield" size={17} />
+              </span>
+              <span className="an-menu-label">{st.privacy}</span>
+              <span className="an-menu-right">
+                <Icon name="chevron-fwd" size={15} />
+              </span>
+            </button>
+            <button className="an-menu-row">
+              <span className="an-menu-ic">
+                <Icon name="help" size={17} />
+              </span>
+              <span className="an-menu-label">{st.help}</span>
+              <span className="an-menu-right">
+                <Icon name="chevron-fwd" size={15} />
+              </span>
+            </button>
+            <button className="an-menu-row">
+              <span className="an-menu-ic">
+                <Icon name="info" size={17} />
+              </span>
+              <span className="an-menu-label">{st.version}</span>
+              <span className="an-menu-right">
+                <span>{st.versionVal}</span>
+                <Icon name="chevron-fwd" size={15} />
+              </span>
+            </button>
+          </div>
+
+          <button className="an-logout-pill">
+            {st.logout}
+          </button>
+        </>
+      );
+    }
+
     if (screen === "panel") {
       const p = sc.panel;
       return (
@@ -147,13 +372,13 @@ const PayBars = ({
           <div className="an-top">
             <h3 className="an-title">{p.greeting}</h3>
             <div className="an-chips">
-              <span className="an-chip">{sc.langBtn}</span>
-              <span className="an-chip" style={{ padding: 0 }}>
-                <Icon name="sunny" size={20} color="#6080FF" />
-              </span>
-              <span style={{ display: "flex" }}>
-                <Icon name="person-circle" size={26} color="#6080FF" />
-              </span>
+              <button className="an-chip" onClick={toggleLang}>{sc.langBtn}</button>
+              <button className="an-chip" style={{ padding: 0 }} onClick={toggleTheme}>
+                <Icon name={isDark ? "sunny" : "moon"} size={20} color="var(--sc-primary)" />
+              </button>
+              <button className="an-chip" style={{ padding: 0 }} onClick={() => setScreen("profil")}>
+                <Icon name="person-circle" size={26} color="var(--sc-primary)" />
+              </button>
             </div>
           </div>
           <p className="an-sub">{p.subtitle}</p>
@@ -169,7 +394,7 @@ const PayBars = ({
               </div>
               <div className="an-btn-row">
                 <span className="an-btn">
-                  <Icon name="person-add" size={14} color="#fff" />
+                  <Icon name="person-add" size={14} color="var(--sc-primary-on)" />
                   {p.newService}
                 </span>
                 <span className="an-btn">{p.manage}</span>
@@ -186,7 +411,7 @@ const PayBars = ({
               </div>
               <div className="an-btn-row">
                 <span className="an-btn">
-                  <Icon name="plus" size={14} color="#fff" />
+                  <Icon name="plus" size={14} color="var(--sc-primary-on)" />
                   {p.newQuote}
                 </span>
                 <span className="an-btn">{p.manage}</span>
@@ -204,7 +429,7 @@ const PayBars = ({
                     <span>{p.customersDesc}</span>
                   </div>
                   <span className="an-btn-round">
-                    <Icon name="person-add" size={18} color="#fff" />
+                    <Icon name="person-add" size={18} color="var(--sc-primary-on)" />
                   </span>
                 </div>
                 {p.customers.map((name, i) => (
@@ -214,7 +439,7 @@ const PayBars = ({
                       <strong>{name}</strong>
                       <span>{p.customersInfo[i]}</span>
                     </div>
-                    <Icon name="chevron-fwd" size={16} color="#303048" />
+                    <Icon name="chevron-fwd" size={16} color="var(--sc-border)" />
                   </div>
                 ))}
               </div>
@@ -227,7 +452,7 @@ const PayBars = ({
                   <div className="an-card-title">
                     <strong>{p.planTitle}</strong>
                   </div>
-                  <Icon name="arrow-fwd" size={20} color="#8060FF" />
+                  <Icon name="arrow-fwd" size={20} color="var(--sc-purple)" />
                 </div>
                 <div className="an-plan-filters">
                   {p.planFilters.map((f, i) => (
@@ -328,7 +553,7 @@ const PayBars = ({
             <span className="an-chevbox">
               <Icon name="chevron-down" size={16} />
             </span>
-            <strong style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{q.newQuote}</strong>
+            <strong style={{ color: "var(--sc-primary-on)", fontSize: 15, fontWeight: 600 }}>{q.newQuote}</strong>
           </div>
 
           <div className="an-cut-head">
@@ -370,9 +595,9 @@ const PayBars = ({
                   <span>{q.tryTotals[i]}</span>
                 </span>
                 <span className="an-actions">
-                  <Icon name="share" size={17} color="#8060FF" />
+                  <Icon name="share" size={17} color="var(--sc-purple)" />
                   <Icon name="trash" size={17} color="#EF4444" />
-                  <Icon name="eye" size={17} color="#6080FF" />
+                  <Icon name="eye" size={17} color="var(--sc-primary)" />
                   <Icon name="pencil" size={17} color="#10B981" />
                   <Icon name="download" size={17} color="#F59E0B" />
                 </span>
@@ -394,7 +619,7 @@ const PayBars = ({
             <span className="an-chevbox">
               <Icon name="chevron-down" size={16} />
             </span>
-            <strong style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{s.newRecord}</strong>
+            <strong style={{ color: "var(--sc-primary-on)", fontSize: 15, fontWeight: 600 }}>{s.newRecord}</strong>
           </div>
 
           <div className="an-cut-head">
@@ -414,8 +639,8 @@ const PayBars = ({
               </span>
             ))}
             <span className="an-fpill an-fpill-sel">
-              <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{s.allTemplates}</strong>
-              <Icon name="chevron-down" size={13} color="#6B7280" />
+              <strong style={{ color: "var(--sc-secondary)", fontSize: 12, fontWeight: 500 }}>{s.allTemplates}</strong>
+              <Icon name="chevron-down" size={13} color="var(--sc-muted)" />
             </span>
             <span className="an-inp">{s.filterDate}</span>
             <span className="an-inp">{s.filterDoc}</span>
@@ -444,9 +669,9 @@ const PayBars = ({
                   <span className={row[4] === s.rows[2]?.[4] ? "an-tpl none" : "an-tpl"}>{row[4]}</span>
                 </span>
                 <span className="an-actions">
-                  <Icon name="share" size={17} color="#8060FF" />
+                  <Icon name="share" size={17} color="var(--sc-purple)" />
                   <Icon name="trash" size={17} color="#EF4444" />
-                  <Icon name="eye" size={17} color="#6080FF" />
+                  <Icon name="eye" size={17} color="var(--sc-primary)" />
                   <Icon name="pencil" size={17} color="#10B981" />
                   <Icon name="download" size={17} color="#F59E0B" />
                 </span>
@@ -486,9 +711,9 @@ const PayBars = ({
             <p className="an-paylist-title">{py.list}</p>
             <div className="an-filters">
               <span className="an-paysearch">
-                <Icon name="search" size={14} color="#6B7280" />
+                <Icon name="search" size={14} color="var(--sc-muted)" />
                 <span className="an-paysearch-text">{py.search}</span>
-                <Icon name="close" size={14} color="#6B7280" />
+                <Icon name="close" size={14} color="var(--sc-muted)" />
               </span>
               {py.timeFilters.map((f, i) => (
                 <span key={f} className={`an-fpill${i === 0 ? " active" : ""}`} style={{ height: 32, padding: "0 12px" }}>
@@ -496,8 +721,8 @@ const PayBars = ({
                 </span>
               ))}
               <span className="an-fpill an-fpill-sel" style={{ height: 32 }}>
-                <strong style={{ color: "#E5E7EB", fontSize: 12, fontWeight: 500 }}>{py.allStatus}</strong>
-                <Icon name="chevron-down" size={13} color="#6B7280" />
+                <strong style={{ color: "var(--sc-text)", fontSize: 12, fontWeight: 500 }}>{py.allStatus}</strong>
+                <Icon name="chevron-down" size={13} color="var(--sc-muted)" />
               </span>
               <span className="an-payref">
                 <Icon name="refresh" size={16} />
@@ -533,7 +758,7 @@ const PayBars = ({
 
     if (screen === "plan") {
       const pl = sc.plan;
-      const teamColors = ["#6080FF", "#10B981"];
+      const teamColors = isDark ? ["#6080FF", "#10B981"] : ["#7A6CFD", "#10B981"];
       const d = new Date();
       const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
       const firstDow = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
@@ -559,8 +784,8 @@ const PayBars = ({
               <div className="an-card-title">
                 <strong>{pl.teamsTitle}</strong>
               </div>
-              <span className="an-btn" style={{ background: "rgba(96,128,255,.14)", color: "#6080FF" }}>
-                <Icon name="plus" size={14} color="#6080FF" />
+              <span className="an-btn" style={{ background: "var(--sc-primary-rgba)", color: "var(--sc-primary)" }}>
+                <Icon name="plus" size={14} color="var(--sc-primary)" />
                 {pl.newTeam}
               </span>
             </div>
@@ -604,14 +829,14 @@ const PayBars = ({
                 </span>
               ))}
               <span className="an-fpill an-fpill-sel">
-                <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{pl.allTeams}</strong>
-                <Icon name="chevron-down" size={13} color="#6B7280" />
+                <strong style={{ color: "var(--sc-secondary)", fontSize: 12, fontWeight: 500 }}>{pl.allTeams}</strong>
+                <Icon name="chevron-down" size={13} color="var(--sc-muted)" />
               </span>
               <span className="an-cal-close">
                 <Icon name="close" size={15} />
               </span>
               <span className="an-btn an-btn-newplan">
-                <Icon name="plus" size={14} color="#fff" />
+                <Icon name="plus" size={14} color="var(--sc-primary-on)" />
                 {pl.newPlan}
               </span>
             </div>
@@ -664,7 +889,7 @@ const PayBars = ({
 
           <div className="an-plist">
             <div className="an-plist-head">
-              <Icon name="card" size={18} color="#6080FF" />
+              <Icon name="card" size={18} color="var(--sc-primary)" />
               <span className="an-plist-title">{pl.planList}</span>
               <span className="an-plist-count">{pl.listCount}</span>
             </div>
@@ -675,8 +900,8 @@ const PayBars = ({
                 </span>
               ))}
               <span className="an-fpill an-fpill-sel" style={{ height: 28, padding: "0 12px" }}>
-                <strong style={{ color: "#9CA3AF", fontSize: 12, fontWeight: 500 }}>{pl.allTeams}</strong>
-                <Icon name="chevron-down" size={13} color="#6B7280" />
+                <strong style={{ color: "var(--sc-secondary)", fontSize: 12, fontWeight: 500 }}>{pl.allTeams}</strong>
+                <Icon name="chevron-down" size={13} color="var(--sc-muted)" />
               </span>
             </div>
             {pl.appts.map((a, i) => {
@@ -735,7 +960,7 @@ const PayBars = ({
               <span className="an-ib-danger an-ib-btn">
                 <Icon name="trash" size={18} />
               </span>
-              <Icon name="chevron-fwd" size={20} color="#9CA3AF" />
+              <Icon name="chevron-fwd" size={20} color="var(--sc-secondary)" />
             </div>
           ))}
         </div>
@@ -756,6 +981,8 @@ const PayBars = ({
     { key: "customers", label: sc.customers.label },
     { key: "plan", label: sc.plan.label },
     { key: "payments", label: sc.payments.label },
+    { key: "profil", label: sc.profil.label },
+    { key: "settings", label: sc.settings.label },
   ];
 
   return (
@@ -768,7 +995,7 @@ const PayBars = ({
         </div>
 
         <div className="showcase">
-          <div className="browser">
+          <div className="browser" data-theme={isDark ? "dark" : "light"}>
             <div className="browser-top">
               <span className="browser-dots">
                 <i className="r" />
@@ -776,17 +1003,19 @@ const PayBars = ({
                 <i className="g" />
               </span>
               <span className="browser-url">
-                <Icon name="card" size={14} color="#6B7280" />
+                <Icon name="card" size={14} color="var(--sc-muted)" />
                 loomy-omega.vercel.app
               </span>
             </div>
             <div className="browser-body">{renderBody()}</div>
             <div className="an-tabbar">
               {sc.tabs.map((label, i) => (
-                <div className={`an-tab ${i === activeTab ? "active" : ""}`} key={label}>
-                  <Icon name={tabBarIcons[i]} size={i === activeTab ? 22 : 20} color={i === activeTab ? "#6080FF" : "#6B7280"} />
+                <button className={`an-tab ${i === activeTab ? "active" : ""}`} key={label} onClick={() => setScreen(screenKeys[i])}>
+                  <span className="an-tab-ic">
+                    <Icon name={tabBarIcons[i]} size={i === activeTab ? 22 : 20} color={i === activeTab ? "var(--sc-primary)" : "var(--sc-muted)"} />
+                  </span>
                   <span>{label}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
