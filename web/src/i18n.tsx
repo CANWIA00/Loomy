@@ -28,6 +28,12 @@ const tr = {
     stat2Label: "Dijital Kayıt",
     stat3Value: "1",
     stat3Label: "Panel",
+    visual: {
+      floatATitle: "Teklif onaylandı",
+      floatASub: "18.000,00 ₺ · anında PDF",
+      floatBTitle: "Sıfır kağıt",
+      floatBSub: "her şey dijital",
+    },
   },
   features: {
     badge: "Özellikler",
@@ -774,6 +780,12 @@ const en: Dictionary = {
     stat2Label: "Digital records",
     stat3Value: "1",
     stat3Label: "Panel",
+    visual: {
+      floatATitle: "Quote approved",
+      floatASub: "18,000.00 TL · instant PDF",
+      floatBTitle: "Zero paper",
+      floatBSub: "everything digital",
+    },
   },
   features: {
     badge: "Features",

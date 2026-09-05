@@ -275,25 +275,34 @@ button {
 .hero {
   position: relative;
   padding: 110px 0 90px;
-  text-align: center;
   overflow: hidden;
 }
 
-.hero::before {
-  content: "";
+.hero-glow {
   position: absolute;
   top: -300px;
   left: 50%;
   transform: translateX(-50%);
-  width: 900px;
+  width: 1000px;
   height: 900px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.22), rgba(139, 92, 246, 0.1) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.24), rgba(139, 92, 246, 0.12) 45%, transparent 70%);
   pointer-events: none;
 }
 
 .hero-inner {
   position: relative;
   z-index: 1;
+}
+
+.hero-split {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.hero-copy {
+  text-align: left;
 }
 
 .hero-badge {
@@ -318,22 +327,22 @@ button {
 }
 
 .hero h1 {
-  font-size: clamp(38px, 6vw, 64px);
+  font-size: clamp(36px, 5.4vw, 60px);
   font-weight: 900;
   line-height: 1.08;
   letter-spacing: -0.03em;
 }
 
-.hero p {
-  margin: 24px auto 0;
-  max-width: 600px;
+.hero .hero-copy p {
+  margin: 24px 0 0;
+  max-width: 560px;
   color: var(--text-muted);
   font-size: 18px;
 }
 
 .hero-actions {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 14px;
   margin-top: 36px;
   flex-wrap: wrap;
@@ -341,7 +350,7 @@ button {
 
 .hero-stats {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 48px;
   margin-top: 56px;
   flex-wrap: wrap;
@@ -364,4 +373,154 @@ button {
 .hero-stat span {
   font-size: 13.5px;
   color: var(--text-dim);
+}
+
+.hero-showcase {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-phone {
+  width: 100%;
+  max-width: 460px;
+  transform: perspective(1400px) rotateY(-12deg) rotateX(4deg);
+  transform-origin: center;
+  filter: drop-shadow(0 40px 60px rgba(0, 0, 0, 0.55));
+  animation: heroRise 1s ease both;
+}
+
+@keyframes heroRise {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(-12deg) rotateX(6deg) translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(-12deg) rotateX(4deg) translateY(0);
+  }
+}
+
+.hero-phone .mock-frame {
+  max-height: 620px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.hero-av {
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
+  justify-content: center;
+}
+
+.hero-reflection {
+  height: 26px;
+  width: 70%;
+  margin-top: -4px;
+  background: linear-gradient(to bottom, rgba(99, 102, 241, 0.25), transparent);
+  border-radius: 50%;
+  filter: blur(14px);
+  opacity: 0.7;
+}
+
+.hero-float {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: floatY 5s ease-in-out infinite;
+}
+
+.hero-float .hf-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--gradient);
+  flex-shrink: 0;
+}
+
+.hero-float strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.hero-float small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+.hero-float-a {
+  top: 12%;
+  left: -34px;
+}
+
+.hero-float-b {
+  bottom: 16%;
+  right: -26px;
+  animation-delay: 0.7s;
+}
+
+.hero-float-b .hf-ic {
+  background: linear-gradient(135deg, #2dd4bf, #0ea5e9);
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@media (min-width: 900px) {
+  .hero-split {
+    grid-template-columns: 1.05fr 1fr;
+  }
+}
+
+@media (max-width: 899px) {
+  .hero {
+    padding: 90px 0 70px;
+  }
+  .hero-split {
+    grid-template-columns: 1fr;
+    gap: 64px;
+    text-align: center;
+  }
+  .hero-copy {
+    text-align: center;
+  }
+  .hero .hero-copy p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-actions,
+  .hero-stats {
+    justify-content: center;
+  }
+  .hero-phone {
+    transform: none;
+    animation: none;
+  }
+  .hero-float-a {
+    left: -6px;
+  }
+  .hero-float-b {
+    right: -6px;
+  }
 }
