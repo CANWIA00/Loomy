@@ -3706,3 +3706,252 @@
   font-weight: 600;
   color: var(--text-muted);
 }
+
+/* ---- Feature detail: service / payment / schedule / team / dashboard ---- */
+
+.fms-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 99px;
+  color: #fff;
+  background: var(--sc-primary);
+}
+
+.an-sig-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.fms-sig {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  background: rgba(126, 106, 255, 0.07);
+}
+
+.fms-sig b {
+  font-size: 9.5px;
+  color: var(--sc-muted);
+}
+
+.fms-sig em {
+  font-style: normal;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--sc-text);
+  font-family: "Caveat", cursive;
+}
+
+.fms-sig i {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-style: normal;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--sc-muted);
+}
+
+.fmp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 2px;
+}
+
+.fmp-chip {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 99px;
+  color: var(--sc-muted);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fmp-chip.on {
+  color: #fff;
+  background: var(--sc-primary);
+  border-color: var(--sc-primary);
+}
+
+.fmp-chip.warn {
+  color: var(--sc-warn);
+  border-color: var(--sc-warn);
+}
+
+.fmp-tot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  color: var(--sc-muted);
+}
+
+.fmp-tot span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.fmp-tot b {
+  font-weight: 800;
+  color: var(--sc-text);
+  font-size: 12px;
+}
+
+.fm-cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin: 12px 0 4px;
+}
+
+.fm-cal > span {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--sc-text);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fm-cal > span.lbl {
+  height: 16px;
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--sc-muted);
+  background: none;
+  border: none;
+}
+
+.fm-cal > span.on {
+  color: #fff;
+  background: var(--sc-primary);
+  border-color: var(--sc-primary);
+}
+
+.fms-tag {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 99px;
+  color: var(--sc-primary);
+  background: rgba(126, 106, 255, 0.12);
+}
+
+.fms-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--sc-primary);
+  flex-shrink: 0;
+}
+
+.fms-avatar.alt {
+  background: var(--sc-accent);
+}
+
+.fms-invite {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.fms-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--sc-muted);
+}
+
+.fms-code b {
+  font-weight: 800;
+  color: var(--sc-primary);
+  letter-spacing: 1px;
+}
+
+.fm-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0 2px;
+}
+
+.fm-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fm-tile b {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--sc-text);
+}
+
+.fm-tile i {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--sc-muted);
+  line-height: 1.25;
+}
+
+.fm-tile.warn b {
+  color: var(--sc-warn);
+}
+
+.fm-tile.ok b {
+  color: var(--ok);
+}
+
+.fph-note {
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 8.3px;
+  line-height: 1.45;
+  color: #555;
+  font-weight: 500;
+}
+
+.fph-pill {
+  font-size: 7.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 99px;
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.fph-pill.on {
+  color: #15803d;
+  background: #dcfce7;
+}

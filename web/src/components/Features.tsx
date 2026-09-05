@@ -119,7 +119,9 @@ function Mini({ name, size = 15, color = "currentColor" }: { name: string; size?
 
 export default function Features() {
   const { t } = useLanguage();
-  const [detail, setDetail] = useState<"customer" | "quote" | null>(null);
+  const [detail, setDetail] = useState<
+    "customer" | "quote" | "service" | "payment" | "schedule" | "team" | "dashboard" | null
+  >(null);
   const open = detail !== null;
 
   useEffect(() => {
@@ -132,6 +134,11 @@ export default function Features() {
   const fd = t.features.featureDetail;
   const cd = fd.customer;
   const qd = fd.quote;
+  const sd = fd.service;
+  const pd = fd.payment;
+  const sched = fd.schedule;
+  const td = fd.team;
+  const dbd = fd.dashboard;
   const hi = cd.history;
 
   return (
@@ -146,19 +153,12 @@ export default function Features() {
         <div className="features-grid">
           {t.features.items.map((feature, index) => {
             const Icon = icons[index % icons.length];
-            const isCustomer = index === 0;
-            const isQuote = index === 1;
+            const detailKeys = ["customer", "quote", "service", "payment", "schedule", "team", "dashboard"] as const;
             return (
               <button
-                className={`feature-card feature-card-btn${isCustomer ? " customer" : ""}`}
+                className={`feature-card feature-card-btn${index === 0 ? " customer" : ""}`}
                 key={feature.title}
-                onClick={
-                  isCustomer
-                    ? () => setDetail("customer")
-                    : isQuote
-                      ? () => setDetail("quote")
-                      : undefined
-                }
+                onClick={() => setDetail(detailKeys[index])}
                 type="button"
               >
                 <FeatureIcon>
@@ -166,14 +166,12 @@ export default function Features() {
                 </FeatureIcon>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
-                {(isCustomer || isQuote) && (
-                  <span className="feature-card-link">
-                    {fd.link}
-                    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M5 12h14m0 0-5.5-5.5M19 12l-5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                )}
+                <span className="feature-card-link">
+                  {fd.link}
+                  <svg width={15} height={15} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M5 12h14m0 0-5.5-5.5M19 12l-5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
               </button>
             );
           })}
@@ -356,6 +354,626 @@ export default function Features() {
                 <p className="fph-caption">{hi.docTitle}</p>
               </div>
             </div>
+              </>
+            ) : detail === "service" ? (
+              <>
+                <h2 className="fmodal-title">{sd.title}</h2>
+                <p className="fmodal-intro">{sd.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{sd.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Yeni Servis</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Yeni Servis</h3>
+                            <span className="an-top-sub">Servis Kaydı Oluştur</span>
+                          </div>
+                          <span className="an-chip">TR</span>
+                        </div>
+
+                        <div className="an-form-card">
+                          <div className="an-form-head">
+                            <strong>Servis Bilgileri</strong>
+                            <span className="fqm-new"><Mini name="check" size={12} color="var(--sc-primary)" /> Kayıtlı</span>
+                          </div>
+                          <div className="an-form-grid">
+                            <div className="an-field">
+                              <span>Müşteri</span>
+                              <div className="af-input af-chip">Yılmaz Isı Sistemleri</div>
+                            </div>
+                            <div className="an-field">
+                              <span>Hizmet</span>
+                              <input className="af-input" defaultValue="Klima Bakım" />
+                            </div>
+                            <div className="an-field">
+                              <span>Tarih</span>
+                              <input className="af-input" defaultValue="12.09.2026" />
+                            </div>
+                            <div className="an-field">
+                              <span>Teknisyen</span>
+                              <div className="af-input af-chip">Ahmet Yıldız</div>
+                            </div>
+                          </div>
+
+                          <div className="an-form-head an-form-head-sub">
+                            <strong>Yapılan İşlem</strong>
+                          </div>
+                          <div className="an-item-card">
+                            <textarea className="af-input af-ta" rows={2} defaultValue="Genel bakım, filtre değişimi ve gaz kontrolü tamamlandı." />
+                          </div>
+
+                          <div className="an-form-grid af-line">
+                            <div className="an-field">
+                              <span>Ücret</span>
+                              <input className="af-input" defaultValue="6.000,00" />
+                            </div>
+                            <div className="an-field">
+                              <span>KDV</span>
+                              <div className="af-input af-chip">%20</div>
+                            </div>
+                          </div>
+
+                          <div className="an-form-head an-form-head-sub">
+                            <strong>İmzalar</strong>
+                          </div>
+                          <div className="an-sig-row">
+                            <span className="fms-sig">
+                              <b>Teknisyen</b>
+                              <em>A. Yıldız</em>
+                              <i><Mini name="check" size={10} color="#15803d" /> Dijital İmza</i>
+                            </span>
+                            <span className="fms-sig">
+                              <b>Müşteri</b>
+                              <em>Ayşe Yılmaz</em>
+                              <i>İmza Bekleniyor</i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{sd.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{sd.pointsTitle}</h3>
+                    <ul>
+                      {sd.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{sd.docTitle}</h3>
+                    <p>{sd.docIntro}</p>
+                    <ul>
+                      {sd.docPoints.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="fmod-history-photo">
+                    <div className="fph-photo">
+                      <div className="fph-paper">
+                        <div className="fph-brand">
+                          <span className="fph-logo">L</span>
+                          <div className="fph-brand-tx">
+                            <strong>LOOMY</strong>
+                            <span>Servis Teslim Formu</span>
+                          </div>
+                          <span className="fph-date">12.09.2026</span>
+                        </div>
+                        <div className="fph-cust">
+                          <b>Yılmaz Isı Sistemleri</b>
+                          <span>Osmangazi Mah. Çınar Sok. No:12 · Bursa</span>
+                        </div>
+                        <div className="fph-sec">Servis Bilgileri</div>
+                        <div className="fph-row"><span>Hizmet</span><b>Klima Bakım</b></div>
+                        <div className="fph-row"><span>Tarih</span><b>12.09.2026</b></div>
+                        <div className="fph-row"><span>Teknisyen</span><b>Ahmet Yıldız</b></div>
+                        <div className="fph-sec">Yapılan İşlem</div>
+                        <div className="fph-note">Genel bakım, filtre değişimi ve gaz kontrolü tamamlandı.</div>
+                        <div className="fph-row fph-tot"><span>Ücret / KDV</span><b>₺6.000,00 · %20</b></div>
+                        <div className="fph-sig">
+                          <span className="fph-stamp">ÜNSAL<i>TEKNİK SERVİS</i><b>KAŞE 2026</b></span>
+                          <div className="fph-sig-tx">
+                            <span className="fph-ok"><Mini name="check" size={10} color="#15803d" /> Doğrulandı</span>
+                            <span>Teknisyen + müşteri dijital imzası</span>
+                          </div>
+                        </div>
+                        <div className="fph-foot">Loomy ile oluşturuldu · İmza ve kaşe ile güvende</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : detail === "payment" ? (
+              <>
+                <h2 className="fmodal-title">{pd.title}</h2>
+                <p className="fmodal-intro">{pd.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{pd.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Ödemeler</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Ödemeler</h3>
+                            <span className="an-top-sub">Ağustos 2026 · Takip</span>
+                          </div>
+                          <span className="an-chip">₺</span>
+                        </div>
+                        <div className="fmp-chips">
+                          <span className="fmp-chip on">Tümü</span>
+                          <span className="fmp-chip">Ödendi</span>
+                          <span className="fmp-chip warn">Bekliyor</span>
+                        </div>
+                        <div className="an-sec-head">
+                          <span className="an-sec-ic"><Mini name="doc" size={14} /></span>
+                          <strong>Bu Ay · 3 Ödeme</strong>
+                        </div>
+                        <div className="an-rec-list">
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Klima Bakım</strong>
+                              <span>12.09.2026 · Servis</span>
+                            </span>
+                            <span className="an-ht-pill paid">Ödendi</span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Kombi Montaj</strong>
+                              <span>11.09.2026 · Servis</span>
+                            </span>
+                            <span className="an-ht-pill pending">Bekliyor</span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Kamera Sistemi</strong>
+                              <span>05.09.2026 · Teklif</span>
+                            </span>
+                            <span className="an-ht-pill pending">Bekliyor</span>
+                          </span>
+                        </div>
+                        <div className="fmp-tot">
+                          <span>Ödenen <b>₺6.000</b></span>
+                          <span>Bekleyen <b>₺144.500</b></span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{pd.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{pd.pointsTitle}</h3>
+                    <ul>
+                      {pd.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{pd.docTitle}</h3>
+                    <p>{pd.docIntro}</p>
+                    <ul>
+                      {pd.docPoints.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="fmod-history-photo">
+                    <div className="fph-photo">
+                      <div className="fph-paper">
+                        <div className="fph-brand">
+                          <span className="fph-logo">L</span>
+                          <div className="fph-brand-tx">
+                            <strong>LOOMY</strong>
+                            <span>Aylık Ödeme Özeti</span>
+                          </div>
+                          <span className="fph-date">Ağustos 2026</span>
+                        </div>
+                        <div className="fph-cust">
+                          <b>Yılmaz Isı Sistemleri</b>
+                          <span>Hesap Özeti · 01–31 Ağustos</span>
+                        </div>
+                        <div className="fph-sec">Ödemeler (3)</div>
+                        <div className="fph-row"><span><b>Klima Bakım</b> · 12.09</span><span className="fph-pill on">Ödendi</span></div>
+                        <div className="fph-row"><span><b>Kombi Montaj</b> · 11.09</span><span className="fph-pill">Bekliyor</span></div>
+                        <div className="fph-row"><span><b>Kamera Sistemi</b> · 05.09</span><span className="fph-pill">Bekliyor</span></div>
+                        <div className="fph-sec">Özet</div>
+                        <div className="fph-row"><span>Ödenen</span><b>₺6.000,00</b></div>
+                        <div className="fph-row fph-tot"><span>Bekleyen</span><b>₺144.500,00</b></div>
+                        <div className="fph-foot">Loomy ile oluşturuldu · Durum rozetleriyle ödeme özeti</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : detail === "schedule" ? (
+              <>
+                <h2 className="fmodal-title">{sched.title}</h2>
+                <p className="fmodal-intro">{sched.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{sched.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Haftalık Plan</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Haftalık Plan</h3>
+                            <span className="an-top-sub">07 – 13 Eylül 2026</span>
+                          </div>
+                          <span className="an-chip">Eyl</span>
+                        </div>
+                        <div className="fm-cal">
+                          <span className="lbl">Pzt</span><span className="lbl">Sal</span><span className="lbl">Çar</span><span className="lbl">Per</span><span className="lbl">Cum</span><span className="lbl">Cmt</span><span className="lbl">Paz</span>
+                          <span>07</span><span>08</span><span>09</span><span>10</span><span>11</span><span className="on">12</span><span>13</span>
+                        </div>
+                        <div className="an-sec-head">
+                          <span className="an-sec-ic"><Mini name="clock" size={14} /></span>
+                          <strong>Bugün · 12.09</strong>
+                          <span className="an-sec-count">2</span>
+                        </div>
+                        <div className="an-rec-list">
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>09:00 · Klima Bakım</strong>
+                              <span>Yılmaz Isı · Osmangazi</span>
+                            </span>
+                            <span className="fms-tag">A. Yıldız</span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>11:30 · Kombi Montaj</strong>
+                              <span>Beyaz Ocağı · Nilüfer</span>
+                            </span>
+                            <span className="fms-tag">B. Demir</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{sched.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{sched.pointsTitle}</h3>
+                    <ul>
+                      {sched.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{sched.docTitle}</h3>
+                    <p>{sched.docIntro}</p>
+                    <ul>
+                      {sched.docPoints.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="fmod-history-photo">
+                    <div className="fph-photo">
+                      <div className="fph-paper">
+                        <div className="fph-brand">
+                          <span className="fph-logo">L</span>
+                          <div className="fph-brand-tx">
+                            <strong>LOOMY</strong>
+                            <span>Haftalık Plan</span>
+                          </div>
+                          <span className="fph-date">07–13 Eylül</span>
+                        </div>
+                        <div className="fph-cust">
+                          <b>Ekip Takvimi</b>
+                          <span>5 atama · 3 teknisyen</span>
+                        </div>
+                        <div className="fph-sec">Atamalar</div>
+                        <div className="fph-row"><span><b>08.09</b> · Kombi Montaj</span><b>B. Demir</b></div>
+                        <div className="fph-row"><span><b>09.09</b> · Klima Bakım</span><b>A. Yıldız</b></div>
+                        <div className="fph-row"><span><b>10.09</b> · Arıza Onarım</span><b>S. Can</b></div>
+                        <div className="fph-row"><span><b>12.09</b> · Yıllık Bakım</span><b>A. Yıldız</b></div>
+                        <div className="fph-row fph-tot"><span><b>13.09</b> · Kamera Sistemi</span><b>B. Demir</b></div>
+                        <div className="fph-foot">Loomy ile oluşturuldu · Tüm ekip aynı planı görür</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : detail === "team" ? (
+              <>
+                <h2 className="fmodal-title">{td.title}</h2>
+                <p className="fmodal-intro">{td.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{td.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Ekip</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Ekip</h3>
+                            <span className="an-top-sub">Üyeler ve Roller</span>
+                          </div>
+                          <span className="an-chip">TR</span>
+                        </div>
+                        <div className="fmp-chips">
+                          <span className="fmp-chip on">Tümü</span>
+                          <span className="fmp-chip">Teknisyen</span>
+                          <span className="fmp-chip">Ofis</span>
+                        </div>
+                        <div className="an-sec-head">
+                          <span className="an-sec-ic"><Mini name="shield" size={14} /></span>
+                          <strong>Üyeler (3)</strong>
+                        </div>
+                        <div className="an-rec-list">
+                          <span className="an-rec">
+                            <span className="fms-avatar">AY</span>
+                            <span className="an-rec-main">
+                              <strong>Ahmet Yıldız</strong>
+                              <span>Teknisyen · Servis</span>
+                            </span>
+                            <span className="fms-tag">Aktif</span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="fms-avatar">BD</span>
+                            <span className="an-rec-main">
+                              <strong>Burak Demir</strong>
+                              <span>Teknisyen · Servis</span>
+                            </span>
+                            <span className="fms-tag">Aktif</span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="fms-avatar">SC</span>
+                            <span className="an-rec-main">
+                              <strong>Seda Can</strong>
+                              <span>Satış & Ofis</span>
+                            </span>
+                            <span className="fms-tag">Yönetici</span>
+                          </span>
+                        </div>
+                        <div className="fms-invite">
+                          <span className="an-add-item"><Mini name="check" size={14} /> Ekip Üyesi Davet Et</span>
+                          <span className="fms-code">Kod: <b>LOOMY-4821</b></span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{td.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{td.pointsTitle}</h3>
+                    <ul>
+                      {td.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{td.docTitle}</h3>
+                    <p>{td.docIntro}</p>
+                    <ul>
+                      {td.docPoints.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="fmod-history-photo">
+                    <div className="fph-photo">
+                      <div className="fph-paper">
+                        <div className="fph-brand">
+                          <span className="fph-logo">L</span>
+                          <div className="fph-brand-tx">
+                            <strong>LOOMY</strong>
+                            <span>Ekip Listesi</span>
+                          </div>
+                          <span className="fph-date">05.09.2026</span>
+                        </div>
+                        <div className="fph-cust">
+                          <b>1D TEKNİK SERVİS</b>
+                          <span>Üye listesi · 3 çalışan</span>
+                        </div>
+                        <div className="fph-sec">Üyeler (3)</div>
+                        <div className="fph-row"><span>Ahmet Yıldız</span><b>Teknisyen</b></div>
+                        <div className="fph-row"><span>Burak Demir</span><b>Teknisyen</b></div>
+                        <div className="fph-row fph-tot"><span>Seda Can</span><b>Satış & Ofis</b></div>
+                        <div className="fph-sec">Davet Kodu</div>
+                        <div className="fph-row fph-tot"><span>Yeni üyeler için</span><b>LOOMY-4821</b></div>
+                        <div className="fph-foot">Loomy ile oluşturuldu · Roller ve yetkilerle güvende</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : detail === "dashboard" ? (
+              <>
+                <h2 className="fmodal-title">{dbd.title}</h2>
+                <p className="fmodal-intro">{dbd.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{dbd.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Panel</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Panel</h3>
+                            <span className="an-top-sub">İşletme Özeti · 12.09.2026</span>
+                          </div>
+                          <span className="an-chip">TR</span>
+                        </div>
+                        <div className="fm-tiles">
+                          <span className="fm-tile"><b>4</b><i>Bugünkü Randevu</i></span>
+                          <span className="fm-tile"><b>2</b><i>Bekleyen Teklif</i></span>
+                          <span className="fm-tile warn"><b>1</b><i>Geciken Ödeme</i></span>
+                          <span className="fm-tile ok"><b>3</b><i>Tamamlanan Servis</i></span>
+                        </div>
+                        <div className="an-sec-head">
+                          <span className="an-sec-ic"><Mini name="doc" size={14} /></span>
+                          <strong>Son Servisler</strong>
+                          <span className="an-sec-count">3</span>
+                        </div>
+                        <div className="an-rec-list">
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Klima Bakım</strong>
+                              <span>12.09.2026 · Yılmaz Isı</span>
+                            </span>
+                            <span className="an-ht-pill paid">Ödendi</span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Arıza Onarım</strong>
+                              <span>11.09.2026 · Beyaz Ocağı</span>
+                            </span>
+                            <span className="an-ht-pill pending">Bekliyor</span>
+                          </span>
+                        </div>
+                        <div className="fmp-tot">
+                          <span>Ödenen <b>₺8.000</b></span>
+                          <span>Bekleyen <b>₺144.500</b></span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{dbd.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{dbd.pointsTitle}</h3>
+                    <ul>
+                      {dbd.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{dbd.docTitle}</h3>
+                    <p>{dbd.docIntro}</p>
+                    <ul>
+                      {dbd.docPoints.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="fmod-history-photo">
+                    <div className="fph-photo">
+                      <div className="fph-paper">
+                        <div className="fph-brand">
+                          <span className="fph-logo">L</span>
+                          <div className="fph-brand-tx">
+                            <strong>LOOMY</strong>
+                            <span>Günlük Rapor</span>
+                          </div>
+                          <span className="fph-date">12.09.2026</span>
+                        </div>
+                        <div className="fph-cust">
+                          <b>1D TEKNİK SERVİS</b>
+                          <span>İşletme Özeti · Günlük Rapor</span>
+                        </div>
+                        <div className="fph-sec">Özet</div>
+                        <div className="fph-row"><span>Bugünkü Randevu</span><b>4</b></div>
+                        <div className="fph-row"><span>Bekleyen Teklif</span><b>2</b></div>
+                        <div className="fph-row"><span>Tamamlanan Servis</span><b>3</b></div>
+                        <div className="fph-sec">Ödeme Durumu</div>
+                        <div className="fph-row"><span>Ödenen</span><b>₺8.000,00</b></div>
+                        <div className="fph-row fph-tot"><span>Bekleyen</span><b>₺144.500,00</b></div>
+                        <div className="fph-foot">Loomy ile oluşturuldu · Günlük özeti ekiple paylaşın</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </>
             ) : (
               <>

@@ -161,6 +161,116 @@ const tr = {
           "WhatsApp, e-posta veya güvenli bağlantıyla anında online paylaşım",
         ],
       },
+      service: {
+        title: "Servis ve İş Takibi",
+        intro:
+          "Yaptığınız her servisi kaydedin, teknisyen ve müşteri dijital imzasını formda alın ve eksiksiz bir servis teslim formunu müşteriyle anında paylaşın.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın servis kayıt ekranını yansıtır: işlem detayı, ücret ve teknisyen/müşteri imza alanları.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Servis kaydı ekleyin: müşteri, işlem, açıklama, ücret ve KDV tek ekranda",
+          "Yapılan işlem açıklamasıyla eksiksiz servis raporu oluşturun",
+          "Teknisyen ve müşteri dijital imzasını formda alın",
+          "Servis teslim formunu tek tıkla PDF olarak paylaşın",
+        ],
+        docTitle: "Servis Raporunu Online Paylaşın",
+        docIntro:
+          "Kaydedilen her servis; firma logosu, kaşe, teknisyen ve müşteri dijital imzası ile işlem detayını içeren eksiksiz bir servis teslim formuna dönüşür.",
+        docPoints: [
+          "Teknisyen ve müşteri dijital imzası + firma kaşesi",
+          "WhatsApp, e-posta veya güvenli bağlantıyla anında paylaşım",
+        ],
+      },
+      payment: {
+        title: "Ödeme Takibi",
+        intro:
+          "Ödenmiş, bekleyen ve geciken ödemeleri tek ekranda görün; tek dokunuşla ödendi işaretleyin, aylık özetle tahsilatınızı takip edin.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın ödeme takip ekranını yansıtır: filtreler, ödeme durumları ve tutarlar tek bakışta.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Ödenmiş, bekleyen ve geciken ödemeleri filtreyle ayırın",
+          "Tek dokunuşla bir ödemeyi ödendi olarak işaretleyin",
+          "Aylık ödeme durumunu ve özeti tek ekranda görün",
+          "Ödeme geçmişini müşteriyle tek tıkla paylaşın",
+        ],
+        docTitle: "Ödeme Özetini Online Paylaşın",
+        docIntro:
+          "Aylık ödeme durumu; ödenen ve bekleyen tutarlar, durum rozetleriyle tek belgede özetlenir ve müşteriyle online paylaşılır.",
+        docPoints: [
+          "Ödenen ve bekleyen tutarlar ayrı rozetlerle gösterilir",
+          "Aylık özet tek tıkla WhatsApp veya e-posta ile paylaşılır",
+        ],
+      },
+      schedule: {
+        title: "Randevu ve Planlama",
+        intro:
+          "Takvim ve haftalık plan üzerinden randevularınızı ve ekibinizin işlerini düzenleyin; haftanın planı tek bakışta görünür.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın haftalık plan ekranını yansıtır: takvim ve günün randevuları.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Haftalık takvimde randevuları tek bakışta görün",
+          "Randevuları müşteriye ve ekip üyesine atayın",
+          "Kimsenin işi aksamasın: tüm ekip aynı planı görür",
+          "Günlük planı ekiple anında paylaşın",
+        ],
+        docTitle: "Haftalık Planı Paylaşın",
+        docIntro:
+          "Haftalık plan; günler, randevular ve atanan personel ile tek belgede özetlenir ve ekiple online paylaşılır.",
+        docPoints: [
+          "Tüm randevular haftalık plan belgesinde toplanır",
+          "Ekiple veya müşteriyle tek tıkla online paylaşılır",
+        ],
+      },
+      team: {
+        title: "Ekip ve Roller",
+        intro:
+          "Davet koduyla ekibinizi ekleyin, rollerini belirleyin ve yetkilendirme ile herkesin yaptığı işi takip edin.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın ekip ekranını yansıtır: üyeler, roller ve davet kodu.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Davet koduyla ekibinize üye ekleyin",
+          "Teknisyen, yönetici ve satış gibi roller belirleyin",
+          "Yetkilendirme ile kimin neyi görebileceğini kontrol edin",
+          "Her üyenin yaptığı işleri takip edin",
+        ],
+        docTitle: "Ekip Raporunu Paylaşın",
+        docIntro:
+          "Ekip üyeleri, rolleri ve son görevleri tek belgede özetlenir; rapor yöneticiler tarafından anında online paylaşılır.",
+        docPoints: [
+          "Üye listesi ve roller tek belgede toplanır",
+          "Son görevler ve durumlar birlikte gösterilir",
+        ],
+      },
+      dashboard: {
+        title: "Anlık Panel",
+        intro:
+          "İşletmenizin genel durumunu özet istatistiklerle görün; bugünkü planlar, ödeme durumu ve son servisler tek bakışta.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın anlık panel ekranını yansıtır: özet istatistikler ve son kayıtlar.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Bugünkü randevu, teklif ve servis sayılarını görün",
+          "Ödenmiş ve bekleyen ödeme durumunu takip edin",
+          "Son servis ve teklif kayıtlarını tek ekranda görün",
+          "Günlük işletme özetini ekiple anında paylaşın",
+        ],
+        docTitle: "Günlük Raporu Paylaşın",
+        docIntro:
+          "Günlük işletme özeti; istatistikler ve son kayıtlarla tek belgede toplanır ve ekiple online paylaşılır.",
+        docPoints: [
+          "Özet istatistikler ve son kayıtlar tek belgede",
+          "Ekiple veya yönetimle tek tıkla paylaşılır",
+        ],
+      },
     },
   },
   howItWorks: {
@@ -801,6 +911,116 @@ const en: Dictionary = {
         docPoints: [
           "Ready template with company info, logo, stamp and digital signature",
           "Instant online sharing via WhatsApp, email or a secure link",
+        ],
+      },
+      service: {
+        title: "Service & Work Tracking",
+        intro:
+          "Record every service you perform, capture technician and customer digital signatures on the form, and share a complete service delivery form with your customer instantly.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's service record screen: work details, fee and technician/customer signature fields.",
+        pointsTitle: "What can you do?",
+        points: [
+          "Add a service record: customer, work, description, fee and VAT in one screen",
+          "Build a complete service report with the work description",
+          "Capture technician and customer digital signatures on the form",
+          "Share the service delivery form as a PDF in one tap",
+        ],
+        docTitle: "Share Service Reports Online",
+        docIntro:
+          "Every recorded service becomes a complete service delivery form with company logo, stamp, technician/customer digital signatures and work details.",
+        docPoints: [
+          "Technician and customer digital signatures + company stamp",
+          "Instant sharing via WhatsApp, email or a secure link",
+        ],
+      },
+      payment: {
+        title: "Payment Tracking",
+        intro:
+          "See paid, pending and overdue payments in one screen; mark a payment as paid with a single tap and keep track of collections with the monthly summary.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's payment tracking screen: filters, payment statuses and amounts at a glance.",
+        pointsTitle: "What can you do?",
+        points: [
+          "Filter paid, pending and overdue payments",
+          "Mark a payment as paid with a single tap",
+          "See the monthly payment status and summary in one screen",
+          "Share the payment history with your customer in one tap",
+        ],
+        docTitle: "Share Payment Summaries Online",
+        docIntro:
+          "The monthly payment status is summarized in a single document with paid and pending amounts shown as badges, and shared with customers online.",
+        docPoints: [
+          "Paid and pending amounts shown with separate badges",
+          "Monthly summary shared in one tap via WhatsApp or email",
+        ],
+      },
+      schedule: {
+        title: "Appointments & Scheduling",
+        intro:
+          "Organize your appointments and your team's jobs on a calendar and weekly plan; the whole week is visible at a glance.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's weekly plan screen: calendar and the day's appointments.",
+        pointsTitle: "What can you do?",
+        points: [
+          "See appointments on the weekly calendar at a glance",
+          "Assign appointments to customers and team members",
+          "Nothing slips: the whole team sees the same plan",
+          "Share the daily plan with your team instantly",
+        ],
+        docTitle: "Share Weekly Plans Online",
+        docIntro:
+          "The weekly plan is summarized in a single document with days, appointments and assigned staff, and shared with the team online.",
+        docPoints: [
+          "All appointments gathered in one weekly plan document",
+          "Shared online with the team or customer in one tap",
+        ],
+      },
+      team: {
+        title: "Team & Roles",
+        intro:
+          "Add your team with an invite code, assign roles and track what everyone does with permissions.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's team screen: members, roles and the invite code.",
+        pointsTitle: "What can you do?",
+        points: [
+          "Invite team members with your invite code",
+          "Assign roles such as technician, manager and sales",
+          "Control who can see what with permissions",
+          "Track the work each member performs",
+        ],
+        docTitle: "Share Team Reports Online",
+        docIntro:
+          "Team members, roles and recent tasks are summarized in a single document; the report is shared online instantly by managers.",
+        docPoints: [
+          "Member list and roles gathered in one document",
+          "Recent tasks and statuses shown together",
+        ],
+      },
+      dashboard: {
+        title: "Live Dashboard",
+        intro:
+          "See your business status with summary statistics; today's plans, payment status and recent services at a glance.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's live dashboard screen: summary statistics and recent records.",
+        pointsTitle: "What can you do?",
+        points: [
+          "See today's appointment, quote and service counts",
+          "Track paid and pending payment status",
+          "See recent services and quotes in one screen",
+          "Share the daily business summary with your team instantly",
+        ],
+        docTitle: "Share Daily Reports Online",
+        docIntro:
+          "The daily business summary is gathered in a single document with statistics and recent records, and shared online with the team.",
+        docPoints: [
+          "Summary statistics and recent records in one document",
+          "Shared with the team or management in one tap",
         ],
       },
     },
