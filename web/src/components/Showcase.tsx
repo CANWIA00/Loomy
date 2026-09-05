@@ -65,6 +65,8 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><circle cx="12" cy="8" r="0.4" fill="currentColor" /></svg>;
     case "globe":
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.8 2.6 4.2 5.5 4.2 9S14.8 18.4 12 21c-2.8-2.6-4.2-5.5-4.2-9S9.2 5.6 12 3Z" /></svg>;
+    case "star":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m12 4 2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2L4.5 9.5l5.2-.8L12 4Z" /></svg>;
     case "back":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M15 5l-7 7 7 7" /></svg>;
     case "refresh":
@@ -77,6 +79,8 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3 2" /></svg>;
     case "chevron-down":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m6 9 6 6 6-6" /></svg>;
+    case "chevron-up":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m6 15 6-6 6 6" /></svg>;
     case "chevron-fwd":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m9 6 6 6-6 6" /></svg>;
     case "arrow-fwd":
@@ -106,6 +110,8 @@ export default function Showcase() {
   const { t, lang, setLang } = useLanguage();
   const [screen, setScreen] = useState<ScreenKey>("panel");
   const [isDark, setIsDark] = useState(true);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [showServiceForm, setShowServiceForm] = useState(false);
   const sc = t.showcase;
   const statusLabels = sc.statuses as Record<string, string>;
   const statusLabel = (state: string) => statusLabels[state] ?? state;
@@ -544,17 +550,150 @@ const PayBars = ({
 
     if (screen === "quotes") {
       const q = sc.quotes;
+      const qf = sc.forms;
       return (
         <>
           <ScreenHead title={q.title} />
           <p className="an-sub">{q.subtitle}</p>
 
-          <div className="an-head an-head-new">
+          <button className="an-head-new" onClick={() => setShowQuoteForm(!showQuoteForm)}>
             <span className="an-chevbox">
-              <Icon name="chevron-down" size={16} />
+              <Icon name={showQuoteForm ? "chevron-up" : "chevron-down"} size={16} />
             </span>
-            <strong style={{ color: "var(--sc-primary-on)", fontSize: 15, fontWeight: 600 }}>{q.newQuote}</strong>
-          </div>
+            <strong style={{ color: "var(--sc-text)", fontSize: 15, fontWeight: 600 }}>{qf.qNewQuote}</strong>
+          </button>
+
+          {showQuoteForm && (
+            <div className="an-form-card">
+              <div className="an-form-head">
+                <strong>{qf.qNewQuote}</strong>
+                <button className="an-form-close" onClick={() => setShowQuoteForm(false)}>
+                  <Icon name="close" size={16} color="var(--sc-muted)" />
+                </button>
+              </div>
+
+              <button className="an-select-row">
+                <span>
+                  <Icon name="person" size={15} color="var(--sc-muted)" />
+                  {qf.qSelectCustomer}
+                </span>
+                <Icon name="chevron-down" size={15} color="var(--sc-secondary)" />
+              </button>
+              <span className="an-select-hint">{qf.qSearchCustomer}</span>
+
+              <div className="an-form-grid">
+                <label className="an-field">
+                  <span>{qf.qCustomerName}</span>
+                  <input className="af-input" placeholder="Yılmaz Isı Sistemleri" />
+                </label>
+                <label className="an-field">
+                  <span>{qf.qPhone}</span>
+                  <input className="af-input" placeholder="0532 000 00 00" />
+                </label>
+                <label className="an-field">
+                  <span>{qf.qContactPerson}</span>
+                  <input className="af-input" placeholder="Ayşe Yılmaz" />
+                </label>
+                <label className="an-field">
+                  <span>{qf.qSubscriberNo}</span>
+                  <input className="af-input" placeholder="12345" />
+                </label>
+                <label className="an-field">
+                  <span>{qf.qEmail}</span>
+                  <input className="af-input" placeholder="info@yilmazhvac.com" />
+                </label>
+                <label className="an-field">
+                  <span>{qf.qAddress}</span>
+                  <input className="af-input" placeholder="Karşıyaka Mah. Ata Cad. No: 42" />
+                </label>
+                <label className="an-field">
+                  <span>{qf.qFax}</span>
+                  <input className="af-input" placeholder="0232 000 00 01" />
+                </label>
+                <label className="an-field">
+                  <span>{qf.qWebsite}</span>
+                  <input className="af-input" placeholder="yilmazhvac.com" />
+                </label>
+              </div>
+
+              <div className="an-form-grid">
+                <label className="an-field">
+                  <span>{qf.qDocumentDate}</span>
+                  <input className="af-input" placeholder={qf.qDatePlaceholder} />
+                </label>
+                <div className="an-field">
+                  <span>{qf.qValidUntil}</span>
+                  <div className="an-chiprow">
+                    <span className="an-fpill an-fpill active">{qf.qValid1Week}</span>
+                    <span className="an-fpill">{qf.qValid2Week}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="an-form-head an-form-head-sub">
+                <strong>{qf.qItems}</strong>
+              </div>
+
+              <div className="an-item-card">
+                <div className="an-item-top">
+                  <input className="af-input" placeholder={qf.qProductNamePlaceholder} />
+                  <span className="an-ib-danger an-ib-btn">
+                    <Icon name="trash" size={14} />
+                  </span>
+                </div>
+                <textarea className="af-input af-ta" rows={2} placeholder={qf.qDetailsPlaceholder} />
+                <div className="an-form-grid af-line">
+                  <label className="an-field">
+                    <span>{qf.qQuantity}</span>
+                    <input className="af-input" defaultValue="1" />
+                  </label>
+                  <label className="an-field">
+                    <span>{qf.qUnitPrice}</span>
+                    <input className="af-input" placeholder="0,00" />
+                  </label>
+                  <label className="an-field">
+                    <span>{qf.qCurrency}</span>
+                    <button className="af-input af-chip" type="button">
+                      {qf.currencyTry}
+                    </button>
+                  </label>
+                </div>
+              </div>
+
+              <button className="an-add-item" type="button">
+                <Icon name="plus" size={14} color="var(--sc-primary)" />
+                {qf.qAddItem}
+              </button>
+
+              <div className="an-sum">
+                <div className="an-sum-row">
+                  <span>{qf.qSubtotal}</span>
+                  <strong>₺1.200,00</strong>
+                </div>
+                <div className="an-sum-row">
+                  <span>{qf.qKdv} %20</span>
+                  <strong>₺240,00</strong>
+                </div>
+                <div className="an-sum-row total">
+                  <span>{qf.qGrandTotal}</span>
+                  <strong>₺1.440,00</strong>
+                </div>
+              </div>
+
+              <label className="an-field">
+                <span>{qf.qNotes}</span>
+                <textarea className="af-input af-ta" rows={3} placeholder={qf.qNotesPlaceholder} />
+              </label>
+
+              <div className="an-form-actions">
+                <button className="af-btn af-btn-danger" type="button">{qf.qClear}</button>
+                <button className="af-btn af-btn-primary" type="button">
+                  <Icon name="check-circle" size={15} color="var(--sc-primary-on)" />
+                  {qf.qSave}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="an-cut-head">
             <span className="an-cut-title">{q.allLabel}</span>
@@ -610,17 +749,134 @@ const PayBars = ({
 
     if (screen === "services") {
       const s = sc.services;
+      const sf = sc.forms;
       return (
         <>
           <ScreenHead title={s.title} />
           <p className="an-sub">{s.subtitle}</p>
 
-          <div className="an-head an-head-new">
+          <button className="an-head-new" onClick={() => setShowServiceForm(!showServiceForm)}>
             <span className="an-chevbox">
-              <Icon name="chevron-down" size={16} />
+              <Icon name={showServiceForm ? "chevron-up" : "chevron-down"} size={16} />
             </span>
-            <strong style={{ color: "var(--sc-primary-on)", fontSize: 15, fontWeight: 600 }}>{s.newRecord}</strong>
-          </div>
+            <strong style={{ color: "var(--sc-text)", fontSize: 15, fontWeight: 600 }}>{sf.sNewRecord}</strong>
+          </button>
+
+          {showServiceForm && (
+            <div className="an-form-card">
+              <div className="an-form-head">
+                <strong>{sf.sNewRecord}</strong>
+                <button className="an-form-close" onClick={() => setShowServiceForm(false)}>
+                  <Icon name="close" size={16} color="var(--sc-muted)" />
+                </button>
+              </div>
+
+              <div className="an-tpl-row">
+                <span className="an-profile-label">{sf.sFormLabel}</span>
+                <span className="an-fpill an-fpill active">
+                  <Icon name="star" size={13} color="var(--sc-primary-on)" />
+                  {sf.sDefaultTemplate}
+                </span>
+              </div>
+
+              <button className="an-select-row">
+                <span>
+                  <Icon name="person" size={15} color="var(--sc-muted)" />
+                  {sf.sSelectCustomer}
+                </span>
+                <Icon name="chevron-down" size={15} color="var(--sc-secondary)" />
+              </button>
+              <span className="an-select-hint">{sf.qSearchCustomer}</span>
+
+              <div className="an-form-grid">
+                <label className="an-field">
+                  <span>{sf.sCustomerName}</span>
+                  <input className="af-input" placeholder="Yılmaz Isı Sistemleri" />
+                </label>
+                <label className="an-field">
+                  <span>{sf.sServiceAddress}</span>
+                  <input className="af-input" placeholder={sf.sServiceAddressPlaceholder} />
+                </label>
+              </div>
+
+              <div className="an-form-grid">
+                <label className="an-field">
+                  <span>{sf.sStartTime}</span>
+                  <input className="af-input" defaultValue="09:00" />
+                </label>
+                <label className="an-field">
+                  <span>{sf.sEndTime}</span>
+                  <input className="af-input" defaultValue="10:00" />
+                </label>
+              </div>
+
+              <label className="an-field">
+                <span>{sf.sPhone}</span>
+                <input className="af-input" placeholder="0532 000 00 00" />
+              </label>
+
+              <div className="an-chipgroup">
+                <span className="an-profile-label">{sf.sServiceServices}</span>
+                <div className="an-chiprow">
+                  <span className="an-fpill an-fpill active">
+                    <Icon name="check-circle" size={13} color="var(--sc-primary-on)" />
+                    Periyodik Bakım
+                  </span>
+                  <span className="an-fpill">Arıza Onarım</span>
+                  <span className="an-fpill">Montaj</span>
+                </div>
+              </div>
+
+              <div className="an-chipgroup">
+                <span className="an-profile-label">{sf.sTechnicalServices}</span>
+                <div className="an-chiprow">
+                  <span className="an-fpill an-fpill active">
+                    <Icon name="check-circle" size={13} color="var(--sc-primary-on)" />
+                    Kombi
+                  </span>
+                  <span className="an-fpill">Klima</span>
+                  <span className="an-fpill an-fpill active">
+                    <Icon name="check-circle" size={13} color="var(--sc-primary-on)" />
+                    Hidrofor
+                  </span>
+                </div>
+              </div>
+
+              <label className="an-field">
+                <span>{sf.sDetails}</span>
+                <textarea className="af-input af-ta" rows={3} placeholder={sf.sDetailsPlaceholder} />
+              </label>
+
+              <div className="an-form-grid">
+                <label className="an-field">
+                  <span>{sf.sServiceFee}</span>
+                  <input className="af-input" placeholder="0,00" />
+                </label>
+                <div className="an-field">
+                  <span>{sf.sTechnician}</span>
+                  <div className="an-tech">
+                    <span className="an-tech-ic">
+                      <Icon name="person" size={15} />
+                    </span>
+                    <span>{sf.sTechnicianName}</span>
+                  </div>
+                </div>
+              </div>
+
+              <label className="an-field">
+                <span>{sf.sDocumentDate}</span>
+                <input className="af-input" placeholder={sf.sDatePlaceholder} />
+              </label>
+
+              <div className="an-form-actions">
+                <button className="af-btn af-btn-danger" type="button">{sf.sClear}</button>
+                <button className="af-btn af-btn-primary" type="button">
+                  <Icon name="check-circle" size={15} color="var(--sc-primary-on)" />
+                  {sf.sSave}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="an-cut-head">
             <span className="an-cut-title">{s.allLabel}</span>
