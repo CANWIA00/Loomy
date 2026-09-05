@@ -77,6 +77,44 @@ const tr = {
           "İşletmenizin genel durumunu özet istatistiklerle görün; bugünkü planlar, ödeme durumu ve son servisler tek bakışta.",
       },
     ],
+    featureDetail: {
+      badge: "Özellik Detayı",
+      link: "Detaylı Bilgi",
+      back: "Geri Dön",
+      cta: "Ücretsiz Başla",
+      customer: {
+        title: "Müşteri Yönetimi & Geçmişi",
+        intro:
+          "Tüm müşteri bilgileri ve geçmişi tek ekranda. Her müşteri için kart oluşturun, iletişim bilgilerini saklayın ve tüm servis, teklif ve ödeme geçmişine arama ve filtreyle saniyeler içinde ulaşın.",
+        stat1Value: "7/24",
+        stat1Label: "Geçmişe Erişim",
+        stat2Value: "%100",
+        stat2Label: "Dijital Kayıt",
+        stat3Value: "1",
+        stat3Label: "Ekranda Tüm Geçmiş",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın müşteri detay ekranını birebir yansıtır: kart bilgileri, işlem geçmişi ve online paylaşıma hazır belgeler.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Müşteri kartları: şirket adı, ilgili kişi, telefon, e-posta, web sitesi, adres ve abone no tek ekranda",
+          "Her müşteriye özel işlem geçmişi: servis raporları, teklifler ve ödemeler tek akışta listelenir",
+          "Güçlü arama ve filtreleme ile binlerce kaydın içinde saniyeler içinde bulun",
+          "Kağıt, kaşe ve imza arayışına son: tüm belgeler dijital imza ve kaşeyle saklanır",
+          "Belgeleri müşterilerinizle tek tıkla online paylaşın; isterseniz PDF indirip arşivleyin",
+          "Verileriniz bulutta güvenle saklanır; istediğiniz cihazdan erişin",
+        ],
+        docTitle: "Belge ve Online Paylaşım",
+        docIntro:
+          "Kaydedilen her teklif ve servis raporu; firma logosu, kaşe, dijital imza ve canlı döviz kuruyla eksiksiz bir belgeye dönüşür.",
+        docPoints: [
+          "TEKLİF PDF'si: KDV, para birimi ve TCMB canlı kur bilgisiyle",
+          "SERVİS TESLİM FORMU: teknisyen ve müşteri dijital imzası + firma kaşesi",
+          "MÜŞTERİ GEÇMİŞİ PDF'si: tüm işlemleri tek belgede paylaşın",
+          "WhatsApp, e-posta veya güvenli bağlantıyla anında online paylaşım",
+        ],
+      },
+    },
   },
   howItWorks: {
     badge: "Nasıl Çalışır",
@@ -618,6 +656,44 @@ const en: Dictionary = {
           "See your business at a glance with summary statistics; today's plans, payment status and recent services in one view.",
       },
     ],
+    featureDetail: {
+      badge: "Feature Detail",
+      link: "Learn More",
+      back: "Go Back",
+      cta: "Start Free",
+      customer: {
+        title: "Customer Management & History",
+        intro:
+          "All customer information and history in one screen. Create a card for every customer, store contact details and reach all service, quote and payment history in seconds with search and filters.",
+        stat1Value: "7/24",
+        stat1Label: "History Access",
+        stat2Value: "100%",
+        stat2Label: "Digital Records",
+        stat3Value: "1",
+        stat3Label: "Screen for All History",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's customer detail screen: card information, transaction history and documents ready for online sharing.",
+        pointsTitle: "What can you do?",
+        points: [
+          "Customer cards: company name, contact person, phone, email, website, address and subscriber no on one screen",
+          "Per-customer transaction history: service reports, quotes and payments listed in a single stream",
+          "Strong search and filters find any record among thousands in seconds",
+          "No more paper, stamps and signatures: all documents are stored with digital signature and stamp",
+          "Share documents online with your customers in one click, or download and archive PDFs",
+          "Your data is stored securely in the cloud, accessible from any device",
+        ],
+        docTitle: "Documents & Online Sharing",
+        docIntro:
+          "Every saved quote and service report turns into a complete document with company logo, stamp, digital signature and live exchange rates.",
+        docPoints: [
+          "QUOTE PDF: with VAT, currency and TCMB live exchange rates",
+          "SERVICE DELIVERY FORM: technician and customer digital signatures + company stamp",
+          "CUSTOMER HISTORY PDF: share all transactions in a single document",
+          "Instant online sharing via WhatsApp, email or a secure link",
+        ],
+      },
+    },
   },
   howItWorks: {
     badge: "How it works",

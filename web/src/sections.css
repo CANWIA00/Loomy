@@ -3114,3 +3114,296 @@
   font-weight: 700;
   color: var(--sc-primary);
 }
+
+/* ---- feature detail modal ---- */
+.feature-card-btn {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.feature-card-btn.customer {
+  border-color: rgba(139, 92, 246, 0.35);
+  background: linear-gradient(160deg, var(--bg-card-2), var(--bg-card));
+}
+
+.feature-card-link {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--violet);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.feature-card-link svg {
+  transition: transform 0.15s ease;
+}
+
+.feature-card-btn.customer:hover .feature-card-link svg {
+  transform: translateX(3px);
+}
+
+.fmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(11, 11, 20, 0.74);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5vh 20px 40px;
+  overflow: auto;
+}
+
+.fmodal-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  width: 100%;
+  max-width: 960px;
+  padding: 32px 38px 40px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55);
+  margin: auto 0;
+  animation: fmodalIn 0.22s ease;
+}
+
+@keyframes fmodalIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fmodal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.fmodal-head .section-badge {
+  margin-bottom: 0;
+}
+
+.fmodal-close {
+  background: var(--bg-card-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  transition: color 0.15s ease;
+}
+
+.fmodal-close:hover {
+  color: var(--text);
+}
+
+.fmodal-title {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 16px;
+}
+
+.fmodal-intro {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 16px;
+  max-width: 720px;
+}
+
+.fmodal-stats {
+  display: flex;
+  gap: 14px;
+  margin: 26px 0;
+  flex-wrap: wrap;
+}
+
+.fmodal-stat {
+  flex: 1;
+  min-width: 160px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.fmodal-stat strong {
+  display: block;
+  font-size: 26px;
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.fmodal-stat span {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.fmodal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .fmodal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fmodal-mock-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.mock-frame {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--sc-bg);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.mock-frame-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: var(--bg-card-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.mock-f-btn {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.mock-f-btn.r {
+  background: #ff5f57;
+}
+
+.mock-f-btn.y {
+  background: #febc2e;
+}
+
+.mock-f-btn.g {
+  background: #28c840;
+}
+
+.mock-f-url {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mock-frame-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fmodal-mock-desc {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.fmodal-points h3,
+.fmodal-doc h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.fmodal-points ul,
+.fmodal-doc ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fmodal-points li,
+.fmodal-doc li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.fmodal-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gradient);
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+
+.fmodal-doc {
+  margin-top: 28px;
+  background: linear-gradient(160deg, var(--bg-card-2), var(--bg-card));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 24px;
+}
+
+.fmodal-doc p {
+  font-size: 14.5px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.fmodal-doc ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+}
+
+@media (max-width: 640px) {
+  .fmodal-doc ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fmodal-cta {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
