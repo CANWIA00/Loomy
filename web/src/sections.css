@@ -393,9 +393,8 @@
 }
 
 .browser-body {
+  flex: 0 0 auto;
   height: 360px;
-  flex: 1;
-  min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--sc-border) transparent;
