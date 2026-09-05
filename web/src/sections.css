@@ -2786,6 +2786,51 @@
   font-size: 11.5px;
 }
 
+.an-ht-pill {
+  display: inline-block;
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2.5px 7px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.an-ht-pill.paid {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.an-ht-pill.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.an-ht-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--sc-border);
+  background: var(--sc-card2);
+  border-radius: var(--sc-r);
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--sc-text);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.an-ht-bar strong {
+  flex: 1;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.an-ht-bar .an-hist-btn {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
 .an-doc-split {
   height: 7px;
 }
@@ -3406,4 +3451,33 @@
   gap: 12px;
   margin-top: 30px;
   flex-wrap: wrap;
+}
+
+.fhist-viewer {
+  background: var(--sc-card2);
+  border: 1px solid var(--sc-border);
+  border-radius: 12px;
+  padding: 12px;
+  max-height: 430px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.fhist-viewer .an-doc-sheet {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  border-width: 1.5px;
+}
+
+.fhist-back {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 2px;
+}
+
+.fhist-back .btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
 }

@@ -273,7 +273,7 @@ export default function Showcase() {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [custIdx, setCustIdx] = useState(0);
-  const [doc, setDoc] = useState<{ kind: "quote" | "service"; title: string; date: string } | null>(null);
+  const [doc, setDoc] = useState<{ kind: "quote" | "service" | "history"; title: string; date: string } | null>(null);
   const sc = t.showcase;
   const statusLabels = sc.statuses as Record<string, string>;
   const statusLabel = (state: string) => statusLabels[state] ?? state;
@@ -1439,8 +1439,18 @@ const PayBars = ({
           <div className="an-hist-bar">
             <span className="an-sec-ic"><Icon name="clock" size={16} /></span>
             <strong>{cd.historyTitle}</strong>
-            <button className="an-hist-btn soft"><Icon name="share" size={14} />{cd.share}</button>
-            <button className="an-hist-btn solid"><Icon name="download" size={14} />{cd.download}</button>
+            <button
+              className="an-hist-btn soft"
+              onClick={() => setDoc({ kind: "history", title: cd.historyTitle, date: "05.09.2026" })}
+            >
+              <Icon name="share" size={14} />{cd.share}
+            </button>
+            <button
+              className="an-hist-btn solid"
+              onClick={() => setDoc({ kind: "history", title: cd.historyTitle, date: "05.09.2026" })}
+            >
+              <Icon name="download" size={14} />{cd.download}
+            </button>
           </div>
 
           <div className="an-sec-head">
@@ -1491,13 +1501,19 @@ const PayBars = ({
 
     if (screen === "document") {
       const df = sc.doc;
-      const isQ = doc?.kind !== "service";
+      const cd = sc.customer;
+      const isQ = doc?.kind === "quote";
+      const isH = doc?.kind === "history";
       const cust = MOCK_CUSTOMERS[custIdx % MOCK_CUSTOMERS.length];
-      const dtitle = doc?.title ?? (isQ ? sc.quotes.title : sc.services.title);
+      const dtitle = doc?.title ?? (isH ? cd.historyTitle : isQ ? sc.quotes.title : sc.services.title);
       const ddate = doc?.date ?? "05.09.2026";
       return (
         <>
-          <ScreenHead title={isQ ? sc.quotes.label : sc.services.label} subtitle={dtitle} backTo="customer" />
+          <ScreenHead
+            title={isH ? cd.historyTitle : isQ ? sc.quotes.label : sc.services.label}
+            subtitle={dtitle}
+            backTo="customer"
+          />
 
           <div className="an-doc-actions">
             <button className="an-doc-share">
@@ -1525,7 +1541,97 @@ const PayBars = ({
               </div>
             </div>
 
-            {isQ ? (
+            {isH ? (
+              <>
+                <div className="an-doc-coltitle an-doc-u">{df.customerInfo}</div>
+                <div className="an-doc-cols">
+                  <div className="an-doc-col">
+                    <DocRow l={df.customerName} v={cust.companyName} />
+                    <DocRow l={df.phone} v={cust.phone} />
+                  </div>
+                  <div className="an-doc-col">
+                    <DocRow l={df.address} v={cust.address} />
+                    <DocRow l={df.subscriberNo} v={cust.subscriberNo} />
+                  </div>
+                </div>
+
+                <div className="an-doc-coltitle an-doc-u">{df.serviceReports} ({cust.services.length})</div>
+                <table className="an-doc-table">
+                  <thead>
+                    <tr>
+                      <th className="an-doc-wt">#</th>
+                      <th>{df.recordDate}</th>
+                      <th>{df.serviceType}</th>
+                      <th className="an-doc-wn">{df.technician}</th>
+                      <th className="an-doc-wn">{df.fee}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cust.services.map((s, i) => (
+                      <tr key={i}>
+                        <td>{i + 1}</td>
+                        <td>{s.date}</td>
+                        <td><b>{s.label}</b></td>
+                        <td>{s.tech}</td>
+                        <td>{s.fee}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="an-doc-trow"><span>{df.quoteTotal}</span><b>₺ 7.250,00</b></div>
+
+                <div className="an-doc-coltitle an-doc-u">{df.quotes} ({cust.quotes.length})</div>
+                <table className="an-doc-table">
+                  <thead>
+                    <tr>
+                      <th className="an-doc-wt">#</th>
+                      <th>{df.recordDate}</th>
+                      <th>{df.companyName}</th>
+                      <th className="an-doc-wn">{df.validUntil}</th>
+                      <th className="an-doc-wn">{df.quoteTotal}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cust.quotes.map((q, i) => (
+                      <tr key={i}>
+                        <td>{i + 1}</td>
+                        <td>{q.date}</td>
+                        <td><b>{q.label}</b></td>
+                        <td>12.09.2026</td>
+                        <td>{q.totals}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="an-doc-trow"><span>{df.quoteTotal}</span><b>₺ 225.750,00</b></div>
+
+                <div className="an-doc-coltitle an-doc-u">{df.payments} (3)</div>
+                <table className="an-doc-table">
+                  <thead>
+                    <tr>
+                      <th className="an-doc-wt">#</th>
+                      <th>{df.recordDate}</th>
+                      <th>{df.serviceType}</th>
+                      <th className="an-doc-wn">{df.amount}</th>
+                      <th className="an-doc-wn">{df.status}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>1</td><td>12.09.2026</td><td>Klima Bakım</td><td>₺ 6.000,00</td><td><span className="an-ht-pill paid">{df.paid}</span></td></tr>
+                    <tr><td>2</td><td>11.09.2026</td><td>Kombi Montaj</td><td>₺ 8.000,00</td><td><span className="an-ht-pill pending">{df.pending}</span></td></tr>
+                    <tr><td>3</td><td>10.09.2026</td><td>Arıza Onarım</td><td>₺ 2.000,00</td><td><span className="an-ht-pill paid">{df.paid}</span></td></tr>
+                  </tbody>
+                </table>
+                <div className="an-doc-trow g-total">
+                  <span>{df.paid}</span>
+                  <b style={{ color: "#15803d" }}>₺ 8.000,00</b>
+                </div>
+                <div className="an-doc-trow g-total">
+                  <span>{df.pending}</span>
+                  <b style={{ color: "#b45309" }}>₺ 8.000,00</b>
+                </div>
+              </>
+            ) : isQ ? (
               <>
                 <div className="an-doc-cols">
                   <div className="an-doc-col">
