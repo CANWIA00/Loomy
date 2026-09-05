@@ -3242,6 +3242,7 @@
 
 .fmodal-intro {
   margin-top: 12px;
+  margin-bottom: 34px;
   color: var(--text-muted);
   font-size: 16px;
   max-width: 720px;
