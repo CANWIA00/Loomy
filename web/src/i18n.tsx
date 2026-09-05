@@ -138,6 +138,29 @@ const tr = {
           pending: "Bekliyor",
         },
       },
+      quote: {
+        title: "Teklif Hazırlama",
+        intro:
+          "Ürün satırları, KDV ve güncel döviz kuruyla teklifleri saniyeler içinde hazırlayın; firma bilgileriniz, canlı kur ve KVKK notuyla eksiksiz bir PDF olarak müşteriyle paylaşın.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın teklif oluşturma ekranını yansıtır: ürün satırları, KDV, canlı döviz kuru ve kaydetme seçenekleri.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Ürün satırları ve KDV otomatik hesaplanır; elle hesap yapma derdi sona erer",
+          "TCMB efektif satış kuru anlık; dövizli tekliflerde fiyatlar canlı güncellenir",
+          "Firma logonuz, kaşeniz ve dijital imzanız hazır şablonda yer alır",
+          "Canlı kur bloğu ile bugünün kuru ve genel toplam PDF'te görünür",
+          "Tek tıkla PDF indirin veya WhatsApp / e-posta ile online paylaşın",
+        ],
+        docTitle: "Teklifi Online Paylaşın",
+        docIntro:
+          "Hazırlanan her teklif; firma logosu, KDV, para birimi, TCMB canlı döviz kuru ve KVKK notuyla eksiksiz bir belgeye dönüşür. Teklif PDF'i tek tıkla müşteriye online olarak gönderilir.",
+        docPoints: [
+          "Firma bilgileri, logo, kaşe ve dijital imza hazır şablonda",
+          "WhatsApp, e-posta veya güvenli bağlantıyla anında online paylaşım",
+        ],
+      },
     },
   },
   howItWorks: {
@@ -756,6 +779,29 @@ const en: Dictionary = {
           paid: "Paid",
           pending: "Pending",
         },
+      },
+      quote: {
+        title: "Quote Creation",
+        intro:
+          "Create quotes in seconds with product lines, VAT and live exchange rates; share as a complete PDF with your company info, live rates and KVKK note.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's quote builder: product lines, VAT, live exchange rates and save options.",
+        pointsTitle: "What can you do?",
+        points: [
+          "Product lines and VAT are calculated automatically; manual math is gone",
+          "Live TCMB effective selling rate; FX quotes update in real time",
+          "Your logo, stamp and digital signature are ready in the template",
+          "Today's rate and grand total appear in the PDF with the live rate block",
+          "Download the PDF in one tap or share online via WhatsApp / email",
+        ],
+        docTitle: "Share Quotes Online",
+        docIntro:
+          "Every quote becomes a complete document with company logo, VAT, currency, TCMB live exchange rates and KVKK note. The quote PDF is sent to the customer online with a single tap.",
+        docPoints: [
+          "Ready template with company info, logo, stamp and digital signature",
+          "Instant online sharing via WhatsApp, email or a secure link",
+        ],
       },
     },
   },

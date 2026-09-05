@@ -119,17 +119,19 @@ function Mini({ name, size = 15, color = "currentColor" }: { name: string; size?
 
 export default function Features() {
   const { t } = useLanguage();
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [detail, setDetail] = useState<"customer" | "quote" | null>(null);
+  const open = detail !== null;
 
   useEffect(() => {
-    document.body.style.overflow = detailOpen ? "hidden" : "";
+    document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [detailOpen]);
+  }, [open]);
 
   const fd = t.features.featureDetail;
   const cd = fd.customer;
+  const qd = fd.quote;
   const hi = cd.history;
 
   return (
@@ -145,11 +147,18 @@ export default function Features() {
           {t.features.items.map((feature, index) => {
             const Icon = icons[index % icons.length];
             const isCustomer = index === 0;
+            const isQuote = index === 1;
             return (
               <button
                 className={`feature-card feature-card-btn${isCustomer ? " customer" : ""}`}
                 key={feature.title}
-                onClick={isCustomer ? () => setDetailOpen(true) : undefined}
+                onClick={
+                  isCustomer
+                    ? () => setDetail("customer")
+                    : isQuote
+                      ? () => setDetail("quote")
+                      : undefined
+                }
                 type="button"
               >
                 <FeatureIcon>
@@ -157,7 +166,7 @@ export default function Features() {
                 </FeatureIcon>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
-                {isCustomer && (
+                {(isCustomer || isQuote) && (
                   <span className="feature-card-link">
                     {fd.link}
                     <svg width={15} height={15} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -171,18 +180,20 @@ export default function Features() {
         </div>
       </div>
 
-      {detailOpen && (
-        <div className="fmodal" onClick={() => setDetailOpen(false)} role="dialog" aria-modal="true">
+      {open && (
+        <div className="fmodal" onClick={() => setDetail(null)} role="dialog" aria-modal="true">
           <div className="fmodal-panel" onClick={(e) => e.stopPropagation()}>
             <div className="fmodal-head">
               <span className="section-badge">{fd.badge}</span>
-              <button className="fmodal-close" onClick={() => setDetailOpen(false)} aria-label="close" type="button">
+              <button className="fmodal-close" onClick={() => setDetail(null)} aria-label="close" type="button">
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </button>
             </div>
 
+            {detail === "customer" ? (
+              <>
             <h2 className="fmodal-title">{cd.title}</h2>
             <p className="fmodal-intro">{cd.intro}</p>
 
@@ -345,10 +356,205 @@ export default function Features() {
                 <p className="fph-caption">{hi.docTitle}</p>
               </div>
             </div>
+              </>
+            ) : (
+              <>
+                <h2 className="fmodal-title">{qd.title}</h2>
+                <p className="fmodal-intro">{qd.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{qd.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Yeni Teklif</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Yeni Teklif</h3>
+                            <span className="an-top-sub">Teklif Oluştur</span>
+                          </div>
+                          <span className="an-chip">TR</span>
+                        </div>
+
+                        <div className="an-form-card">
+                          <div className="an-form-head">
+                            <strong>Müşteri Bilgileri</strong>
+                            <span className="fqm-new"><Mini name="check" size={12} color="var(--sc-primary)" /> Kayıtlı</span>
+                          </div>
+                          <div className="an-form-grid">
+                            <div className="an-field">
+                              <span>Müşteri</span>
+                              <div className="af-input af-chip">Yılmaz Isı Sistemleri</div>
+                            </div>
+                            <div className="an-field">
+                              <span>Para Birimi</span>
+                              <div className="af-input af-chip">₺ TRY</div>
+                            </div>
+                          </div>
+
+                          <div className="an-form-head an-form-head-sub">
+                            <strong>Ürünler</strong>
+                          </div>
+
+                          <div className="an-item-card">
+                            <div className="an-item-top">
+                              <input className="af-input" defaultValue="4CH IP Kamera + 4TB Kayıt Cihazı" />
+                              <span className="an-ib-danger an-ib-btn"><Mini name="trash" size={14} /></span>
+                            </div>
+                            <div className="an-form-grid af-line">
+                              <div className="an-field">
+                                <span>Adet</span>
+                                <input className="af-input" defaultValue="1" />
+                              </div>
+                              <div className="an-field">
+                                <span>Birim Fiyat</span>
+                                <input className="af-input" defaultValue="82.000,00" />
+                              </div>
+                              <div className="an-field">
+                                <span>KDV</span>
+                                <div className="af-input af-chip">%20</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="an-item-card">
+                            <div className="an-item-top">
+                              <input className="af-input" defaultValue="Kurulum ve Montaj" />
+                              <span className="an-ib-danger an-ib-btn"><Mini name="trash" size={14} /></span>
+                            </div>
+                            <div className="an-form-grid af-line">
+                              <div className="an-field">
+                                <span>Adet</span>
+                                <input className="af-input" defaultValue="1" />
+                              </div>
+                              <div className="an-field">
+                                <span>Birim Fiyat</span>
+                                <input className="af-input" defaultValue="16.000,00" />
+                              </div>
+                              <div className="an-field">
+                                <span>KDV</span>
+                                <div className="af-input af-chip">%20</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button className="an-add-item" type="button">
+                            <Mini name="check" size={14} color="var(--sc-primary)" /> Ürün Ekle
+                          </button>
+
+                          <div className="an-sum">
+                            <div className="an-sum-row">
+                              <span>Ara Toplam</span>
+                              <strong>₺98.000,00</strong>
+                            </div>
+                            <div className="an-sum-row">
+                              <span>KDV %20</span>
+                              <strong>₺19.600,00</strong>
+                            </div>
+                            <div className="an-sum-row total">
+                              <span>Genel Toplam</span>
+                              <strong>₺117.600,00</strong>
+                            </div>
+                          </div>
+
+                          <div className="an-rate-card">
+                            <div className="an-rate-head">
+                              <span className="an-rate-live"><i />Canlı Kur · TCMB</span>
+                              <span className="an-rate-src">Efektif Satış · 05.09.2026</span>
+                            </div>
+                            <div className="an-rate-row"><span>USD / TRY</span><b>36,50</b></div>
+                            <div className="an-rate-row"><span>EUR / TRY</span><b>39,90</b></div>
+                            <div className="an-rate-row"><span>GBP / TRY</span><b>45,10</b></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{qd.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{qd.pointsTitle}</h3>
+                    <ul>
+                      {qd.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{qd.docTitle}</h3>
+                    <p>{qd.docIntro}</p>
+                    <ul>
+                      {qd.docPoints.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="fmod-history-photo">
+                    <div className="fph-photo">
+                      <div className="fph-paper">
+                        <div className="fph-brand">
+                          <span className="fph-logo">L</span>
+                          <div className="fph-brand-tx">
+                            <strong>LOOMY</strong>
+                            <span>Teklif</span>
+                          </div>
+                          <span className="fph-date">05.09.2026</span>
+                        </div>
+                        <div className="fph-cust">
+                          <b>Yılmaz Isı Sistemleri</b>
+                          <span>Karşıyaka Mah. Ata Cad. No: 42 · İzmir</span>
+                        </div>
+                        <div className="fph-sec">Teklif Özeti (3)</div>
+                        <div className="fph-row"><span><b>4CH IP Kamera + 4TB Kayıt</b> · 1 adet</span><b>₺82.000,00</b></div>
+                        <div className="fph-row"><span><b>Kurulum ve Montaj</b> · 1 adet</span><b>₺16.000,00</b></div>
+                        <div className="fph-row"><span><b>12 Ay Uzaktan İzleme</b> · 12 adet</span><b>₺30.000,00</b></div>
+                        <div className="fph-sec">Özet</div>
+                        <div className="fph-row"><span>Ara Toplam</span><b>₺128.000,00</b></div>
+                        <div className="fph-row"><span>KDV %20</span><b>₺25.600,00</b></div>
+                        <div className="fph-row fph-tot"><span>Genel Toplam</span><b>₺153.600,00</b></div>
+                        <div className="fph-fx">
+                          <span className="fph-fx-title"><i /> TCMB Canlı Kur · 05.09.2026</span>
+                          <div className="fph-fx-cols">
+                            <span>USD <b>36,50</b></span>
+                            <span>EUR <b>39,90</b></span>
+                            <span>GBP <b>45,10</b></span>
+                          </div>
+                        </div>
+                        <div className="fph-sig">
+                          <span className="fph-stamp">ÜNSAL<i>TEKNİK SERVİS</i><b>KAŞE 2026</b></span>
+                          <div className="fph-sig-tx">
+                            <span className="fph-ok"><Mini name="check" size={10} color="#15803d" /> Doğrulandı</span>
+                            <span>Firma kaşesi · Dijital imza</span>
+                          </div>
+                        </div>
+                        <div className="fph-foot">Loomy ile oluşturuldu · KDV, para birimi ve canlı kur bilgisiyle</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="fmodal-cta">
               <button className="btn btn-primary" type="button">{fd.cta}</button>
-              <button className="btn btn-secondary" onClick={() => setDetailOpen(false)} type="button">{fd.back}</button>
+              <button className="btn btn-secondary" onClick={() => setDetail(null)} type="button">{fd.back}</button>
             </div>
           </div>
         </div>
