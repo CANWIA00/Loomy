@@ -974,17 +974,6 @@ const PayBars = ({
     );
   };
 
-  const selectors: { key: ScreenKey; label: string }[] = [
-    { key: "panel", label: sc.panel.label },
-    { key: "quotes", label: sc.quotes.label },
-    { key: "services", label: sc.services.label },
-    { key: "customers", label: sc.customers.label },
-    { key: "plan", label: sc.plan.label },
-    { key: "payments", label: sc.payments.label },
-    { key: "profil", label: sc.profil.label },
-    { key: "settings", label: sc.settings.label },
-  ];
-
   return (
     <section className="section" id="screens">
       <div className="container">
@@ -1018,18 +1007,6 @@ const PayBars = ({
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="showcase-selector">
-            {selectors.map((s) => (
-              <button
-                key={s.key}
-                className={screen === s.key ? "active" : ""}
-                onClick={() => setScreen(s.key)}
-              >
-                {s.label}
-              </button>
-            ))}
           </div>
         </div>
       </div>
