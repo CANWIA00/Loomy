@@ -28,12 +28,6 @@ const tr = {
     stat2Label: "Dijital Kayıt",
     stat3Value: "1",
     stat3Label: "Panel",
-    mock: [
-      { label: "Müşteriler", value: "24" },
-      { label: "Servisler", value: "12" },
-      { label: "Teklifler", value: "18" },
-      { label: "Ödemeler", value: "%82" },
-    ],
   },
   features: {
     badge: "Özellikler",
@@ -780,12 +774,6 @@ const en: Dictionary = {
     stat2Label: "Digital records",
     stat3Value: "1",
     stat3Label: "Panel",
-    mock: [
-      { label: "Customers", value: "24" },
-      { label: "Services", value: "12" },
-      { label: "Quotes", value: "18" },
-      { label: "Payments", value: "82%" },
-    ],
   },
   features: {
     badge: "Features",

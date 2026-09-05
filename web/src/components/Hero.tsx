@@ -2,8 +2,6 @@ import { useLanguage } from "../i18n";
 import { APP_URL } from "../App";
 import InstallApp from "./InstallApp";
 
-const lines = ["indigo", "violet", "teal", "indigo"];
-
 export default function Hero() {
   const { t } = useLanguage();
 
@@ -42,23 +40,6 @@ export default function Hero() {
           <div className="hero-stat">
             <strong>{t.hero.stat3Value}</strong>
             <span>{t.hero.stat3Label}</span>
-          </div>
-        </div>
-
-        <div className="mock-panel" aria-hidden="true">
-          <div className="mock-bar">
-            <span className="mock-dot" style={{ background: "#f87171" }} />
-            <span className="mock-dot" style={{ background: "#fbbf24" }} />
-            <span className="mock-dot" style={{ background: "#34d399" }} />
-          </div>
-          <div className="mock-body">
-            {t.hero.mock.map((card, index) => (
-              <div className="mock-card" key={card.label}>
-                <strong>{card.label}</strong>
-                <span>{card.value}</span>
-                <div className={`mock-line ${lines[index % lines.length]}`} />
-              </div>
-            ))}
           </div>
         </div>
       </div>
