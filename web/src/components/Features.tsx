@@ -120,7 +120,6 @@ function Mini({ name, size = 15, color = "currentColor" }: { name: string; size?
 export default function Features() {
   const { t } = useLanguage();
   const [detailOpen, setDetailOpen] = useState(false);
-  const [showHist, setShowHist] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = detailOpen ? "hidden" : "";
@@ -187,123 +186,9 @@ export default function Features() {
             <h2 className="fmodal-title">{cd.title}</h2>
             <p className="fmodal-intro">{cd.intro}</p>
 
-            <div className="fmodal-stats">
-              <div className="fmodal-stat">
-                <strong>{cd.stat1Value}</strong>
-                <span>{cd.stat1Label}</span>
-              </div>
-              <div className="fmodal-stat">
-                <strong>{cd.stat2Value}</strong>
-                <span>{cd.stat2Label}</span>
-              </div>
-              <div className="fmodal-stat">
-                <strong>{cd.stat3Value}</strong>
-                <span>{cd.stat3Label}</span>
-              </div>
-            </div>
-
             <div className="fmodal-grid">
               <div className="fmodal-mock">
-                <span className="fmodal-mock-label">{showHist ? hi.docTitle : cd.visualTitle}</span>
-                {showHist ? (
-                  <div className="mock-frame">
-                    <div className="mock-frame-bar">
-                      <span className="mock-f-btn r" />
-                      <span className="mock-f-btn y" />
-                      <span className="mock-f-btn g" />
-                      <span className="mock-f-url">loomy-app · {hi.barTitle} PDF</span>
-                    </div>
-                    <div className="fhist-viewer">
-                      <div className="an-doc-sheet">
-                        <div className="an-doc-head">
-                          <span className="an-doc-logo"><Mini name="shield" size={20} /></span>
-                          <div className="an-doc-title">
-                            <strong>1D GÜVENLİK VE İLETİŞİM SİSTEMLERİ TİCARET LTD. ŞTİ.</strong>
-                            <span className="an-doc-doctitle">{hi.barTitle}</span>
-                          </div>
-                          <div className="an-doc-meta">
-                            <span><b>Tarih</b> 05.09.2026</span>
-                            <span><b>Müşteri</b> Yılmaz Isı Sistemleri</span>
-                          </div>
-                        </div>
-
-                        <div className="an-doc-coltitle an-doc-u">{hi.customerInfo}</div>
-                        <div className="an-doc-cols">
-                          <div className="an-doc-col">
-                            <span className="an-doc-row"><b>{hi.companyName}</b><span>Yılmaz Isı Sistemleri</span></span>
-                            <span className="an-doc-row"><b>{hi.phone}</b><span>0532 000 00 00</span></span>
-                          </div>
-                          <div className="an-doc-col">
-                            <span className="an-doc-row"><b>{hi.address}</b><span>Osmangazi Mah. Çınar Sok. No:12, Osmangazi/Bursa</span></span>
-                            <span className="an-doc-row"><b>{hi.subscriberNo}</b><span>AK-101204</span></span>
-                          </div>
-                        </div>
-
-                        <div className="an-doc-coltitle an-doc-u">{hi.serviceReports} (3)</div>
-                        <table className="an-doc-table">
-                          <thead>
-                            <tr>
-                              <th className="an-doc-wt">#</th>
-                              <th>{hi.date}</th>
-                              <th>{hi.service}</th>
-                              <th className="an-doc-wn">{hi.technician}</th>
-                              <th className="an-doc-wn">{hi.fee}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr><td>1</td><td>12.09.2026</td><td><b>Klima Bakım</b></td><td>Ahmet Yıldız</td><td>₺ 6.000,00</td></tr>
-                            <tr><td>2</td><td>05.09.2026</td><td><b>Kış Hazırlık Kontrolü</b></td><td>Ahmet Yıldız</td><td>Ücretsiz</td></tr>
-                            <tr><td>3</td><td>02.08.2026</td><td><b>Filtre Değişimi</b></td><td>Burak Demir</td><td>₺ 1.250,00</td></tr>
-                          </tbody>
-                        </table>
-                        <div className="an-doc-trow"><span>{hi.total}</span><b>₺ 7.250,00</b></div>
-
-                        <div className="an-doc-coltitle an-doc-u">{hi.quotes} (2)</div>
-                        <table className="an-doc-table">
-                          <thead>
-                            <tr>
-                              <th className="an-doc-wt">#</th>
-                              <th>{hi.date}</th>
-                              <th>{hi.companyName}</th>
-                              <th className="an-doc-wn">{hi.validity}</th>
-                              <th className="an-doc-wn">{hi.total}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr><td>1</td><td>05.09.2026</td><td><b>Kamera Sistemleri Teklifi</b></td><td>12.09.2026</td><td>₺ 136.500,00</td></tr>
-                            <tr><td>2</td><td>02.08.2026</td><td><b>Yıllık Bakım Anlaşması</b></td><td>09.08.2026</td><td>₺ 89.250,00</td></tr>
-                          </tbody>
-                        </table>
-                        <div className="an-doc-trow"><span>{hi.total}</span><b>₺ 225.750,00</b></div>
-
-                        <div className="an-doc-coltitle an-doc-u">{hi.payments} (3)</div>
-                        <table className="an-doc-table">
-                          <thead>
-                            <tr>
-                              <th className="an-doc-wt">#</th>
-                              <th>{hi.date}</th>
-                              <th>{hi.service}</th>
-                              <th className="an-doc-wn">{hi.amount}</th>
-                              <th className="an-doc-wn">{hi.status}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr><td>1</td><td>12.09.2026</td><td>Klima Bakım</td><td>₺ 6.000,00</td><td><span className="an-ht-pill paid">{hi.paid}</span></td></tr>
-                            <tr><td>2</td><td>11.09.2026</td><td>Kombi Montaj</td><td>₺ 8.000,00</td><td><span className="an-ht-pill pending">{hi.pending}</span></td></tr>
-                            <tr><td>3</td><td>10.09.2026</td><td>Arıza Onarım</td><td>₺ 2.000,00</td><td><span className="an-ht-pill paid">{hi.paid}</span></td></tr>
-                          </tbody>
-                        </table>
-                        <div className="an-doc-trow g-total"><span>{hi.paid}</span><b>₺ 8.000,00</b></div>
-                        <div className="an-doc-trow g-total"><span>{hi.pending}</span><b>₺ 8.000,00</b></div>
-                      </div>
-                    </div>
-                    <div className="fhist-back">
-                      <button className="btn btn-secondary" onClick={() => setShowHist(false)} type="button">
-                        <Mini name="back" size={14} /> {hi.back}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
+                <span className="fmodal-mock-label">{cd.visualTitle}</span>
                   <div className="mock-frame">
                     <div className="mock-frame-bar">
                       <span className="mock-f-btn r" />
@@ -398,21 +283,9 @@ export default function Features() {
                         <span className="an-ib-primary an-ib-btn"><Mini name="eye" size={14} /></span>
                       </span>
                     </div>
-
-                    <div className="an-ht-bar">
-                      <span className="an-sec-ic"><Mini name="clock" size={15} /></span>
-                      <strong>{hi.barTitle}</strong>
-                      <button className="an-hist-btn soft" onClick={() => setShowHist(true)} type="button">
-                        <Mini name="share" size={13} /> {hi.share}
-                      </button>
-                      <button className="an-hist-btn solid" onClick={() => setShowHist(true)} type="button">
-                        <Mini name="download" size={13} /> {hi.download}
-                      </button>
-                    </div>
-                    </div>
                   </div>
-                )}
-                <p className="fmodal-mock-desc">{showHist ? hi.docSub : cd.visualDesc}</p>
+                </div>
+                <p className="fmodal-mock-desc">{cd.visualDesc}</p>
               </div>
 
               <div className="fmodal-points">
@@ -429,16 +302,48 @@ export default function Features() {
             </div>
 
             <div className="fmodal-doc">
-              <h3>{cd.docTitle}</h3>
-              <p>{cd.docIntro}</p>
-              <ul>
-                {cd.docPoints.map((point, i) => (
-                  <li key={i}>
-                    <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
-                    {point}
-                  </li>
-                ))}
-              </ul>
+              <div className="fmodal-doc-list">
+                <h3>{cd.docTitle}</h3>
+                <p>{cd.docIntro}</p>
+                <ul>
+                  {cd.docPoints.map((point, i) => (
+                    <li key={i}>
+                      <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="fmod-history-photo">
+                <div className="fph-photo">
+                  <div className="fph-paper">
+                    <div className="fph-brand">
+                      <span className="fph-logo">L</span>
+                      <div className="fph-brand-tx">
+                        <strong>LOOMY</strong>
+                        <span>Müşteri Geçmişi</span>
+                      </div>
+                      <span className="fph-date">05.09.2026</span>
+                    </div>
+                    <div className="fph-cust">
+                      <b>Yılmaz Isı Sistemleri</b>
+                      <span>0532 000 00 00 · Osmangazi/Bursa · AK-101204</span>
+                    </div>
+                    <div className="fph-sec">Servis Raporları (3)</div>
+                    <div className="fph-row"><span><b>Klima Bakım</b> · 12.09.2026 · A. Yıldız</span><b>₺6.000</b></div>
+                    <div className="fph-row"><span><b>Kış Hazırlık Kontrolü</b> · 05.09.2026</span><b>Ücretsiz</b></div>
+                    <div className="fph-row fph-tot"><span>Toplam</span><b>₺7.250</b></div>
+                    <div className="fph-sec">Teklifler (2)</div>
+                    <div className="fph-row"><span><b>Kamera Sistemleri Teklifi</b> · 05.09.2026</span><b>₺136.500</b></div>
+                    <div className="fph-row fph-tot"><span>Toplam</span><b>₺225.750</b></div>
+                    <div className="fph-sec">Ödemeler (3)</div>
+                    <div className="fph-row"><span><b>Klima Bakım</b> · 12.09.2026</span><span className="fph-pill on">Ödendi</span></div>
+                    <div className="fph-row"><span><b>Kombi Montaj</b> · 11.09.2026</span><span className="fph-pill">Bekliyor</span></div>
+                    <div className="fph-foot">Loomy ile oluşturuldu · Dijital imza, kaşe ve canlı kurla güvenle paylaşılır</div>
+                  </div>
+                </div>
+                <p className="fph-caption">{hi.docTitle}</p>
+              </div>
             </div>
 
             <div className="fmodal-cta">

@@ -104,13 +104,11 @@ const tr = {
           "Belgeleri müşterilerinizle tek tıkla online paylaşın; isterseniz PDF indirip arşivleyin",
           "Verileriniz bulutta güvenle saklanır; istediğiniz cihazdan erişin",
         ],
-        docTitle: "Belge ve Online Paylaşım",
+        docTitle: "Müşteri Geçmişini Online Paylaşın",
         docIntro:
-          "Kaydedilen her teklif ve servis raporu; firma logosu, kaşe, dijital imza ve canlı döviz kuruyla eksiksiz bir belgeye dönüşür.",
+          "Kaydedilen her servis raporu ve teklif, firma logosu, kaşe, dijital imza ve canlı döviz kuruyla eksiksiz bir belgeye dönüşür. Müşteri geçmişi PDF'i tek tıkla müşteriye online olarak gönderilir.",
         docPoints: [
-          "TEKLİF PDF'si: KDV, para birimi ve TCMB canlı kur bilgisiyle",
-          "SERVİS TESLİM FORMU: teknisyen ve müşteri dijital imzası + firma kaşesi",
-          "MÜŞTERİ GEÇMİŞİ PDF'si: tüm işlemleri tek belgede paylaşın",
+          "Müşterinin tüm işlem geçmişi tek PDF'te, logo ve kaşeyle",
           "WhatsApp, e-posta veya güvenli bağlantıyla anında online paylaşım",
         ],
         history: {
@@ -725,13 +723,11 @@ const en: Dictionary = {
           "Share documents online with your customers in one click, or download and archive PDFs",
           "Your data is stored securely in the cloud, accessible from any device",
         ],
-        docTitle: "Documents & Online Sharing",
+        docTitle: "Share Customer History Online",
         docIntro:
-          "Every saved quote and service report turns into a complete document with company logo, stamp, digital signature and live exchange rates.",
+          "Every saved service report and quote turns into a complete document with company logo, stamp, digital signature and live exchange rates. The customer history PDF is sent to the customer online with a single tap.",
         docPoints: [
-          "QUOTE PDF: with VAT, currency and TCMB live exchange rates",
-          "SERVICE DELIVERY FORM: technician and customer digital signatures + company stamp",
-          "CUSTOMER HISTORY PDF: share all transactions in a single document",
+          "The customer's full transaction history in one PDF, with logo and stamp",
           "Instant online sharing via WhatsApp, email or a secure link",
         ],
         history: {
