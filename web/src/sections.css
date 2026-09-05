@@ -3283,7 +3283,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 26px;
-  align-items: start;
+  align-items: center;
 }
 
 @media (max-width: 820px) {
