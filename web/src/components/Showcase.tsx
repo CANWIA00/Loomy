@@ -9,7 +9,9 @@ type ScreenKey =
   | "plan"
   | "payments"
   | "profil"
-  | "settings";
+  | "settings"
+  | "customer"
+  | "document";
 
 const screenKeys: ScreenKey[] = ["panel", "services", "quotes", "customers", "plan", "payments", "settings"];
 
@@ -18,6 +20,156 @@ const labelColors: Record<string, string> = {
   warning: "amt-warn",
   success: "amt-success",
 };
+
+type MockS = { label: string; date: string; tech: string; fee: string };
+type MockQ = { label: string; date: string; totals: string; tryTotal: string };
+type MockC = {
+  companyName: string;
+  contactPerson: string;
+  phone: string;
+  subscriberNo: string;
+  email: string;
+  website: string;
+  address: string;
+  services: MockS[];
+  quotes: MockQ[];
+};
+
+const MOCK_CUSTOMERS: MockC[] = [
+  {
+    companyName: "Yılmaz Isı Sistemleri",
+    contactPerson: "Ayşe Yılmaz",
+    phone: "0532 000 00 00",
+    subscriberNo: "AK-101204",
+    email: "info@yilmazhvac.com",
+    website: "yilmazhvac.com",
+    address: "Karşıyaka Mah. Ata Cad. No: 42",
+    services: [
+      { label: "Klima Bakım", date: "12.09.2026", tech: "Ahmet Yıldız", fee: "₺6.000" },
+      { label: "Kış Hazırlık Kontrolü", date: "05.09.2026", tech: "Ahmet Yıldız", fee: "Ücretsiz" },
+      { label: "Filtre Değişimi", date: "02.08.2026", tech: "Murat Aydın", fee: "₺1.250" },
+    ],
+    quotes: [
+      { label: "Kamera Sistemleri Teklifi", date: "05.09.2026", totals: "136.500,00 ₺", tryTotal: "≈ ₺163.800" },
+      { label: "Yıllık Bakım Anlaşması", date: "02.08.2026", totals: "89.250,00 ₺", tryTotal: "≈ ₺107.100" },
+    ],
+  },
+  {
+    companyName: "Kaya Teknik Servis",
+    contactPerson: "Mehmet Kaya",
+    phone: "0505 000 00 00",
+    subscriberNo: "AK-201150",
+    email: "mehmet@kayateknik.com",
+    website: "kayateknik.com",
+    address: "Mimar Sinan Bulvarı No: 88 Bornova",
+    services: [
+      { label: "Kombi Montaj", date: "11.09.2026", tech: "Ahmet Yıldız", fee: "₺8.000" },
+      { label: "Arıza Tespiti", date: "01.09.2026", tech: "Murat Aydın", fee: "₺1.500" },
+      { label: "Baca Bağlantı Kontrolü", date: "14.07.2026", tech: "Ahmet Yıldız", fee: "Ücretsiz" },
+    ],
+    quotes: [
+      { label: "Kombi Kurulum Teklifi", date: "09.09.2026", totals: "12.000,00 USD", tryTotal: "≈ ₺420.000" },
+      { label: "Periyodik Bakım Teklifi", date: "22.07.2026", totals: "18.000,00 ₺", tryTotal: "≈ ₺21.600" },
+    ],
+  },
+  {
+    companyName: "Demir Bilişim",
+    contactPerson: "Zeynep Demir",
+    phone: "0542 000 00 00",
+    subscriberNo: "AK-311982",
+    email: "zeynep@demirbilisim.com",
+    website: "demirbilisim.com",
+    address: "Kemalpaşa OSB 2. Cadde No: 12",
+    services: [
+      { label: "Arıza Onarım", date: "10.09.2026", tech: "Ahmet Yıldız", fee: "₺2.000" },
+      { label: "Yazılım Güncelleme", date: "30.08.2026", tech: "Murat Aydın", fee: "₺5.750" },
+    ],
+    quotes: [
+      { label: "Bilişim Altyapı Teklifi", date: "08.09.2026", totals: "4.500,00 ₺", tryTotal: "≈ ₺5.400" },
+    ],
+  },
+];
+
+const QUOTE_ITEMS: [string, string, string, string, string][] = [
+  ["CDVX-24B IP Dome Kamera", "4K çözünürlük · gece görüş", "8", "12.500,00 ₺", "100.000,00 ₺"],
+  ["NVR-16 Kayıt Cihazı", "2 TB HDD dahil", "2", "15.250,00 ₺", "30.500,00 ₺"],
+  ["POES-16 16 Port Switch", "PoE+ 120W", "2", "3.000,00 ₺", "6.000,00 ₺"],
+  ["SM-24 Dedektör Seti", "İthal · harici sensör", "10", "150,00 $", "1.500,00 $"],
+];
+
+const FX_ROWS: [string, string][] = [
+  ["1 USD", "33,1245 ₺"],
+  ["1 EUR", "40,7731 ₺"],
+  ["1 GBP", "44,2010 ₺"],
+];
+
+const SVC_GROUPS: { items: [string, boolean][] }[] = [
+  {
+    items: [
+      ["Alarm", true],
+      ["Yangın", false],
+      ["CCTV", true],
+      ["AHM Bağlantısı", true],
+      ["Kablolama", false],
+      ["Montaj", true],
+      ["Devreye Alma Eğitimi", false],
+      ["Belge Kontrolü", false],
+    ],
+  },
+  {
+    items: [
+      ["AHM Sinyal Kontrolü", false],
+      ["Eğitim ve Tatbikat", false],
+      ["DOVR Kayıt Kontrol", true],
+      ["Uzak Erişim", false],
+      ["Kayıt ve Yedekleme Eğitimi", false],
+      ["Kameralara Netlik ve Yön Ayarı", true],
+      ["Test Sinyal Programlama", true],
+      ["Akü Ömrü Kontrolü", false],
+    ],
+  },
+];
+
+const Sig = ({ t }: { t: "a" | "b" }) => (
+  <svg viewBox="0 0 120 42" aria-hidden>
+    <path
+      d={
+        t === "a"
+          ? "M6 30 C18 8, 30 36, 42 18 S 60 6, 70 24 S 88 32, 96 14 S 106 18, 114 26"
+          : "M8 24 C20 34, 30 8, 42 22 S 58 30, 68 12 S 84 20, 92 16 S 104 28, 112 20"
+      }
+      fill="none"
+      stroke="#222238"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const Stamp = () => (
+  <div className="an-stamp">
+    <span className="an-stamp-ring" />
+    <span className="an-stamp-star">✦</span>
+    <strong>1D GÜVENLİK</strong>
+    <em>VE İLETİŞİM LTD. ŞTİ.</em>
+    <span className="an-stamp-reg">İZMİR · KVKK</span>
+  </div>
+);
+
+const DocRow = ({ l, v }: { l: string; v: string }) => (
+  <span className="an-doc-row">
+    <b>{l}</b>
+    <span>{v}</span>
+  </span>
+);
+
+const CheckItem = ({ label, on }: { label: string; on: boolean }) => (
+  <span className={`an-cbox${on ? " on" : ""}`}>
+    <i>{on ? "✓" : ""}</i>
+    <b>{label}</b>
+  </span>
+);
 
 function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?: number; color?: string }) {
   const p = {
@@ -69,6 +221,14 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m12 4 2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2L4.5 9.5l5.2-.8L12 4Z" /></svg>;
     case "back":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M15 5l-7 7 7 7" /></svg>;
+    case "phone":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M5 4h4l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v4a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 3 6.2 2 2 0 0 1 5 4Z" /></svg>;
+    case "mail":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><rect x="3.5" y="5.5" width="17" height="13" rx="2.5" /><path d="m4.5 7 7.5 6 7.5-6" /></svg>;
+    case "location":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>;
+    case "cloud":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M7 18.5h10.5a3.5 3.5 0 0 0 .7-6.9A5.5 5.5 0 0 0 7 9.6a4 4 0 0 0 0 8.9Z" /></svg>;
     case "refresh":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M20 12a8 8 0 1 1-2.5-5.8" /><path d="M20 4v4h-4" /></svg>;
     case "search":
@@ -112,6 +272,8 @@ export default function Showcase() {
   const [isDark, setIsDark] = useState(true);
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showServiceForm, setShowServiceForm] = useState(false);
+  const [custIdx, setCustIdx] = useState(0);
+  const [doc, setDoc] = useState<{ kind: "quote" | "service"; title: string; date: string } | null>(null);
   const sc = t.showcase;
   const statusLabels = sc.statuses as Record<string, string>;
   const statusLabel = (state: string) => statusLabels[state] ?? state;
@@ -119,7 +281,22 @@ export default function Showcase() {
   const toggleTheme = () => setIsDark((d) => !d);
   const toggleLang = () => setLang(lang === "tr" ? "en" : "tr");
 
-  const activeTab = screen === "profil" ? -1 : screen === "panel" ? 0 : screen === "quotes" ? 2 : screen === "services" ? 1 : screen === "customers" ? 3 : screen === "plan" ? 4 : screen === "payments" ? 5 : 6;
+  const activeTab =
+    screen === "profil" || screen === "customer" || screen === "document"
+      ? -1
+      : screen === "panel"
+        ? 0
+        : screen === "quotes"
+          ? 2
+          : screen === "services"
+            ? 1
+            : screen === "customers"
+              ? 3
+              : screen === "plan"
+                ? 4
+                : screen === "payments"
+                  ? 5
+                  : 6;
 
 const PayBars = ({
   data,
@@ -149,13 +326,16 @@ const PayBars = ({
   );
 };
 
-  const ScreenHead = ({ title }: { title: string }) => (
+  const ScreenHead = ({ title, subtitle, backTo = "panel" }: { title: string; subtitle?: string; backTo?: ScreenKey }) => (
     <div className="an-top">
       <div className="an-head">
-        <button className="an-chip" style={{ padding: 0, flexShrink: 0 }} onClick={() => setScreen("panel")}>
+        <button className="an-chip" style={{ padding: 0, flexShrink: 0 }} onClick={() => setScreen(backTo)}>
           <Icon name="back" size={22} color="var(--sc-primary)" />
         </button>
-        <h3 className="an-title">{title}</h3>
+        <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+          <h3 className="an-title">{title}</h3>
+          {subtitle && <span className="an-top-sub">{subtitle}</span>}
+        </div>
       </div>
       <div className="an-chips">
         <button className="an-chip" onClick={toggleLang}>{sc.langBtn}</button>
@@ -551,6 +731,7 @@ const PayBars = ({
     if (screen === "quotes") {
       const q = sc.quotes;
       const qf = sc.forms;
+      const dd = sc.doc;
       return (
         <>
           <ScreenHead title={q.title} />
@@ -678,6 +859,17 @@ const PayBars = ({
                   <span>{qf.qGrandTotal}</span>
                   <strong>₺1.440,00</strong>
                 </div>
+              </div>
+
+              <div className="an-rate-card">
+                <div className="an-rate-head">
+                  <span className="an-rate-live"><i />{dd.fxLive} · {dd.fxHead}</span>
+                  <span className="an-rate-src">{dd.fxSource} · {dd.fxDate}</span>
+                  <button className="an-rate-refresh" type="button"><Icon name="refresh" size={12} />{dd.fxRefresh}</button>
+                </div>
+                {FX_ROWS.map((r) => (
+                  <div className="an-rate-row" key={r[0]}><span>{r[0]}</span><b>{r[1]}</b></div>
+                ))}
               </div>
 
               <label className="an-field">
@@ -1188,6 +1380,321 @@ const PayBars = ({
       );
     }
 
+    if (screen === "customer") {
+      const cd = sc.customer;
+      const cust = MOCK_CUSTOMERS[custIdx % MOCK_CUSTOMERS.length];
+      return (
+        <>
+          <ScreenHead title={cust.companyName} subtitle={cd.detail} backTo="customers" />
+
+          <div className="an-ccard">
+            <div className="an-ccard-top">
+              <span className="an-ph-avatar">{cust.companyName.charAt(0)}</span>
+              <div className="an-ccard-id">
+                <strong>{cust.companyName}</strong>
+                <span>{cust.contactPerson}</span>
+              </div>
+            </div>
+            <div className="an-cust-rows">
+              <span className="an-cust-row">
+                <span className="an-cust-ic"><Icon name="phone" size={14} color="var(--sc-muted)" /></span>
+                <span className="an-cust-lbl">{cd.phone}</span>
+                <span className="an-cust-val">{cust.phone}</span>
+              </span>
+              <span className="an-cust-row">
+                <span className="an-cust-ic"><Icon name="card" size={14} color="var(--sc-muted)" /></span>
+                <span className="an-cust-lbl">{cd.subscriberNo}</span>
+                <span className="an-cust-val">{cust.subscriberNo}</span>
+              </span>
+              <span className="an-cust-row">
+                <span className="an-cust-ic"><Icon name="mail" size={14} color="var(--sc-muted)" /></span>
+                <span className="an-cust-lbl">{cd.email}</span>
+                <span className="an-cust-val">{cust.email}</span>
+              </span>
+              <span className="an-cust-row">
+                <span className="an-cust-ic"><Icon name="globe" size={14} color="var(--sc-muted)" /></span>
+                <span className="an-cust-lbl">{cd.website}</span>
+                <span className="an-cust-val">{cust.website}</span>
+              </span>
+              <span className="an-cust-row">
+                <span className="an-cust-ic"><Icon name="location" size={14} color="var(--sc-muted)" /></span>
+                <span className="an-cust-lbl">{cd.address}</span>
+                <span className="an-cust-val">{cust.address}</span>
+              </span>
+            </div>
+            <div className="an-ccard-foot">
+              <Icon name="check-circle" size={15} color="var(--sc-primary)" />
+              <span>{cd.customerInfo} · {lang === "tr" ? "veriler güvenle saklanır" : "data stored securely"}</span>
+            </div>
+          </div>
+
+          <div className="an-cloud-note">
+            <span className="an-cloud-ic"><Icon name="cloud" size={20} /></span>
+            <div>
+              <strong>{cd.cloudTitle}</strong>
+              <span>{cd.cloudBody}</span>
+            </div>
+          </div>
+
+          <div className="an-hist-bar">
+            <span className="an-sec-ic"><Icon name="clock" size={16} /></span>
+            <strong>{cd.historyTitle}</strong>
+            <button className="an-hist-btn soft"><Icon name="share" size={14} />{cd.share}</button>
+            <button className="an-hist-btn solid"><Icon name="download" size={14} />{cd.download}</button>
+          </div>
+
+          <div className="an-sec-head">
+            <span className="an-sec-ic"><Icon name="construct" size={16} /></span>
+            <strong>{cd.serviceReports}</strong>
+            <span className="an-sec-count">{cust.services.length}</span>
+          </div>
+          <div className="an-rec-list">
+            {cust.services.map((s, i) => (
+              <button className="an-rec" key={i} onClick={() => setDoc({ kind: "service", title: s.label, date: s.date })}>
+                <div className="an-rec-main">
+                  <strong>{s.label}</strong>
+                  <span>{s.date} · {s.tech}</span>
+                </div>
+                <span className="an-rec-fee">{s.fee}</span>
+                <span className="an-ib-purple an-ib-btn"><Icon name="share" size={16} /></span>
+                <span className="an-ib-primary an-ib-btn"><Icon name="eye" size={16} /></span>
+                <span className="an-ib-warn an-ib-btn"><Icon name="download" size={16} /></span>
+              </button>
+            ))}
+          </div>
+
+          <div className="an-sec-head">
+            <span className="an-sec-ic"><Icon name="doc" size={16} /></span>
+            <strong>{cd.quotes}</strong>
+            <span className="an-sec-count">{cust.quotes.length}</span>
+          </div>
+          <div className="an-rec-list">
+            {cust.quotes.map((q, i) => (
+              <button className="an-rec" key={i} onClick={() => setDoc({ kind: "quote", title: q.label, date: q.date })}>
+                <div className="an-rec-main">
+                  <strong>{q.label}</strong>
+                  <span>{q.date}</span>
+                </div>
+                <div className="an-rec-money">
+                  <strong>{q.totals}</strong>
+                  <span>{q.tryTotal}</span>
+                </div>
+                <span className="an-ib-purple an-ib-btn"><Icon name="share" size={16} /></span>
+                <span className="an-ib-primary an-ib-btn"><Icon name="eye" size={16} /></span>
+                <span className="an-ib-warn an-ib-btn"><Icon name="download" size={16} /></span>
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    if (screen === "document") {
+      const df = sc.doc;
+      const isQ = doc?.kind !== "service";
+      const cust = MOCK_CUSTOMERS[custIdx % MOCK_CUSTOMERS.length];
+      const dtitle = doc?.title ?? (isQ ? sc.quotes.title : sc.services.title);
+      const ddate = doc?.date ?? "05.09.2026";
+      return (
+        <>
+          <ScreenHead title={isQ ? sc.quotes.label : sc.services.label} subtitle={dtitle} backTo="customer" />
+
+          <div className="an-doc-actions">
+            <button className="an-doc-share">
+              <Icon name="share" size={15} />
+              {df.shareOnline}
+            </button>
+            <button className="an-doc-dl">
+              <Icon name="download" size={15} />
+              {df.downloadPdf}
+            </button>
+          </div>
+
+          <div className="an-doc-sheet">
+            <div className="an-doc-head">
+              <span className="an-doc-logo">
+                <Icon name="shield" size={22} />
+              </span>
+              <div className="an-doc-title">
+                <strong>{df.companyNameLabel}</strong>
+                <span className="an-doc-doctitle">{isQ ? df.quoteLabel : df.serviceTitle}</span>
+              </div>
+              <div className="an-doc-meta">
+                <span><b>{df.date}</b> {ddate}</span>
+                {isQ && <span><b>{df.validUntil}</b> 12.09.2026</span>}
+              </div>
+            </div>
+
+            {isQ ? (
+              <>
+                <div className="an-doc-cols">
+                  <div className="an-doc-col">
+                    <div className="an-doc-coltitle">{df.companyInfo}</div>
+                    <DocRow l={df.address} v={df.companyAddressLabel} />
+                    <DocRow l={df.phone} v={df.companyPhone} />
+                    <DocRow l={df.gsm} v={df.companyGsm} />
+                    <DocRow l={df.email} v={df.companyEmail} />
+                    <DocRow l={df.website} v={df.companyWeb} />
+                    <DocRow l={df.taxNo} v={df.companyTax} />
+                  </div>
+                  <div className="an-doc-col">
+                    <div className="an-doc-coltitle">{df.customerInfo}</div>
+                    <DocRow l={df.customerName} v={cust.companyName} />
+                    <DocRow l={df.contactPerson} v={cust.contactPerson} />
+                    <DocRow l={df.phone} v={cust.phone} />
+                    <DocRow l={df.email} v={cust.email} />
+                    <DocRow l={df.address} v={cust.address} />
+                    <DocRow l={df.subscriberNo} v={cust.subscriberNo} />
+                  </div>
+                </div>
+
+                <div className="an-doc-coltitle an-doc-u">{df.notes}</div>
+                <p className="an-doc-par">
+                  {lang === "tr"
+                    ? "Tüm ürünler 2 yıl garanti kapsamındadır; kurulum, devreye alma ve kullanıcı eğitimi ücrete dahildir."
+                    : "All products are covered by a 2-year warranty; installation, commissioning and user training are included."}
+                </p>
+
+                <div className="an-doc-coltitle an-doc-u">{df.items}</div>
+                <table className="an-doc-table">
+                  <thead>
+                    <tr>
+                      <th className="an-doc-wt">#</th>
+                      <th>{df.product}</th>
+                      <th className="an-doc-wn">{df.quantity}</th>
+                      <th className="an-doc-wn">{df.unitPrice}</th>
+                      <th className="an-doc-wn">{df.total}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {QUOTE_ITEMS.map((it, i) => (
+                      <tr key={i}>
+                        <td>{i + 1}</td>
+                        <td>
+                          <b>{it[0]}</b>
+                          <span className="an-doc-sub">{it[1]}</span>
+                        </td>
+                        <td>{it[2]}</td>
+                        <td>{it[3]}</td>
+                        <td><b>{it[4]}</b></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="an-doc-totals">
+                  <div className="an-doc-trow"><span>{df.subtotal} (₺)</span><b>136.500,00 ₺</b></div>
+                  <div className="an-doc-trow"><span>{df.kdv}</span><b>27.300,00 ₺</b></div>
+                  <div className="an-doc-trow g-total"><span>{df.grandTotal} (₺)</span><b>163.800,00 ₺</b></div>
+                  <div className="an-doc-split" />
+                  <div className="an-doc-trow"><span>{df.subtotal} (US$)</span><b>1.500,00 $</b></div>
+                  <div className="an-doc-trow"><span>{df.kdv}</span><b>300,00 $</b></div>
+                  <div className="an-doc-trow g-total"><span>{df.grandTotal} (US$)</span><b>1.800,00 $</b></div>
+                </div>
+
+                <div className="an-doc-fx">
+                  <div className="an-fx-head">
+                    <span className="an-fx-live"><i />{df.fxLive}</span>
+                    <strong>{df.effectiveSellingRate}</strong>
+                    <span className="an-fx-src">({df.fxSource} · {df.fxDate})</span>
+                    <button className="an-fx-refresh"><Icon name="refresh" size={12} />{df.fxRefresh}</button>
+                  </div>
+                  {FX_ROWS.map((r) => (
+                    <div className="an-doc-trow" key={r[0]}><span>{r[0]}</span><b>{r[1]}</b></div>
+                  ))}
+                  <div className="an-doc-split" />
+                  <div className="an-doc-trow g-total"><span>{df.grandTotalTry}</span><b>≈ 223.424,10 ₺</b></div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="an-doc-cols">
+                  <div className="an-doc-col">
+                    <div className="an-doc-coltitle">{df.customerInfo}</div>
+                    <DocRow l={df.customerName} v={cust.companyName} />
+                    <DocRow l={df.address} v={cust.address} />
+                    <DocRow l={df.phone} v={cust.phone} />
+                    <DocRow l={df.email} v={cust.email} />
+                    <DocRow l={df.subscriberNo} v={cust.subscriberNo} />
+                  </div>
+                  <div className="an-doc-col">
+                    <div className="an-doc-coltitle">{df.serviceDetails}</div>
+                    <DocRow l={df.responsiblePersonnel} v="Ahmet Yıldız" />
+                    <DocRow l={df.startTime} v="09:00" />
+                    <DocRow l={df.endTime} v="12:30" />
+                    <DocRow l={df.technicianPhone} v={df.companyGsm} />
+                  </div>
+                </div>
+
+                {SVC_GROUPS.map((g, gi) => (
+                  <div key={gi}>
+                    <div className="an-doc-coltitle an-doc-u">{gi === 0 ? df.serviceServices : df.technicalServices}</div>
+                    <div className="an-doc-checks">
+                      {g.items.map((it) => <CheckItem key={it[0]} label={it[0]} on={it[1]} />)}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="an-doc-coltitle an-doc-u">{df.detailsNotes}</div>
+                <p className="an-doc-par">
+                  {lang === "tr"
+                    ? "Kamera ve kayıt sisteminin periyodik bakımı yapılmış, tüm cihazlar test edilmiştir. Kayıt ve yedekleme eğitimi tamamlanmıştır."
+                    : "Periodic maintenance of the camera and recording system completed, all devices tested. Recording and backup training finished."}
+                </p>
+
+                <div className="an-doc-fee">
+                  <div className="an-doc-coltitle">{df.serviceFee}</div>
+                  <b>{lang === "tr" ? "Servis Bedeli: ₺6.000 + KDV" : "Service Fee: ₺6.000 + VAT"}</b>
+                </div>
+              </>
+            )}
+
+            <div className="an-doc-sign">
+              <div className="an-doc-sign-title">{df.signatureArea}</div>
+              <p className="an-doc-sign-note">{df.signatureNote}</p>
+              <div className="an-doc-sign-boxes">
+                <div className="an-doc-sbox">
+                  <span className="an-sig-label">{df.companyStamp}</span>
+                  <Stamp />
+                </div>
+                <div className="an-doc-sbox strong">
+                  <span className="an-sig-label">{df.approvedBy}</span>
+                  <span className="an-sig-badge"><Icon name="check-circle" size={13} />{df.digitalSignature} · {df.verified}</span>
+                  <Sig t="a" />
+                  <b className="an-sig-name">Ahmet Yıldız</b>
+                </div>
+                <div className="an-doc-sbox">
+                  <span className="an-sig-label">{df.technicianSignature}</span>
+                  <Sig t="b" />
+                  <b className="an-sig-name">Ahmet Yıldız</b>
+                </div>
+                {!isQ && (
+                  <div className="an-doc-sbox">
+                    <span className="an-sig-label">{df.customerSignature}</span>
+                    <Sig t="b" />
+                    <b className="an-sig-name">{cust.contactPerson}</b>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="an-doc-foot">
+              <b>{df.companyNameLabel}</b>
+              <span>{df.companyAddressLabel}</span>
+              <span>Tel: {df.companyPhone}&nbsp;&nbsp;Gsm: {df.companyGsm}</span>
+              <span>Email: {df.companyEmail}&nbsp;&nbsp;Web: {df.companyWeb}</span>
+              <span>{lang === "tr" ? "Vergi No:" : "Tax No:"} {df.companyTax}</span>
+            </div>
+
+            <div className="an-doc-privacy">
+              <b>{df.privacyTitle}</b>
+              <span>{df.privacyBody}</span>
+            </div>
+          </div>
+        </>
+      );
+    }
+
     const c = sc.customers;
     return (
       <>
@@ -1203,7 +1710,7 @@ const PayBars = ({
 
         <div className="an-stack" style={{ gap: 12 }}>
           {c.rows.map((row, i) => (
-            <div className="an-card an-row" key={i}>
+            <div className="an-card an-row an-row-btn" key={i} onClick={() => { setCustIdx(i); setScreen("customer"); }}>
               <span className="an-avatar an-avatar-lg">{row[0].charAt(0)}</span>
               <div className="an-rowmain no-sub an-cust-main">
                 <strong>{row[0]}</strong>
