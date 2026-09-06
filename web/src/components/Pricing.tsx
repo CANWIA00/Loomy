@@ -4,6 +4,7 @@ import { CheckIcon } from "../icons";
 export default function Pricing() {
   const { t } = useLanguage();
   const featuredLabel = t.pricing.comingSoon;
+  const only = t.pricing.plans.length === 1;
 
   return (
     <section className="section" id="pricing">
@@ -16,11 +17,11 @@ export default function Pricing() {
 
         <div className="pricing-grid">
           {t.pricing.plans.map((plan) => (
-            <div className={`plan-card ${plan.featured ? "featured" : ""}`} key={plan.name}>
+            <div className={`plan-card ${plan.featured ? "featured" : ""}${only ? " only" : ""}`} key={plan.name}>
               {plan.featured ? <span className="plan-badge">{featuredLabel}</span> : null}
               <div className="plan-name">{plan.name}</div>
               <div className="plan-desc">{plan.description}</div>
-              <div className="plan-price">{plan.price}</div>
+              <div className="plan-price is-label">{plan.price}</div>
               <ul className="plan-features">
                 {plan.features.map((feature) => (
                   <li key={feature}>
