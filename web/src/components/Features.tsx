@@ -308,21 +308,7 @@ export default function Features() {
                   ))}
                 </ul>
               </div>
-            </div>
 
-            <div className="fmodal-doc">
-              <div className="fmodal-doc-list">
-                <h3>{cd.docTitle}</h3>
-                <p>{cd.docIntro}</p>
-                <ul>
-                  {cd.docPoints.map((point, i) => (
-                    <li key={i}>
-                      <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-              </div>
               <div className="fmod-history-photo">
                 <div className="fph-photo">
                   <div className="fph-paper">
@@ -352,6 +338,21 @@ export default function Features() {
                   </div>
                 </div>
                 <p className="fph-caption">{hi.docTitle}</p>
+              </div>
+            </div>
+
+            <div className="fmodal-doc">
+              <div className="fmodal-doc-list">
+                <h3>{cd.docTitle}</h3>
+                <p>{cd.docIntro}</p>
+                <ul>
+                  {cd.docPoints.map((point, i) => (
+                    <li key={i}>
+                      <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                      {point}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
               </>

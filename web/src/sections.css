@@ -3360,6 +3360,28 @@
   line-height: 1.5;
 }
 
+.fmodal-points {
+  display: flex;
+  flex-direction: column;
+}
+
+.fmodal-points .fmod-history-photo {
+  margin-top: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.fmodal-points .fph-photo {
+  transform: rotate(1.5deg) scale(0.7);
+  transform-origin: top center;
+}
+
+.fmodal-points .fph-caption {
+  margin-top: -8px;
+}
+
 .fmodal-points h3,
 .fmodal-doc h3 {
   font-size: 18px;
@@ -3402,10 +3424,9 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 22px 24px;
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 26px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .fmodal-doc-list {
