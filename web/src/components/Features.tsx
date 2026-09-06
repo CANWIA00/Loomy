@@ -587,47 +587,6 @@ export default function Features() {
                     </ul>
                   </div>
                 </div>
-
-                <div className="fmodal-doc">
-                  <div className="fmodal-doc-list">
-                    <h3>{pd.docTitle}</h3>
-                    <p>{pd.docIntro}</p>
-                    <ul>
-                      {pd.docPoints.map((point, i) => (
-                        <li key={i}>
-                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="fmod-history-photo">
-                    <div className="fph-photo">
-                      <div className="fph-paper">
-                        <div className="fph-brand">
-                          <span className="fph-logo">L</span>
-                          <div className="fph-brand-tx">
-                            <strong>LOOMY</strong>
-                            <span>Aylık Ödeme Özeti</span>
-                          </div>
-                          <span className="fph-date">Ağustos 2026</span>
-                        </div>
-                        <div className="fph-cust">
-                          <b>Yılmaz Isı Sistemleri</b>
-                          <span>Hesap Özeti · 01–31 Ağustos</span>
-                        </div>
-                        <div className="fph-sec">Ödemeler (3)</div>
-                        <div className="fph-row"><span><b>Klima Bakım</b> · 12.09</span><span className="fph-pill on">Ödendi</span></div>
-                        <div className="fph-row"><span><b>Kombi Montaj</b> · 11.09</span><span className="fph-pill">Bekliyor</span></div>
-                        <div className="fph-row"><span><b>Kamera Sistemi</b> · 05.09</span><span className="fph-pill">Bekliyor</span></div>
-                        <div className="fph-sec">Özet</div>
-                        <div className="fph-row"><span>Ödenen</span><b>₺6.000,00</b></div>
-                        <div className="fph-row fph-tot"><span>Bekleyen</span><b>₺144.500,00</b></div>
-                        <div className="fph-foot">Loomy ile oluşturuldu · Durum rozetleriyle ödeme özeti</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </>
             ) : detail === "schedule" ? (
               <>
@@ -695,46 +654,6 @@ export default function Features() {
                         </li>
                       ))}
                     </ul>
-                  </div>
-                </div>
-
-                <div className="fmodal-doc">
-                  <div className="fmodal-doc-list">
-                    <h3>{sched.docTitle}</h3>
-                    <p>{sched.docIntro}</p>
-                    <ul>
-                      {sched.docPoints.map((point, i) => (
-                        <li key={i}>
-                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="fmod-history-photo">
-                    <div className="fph-photo">
-                      <div className="fph-paper">
-                        <div className="fph-brand">
-                          <span className="fph-logo">L</span>
-                          <div className="fph-brand-tx">
-                            <strong>LOOMY</strong>
-                            <span>Haftalık Plan</span>
-                          </div>
-                          <span className="fph-date">07–13 Eylül</span>
-                        </div>
-                        <div className="fph-cust">
-                          <b>Ekip Takvimi</b>
-                          <span>5 atama · 3 teknisyen</span>
-                        </div>
-                        <div className="fph-sec">Atamalar</div>
-                        <div className="fph-row"><span><b>08.09</b> · Kombi Montaj</span><b>B. Demir</b></div>
-                        <div className="fph-row"><span><b>09.09</b> · Klima Bakım</span><b>A. Yıldız</b></div>
-                        <div className="fph-row"><span><b>10.09</b> · Arıza Onarım</span><b>S. Can</b></div>
-                        <div className="fph-row"><span><b>12.09</b> · Yıllık Bakım</span><b>A. Yıldız</b></div>
-                        <div className="fph-row fph-tot"><span><b>13.09</b> · Kamera Sistemi</span><b>B. Demir</b></div>
-                        <div className="fph-foot">Loomy ile oluşturuldu · Tüm ekip aynı planı görür</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </>
@@ -820,46 +739,6 @@ export default function Features() {
                     </ul>
                   </div>
                 </div>
-
-                <div className="fmodal-doc">
-                  <div className="fmodal-doc-list">
-                    <h3>{td.docTitle}</h3>
-                    <p>{td.docIntro}</p>
-                    <ul>
-                      {td.docPoints.map((point, i) => (
-                        <li key={i}>
-                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="fmod-history-photo">
-                    <div className="fph-photo">
-                      <div className="fph-paper">
-                        <div className="fph-brand">
-                          <span className="fph-logo">L</span>
-                          <div className="fph-brand-tx">
-                            <strong>LOOMY</strong>
-                            <span>Ekip Listesi</span>
-                          </div>
-                          <span className="fph-date">05.09.2026</span>
-                        </div>
-                        <div className="fph-cust">
-                          <b>1D TEKNİK SERVİS</b>
-                          <span>Üye listesi · 3 çalışan</span>
-                        </div>
-                        <div className="fph-sec">Üyeler (3)</div>
-                        <div className="fph-row"><span>Ahmet Yıldız</span><b>Teknisyen</b></div>
-                        <div className="fph-row"><span>Burak Demir</span><b>Teknisyen</b></div>
-                        <div className="fph-row fph-tot"><span>Seda Can</span><b>Satış & Ofis</b></div>
-                        <div className="fph-sec">Davet Kodu</div>
-                        <div className="fph-row fph-tot"><span>Yeni üyeler için</span><b>LOOMY-4821</b></div>
-                        <div className="fph-foot">Loomy ile oluşturuldu · Roller ve yetkilerle güvende</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </>
             ) : detail === "dashboard" ? (
               <>
@@ -933,47 +812,6 @@ export default function Features() {
                         </li>
                       ))}
                     </ul>
-                  </div>
-                </div>
-
-                <div className="fmodal-doc">
-                  <div className="fmodal-doc-list">
-                    <h3>{dbd.docTitle}</h3>
-                    <p>{dbd.docIntro}</p>
-                    <ul>
-                      {dbd.docPoints.map((point, i) => (
-                        <li key={i}>
-                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="fmod-history-photo">
-                    <div className="fph-photo">
-                      <div className="fph-paper">
-                        <div className="fph-brand">
-                          <span className="fph-logo">L</span>
-                          <div className="fph-brand-tx">
-                            <strong>LOOMY</strong>
-                            <span>Günlük Rapor</span>
-                          </div>
-                          <span className="fph-date">12.09.2026</span>
-                        </div>
-                        <div className="fph-cust">
-                          <b>1D TEKNİK SERVİS</b>
-                          <span>İşletme Özeti · Günlük Rapor</span>
-                        </div>
-                        <div className="fph-sec">Özet</div>
-                        <div className="fph-row"><span>Bugünkü Randevu</span><b>4</b></div>
-                        <div className="fph-row"><span>Bekleyen Teklif</span><b>2</b></div>
-                        <div className="fph-row"><span>Tamamlanan Servis</span><b>3</b></div>
-                        <div className="fph-sec">Ödeme Durumu</div>
-                        <div className="fph-row"><span>Ödenen</span><b>₺8.000,00</b></div>
-                        <div className="fph-row fph-tot"><span>Bekleyen</span><b>₺144.500,00</b></div>
-                        <div className="fph-foot">Loomy ile oluşturuldu · Günlük özeti ekiple paylaşın</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </>
