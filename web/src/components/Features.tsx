@@ -116,14 +116,14 @@ function Mini({ name, size = 15, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m4 20 1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5 4 20z" /><path d="m13.5 7 3 3" /></svg>;
     case "check-circle":
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12 2.5 2.5 5-5" /></svg>;
+    case "trash":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M4 7h16M9 7V5h6v2M6.5 7l1 13h9l1-13M10 11v5M14 11v5" /></svg>;
     case "people":
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5s5.5 1.7 5.5 4.5" /><path d="M15.5 5.8a3 3 0 0 1 0 5.4" /></svg>;
     case "calendar":
       return <svg viewBox="0 0 24 24" {...p} style={s}><rect x="3.5" y="5" width="17" height="16" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>;
     case "card":
       return <svg viewBox="0 0 24 24" {...p} style={s}><rect x="3" y="5.5" width="18" height="13" rx="3" /><path d="M3 9.5h18" /></svg>;
-    case "settings":
-      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="3" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" /></svg>;
     case "chatbubbles":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M8 10.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3.5L9.5 17v-1.5H8a2 2 0 0 1-2-2v-3z" /><circle cx="14.5" cy="11" r="0.6" fill="currentColor" /></svg>;
     case "person-add":
