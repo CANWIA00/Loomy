@@ -456,6 +456,40 @@ export default function Features() {
                         </li>
                       ))}
                     </ul>
+
+                    <div className="fmod-history-photo">
+                      <div className="fph-photo">
+                        <div className="fph-paper">
+                          <div className="fph-brand">
+                            <span className="fph-logo">L</span>
+                            <div className="fph-brand-tx">
+                              <strong>LOOMY</strong>
+                              <span>Servis Teslim Formu</span>
+                            </div>
+                            <span className="fph-date">12.09.2026</span>
+                          </div>
+                          <div className="fph-cust">
+                            <b>Yılmaz Isı Sistemleri</b>
+                            <span>Osmangazi Mah. Çınar Sok. No:12 · Bursa</span>
+                          </div>
+                          <div className="fph-sec">Servis Bilgileri</div>
+                          <div className="fph-row"><span>Hizmet</span><b>Klima Bakım</b></div>
+                          <div className="fph-row"><span>Tarih</span><b>12.09.2026</b></div>
+                          <div className="fph-row"><span>Teknisyen</span><b>Ahmet Yıldız</b></div>
+                          <div className="fph-sec">Yapılan İşlem</div>
+                          <div className="fph-note">Genel bakım, filtre değişimi ve gaz kontrolü tamamlandı.</div>
+                          <div className="fph-row fph-tot"><span>Ücret / KDV</span><b>₺6.000,00 · %20</b></div>
+                          <div className="fph-sig">
+                            <span className="fph-stamp">ÜNSAL<i>TEKNİK SERVİS</i><b>KAŞE 2026</b></span>
+                            <div className="fph-sig-tx">
+                              <span className="fph-ok"><Mini name="check" size={10} color="#15803d" /> Doğrulandı</span>
+                              <span>Teknisyen + müşteri dijital imzası</span>
+                            </div>
+                          </div>
+                          <div className="fph-foot">Loomy ile oluşturuldu · İmza ve kaşe ile güvende</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -471,39 +505,6 @@ export default function Features() {
                         </li>
                       ))}
                     </ul>
-                  </div>
-                  <div className="fmod-history-photo">
-                    <div className="fph-photo">
-                      <div className="fph-paper">
-                        <div className="fph-brand">
-                          <span className="fph-logo">L</span>
-                          <div className="fph-brand-tx">
-                            <strong>LOOMY</strong>
-                            <span>Servis Teslim Formu</span>
-                          </div>
-                          <span className="fph-date">12.09.2026</span>
-                        </div>
-                        <div className="fph-cust">
-                          <b>Yılmaz Isı Sistemleri</b>
-                          <span>Osmangazi Mah. Çınar Sok. No:12 · Bursa</span>
-                        </div>
-                        <div className="fph-sec">Servis Bilgileri</div>
-                        <div className="fph-row"><span>Hizmet</span><b>Klima Bakım</b></div>
-                        <div className="fph-row"><span>Tarih</span><b>12.09.2026</b></div>
-                        <div className="fph-row"><span>Teknisyen</span><b>Ahmet Yıldız</b></div>
-                        <div className="fph-sec">Yapılan İşlem</div>
-                        <div className="fph-note">Genel bakım, filtre değişimi ve gaz kontrolü tamamlandı.</div>
-                        <div className="fph-row fph-tot"><span>Ücret / KDV</span><b>₺6.000,00 · %20</b></div>
-                        <div className="fph-sig">
-                          <span className="fph-stamp">ÜNSAL<i>TEKNİK SERVİS</i><b>KAŞE 2026</b></span>
-                          <div className="fph-sig-tx">
-                            <span className="fph-ok"><Mini name="check" size={10} color="#15803d" /> Doğrulandı</span>
-                            <span>Teknisyen + müşteri dijital imzası</span>
-                          </div>
-                        </div>
-                        <div className="fph-foot">Loomy ile oluşturuldu · İmza ve kaşe ile güvende</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </>
@@ -1109,6 +1110,49 @@ export default function Features() {
                         </li>
                       ))}
                     </ul>
+
+                    <div className="fmod-history-photo">
+                      <div className="fph-photo">
+                        <div className="fph-paper">
+                          <div className="fph-brand">
+                            <span className="fph-logo">L</span>
+                            <div className="fph-brand-tx">
+                              <strong>LOOMY</strong>
+                              <span>Teklif</span>
+                            </div>
+                            <span className="fph-date">05.09.2026</span>
+                          </div>
+                          <div className="fph-cust">
+                            <b>Yılmaz Isı Sistemleri</b>
+                            <span>Karşıyaka Mah. Ata Cad. No: 42 · İzmir</span>
+                          </div>
+                          <div className="fph-sec">Teklif Özeti (3)</div>
+                          <div className="fph-row"><span><b>4CH IP Kamera + 4TB Kayıt</b> · 1 adet</span><b>₺82.000,00</b></div>
+                          <div className="fph-row"><span><b>Kurulum ve Montaj</b> · 1 adet</span><b>₺16.000,00</b></div>
+                          <div className="fph-row"><span><b>12 Ay Uzaktan İzleme</b> · 12 adet</span><b>₺30.000,00</b></div>
+                          <div className="fph-sec">Özet</div>
+                          <div className="fph-row"><span>Ara Toplam</span><b>₺128.000,00</b></div>
+                          <div className="fph-row"><span>KDV %20</span><b>₺25.600,00</b></div>
+                          <div className="fph-row fph-tot"><span>Genel Toplam</span><b>₺153.600,00</b></div>
+                          <div className="fph-fx">
+                            <span className="fph-fx-title"><i /> TCMB Canlı Kur · 05.09.2026</span>
+                            <div className="fph-fx-cols">
+                              <span>USD <b>36,50</b></span>
+                              <span>EUR <b>39,90</b></span>
+                              <span>GBP <b>45,10</b></span>
+                            </div>
+                          </div>
+                          <div className="fph-sig">
+                            <span className="fph-stamp">ÜNSAL<i>TEKNİK SERVİS</i><b>KAŞE 2026</b></span>
+                            <div className="fph-sig-tx">
+                              <span className="fph-ok"><Mini name="check" size={10} color="#15803d" /> Doğrulandı</span>
+                              <span>Firma kaşesi · Dijital imza</span>
+                            </div>
+                          </div>
+                          <div className="fph-foot">Loomy ile oluşturuldu · KDV, para birimi ve canlı kur bilgisiyle</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1124,48 +1168,6 @@ export default function Features() {
                         </li>
                       ))}
                     </ul>
-                  </div>
-                  <div className="fmod-history-photo">
-                    <div className="fph-photo">
-                      <div className="fph-paper">
-                        <div className="fph-brand">
-                          <span className="fph-logo">L</span>
-                          <div className="fph-brand-tx">
-                            <strong>LOOMY</strong>
-                            <span>Teklif</span>
-                          </div>
-                          <span className="fph-date">05.09.2026</span>
-                        </div>
-                        <div className="fph-cust">
-                          <b>Yılmaz Isı Sistemleri</b>
-                          <span>Karşıyaka Mah. Ata Cad. No: 42 · İzmir</span>
-                        </div>
-                        <div className="fph-sec">Teklif Özeti (3)</div>
-                        <div className="fph-row"><span><b>4CH IP Kamera + 4TB Kayıt</b> · 1 adet</span><b>₺82.000,00</b></div>
-                        <div className="fph-row"><span><b>Kurulum ve Montaj</b> · 1 adet</span><b>₺16.000,00</b></div>
-                        <div className="fph-row"><span><b>12 Ay Uzaktan İzleme</b> · 12 adet</span><b>₺30.000,00</b></div>
-                        <div className="fph-sec">Özet</div>
-                        <div className="fph-row"><span>Ara Toplam</span><b>₺128.000,00</b></div>
-                        <div className="fph-row"><span>KDV %20</span><b>₺25.600,00</b></div>
-                        <div className="fph-row fph-tot"><span>Genel Toplam</span><b>₺153.600,00</b></div>
-                        <div className="fph-fx">
-                          <span className="fph-fx-title"><i /> TCMB Canlı Kur · 05.09.2026</span>
-                          <div className="fph-fx-cols">
-                            <span>USD <b>36,50</b></span>
-                            <span>EUR <b>39,90</b></span>
-                            <span>GBP <b>45,10</b></span>
-                          </div>
-                        </div>
-                        <div className="fph-sig">
-                          <span className="fph-stamp">ÜNSAL<i>TEKNİK SERVİS</i><b>KAŞE 2026</b></span>
-                          <div className="fph-sig-tx">
-                            <span className="fph-ok"><Mini name="check" size={10} color="#15803d" /> Doğrulandı</span>
-                            <span>Firma kaşesi · Dijital imza</span>
-                          </div>
-                        </div>
-                        <div className="fph-foot">Loomy ile oluşturuldu · KDV, para birimi ve canlı kur bilgisiyle</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </>
