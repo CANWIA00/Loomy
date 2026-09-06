@@ -164,21 +164,23 @@ const tr = {
       service: {
         title: "Servis ve İş Takibi",
         intro:
-          "Yaptığınız her servisi kaydedin, teknisyen ve müşteri dijital imzasını formda alın ve eksiksiz bir servis teslim formunu müşteriyle anında paylaşın.",
+          "İşletmenize özel birden fazla servis formu oluşturun, düzenleyin; farklı servis türlerini tek uygulamadan yönetin. Teknisyen ve müşteri dijital imzasını formda alın, eksiksiz teslim formunu anında paylaşın.",
         visualTitle: "Gerçek Uygulama Görünümü",
         visualDesc:
-          "Aşağıdaki örnek, uygulamanın servis kayıt ekranını yansıtır: işlem detayı, ücret ve teknisyen/müşteri imza alanları.",
+          "Aşağıdaki örnek, uygulamanın servis kayıt ekranını yansıtır: işletmenize özel form seçimi, işlem detayı, ücret ve teknisyen/müşteri imza alanları.",
         pointsTitle: "Neler yapabilirsiniz?",
         points: [
+          "İşletmenize özel birden fazla form oluşturun: alan, başlık ve düzeni kendi işinize göre düzenleyin",
+          "Bakım, montaj, arıza, keşif gibi farklı servis türlerini tek uygulamadan kaydedin ve yönetin",
           "Servis kaydı ekleyin: müşteri, işlem, açıklama, ücret ve KDV tek ekranda",
-          "Yapılan işlem açıklamasıyla eksiksiz servis raporu oluşturun",
           "Teknisyen ve müşteri dijital imzasını formda alın",
           "Servis teslim formunu tek tıkla PDF olarak paylaşın",
         ],
         docTitle: "Servis Raporunu Online Paylaşın",
         docIntro:
-          "Kaydedilen her servis; firma logosu, kaşe, teknisyen ve müşteri dijital imzası ile işlem detayını içeren eksiksiz bir servis teslim formuna dönüşür.",
+          "İşletmenize özel formlarla kaydedilen her servis; firma logosu, kaşe, teknisyen ve müşteri dijital imzası ile işlem detayını içeren eksiksiz bir servis teslim formuna dönüşür.",
         docPoints: [
+          "Kendi formunuz, kendi şablonunuz: işletmenize göre özelleştirin",
           "Teknisyen ve müşteri dijital imzası + firma kaşesi",
           "WhatsApp, e-posta veya güvenli bağlantıyla anında paylaşım",
         ],
@@ -898,21 +900,23 @@ const en: Dictionary = {
       service: {
         title: "Service & Work Tracking",
         intro:
-          "Record every service you perform, capture technician and customer digital signatures on the form, and share a complete service delivery form with your customer instantly.",
+          "Create and customize multiple service forms for your business; manage different service types from a single app. Capture technician and customer digital signatures on the form and share a complete service delivery form instantly.",
         visualTitle: "Real App View",
         visualDesc:
-          "The example below mirrors the app's service record screen: work details, fee and technician/customer signature fields.",
+          "The example below mirrors the app's service record screen: business-specific form selection, work details, fee and technician/customer signature fields.",
         pointsTitle: "What can you do?",
         points: [
+          "Create multiple forms tailored to your business: customize fields, titles and layout",
+          "Manage different service types — maintenance, installation, repair, survey — from one app",
           "Add a service record: customer, work, description, fee and VAT in one screen",
-          "Build a complete service report with the work description",
           "Capture technician and customer digital signatures on the form",
           "Share the service delivery form as a PDF in one tap",
         ],
         docTitle: "Share Service Reports Online",
         docIntro:
-          "Every recorded service becomes a complete service delivery form with company logo, stamp, technician/customer digital signatures and work details.",
+          "Every service recorded with your own forms becomes a complete service delivery form with company logo, stamp, technician/customer digital signatures and work details.",
         docPoints: [
+          "Your form, your template: customize it to fit your business",
           "Technician and customer digital signatures + company stamp",
           "Instant sharing via WhatsApp, email or a secure link",
         ],

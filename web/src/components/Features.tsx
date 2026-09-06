@@ -399,6 +399,16 @@ export default function Features() {
                           <span className="an-chip">TR</span>
                         </div>
 
+                        <div className="an-form-select">
+                          <span className="an-form-select-label"><Mini name="doc" size={12} color="var(--sc-muted)" /> Form Seç</span>
+                          <div className="an-form-select-chips">
+                            <span className="fms-chip on">Klima Bakım</span>
+                            <span className="fms-chip">Kombi Montaj</span>
+                            <span className="fms-chip">Arıza Onarım</span>
+                            <span className="fms-chip add"><Mini name="check" size={11} /> Yeni Form</span>
+                          </div>
+                        </div>
+
                         <div className="an-form-card">
                           <div className="an-form-head">
                             <strong>Servis Bilgileri</strong>
