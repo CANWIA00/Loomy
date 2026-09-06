@@ -3366,12 +3366,85 @@
 }
 
 .fmodal-points .fmod-history-photo {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .fmodal-points .fph-photo {
-  transform: rotate(1.5deg) scale(0.7);
-  transform-origin: top center;
+  transform: none;
+  padding: 20px;
+}
+
+.fmodal-points .fph-paper {
+  max-width: 375px;
+  font-size: 11px;
+  padding: 18px 18px 16px;
+}
+
+.fmodal-points .fph-brand {
+  gap: 10px;
+  padding-bottom: 9px;
+}
+
+.fmodal-points .fph-logo {
+  width: 34px;
+  height: 34px;
+  font-size: 17px;
+  border-radius: 9px;
+}
+
+.fmodal-points .fph-brand-tx strong {
+  font-size: 15px;
+}
+
+.fmodal-points .fph-brand-tx span {
+  font-size: 9.5px;
+}
+
+.fmodal-points .fph-date {
+  font-size: 9px;
+}
+
+.fmodal-points .fph-cust {
+  font-size: 10px;
+  padding: 9px 0;
+}
+
+.fmodal-points .fph-cust b {
+  font-size: 11px;
+}
+
+.fmodal-points .fph-sec {
+  font-size: 9px;
+  margin: 9px 0 4px;
+}
+
+.fmodal-points .fph-row {
+  font-size: 10px;
+  padding: 2px 0;
+}
+
+.fmodal-points .fph-row.fph-tot b {
+  font-size: 11px;
+}
+
+.fmodal-points .fph-pill {
+  font-size: 8.5px;
+  padding: 2px 7px;
+}
+
+.fmodal-points .fph-foot {
+  font-size: 8.5px;
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+.fmodal-points .fph-fx {
+  padding: 7px 9px;
+}
+
+.fmodal-points .fph-sig {
+  margin-top: 8px;
+  padding-top: 8px;
 }
 
 .fmodal-points .fph-caption {
