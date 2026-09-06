@@ -116,6 +116,24 @@ function Mini({ name, size = 15, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m4 20 1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5 4 20z" /><path d="m13.5 7 3 3" /></svg>;
     case "check-circle":
       return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12 2.5 2.5 5-5" /></svg>;
+    case "people":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5s5.5 1.7 5.5 4.5" /><path d="M15.5 5.8a3 3 0 0 1 0 5.4" /></svg>;
+    case "calendar":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><rect x="3.5" y="5" width="17" height="16" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>;
+    case "card":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><rect x="3" y="5.5" width="18" height="13" rx="3" /><path d="M3 9.5h18" /></svg>;
+    case "settings":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="3" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" /></svg>;
+    case "chatbubbles":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M8 10.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3.5L9.5 17v-1.5H8a2 2 0 0 1-2-2v-3z" /><circle cx="14.5" cy="11" r="0.6" fill="currentColor" /></svg>;
+    case "person-add":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="9" cy="8" r="3" /><path d="M3.5 19c0-2.8 2.4-4.5 5.5-4.5" /><path d="M14.5 10.5v5M17 13h-5" /></svg>;
+    case "plus":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 5v14M5 12h14" /></svg>;
+    case "arrow-fwd":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M4 12h15m0 0-5.5-5.5M19 12l-5.5 5.5" /></svg>;
+    case "chevron-fwd":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m9 6 6 6-6 6" /></svg>;
     default:
       return null;
   }
@@ -812,36 +830,156 @@ export default function Features() {
                           </div>
                           <span className="an-chip">TR</span>
                         </div>
-                        <div className="fm-tiles">
-                          <span className="fm-tile"><b>4</b><i>Bugünkü Randevu</i></span>
-                          <span className="fm-tile"><b>2</b><i>Bekleyen Teklif</i></span>
-                          <span className="fm-tile warn"><b>1</b><i>Geciken Ödeme</i></span>
-                          <span className="fm-tile ok"><b>3</b><i>Tamamlanan Servis</i></span>
-                        </div>
-                        <div className="an-sec-head">
-                          <span className="an-sec-ic"><Mini name="doc" size={14} /></span>
-                          <strong>Son Servisler</strong>
-                          <span className="an-sec-count">3</span>
-                        </div>
-                        <div className="an-rec-list">
-                          <span className="an-rec">
-                            <span className="an-rec-main">
-                              <strong>Klima Bakım</strong>
-                              <span>12.09.2026 · Yılmaz Isı</span>
+                        <div className="an-stack">
+                          <div className="an-card an-row">
+                            <span className="an-iconbox an-ib-primary">
+                              <Mini name="chatbubbles" size={18} />
                             </span>
-                            <span className="an-ht-pill paid">Ödendi</span>
-                          </span>
-                          <span className="an-rec">
-                            <span className="an-rec-main">
-                              <strong>Arıza Onarım</strong>
-                              <span>11.09.2026 · Beyaz Ocağı</span>
+                            <div className="an-card-title">
+                              <strong>Servisler</strong>
+                              <span>Aktif servislerinizi yönetin</span>
+                            </div>
+                            <div className="an-btn-row">
+                              <span className="an-btn"><Mini name="plus" size={13} color="var(--sc-primary-on)" /> Yeni Servis</span>
+                              <span className="an-btn">Yönet</span>
+                            </div>
+                          </div>
+
+                          <div className="an-card an-row">
+                            <span className="an-iconbox an-ib-primary">
+                              <Mini name="doc" size={18} />
                             </span>
-                            <span className="an-ht-pill pending">Bekliyor</span>
-                          </span>
-                        </div>
-                        <div className="fmp-tot">
-                          <span>Ödenen <b>₺8.000</b></span>
-                          <span>Bekleyen <b>₺144.500</b></span>
+                            <div className="an-card-title">
+                              <strong>Teklifler</strong>
+                              <span>Aktif tekliflerinizi yönetin</span>
+                            </div>
+                            <div className="an-btn-row">
+                              <span className="an-btn"><Mini name="plus" size={13} color="var(--sc-primary-on)" /> Yeni Teklif</span>
+                              <span className="an-btn">Yönet</span>
+                            </div>
+                          </div>
+
+                          <div className="an-col2">
+                            <div className="an-card">
+                              <div className="an-card-head">
+                                <span className="an-iconbox an-ib-teal">
+                                  <Mini name="people" size={18} />
+                                </span>
+                                <div className="an-card-title">
+                                  <strong>Müşteriler</strong>
+                                </div>
+                                <span className="an-btn-round">
+                                  <Mini name="person-add" size={16} color="var(--sc-primary-on)" />
+                                </span>
+                              </div>
+                              <div className="an-listrow">
+                                <span className="an-avatar">A</span>
+                                <div className="an-rowmain">
+                                  <strong>Ayşe Yılmaz</strong>
+                                  <span>0532 000 00 00</span>
+                                </div>
+                                <Mini name="chevron-fwd" size={15} color="var(--sc-border)" />
+                              </div>
+                              <div className="an-listrow">
+                                <span className="an-avatar">M</span>
+                                <div className="an-rowmain">
+                                  <strong>Mehmet Kaya</strong>
+                                  <span>0505 000 00 00</span>
+                                </div>
+                                <Mini name="chevron-fwd" size={15} color="var(--sc-border)" />
+                              </div>
+                            </div>
+
+                            <div className="an-card">
+                              <div className="an-card-head">
+                                <span className="an-iconbox an-ib-purple">
+                                  <Mini name="calendar" size={18} />
+                                </span>
+                                <div className="an-card-title">
+                                  <strong>Plan</strong>
+                                </div>
+                                <Mini name="arrow-fwd" size={18} color="var(--sc-purple)" />
+                              </div>
+                              <div className="an-plan-filters">
+                                <span className="an-fpill an-fpill-active-purple">Bugün</span>
+                                <span className="an-fpill">Yarın</span>
+                                <span className="an-fpill">Bu Hafta</span>
+                                <span className="an-plan-count">4</span>
+                              </div>
+                              <p className="an-plan-date">12.09.2026 — Bugün</p>
+                              <div className="an-cal">
+                                <div className="an-cal-top">
+                                  <span className="an-cal-time">10:00</span>
+                                  <span className="an-cal-cust">Ayşe Yılmaz</span>
+                                </div>
+                                <div className="an-cal-bottom">
+                                  <span className="an-cal-team">Ekip 1</span>
+                                  <span className="an-cal-type">Klima Bakım</span>
+                                </div>
+                              </div>
+                              <div className="an-cal">
+                                <div className="an-cal-top">
+                                  <span className="an-cal-time">13:30</span>
+                                  <span className="an-cal-cust">Mehmet Kaya</span>
+                                </div>
+                                <div className="an-cal-bottom">
+                                  <span className="an-cal-team">Ekip 2</span>
+                                  <span className="an-cal-type">Kombi Montaj</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="an-card">
+                            <div className="an-card-head">
+                              <span className="an-iconbox an-ib-warn">
+                                <Mini name="card" size={18} />
+                              </span>
+                              <div className="an-card-title">
+                                <strong>ÖDEME DURUMU</strong>
+                              </div>
+                            </div>
+                            <div className="an-pay">
+                              <div>
+                                <div className="an-bar-wrap">
+                                  <div className="an-bar-top">
+                                    <span>Alınan Ödeme</span>
+                                    <strong className="amt-primary">₺12.500</strong>
+                                  </div>
+                                  <div className="an-bar"><i className="primary" style={{ width: "78%" }} /></div>
+                                </div>
+                                <div className="an-bar-wrap">
+                                  <div className="an-bar-top">
+                                    <span>Bekleyen Ödeme</span>
+                                    <strong className="amt-warn">₺3.450</strong>
+                                  </div>
+                                  <div className="an-bar"><i className="warning" style={{ width: "22%" }} /></div>
+                                </div>
+                                <div className="an-total-row"><span>Alınan Toplam (4)</span><strong className="amt-primary">₺12.500</strong></div>
+                                <div className="an-total-row"><span>Bekleyen Toplam (1)</span><strong className="amt-warn">₺3.450</strong></div>
+                                <div className="an-total-row pb"><span>Tahmini Kasa</span><strong className="amt-success">₺16.000</strong></div>
+                              </div>
+                              <div>
+                                <p className="an-recent-title">SON SERVİSLER</p>
+                                <div className="an-recent">
+                                  <div className="an-recent-row">
+                                    <div className="an-rowmain" style={{ marginLeft: 0 }}>
+                                      <strong>Yılmaz Isı</strong>
+                                      <span>Klima Bakım · 12.09</span>
+                                    </div>
+                                    <span className="an-pill paid"><Mini name="check-circle" size={12} /> Ödendi</span>
+                                  </div>
+                                  <div className="an-recent-row">
+                                    <div className="an-rowmain" style={{ marginLeft: 0 }}>
+                                      <strong>Beyaz Ocağı</strong>
+                                      <span>Kombi Montaj · 11.09</span>
+                                    </div>
+                                    <span className="an-pill pending"><Mini name="clock" size={12} /> Bekliyor</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

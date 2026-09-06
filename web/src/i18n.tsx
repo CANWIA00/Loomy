@@ -254,16 +254,16 @@ const tr = {
       dashboard: {
         title: "Anlık Panel",
         intro:
-          "İşletmenizin genel durumunu özet istatistiklerle görün; bugünkü planlar, ödeme durumu ve son servisler tek bakışta.",
+          "Servisler, teklifler, müşteriler, plan ve ödeme durumu — işletmenizin ana ekranı tek bakışta. Kartlara dokunarak her bölüme hızlıca geçin.",
         visualTitle: "Gerçek Uygulama Görünümü",
         visualDesc:
-          "Aşağıdaki örnek, uygulamanın anlık panel ekranını yansıtır: özet istatistikler ve son kayıtlar.",
+          "Aşağıdaki örnek, uygulamanın anlık panel ekranını yansıtır: sık kullanılan bölümlerin kartları ve ödeme durumu.",
         pointsTitle: "Neler yapabilirsiniz?",
         points: [
-          "Bugünkü randevu, teklif ve servis sayılarını görün",
-          "Ödenmiş ve bekleyen ödeme durumunu takip edin",
-          "Son servis ve teklif kayıtlarını tek ekranda görün",
-          "Günlük işletme özetini ekiple anında paylaşın",
+          "Servis, teklif ve müşteri kartlarından tek dokunuşla ilgili ekrana geçin",
+          "Plan kartında bugün, yarın ve bu haftaki randevuları filtreleyin",
+          "Ödeme durumu kartında alınan ve bekleyen ödemeleri görün",
+          "Son servislerin ödeme durumunu panelden hızlıca işaretleyin",
         ],
         docTitle: "Günlük Raporu Paylaşın",
         docIntro:
@@ -990,16 +990,16 @@ const en: Dictionary = {
       dashboard: {
         title: "Live Dashboard",
         intro:
-          "See your business status with summary statistics; today's plans, payment status and recent services at a glance.",
+          "Services, quotes, customers, plan and payment status — your business's home screen at a glance. Tap the cards to jump quickly to each section.",
         visualTitle: "Real App View",
         visualDesc:
-          "The example below mirrors the app's live dashboard screen: summary statistics and recent records.",
+          "The example below mirrors the app's live dashboard screen: quick-access cards for frequent sections and payment status.",
         pointsTitle: "What can you do?",
         points: [
-          "See today's appointment, quote and service counts",
-          "Track paid and pending payment status",
-          "See recent services and quotes in one screen",
-          "Share the daily business summary with your team instantly",
+          "Jump to services, quotes and customers from cards in one tap",
+          "Filter today's, tomorrow's and this week's appointments in the plan card",
+          "See received and pending payments in the payment card",
+          "Mark recent service payment status right from the panel",
         ],
         docTitle: "Share Daily Reports Online",
         docIntro:
