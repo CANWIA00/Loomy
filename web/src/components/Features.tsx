@@ -112,9 +112,25 @@ function Mini({ name, size = 15, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>;
     case "shield":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 3l7 2.5v6c0 4.6-3 7.7-7 9.5-4-1.8-7-4.9-7-9.5v-6L12 3z" /></svg>;
+    case "pen":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="m4 20 1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5 4 20z" /><path d="m13.5 7 3 3" /></svg>;
+    case "check-circle":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12 2.5 2.5 5-5" /></svg>;
     default:
       return null;
   }
+}
+
+function SigScribble({ t = "a" }: { t?: "a" | "b" }) {
+  const d =
+    t === "a"
+      ? "M6 30 C18 8, 30 36, 42 18 S 60 6, 70 24 S 88 32, 96 14 S 106 18, 114 26"
+      : "M8 24 C20 34, 30 8, 42 22 S 58 30, 68 12 S 84 20, 92 16 S 104 28, 112 20";
+  return (
+    <svg viewBox="0 0 120 42" aria-hidden="true" style={{ width: "100%", height: "26px" }}>
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 export default function Features() {
@@ -427,18 +443,28 @@ export default function Features() {
 
                           <div className="an-form-head an-form-head-sub">
                             <strong>İmzalar</strong>
+                            <span className="fms-badge"><Mini name="shield" size={11} color="var(--sc-primary)" /> Gömülü Imza</span>
                           </div>
                           <div className="an-sig-row">
-                            <span className="fms-sig">
-                              <b>Teknisyen</b>
+                            <span className="fms-sig on">
+                              <b>Teknisyen İmzası</b>
+                              <span className="fms-sig-box signed"><SigScribble t="a" /></span>
                               <em>A. Yıldız</em>
-                              <i><Mini name="check" size={10} color="#15803d" /> Dijital İmza</i>
+                              <i><Mini name="check-circle" size={11} color="#15803d" /> Dijital İmza · Onaylandı</i>
                             </span>
                             <span className="fms-sig">
-                              <b>Müşteri</b>
+                              <b>Müşteri İmzası</b>
+                              <span className="fms-sig-box"><SigScribble t="b" /></span>
                               <em>Ayşe Yılmaz</em>
-                              <i>İmza Bekleniyor</i>
+                              <i className="dim"><Mini name="pen" size={11} /> İmza Bekleniyor</i>
                             </span>
+                          </div>
+                          <div className="an-sig-note">
+                            <span className="an-sig-note-ic"><Mini name="shield" size={15} color="var(--sc-primary)" /></span>
+                            <div>
+                              <strong>Dijital imza belgeye gömülür</strong>
+                              <span>Teknisyen ve müşteri imzası, belgeye ne zaman ve kimin imzaladığıyla birlikte kaydedilir; sonradan değiştirilemez.</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -482,9 +508,19 @@ export default function Features() {
                           <div className="fph-sig">
                             <span className="fph-stamp">ÜNSAL<i>TEKNİK SERVİS</i><b>KAŞE 2026</b></span>
                             <div className="fph-sig-tx">
-                              <span className="fph-ok"><Mini name="check" size={10} color="#15803d" /> Doğrulandı</span>
+                              <span className="fph-ok"><Mini name="check-circle" size={10} color="#15803d" /> Doğrulandı</span>
                               <span>Teknisyen + müşteri dijital imzası</span>
                             </div>
+                          </div>
+                          <div className="fph-sig-scribbles">
+                            <span className="fph-scribble">
+                              <i>Teknisyen İmzası</i>
+                              <b><SigScribble t="a" /></b>
+                            </span>
+                            <span className="fph-scribble">
+                              <i>Müşteri İmzası</i>
+                              <b><SigScribble t="b" /></b>
+                            </span>
                           </div>
                           <div className="fph-foot">Loomy ile oluşturuldu · İmza ve kaşe ile güvende</div>
                         </div>

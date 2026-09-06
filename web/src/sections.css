@@ -3447,6 +3447,23 @@
   padding-top: 8px;
 }
 
+.fmodal-points .fph-sig-scribbles {
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.fmodal-points .fph-scribble {
+  padding: 6px 7px;
+}
+
+.fmodal-points .fph-scribble i {
+  font-size: 8px;
+}
+
+.fmodal-points .fph-scribble b svg {
+  height: 26px;
+}
+
 .fmodal-points .fph-caption {
   margin-top: -4px;
 }
@@ -3780,6 +3797,40 @@
   color: #15803d;
 }
 
+.fph-sig-scribbles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.fph-scribble {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e5ea;
+  border-radius: 6px;
+  padding: 5px 6px;
+}
+
+.fph-scribble i {
+  font-style: normal;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.fph-scribble b {
+  color: #222238;
+  display: flex;
+}
+
+.fph-scribble b svg {
+  width: 100%;
+  height: 22px;
+}
+
 .fqm-new {
   display: inline-flex;
   align-items: center;
@@ -3818,6 +3869,15 @@
   margin-top: 2px;
 }
 
+.fms-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--sc-primary);
+}
+
 .fms-sig {
   display: flex;
   flex-direction: column;
@@ -3826,6 +3886,26 @@
   border: 1px dashed rgba(255, 255, 255, 0.22);
   border-radius: 10px;
   background: rgba(126, 106, 255, 0.07);
+}
+
+.fms-sig.on {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.fms-sig-box {
+  width: 100%;
+  height: 30px;
+  margin: 4px 0 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--sc-muted);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.fms-sig-box.signed {
+  color: #15803d;
 }
 
 .fms-sig b {
@@ -3848,7 +3928,50 @@
   font-style: normal;
   font-size: 8.5px;
   font-weight: 700;
+  color: #15803d;
+}
+
+.fms-sig i.dim {
   color: var(--sc-muted);
+}
+
+.an-sig-note {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--sc-primary-rgba2);
+  border-radius: 12px;
+  background: var(--sc-primary-rgba);
+}
+
+.an-sig-note-ic {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--sc-panel);
+  display: grid;
+  place-items: center;
+}
+
+.an-sig-note div {
+  display: flex;
+  flex-direction: column;
+}
+
+.an-sig-note strong {
+  color: var(--sc-primary);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.an-sig-note div span {
+  color: var(--sc-text);
+  font-size: 10px;
+  line-height: 1.55;
+  margin-top: 3px;
 }
 
 .fmp-chips {
