@@ -307,37 +307,37 @@ export default function Features() {
                     </li>
                   ))}
                 </ul>
-              </div>
 
-              <div className="fmod-history-photo">
-                <div className="fph-photo">
-                  <div className="fph-paper">
-                    <div className="fph-brand">
-                      <span className="fph-logo">L</span>
-                      <div className="fph-brand-tx">
-                        <strong>LOOMY</strong>
-                        <span>Müşteri Geçmişi</span>
+                <div className="fmod-history-photo">
+                  <div className="fph-photo">
+                    <div className="fph-paper">
+                      <div className="fph-brand">
+                        <span className="fph-logo">L</span>
+                        <div className="fph-brand-tx">
+                          <strong>LOOMY</strong>
+                          <span>Müşteri Geçmişi</span>
+                        </div>
+                        <span className="fph-date">05.09.2026</span>
                       </div>
-                      <span className="fph-date">05.09.2026</span>
+                      <div className="fph-cust">
+                        <b>Yılmaz Isı Sistemleri</b>
+                        <span>0532 000 00 00 · Osmangazi/Bursa · AK-101204</span>
+                      </div>
+                      <div className="fph-sec">Servis Raporları (3)</div>
+                      <div className="fph-row"><span><b>Klima Bakım</b> · 12.09.2026 · A. Yıldız</span><b>₺6.000</b></div>
+                      <div className="fph-row"><span><b>Kış Hazırlık Kontrolü</b> · 05.09.2026</span><b>Ücretsiz</b></div>
+                      <div className="fph-row fph-tot"><span>Toplam</span><b>₺7.250</b></div>
+                      <div className="fph-sec">Teklifler (2)</div>
+                      <div className="fph-row"><span><b>Kamera Sistemleri Teklifi</b> · 05.09.2026</span><b>₺136.500</b></div>
+                      <div className="fph-row fph-tot"><span>Toplam</span><b>₺225.750</b></div>
+                      <div className="fph-sec">Ödemeler (3)</div>
+                      <div className="fph-row"><span><b>Klima Bakım</b> · 12.09.2026</span><span className="fph-pill on">Ödendi</span></div>
+                      <div className="fph-row"><span><b>Kombi Montaj</b> · 11.09.2026</span><span className="fph-pill">Bekliyor</span></div>
+                      <div className="fph-foot">Loomy ile oluşturuldu · Dijital imza, kaşe ve canlı kurla güvenle paylaşılır</div>
                     </div>
-                    <div className="fph-cust">
-                      <b>Yılmaz Isı Sistemleri</b>
-                      <span>0532 000 00 00 · Osmangazi/Bursa · AK-101204</span>
-                    </div>
-                    <div className="fph-sec">Servis Raporları (3)</div>
-                    <div className="fph-row"><span><b>Klima Bakım</b> · 12.09.2026 · A. Yıldız</span><b>₺6.000</b></div>
-                    <div className="fph-row"><span><b>Kış Hazırlık Kontrolü</b> · 05.09.2026</span><b>Ücretsiz</b></div>
-                    <div className="fph-row fph-tot"><span>Toplam</span><b>₺7.250</b></div>
-                    <div className="fph-sec">Teklifler (2)</div>
-                    <div className="fph-row"><span><b>Kamera Sistemleri Teklifi</b> · 05.09.2026</span><b>₺136.500</b></div>
-                    <div className="fph-row fph-tot"><span>Toplam</span><b>₺225.750</b></div>
-                    <div className="fph-sec">Ödemeler (3)</div>
-                    <div className="fph-row"><span><b>Klima Bakım</b> · 12.09.2026</span><span className="fph-pill on">Ödendi</span></div>
-                    <div className="fph-row"><span><b>Kombi Montaj</b> · 11.09.2026</span><span className="fph-pill">Bekliyor</span></div>
-                    <div className="fph-foot">Loomy ile oluşturuldu · Dijital imza, kaşe ve canlı kurla güvenle paylaşılır</div>
                   </div>
+                  <p className="fph-caption">{hi.docTitle}</p>
                 </div>
-                <p className="fph-caption">{hi.docTitle}</p>
               </div>
             </div>
 
