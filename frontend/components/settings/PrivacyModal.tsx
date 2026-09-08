@@ -45,7 +45,7 @@ export default function PrivacyModal({ visible, onClose }: PrivacyModalProps) {
           </View>
         </View>
         <ScrollView className="flex-1" indicatorStyle={colors.indicatorBg as any}>
-          <View className="px-4 pt-5 pb-8">
+          <View className="px-4 pt-5 pb-8 w-full max-w-6xl mx-auto">
             <View className="rounded-2xl p-5 mb-6" style={{ backgroundColor: colors.primary + "10" }}>
               <View className="flex-row items-center gap-3">
                 <View className="w-12 h-12 rounded-2xl items-center justify-center" style={{ backgroundColor: colors.primary + "20" }}>

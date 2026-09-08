@@ -102,7 +102,7 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
         </View>
 
         <ScrollView className="flex-1" indicatorStyle={colors.indicatorBg as any}>
-          <View className="px-4 pt-5 pb-8">
+          <View className="px-4 pt-5 pb-8 w-full max-w-6xl mx-auto">
             <View className="rounded-2xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderColor: colors.borderAlt, borderWidth: 1 }}>
               <Text className="text-xs leading-5" style={{ color: colors.textSecondary }}>{t("kvkk.rightsDesc")}</Text>
             </View>
