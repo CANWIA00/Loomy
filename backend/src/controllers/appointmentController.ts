@@ -41,7 +41,7 @@ export async function getAppointments(req: AuthRequest, res: Response): Promise<
 export async function createAppointment(req: AuthRequest, res: Response): Promise<void> {
   try {
     const companyId = req.user!.companyId!;
-    const { customerName, customerId, ekip, ekipId, tarih, startTime, duration, tur, notes } = req.body;
+    const { customerName, customerId, ekipId, tarih, startTime, duration, tur, notes } = req.body;
 
     if (!customerName?.trim()) {
       res.status(400).json({ message: "Müşteri adı zorunludur." });
@@ -88,7 +88,7 @@ export async function updateAppointment(req: AuthRequest, res: Response): Promis
   try {
     const id = parseInt(String(req.params.id));
     const companyId = req.user!.companyId!;
-    const { customerName, customerId, ekip, ekipId, tarih, startTime, duration, tur, notes } = req.body;
+    const { customerName, customerId, ekipId, tarih, startTime, duration, tur, notes } = req.body;
 
     const existing = await prisma.appointment.findFirst({ where: { id, companyId } });
     if (!existing) {

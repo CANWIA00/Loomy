@@ -25,7 +25,7 @@ interface ChipGroupConfig {
   options: ChipOptionConfig[];
 }
 
-export interface ServiceTemplateConfig {
+interface ServiceTemplateConfig {
   fields: FieldConfig[];
   chipGroups: ChipGroupConfig[];
 }
