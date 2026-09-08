@@ -1862,7 +1862,7 @@ const PayBars = ({
               </span>
               <span className="browser-url">
                 <Icon name="card" size={14} color="var(--sc-muted)" />
-                loomy-omega.vercel.app
+                app.loomy-app.com
               </span>
             </div>
             <div className="browser-body">{renderBody()}</div>

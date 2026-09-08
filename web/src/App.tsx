@@ -11,7 +11,7 @@ import Cta from "./components/Cta";
 import Footer from "./components/Footer";
 import PrivacyPage from "./components/PrivacyPage";
 
-export const APP_URL = "https://loomy-omega.vercel.app";
+export const APP_URL = "https://app.loomy-app.com";
 export const CONTACT_EMAIL = "lommy.app.info@gmail.com";
 
 function useHash() {
