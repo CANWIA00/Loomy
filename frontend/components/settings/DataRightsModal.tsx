@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Platform, Linking } from "react-native";
+import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Platform, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import * as Clipboard from "expo-clipboard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { profileApi } from "../../api/profile";
@@ -68,11 +69,9 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
     "kvkk.requestStepVerify",
   ];
 
-  const handleContact = () => {
-    const subject = encodeURIComponent(t("kvkk.mailSubject"));
-    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=${subject}`).catch(() => {
-      Linking.openURL(`mailto:${CONTACT_EMAIL}`);
-    });
+  const handleContact = async () => {
+    await Clipboard.setStringAsync(CONTACT_EMAIL);
+    Alert.alert(t("common.success"), t("common.emailCopied"));
   };
 
   const handleExport = async () => {
@@ -156,15 +155,15 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
                 <Text className="text-xs font-semibold mb-1" style={{ color: colors.text }}>{t("kvkk.identity")}</Text>
                 <Text className="text-xs leading-5" style={{ color: colors.textSecondary }}>{t("kvkk.identityDesc")}</Text>
               </View>
+              <Text className="text-xs leading-5 mb-2" style={{ color: colors.textSecondary }}>{t("kvkk.copyHint")}</Text>
               <TouchableOpacity
                 onPress={handleContact}
                 className="h-11 rounded-xl items-center justify-center flex-row gap-2"
                 style={{ backgroundColor: colors.purple }}
               >
-                <Ionicons name="mail-outline" size={18} color="#fff" />
-                <Text className="text-sm font-semibold" style={{ color: "#fff" }}>{t("kvkk.applyNow")}</Text>
+                <Ionicons name="copy-outline" size={18} color="#fff" />
+                <Text className="text-xs font-semibold" style={{ color: "#fff" }}>{CONTACT_EMAIL}</Text>
               </TouchableOpacity>
-              <Text className="text-xs mt-2 text-center" style={{ color: colors.textSecondary }}>{CONTACT_EMAIL}</Text>
             </View>
 
             <View className="rounded-2xl p-4 mt-3" style={{ backgroundColor: colors.warning + "12", borderColor: colors.warning + "30", borderWidth: 1 }}>

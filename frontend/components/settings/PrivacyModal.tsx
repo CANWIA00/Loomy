@@ -1,5 +1,6 @@
-import { Modal, View, Text, TouchableOpacity, ScrollView, Linking } from "react-native";
+import { Modal, View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 
@@ -27,10 +28,9 @@ export default function PrivacyModal({ visible, onClose }: PrivacyModalProps) {
     { titleKey: "privacy.verbis", descKey: "privacy.verbisDesc", icon: "server-outline" as const, color: colors.purple },
   ];
 
-  const handleContact = () => {
-    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t("privacy.mailSubject"))}`).catch(() => {
-      Linking.openURL(`mailto:${CONTACT_EMAIL}`);
-    });
+  const handleContact = async () => {
+    await Clipboard.setStringAsync(CONTACT_EMAIL);
+    Alert.alert(t("common.success"), t("common.emailCopied"));
   };
 
   return (
@@ -95,12 +95,15 @@ export default function PrivacyModal({ visible, onClose }: PrivacyModalProps) {
               <Text className="text-xs ml-12 mb-3" style={{ color: colors.textSecondary }}>
                 {t("privacy.contactDesc")}
               </Text>
+              <Text className="text-xs leading-5 ml-12 mb-3" style={{ color: colors.textSecondary }}>
+                {t("privacy.copyHint")}
+              </Text>
               <TouchableOpacity
                 onPress={handleContact}
                 className="ml-12 h-10 rounded-xl items-center justify-center flex-row gap-2"
                 style={{ backgroundColor: colors.teal }}
               >
-                <Ionicons name="mail-outline" size={16} color="#fff" />
+                <Ionicons name="copy-outline" size={16} color="#fff" />
                 <Text className="text-xs font-semibold" style={{ color: "#fff" }}>{CONTACT_EMAIL}</Text>
               </TouchableOpacity>
             </View>
