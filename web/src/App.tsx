@@ -8,6 +8,7 @@ import HowItWorks from "./components/HowItWorks";
 import Pricing from "./components/Pricing";
 import Faq from "./components/Faq";
 import Cta from "./components/Cta";
+import Apply from "./components/Apply";
 import Footer from "./components/Footer";
 import PrivacyPage from "./components/PrivacyPage";
 
@@ -57,6 +58,7 @@ export default function App() {
         <Pricing />
         <Faq />
         <Cta />
+        <Apply />
       </main>
       <Footer />
     </>

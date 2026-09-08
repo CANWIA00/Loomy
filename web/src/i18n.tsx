@@ -301,6 +301,38 @@ const tr = {
     primary: "Uygulamayı Aç",
     secondary: "İletişime Geç",
   },
+  apply: {
+    badge: "Başvuru",
+    title: "İşletmeniz için yerinizi ayırın",
+    description:
+      "Formu beş dakikada doldurun; ekibimiz başvurunuzu inceleyip işletmenize özel hesabı kısa sürede hazırlasın.",
+    howTitle: "Başvuru nasıl işler?",
+    steps: [
+      "Formu doldurun — işletme bilgilerinizi ve ihtiyacınızı bize iletin",
+      "Ekibimiz e-posta veya telefonla size dönüş yapar",
+      "İşletmenize özel Loomy hesabınız hazır, yönetmeye başlayın",
+    ],
+    emailNote: "Sorularınız için doğrudan yazın:",
+    fields: {
+      business: "İşletme / Firma Adı",
+      name: "Ad Soyad",
+      email: "E-posta",
+      phone: "Telefon (opsiyonel)",
+      message: "Mesajınız",
+      messageHint: "İşletmeniz ne yapıyor? Loomy'den ne bekliyorsunuz?",
+    },
+    submit: "Başvuru Gönder",
+    sending: "Gönderiliyor...",
+    errors: {
+      required: "Lütfen zorunlu alanları doldurun.",
+      email: "Geçerli bir e-posta adresi girin.",
+    },
+    successTitle: "Başvurunuz alındı",
+    successBody:
+      "En kısa sürede size dönüş yapacağız. Dilerseniz doğrudan e-posta ile de ulaşabilirsiniz.",
+    errorBody:
+      "Gönderim başarısız. Lütfen tekrar deneyin veya bize doğrudan e-posta atın.",
+  },
   footer: {
     tagline: "İşletme yönetimi, sadeleştirildi.",
     product: "Ürün",
@@ -995,6 +1027,38 @@ const en: Dictionary = {
       "Start free, start managing in minutes. Contact us for any questions.",
     primary: "Open App",
     secondary: "Contact Us",
+  },
+  apply: {
+    badge: "Apply",
+    title: "Reserve your place for your business",
+    description:
+      "Fill out the form in five minutes; our team will review your application and set up a Loomy account tailored to your business shortly.",
+    howTitle: "How does it work?",
+    steps: [
+      "Fill out the form — share your business details and needs",
+      "Our team gets back to you by email or phone",
+      "Your business-specific Loomy account is ready, start managing",
+    ],
+    emailNote: "For any questions, write to us directly:",
+    fields: {
+      business: "Business / Company Name",
+      name: "Full Name",
+      email: "Email",
+      phone: "Phone (optional)",
+      message: "Your Message",
+      messageHint: "What does your business do? What do you expect from Loomy?",
+    },
+    submit: "Submit Application",
+    sending: "Sending...",
+    errors: {
+      required: "Please fill in the required fields.",
+      email: "Please enter a valid email address.",
+    },
+    successTitle: "Application received",
+    successBody:
+      "We will get back to you as soon as possible. You can also reach us directly by email.",
+    errorBody:
+      "Submission failed. Please try again or email us directly.",
   },
   footer: {
     tagline: "Business management, simplified.",

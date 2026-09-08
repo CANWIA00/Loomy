@@ -12,6 +12,7 @@ import appointmentRoutes from "./routes/appointment";
 import devRoutes from "./routes/dev";
 import translateRoutes from "./routes/translate";
 import currencyRatesRoutes from "./routes/currencyRates";
+import applyRoutes from "./routes/apply";
 
 const ALLOWED_ORIGINS = (
   process.env.ALLOWED_ORIGINS
@@ -59,5 +60,6 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/dev", devRoutes);
 app.use("/api", translateRoutes);
 app.use("/api/rates", currencyRatesRoutes);
+app.use("/api/apply", applyRoutes);
 
 export default app;
