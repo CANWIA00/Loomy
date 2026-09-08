@@ -349,6 +349,7 @@ export function generateQuotePDFHtml(
       <div class="section">
         <div class="section-title">${t("qot.companyInfo")}</div>
         <div class="info-list">
+          <div class="info-item"><span class="label">${t("qot.companyName")}</span> <span class="value">${escapeHtml(data.companyName)}</span></div>
           <div class="info-item"><span class="label">${t("qot.address")}</span> <span class="value">${escapeHtml(data.companyAddress) || ""}</span></div>
           <div class="info-item"><span class="label">${t("qot.companyPhone")}</span> <span class="value">${escapeHtml(data.companyPhone) || ""}</span></div>
           ${data.companyGsm ? `<div class="info-item"><span class="label">${t("qot.companyGsm")}</span> <span class="value">${escapeHtml(data.companyGsm)}</span></div>` : ""}
