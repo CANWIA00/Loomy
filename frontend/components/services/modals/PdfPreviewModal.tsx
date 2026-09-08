@@ -4,6 +4,7 @@ import { WebView } from "react-native-webview";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useServices } from "../ServicesContext";
+import PdfPreviewWeb from "../../PdfPreviewWeb";
 
 export default function PdfPreviewModal() {
   const { colors } = useTheme();
@@ -34,38 +35,7 @@ export default function PdfPreviewModal() {
         </View>
         <View className="flex-1">
           {Platform.OS === "web" ? (
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                backgroundColor: "#e5e5e5",
-                overflow: "auto",
-                display: "block",
-              } as any}
-            >
-              <div
-                style={{
-                  width: 794 * (pdfZoom / 100),
-                  minHeight: 1123 * (pdfZoom / 100),
-                  margin: "0 auto",
-                } as any}
-              >
-                <div
-                  style={{
-                    width: "210mm",
-                    minHeight: "297mm",
-                    backgroundColor: "white",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-                    padding: "15mm",
-                    borderRadius: 4,
-                    transform: `scale(${pdfZoom / 100})`,
-                    transformOrigin: "top left",
-                    flexShrink: 0,
-                  } as any}
-                  dangerouslySetInnerHTML={{ __html: pdfPreviewHtml }}
-                />
-              </div>
-            </div>
+            <PdfPreviewWeb pdfZoom={pdfZoom} html={pdfPreviewHtml} />
           ) : (
             <ScrollView
               style={{ flex: 1, backgroundColor: "#e5e5e5" }}
