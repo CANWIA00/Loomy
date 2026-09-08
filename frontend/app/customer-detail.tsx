@@ -26,6 +26,15 @@ import type { PdfData } from "../components/services/types";
 import type { QuotePdfData } from "../components/quotes/types";
 import { getCurrencySymbol, round2 } from "../components/quotes/types";
 
+const AVATAR_COLORS = ["#7A6CFD", "#6080FF", "#10B981", "#F59E0B", "#EC4899", "#06B6D4", "#8B5CF6", "#EF4444"];
+
+function avatarColorOf(name: string, fallback: string) {
+  if (!name) return fallback;
+  let sum = 0;
+  for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+  return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+}
+
 type DetailPayload =
   | { kind: "service"; record: ServiceRecord }
   | { kind: "quote"; record: QuoteRecord };
@@ -698,29 +707,40 @@ export default function CustomerDetailScreen() {
             ) : (
               <>
                 {customer && (
-                  <View className="rounded-2xl p-4 mb-5" style={{ backgroundColor: colors.bgCard }}>
-                    <View className="flex-row items-center gap-3 mb-3">
-                      <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary + "15" }}>
-                        <Text className="text-lg font-bold" style={{ color: colors.primary }}>
-                          {(customer.companyName || "?").charAt(0).toUpperCase()}
-                        </Text>
+                  <View className="rounded-2xl overflow-hidden mb-5" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}>
+                    <View style={{ height: 5, backgroundColor: avatarColorOf(customer.companyName || "?", colors.primary) }} />
+                    <View className="p-4">
+                      <View className="flex-row items-center gap-3 mb-3">
+                        <View
+                          className="w-14 h-14 rounded-2xl items-center justify-center"
+                          style={{ backgroundColor: avatarColorOf(customer.companyName || "?", colors.primary) + "22" }}
+                        >
+                          <Text className="text-2xl font-bold" style={{ color: avatarColorOf(customer.companyName || "?", colors.primary) }}>
+                            {(customer.companyName || "?").charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-lg font-bold" style={{ color: colors.text }} numberOfLines={1}>{customer.companyName}</Text>
+                          {customer.contactPerson ? (
+                            <View className="flex-row items-center mt-0.5">
+                              <Ionicons name="person-outline" size={13} color={colors.textMuted} />
+                              <Text className="text-sm ml-1" style={{ color: colors.textSecondary }} numberOfLines={1}>{customer.contactPerson}</Text>
+                            </View>
+                          ) : null}
+                        </View>
                       </View>
-                      <View className="flex-1">
-                        <Text className="text-base font-bold" style={{ color: colors.text }}>{customer.companyName}</Text>
-                        <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{customer.contactPerson}</Text>
+                      <Text className="text-xs font-semibold mb-2" style={{ color: colors.textMuted }}>{t("cst.customerInfo")}</Text>
+                      <View className="gap-2">
+                        {(customer.phone || customer.contactPhone) ? (
+                          <DetailRow icon="call-outline" label={t("cst.phone")} value={customer.phone || customer.contactPhone} />
+                        ) : null}
+                        {customer.subscriberNo ? (
+                          <DetailRow icon="card-outline" label={t("cst.subscriberNo")} value={customer.subscriberNo} />
+                        ) : null}
+                        {customer.email ? (<DetailRow icon="mail-outline" label={t("cst.email")} value={customer.email} />) : null}
+                        {customer.website ? (<DetailRow icon="globe-outline" label={t("cst.website")} value={customer.website} />) : null}
+                        {customer.address ? (<DetailRow icon="location-outline" label={t("cst.address")} value={customer.address} />) : null}
                       </View>
-                    </View>
-                    <Text className="text-xs font-semibold mb-1" style={{ color: colors.textMuted }}>{t("cst.customerInfo")}</Text>
-                    <View className="gap-2">
-                      {(customer.phone || customer.contactPhone) ? (
-                        <DetailRow icon="call-outline" label={t("cst.phone")} value={customer.phone || customer.contactPhone} />
-                      ) : null}
-                      {customer.subscriberNo ? (
-                        <DetailRow icon="card-outline" label={t("cst.subscriberNo")} value={customer.subscriberNo} />
-                      ) : null}
-                      {customer.email ? (<DetailRow icon="mail-outline" label={t("cst.email")} value={customer.email} />) : null}
-                      {customer.website ? (<DetailRow icon="globe-outline" label={t("cst.website")} value={customer.website} />) : null}
-                      {customer.address ? (<DetailRow icon="location-outline" label={t("cst.address")} value={customer.address} />) : null}
                     </View>
                   </View>
                 )}
