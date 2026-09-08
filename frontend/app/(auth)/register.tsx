@@ -8,6 +8,8 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import FormField from "../../components/auth/FormField";
 import PrimaryButton from "../../components/auth/PrimaryButton";
 import CustomAlert from "../../components/CustomAlert";
+import PrivacyModal from "../../components/settings/PrivacyModal";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -27,6 +29,9 @@ export default function RegisterScreen() {
   const [phoneError, setPhoneError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [privacyError, setPrivacyError] = useState(false);
+  const [privacyVisible, setPrivacyVisible] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("error");
   const [alertTitle, setAlertTitle] = useState("");
@@ -60,6 +65,10 @@ export default function RegisterScreen() {
       setConfirmPasswordError(t("reg.errorPasswordMatch"));
       hasError = true;
     }
+    if (!privacyAccepted) {
+      setPrivacyError(true);
+      hasError = true;
+    }
     if (hasError) return;
 
     setLoading(true);
@@ -70,6 +79,7 @@ export default function RegisterScreen() {
         phone: phone.trim(),
         password,
         inviteCode: inviteCode.trim(),
+        privacyAccepted,
       });
 
       if (response?.requiresVerification) {
@@ -167,6 +177,35 @@ export default function RegisterScreen() {
           />
         </View>
 
+        <TouchableOpacity
+          className="flex-row items-start gap-2 mt-5"
+          onPress={() => {
+            setPrivacyAccepted((v) => !v);
+            setPrivacyError(false);
+          }}
+          activeOpacity={0.8}
+        >
+          <View
+            className="w-6 h-6 rounded-md items-center justify-center mt-0.5"
+            style={{
+              backgroundColor: privacyAccepted ? colors.primary : "transparent",
+              borderWidth: 1.5,
+              borderColor: privacyError ? colors.danger : privacyAccepted ? colors.primary : colors.border,
+            }}
+          >
+            {privacyAccepted && <Ionicons name="checkmark" size={16} color="#fff" />}
+          </View>
+          <Text className="flex-1 text-sm leading-5" style={{ color: colors.textSecondary }}>{t("reg.privacyConsent")}</Text>
+        </TouchableOpacity>
+        {privacyError && (
+          <Text className="text-xs mt-1" style={{ color: colors.danger }}>{t("reg.privacyConsentError")}</Text>
+        )}
+        <TouchableOpacity className="mt-2" onPress={() => setPrivacyVisible(true)}>
+          <Text className="text-sm font-medium underline" style={{ color: colors.primary }}>
+            {t("reg.privacyPolicyLink")}
+          </Text>
+        </TouchableOpacity>
+
         <View className="mt-6">
           <PrimaryButton title={t("reg.register")} loading={loading} onPress={handleRegister} />
         </View>
@@ -188,6 +227,8 @@ export default function RegisterScreen() {
         message={alertMessage}
         onClose={() => setAlertVisible(false)}
       />
+
+      <PrivacyModal visible={privacyVisible} onClose={() => setPrivacyVisible(false)} />
     </>
   );
 }

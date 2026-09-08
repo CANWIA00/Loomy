@@ -117,6 +117,93 @@ export async function getProfile(
   }
 }
 
+export async function exportData(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        companyId: true,
+        signature: true,
+        privacyAcceptedAt: true,
+        privacyPolicyVersion: true,
+        createdAt: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            phone: true,
+            gsm: true,
+            email: true,
+            fax: true,
+            website: true,
+            taxNumber: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "Kullanıcı bulunamadı." });
+      return;
+    }
+
+    const companyId = user.companyId;
+    const [
+      customers,
+      serviceRecords,
+      quoteRecords,
+      teams,
+      appointments,
+    ] = companyId
+      ? await Promise.all([
+          prisma.customer.findMany({ where: { companyId } }),
+          prisma.serviceRecord.findMany({ where: { companyId } }),
+          prisma.quoteRecord.findMany({ where: { companyId } }),
+          prisma.team.findMany({ where: { companyId } }),
+          prisma.appointment.findMany({ where: { companyId } }),
+        ])
+      : [[], [], [], [], []];
+
+    const payments = serviceRecords.map((r) => ({
+      id: r.id,
+      customer: r.customerName,
+      customerId: r.customerId,
+      tarih: r.documentDate,
+      serviceType: r.serviceType,
+      amount: parseFloat(r.fee) || 0,
+      paid: r.paid,
+    }));
+
+    const exportPackage = {
+      exportedAt: new Date().toISOString(),
+      dataController: "Loomy",
+      user,
+      customers,
+      serviceRecords,
+      quoteRecords,
+      payments,
+      teams,
+      appointments,
+    };
+
+    res.json(exportPackage);
+  } catch (error: any) {
+    console.error("ExportData error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
 export async function updateUser(
   req: AuthRequest,
   res: Response

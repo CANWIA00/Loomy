@@ -306,6 +306,43 @@ const tr = {
     product: "Ürün",
     contactTitle: "İletişim",
     rights: "Tüm hakları saklıdır.",
+    privacy: "Gizlilik Politikası",
+    kvkk: "KVKK Aydınlatma Metni",
+  },
+  privacyPage: {
+    back: "← Ana sayfaya dön",
+    title: "Gizlilik Politikası ve KVKK Aydınlatma Metni",
+    updated: "Son güncelleme: 08.09.2026",
+    sections: [
+      {
+        title: "1. Veri Sorumlusu",
+        body: "Loomy, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusu sıfatıyla faaliyet göstermektedir. Bu metin, kişisel verilerinizin işlenmesi sürecinde sizi bilgilendirmek amacıyla hazırlanmıştır.",
+      },
+      {
+        title: "2. Hangi Veriler İşlenir?",
+        body: "Ad soyad, e-posta adresi, telefon numarası, şirket bilgileri, fatura/ödeme bilgileri, imza verileri, servis kayıtları ve teklif geçmişi. Bu veriler yalnızca servis yönetimi ve sözleşmenin ifası amacıyla işlenir.",
+      },
+      {
+        title: "3. İşleme Amaçları ve Hukuki Sebepler",
+        body: "Verileriniz; hesap oluşturma, servis takibi, teklif hazırlama, ödeme işlemleri ve yasal yükümlülüklerin yerine getirilmesi amacıyla işlenir. İşlemenin hukuki dayanağı; sözleşmenin kurulması/ifası, hukuki yükümlülük, meşru menfaat ve açık rızanızdır.",
+      },
+      {
+        title: "4. Verilerin Aktarılması",
+        body: "Verileriniz, yasal zorunluluklar dışında üçüncü kişilerle paylaşılmaz. Yetkili personeliniz yalnızca kendi şirketinizin verilerine erişebilir. Verileriniz Türkiye'de sunucularda saklanır.",
+      },
+      {
+        title: "5. Saklama Süresi",
+        body: "Kişisel verileriniz, hesabınız aktif olduğu sürece ve ilgili mevzuatta öngörülen süreler boyunca saklanır. Hesabınız silindiğinde verileriniz 30 gün içinde kalıcı olarak silinir.",
+      },
+      {
+        title: "6. KVKK Madde 11 Kapsamında Haklarınız",
+        body: "Verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, düzeltilmesini isteme, silinmesini/yok edilmesini isteme, itiraz etme ve zararınızın giderilmesini talep etme haklarına sahipsiniz. Başvurularınız 30 gün içinde sonuçlandırılır.",
+      },
+      {
+        title: "7. İletişim",
+        body: "Haklarınızı kullanmak veya bilgi almak için Kimliğinizi doğrulayarak lommy.app.info@gmail.com adresine başvurabilirsiniz.",
+      },
+    ],
   },
   showcase: {
     badge: "Uygulama İçinden",
@@ -964,6 +1001,43 @@ const en: Dictionary = {
     product: "Product",
     contactTitle: "Contact",
     rights: "All rights reserved.",
+    privacy: "Privacy Policy",
+    kvkk: "KVKK Disclosure Text",
+  },
+  privacyPage: {
+    back: "← Back to homepage",
+    title: "Privacy Policy and KVKK Disclosure Text",
+    updated: "Last updated: 08.09.2026",
+    sections: [
+      {
+        title: "1. Data Controller",
+        body: "Loomy acts as the data controller under Law No. 6698 on the Protection of Personal Data (KVKK). This text is prepared to inform you about the processing of your personal data.",
+      },
+      {
+        title: "2. Which Data Are Processed?",
+        body: "Name and surname, email address, phone number, company information, invoice/payment information, signature data, service records and quote history. This data is processed solely for service management and the performance of the contract.",
+      },
+      {
+        title: "3. Purposes of Processing and Legal Bases",
+        body: "Your data is processed for account creation, service tracking, quote preparation, payment operations and fulfilment of legal obligations. The legal grounds are: establishment/performance of the contract, legal obligations, legitimate interest and your explicit consent.",
+      },
+      {
+        title: "4. Data Transfers",
+        body: "Your data is not shared with third parties except where legally required. Your authorised staff can only access their own company's data. Your data is stored on servers in Turkey.",
+      },
+      {
+        title: "5. Retention Period",
+        body: "Your personal data is kept as long as your account is active and for the periods prescribed by relevant law. When your account is deleted, your data is permanently erased within 30 days.",
+      },
+      {
+        title: "6. Your Rights under Article 11 of the KVKK",
+        body: "You have the right to learn whether your data is processed, request information, request correction, request erasure/destruction, object and claim compensation for your damage. Requests are finalised within 30 days.",
+      },
+      {
+        title: "7. Contact",
+        body: "To exercise your rights or request information, please verify your identity and write to lommy.app.info@gmail.com.",
+      },
+    ],
   },
   showcase: {
     badge: "Inside the app",

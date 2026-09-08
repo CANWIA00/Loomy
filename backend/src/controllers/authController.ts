@@ -5,12 +5,22 @@ import { generateToken } from "../services/jwt";
 import { AuthRequest } from "../middleware/auth";
 import { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from "../services/email";
 
+export const PRIVACY_POLICY_VERSION = "1.0";
+
 export async function register(req: Request, res: Response): Promise<void> {
   try {
-    const { name, email, phone, password, inviteCode } = req.body;
+    const { name, email, phone, password, inviteCode, privacyAccepted } = req.body;
 
     if (!name || !email || !phone || !password || !inviteCode) {
       res.status(400).json({ message: "Tüm alanlar zorunludur." });
+      return;
+    }
+
+    if (privacyAccepted !== true) {
+      res.status(400).json({
+        message:
+          "KVKK Aydınlatma Metni ile Gizlilik Politikası'nı okuyup kabul etmeniz gerekmektedir.",
+      });
       return;
     }
 
@@ -72,6 +82,8 @@ export async function register(req: Request, res: Response): Promise<void> {
           companyId: company.id,
           verificationCode,
           verificationExpires,
+          privacyAcceptedAt: new Date(),
+          privacyPolicyVersion: PRIVACY_POLICY_VERSION,
         },
       });
 
@@ -124,6 +136,8 @@ export async function register(req: Request, res: Response): Promise<void> {
           companyId: company.id,
           verificationCode,
           verificationExpires,
+          privacyAcceptedAt: new Date(),
+          privacyPolicyVersion: PRIVACY_POLICY_VERSION,
         },
       });
 

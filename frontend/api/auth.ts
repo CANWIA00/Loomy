@@ -28,6 +28,7 @@ export interface RegisterData {
   phone: string;
   password: string;
   inviteCode: string;
+  privacyAccepted?: boolean;
 }
 
 export interface CompanyRequestDto {

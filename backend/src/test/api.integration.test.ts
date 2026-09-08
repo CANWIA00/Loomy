@@ -49,6 +49,20 @@ describe("auth API routes", () => {
       expect(res.body.message).toBe("Tüm alanlar zorunludur.");
     });
 
+    it("returns 400 when privacy consent is not accepted", async () => {
+      const res = await request(app).post("/api/auth/register").send({
+        name: "Test User",
+        email: "test@example.com",
+        phone: "5551234567",
+        password: "password123",
+        inviteCode: "INVITE-ABC",
+        privacyAccepted: false,
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain("KVKK");
+    });
+
     it("returns 400 when invite code format is invalid", async () => {
       (prisma.user.findFirst as jest.Mock).mockResolvedValue(null);
       const res = await request(app).post("/api/auth/register").send({
@@ -57,6 +71,7 @@ describe("auth API routes", () => {
         phone: "5551234567",
         password: "password123",
         inviteCode: "BADCODE",
+        privacyAccepted: true,
       });
 
       expect(res.status).toBe(400);
@@ -76,13 +91,14 @@ describe("auth API routes", () => {
         phone: "5551234567",
         password: "password123",
         inviteCode: "INVITE-ABC",
+        privacyAccepted: true,
       });
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("zaten kullanılıyor");
     });
 
-    it("creates a USER with INVITE- code", async () => {
+    it("creates a USER with INVITE- code and records consent", async () => {
       (prisma.user.findFirst as jest.Mock).mockResolvedValue(null);
       (prisma.company.findUnique as jest.Mock).mockResolvedValue({
         id: "c1",
@@ -99,6 +115,7 @@ describe("auth API routes", () => {
         phone: "5551234567",
         password: "password123",
         inviteCode: "INVITE-ABC",
+        privacyAccepted: true,
       });
 
       expect(res.status).toBe(201);
@@ -107,6 +124,8 @@ describe("auth API routes", () => {
       );
       const createCall = (prisma.user.create as jest.Mock).mock.calls[0][0];
       expect(createCall.data.role).toBe("USER");
+      expect(createCall.data.privacyAcceptedAt).toBeInstanceOf(Date);
+      expect(createCall.data.privacyPolicyVersion).toBe("1.0");
     });
 
     it("rejects expired/invalid ADMIN key", async () => {
@@ -119,6 +138,7 @@ describe("auth API routes", () => {
         phone: "5551234900",
         password: "password123",
         inviteCode: "ADMIN-KEY",
+        privacyAccepted: true,
       });
 
       expect(res.status).toBe(400);
@@ -264,6 +284,52 @@ describe("auth API routes", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.status).toBe("ok");
+    });
+  });
+
+  describe("GET /api/profile/data", () => {
+    it("returns 401 without auth token", async () => {
+      const res = await request(app).get("/api/profile/data");
+
+      expect(res.status).toBe(401);
+    });
+
+    it("returns the exported data package", async () => {
+      (verifyToken as jest.Mock).mockReturnValue({ id: "u1" });
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "u1",
+        name: "Test User",
+        email: "test@example.com",
+        phone: "5551234567",
+        role: "USER",
+        isActive: true,
+        companyId: "c1",
+        signature: null,
+        privacyAcceptedAt: new Date("2026-01-01"),
+        privacyPolicyVersion: "1.0",
+        createdAt: new Date("2026-01-01"),
+        company: { id: "c1", name: "Test Co", isFrozen: false },
+      });
+      (prisma.customer.findMany as jest.Mock).mockResolvedValue([
+        { id: "cust1", companyName: "ACME" },
+      ]);
+      (prisma.serviceRecord.findMany as jest.Mock).mockResolvedValue([
+        { id: 1, customerName: "ACME", documentDate: "01.01.2026", serviceType: "Bakim", fee: "100.00", paid: true },
+      ]);
+      (prisma.quoteRecord.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.team.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.appointment.findMany as jest.Mock).mockResolvedValue([]);
+
+      const res = await request(app)
+        .get("/api/profile/data")
+        .set("Authorization", "Bearer test-token");
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("exportedAt");
+      expect(res.body.user.companyId).toBe("c1");
+      expect(res.body.customers).toHaveLength(1);
+      expect(res.body.payments).toHaveLength(1);
+      expect(res.body.payments[0].paid).toBe(true);
     });
   });
 });

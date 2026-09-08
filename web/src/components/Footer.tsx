@@ -41,6 +41,12 @@ export default function Footer() {
             <p style={{ marginTop: 8 }}>
               <a href={APP_URL}>{t.nav.openApp}</a>
             </p>
+            <p style={{ marginTop: 8 }}>
+              <a href="#privacy">{t.footer.privacy}</a>
+            </p>
+            <p style={{ marginTop: 8 }}>
+              <a href="#privacy">{t.footer.kvkk}</a>
+            </p>
           </div>
         </div>
 

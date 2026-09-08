@@ -44,6 +44,9 @@ export const profileApi = {
   getProfile: () =>
     apiClient.get<UserProfile>("/profile/me"),
 
+  exportData: () =>
+    apiClient.get<any>("/profile/data"),
+
   updateUser: (data: UpdateUserRequest) =>
     apiClient.put<User>("/profile/me", data),
 

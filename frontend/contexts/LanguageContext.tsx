@@ -469,6 +469,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "set.turkish": "Türkçe",
     "set.english": "English",
     "set.privacy": "Gizlilik",
+    "set.dataRights": "Veri Sahibi Hakları (KVKK)",
+    "set.dataExport": "Verilerimi İndir",
     "set.help": "Yardım",
     "set.version": "Sürüm",
     "set.logout": "Çıkış Yap",
@@ -601,6 +603,27 @@ const translations: Record<Lang, Record<string, string>> = {
     "privacy.notificationsDesc": "Bildirim tercihlerinizi ayarlayabilirsiniz. Pazarlama e-postalarını kapatabilirsiniz.",
     "privacy.contact": "Gizlilik ile ilgili sorularınız için bizimle iletişime geçin.",
     "privacy.email": "gizlilik@sirket.com",
+
+    // KVKK Data Subject Rights
+    "kvkk.rightsTitle": "Veri Sahibi Hakları (KVKK Madde 11)",
+    "kvkk.rightsDesc": "6698 sayılı KVKK'nın 11. maddesi uyarınca aşağıdaki haklara sahipsiniz. Başvurularınız 30 gün içinde sonuçlandırılır.",
+    "kvkk.learn": "Kişisel verilerinizin işlenip işlenmediğini öğrenme",
+    "kvkk.information": "İşlenmiş ise buna ilişkin bilgi talep etme",
+    "kvkk.purpose": "İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme",
+    "kvkk.transfer": "Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme",
+    "kvkk.rectify": "Eksik veya yanlış işlenmiş ise düzeltilmesini isteme",
+    "kvkk.erase": "KVKK'nın 7. maddesinde öngörülen şartlar çerçevesinde silinmesini veya yok edilmesini isteme",
+    "kvkk.notify": "Düzeltme veya silme işlemlerinin aktarılan üçüncü kişilere bildirilmesini isteme",
+    "kvkk.object": "İşlenen verilerin münhasıran otomatik sistemler ile analiz edilmesi nedeniyle aleyhe bir sonucun ortaya çıkmasına itiraz etme",
+    "kvkk.claim": "Kanuna aykırı işleme sebebiyle zarara uğraması hâlinde zararın giderilmesini talep etme",
+    "kvkk.exportDesc": "Hesabınıza ait verilerin bir kopyasını JSON olarak indirebilirsiniz. Bu kayıtlar KVKK Madde 11/1-d kapsamında kişisel verilerinize erişim hakkınızın kullanılmasına yöneliktir.",
+    "kvkk.exporting": "Verileriniz hazırlanıyor...",
+    "kvkk.exported": "Verileriniz indirildi.",
+    "kvkk.exportError": "Verileriniz indirilemedi. Lütfen tekrar deneyin.",
+    "kvkk.contactTitle": "Haklarınızı kullanmak için bize yazın:",
+    "kvkk.applyNow": "Başvuru Yap",
+    "kvkk.verifiedTitle": "Veri Sahibi Başvurusu",
+    "kvkk.verifiedDesc": "Kimliğinizi doğrulamak ve talebinizi iletmek için e-posta adresimize yazabilirsiniz. Kimlik doğrulaması yapılmayan talepler işleme alınmaz.",
 
     // Month names (for calendar)
     "month.january": "Ocak",
@@ -735,6 +758,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "reg.errorPassword": "Şifre en az 6 karakter olmalıdır.",
     "reg.errorPasswordMatch": "Şifreler eşleşmiyor.",
     "reg.errorRegister": "Kayıt başarısız. Lütfen tekrar deneyin.",
+    "reg.privacyConsent": "KVKK Aydınlatma Metni ile Gizlilik Politikası'nı okudum ve kabul ediyorum.",
+    "reg.privacyConsentError": "Devam etmek için KVKK Aydınlatma Metni ile Gizlilik Politikası'nı kabul etmelisiniz.",
+    "reg.privacyPolicyLink": "KVKK Aydınlatma Metni ve Gizlilik Politikası",
 
     // Email Verification
     "verify.title": "E-posta Doğrulama",
@@ -1306,6 +1332,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "set.turkish": "Türkçe",
     "set.english": "English",
     "set.privacy": "Privacy",
+    "set.dataRights": "Data Subject Rights (KVKK)",
+    "set.dataExport": "Download My Data",
     "set.help": "Help",
     "set.version": "Version",
     "set.logout": "Log Out",
@@ -1438,6 +1466,27 @@ const translations: Record<Lang, Record<string, string>> = {
     "privacy.notificationsDesc": "You can adjust your notification preferences. You can opt out of marketing emails.",
     "privacy.contact": "For privacy-related questions, please contact us.",
     "privacy.email": "privacy@company.com",
+
+    // KVKK Data Subject Rights
+    "kvkk.rightsTitle": "Data Subject Rights (KVKK Art. 11)",
+    "kvkk.rightsDesc": "Under Article 11 of Law No. 6698 (KVKK), you have the following rights. Requests are finalised within 30 days.",
+    "kvkk.learn": "Learn whether your personal data is processed",
+    "kvkk.information": "Request information if it has been processed",
+    "kvkk.purpose": "Learn the purpose of processing and whether it is used in line with its purpose",
+    "kvkk.transfer": "Know the third parties to whom it has been transferred, domestically or abroad",
+    "kvkk.rectify": "Request correction if processed incompletely or incorrectly",
+    "kvkk.erase": "Request erasure or destruction under the conditions set out in Article 7 of the KVKK",
+    "kvkk.notify": "Request that correction or deletion is notified to third parties to whom the data has been transferred",
+    "kvkk.object": "Object to a negative outcome arising from analysis solely by automated systems",
+    "kvkk.claim": "Claim compensation for damage suffered due to unlawful processing",
+    "kvkk.exportDesc": "You can download a copy of your account data as JSON. This supports your right of access under KVKK Art. 11/1-d.",
+    "kvkk.exporting": "Preparing your data...",
+    "kvkk.exported": "Your data has been downloaded.",
+    "kvkk.exportError": "Could not download your data. Please try again.",
+    "kvkk.contactTitle": "To exercise your rights, write to us:",
+    "kvkk.applyNow": "Submit Request",
+    "kvkk.verifiedTitle": "Data Subject Request",
+    "kvkk.verifiedDesc": "Write to our email to verify your identity and submit your request. Requests without identity verification will not be processed.",
 
     // Month names
     "month.january": "January",
@@ -1572,6 +1621,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "reg.errorPassword": "Password must be at least 6 characters.",
     "reg.errorPasswordMatch": "Passwords do not match.",
     "reg.errorRegister": "Registration failed. Please try again.",
+    "reg.privacyConsent": "I have read and accepted the KVKK Disclosure Text and Privacy Policy.",
+    "reg.privacyConsentError": "You must accept the KVKK Disclosure Text and Privacy Policy to continue.",
+    "reg.privacyPolicyLink": "KVKK Disclosure Text and Privacy Policy",
 
     // Email Verification
     "verify.title": "Email Verification",

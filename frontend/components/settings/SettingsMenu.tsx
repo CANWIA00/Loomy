@@ -7,9 +7,11 @@ import { useAuth } from "../../contexts/AuthContext";
 
 interface SettingsMenuProps {
   onPrivacyPress: () => void;
+  onDataRightsPress: () => void;
+  onDataExportPress: () => void;
 }
 
-export default function SettingsMenu({ onPrivacyPress }: SettingsMenuProps) {
+export default function SettingsMenu({ onPrivacyPress, onDataRightsPress, onDataExportPress }: SettingsMenuProps) {
   const { colors } = useTheme();
   const { lang, t, setLanguage } = useLanguage();
   const { user } = useAuth();
@@ -27,6 +29,8 @@ export default function SettingsMenu({ onPrivacyPress }: SettingsMenuProps) {
       ? [{ icon: "construct" as any, label: t("tpl.menuLabel"), right: t("tpl.menuRight") }]
       : []),
     { icon: "shield-checkmark", label: t("set.privacy") },
+    { icon: "shield-half", label: t("set.dataRights") },
+    { icon: "download-outline", label: t("set.dataExport") },
     { icon: "help-circle", label: t("set.help") },
     {
       icon: "information-circle",
@@ -40,6 +44,8 @@ export default function SettingsMenu({ onPrivacyPress }: SettingsMenuProps) {
     if (label === t("set.language")) setLanguage(lang === "tr" ? "en" : "tr");
     if (label === t("tpl.menuLabel")) router.push("/templates");
     if (label === t("set.privacy")) onPrivacyPress();
+    if (label === t("set.dataRights")) onDataRightsPress();
+    if (label === t("set.dataExport")) onDataExportPress();
   };
 
   return (
@@ -51,7 +57,7 @@ export default function SettingsMenu({ onPrivacyPress }: SettingsMenuProps) {
         <TouchableOpacity
           key={item.label}
           className="flex-row items-center px-4 py-4"
-          style={idx < 4 ? { borderBottomWidth: 1, borderBottomColor: colors.borderAlt } : undefined}
+          style={idx < items.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.borderAlt } : undefined}
           onPress={() => handlePress(item.label)}
         >
           <View style={{ backgroundColor: colors.bgCard }} className="w-9 h-9 rounded-xl items-center justify-center">

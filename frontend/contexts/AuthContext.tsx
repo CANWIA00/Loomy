@@ -8,7 +8,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (data: { name: string; email: string; phone: string; password: string; inviteCode: string }) => Promise<{ token?: string; role?: string; profileCompleted?: boolean; requiresVerification?: boolean; email?: string; message?: string }>;
+  register: (data: { name: string; email: string; phone: string; password: string; inviteCode: string; privacyAccepted?: boolean }) => Promise<{ token?: string; role?: string; profileCompleted?: boolean; requiresVerification?: boolean; email?: string; message?: string }>;
   logout: () => Promise<void>;
   completeCompanyProfile: (data: CompanyRequestDto) => Promise<any>;
 }
