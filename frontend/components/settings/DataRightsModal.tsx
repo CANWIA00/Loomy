@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Platform, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { profileApi } from "../../api/profile";
-import { Platform } from "react-native";
 
 interface DataRightsModalProps {
   visible: boolean;
@@ -39,6 +38,8 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
   const [exporting, setExporting] = useState(false);
   const [status, setStatus] = useState<"idle" | "ok" | "error">("idle");
 
+  const CONTACT_EMAIL = "lommy.app.info@gmail.com";
+
   const rights = [
     "kvkk.learn",
     "kvkk.information",
@@ -50,6 +51,29 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
     "kvkk.object",
     "kvkk.claim",
   ];
+
+  const gdprRights = [
+    "kvkk.gdprAccess",
+    "kvkk.gdprRectify",
+    "kvkk.gdprErase",
+    "kvkk.gdprRestrict",
+    "kvkk.gdprPortability",
+    "kvkk.gdprObject",
+    "kvkk.gdprComplaint",
+  ];
+
+  const requestSteps = [
+    "kvkk.requestStepEmail",
+    "kvkk.requestStepInfo",
+    "kvkk.requestStepVerify",
+  ];
+
+  const handleContact = () => {
+    const subject = encodeURIComponent(t("kvkk.mailSubject"));
+    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=${subject}`).catch(() => {
+      Linking.openURL(`mailto:${CONTACT_EMAIL}`);
+    });
+  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -98,6 +122,62 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
             ))}
 
             <View className="rounded-2xl p-4 mt-4" style={{ backgroundColor: colors.teal + "12", borderColor: colors.teal + "30", borderWidth: 1 }}>
+              <View className="flex-row items-center gap-3 mb-2">
+                <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: colors.teal + "20" }}>
+                  <Ionicons name="shield-outline" size={18} color={colors.teal} />
+                </View>
+                <Text className="text-sm font-bold flex-1" style={{ color: colors.text }}>{t("kvkk.gdprTitle")}</Text>
+              </View>
+              <Text className="text-xs leading-5 mb-3" style={{ color: colors.textSecondary }}>{t("kvkk.gdprDesc")}</Text>
+              {gdprRights.map((key) => (
+                <View key={key} className="flex-row items-start gap-2 mb-2">
+                  <Ionicons name="checkmark-circle" size={16} color={colors.teal} style={{ marginTop: 1 }} />
+                  <Text className="flex-1 text-xs leading-5" style={{ color: colors.text }}>{t(key)}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View className="rounded-2xl p-4 mt-4" style={{ backgroundColor: colors.purple + "12", borderColor: colors.purple + "30", borderWidth: 1 }}>
+              <View className="flex-row items-center gap-3 mb-2">
+                <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: colors.purple + "20" }}>
+                  <Ionicons name="create-outline" size={18} color={colors.purple} />
+                </View>
+                <Text className="text-sm font-bold flex-1" style={{ color: colors.text }}>{t("kvkk.requestTitle")}</Text>
+              </View>
+              {requestSteps.map((key, i) => (
+                <View key={key} className="flex-row items-start gap-2 mb-2">
+                  <View className="w-5 h-5 rounded-full items-center justify-center" style={{ backgroundColor: colors.purple + "20" }}>
+                    <Text className="text-[10px] font-bold" style={{ color: colors.purple }}>{i + 1}</Text>
+                  </View>
+                  <Text className="flex-1 text-xs leading-5" style={{ color: colors.textSecondary }}>{t(key)}</Text>
+                </View>
+              ))}
+              <View className="rounded-xl p-3 mt-2 mb-3" style={{ backgroundColor: colors.bgCard, borderColor: colors.purple + "25", borderWidth: 1 }}>
+                <Text className="text-xs font-semibold mb-1" style={{ color: colors.text }}>{t("kvkk.identity")}</Text>
+                <Text className="text-xs leading-5" style={{ color: colors.textSecondary }}>{t("kvkk.identityDesc")}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleContact}
+                className="h-11 rounded-xl items-center justify-center flex-row gap-2"
+                style={{ backgroundColor: colors.purple }}
+              >
+                <Ionicons name="mail-outline" size={18} color="#fff" />
+                <Text className="text-sm font-semibold" style={{ color: "#fff" }}>{t("kvkk.applyNow")}</Text>
+              </TouchableOpacity>
+              <Text className="text-xs mt-2 text-center" style={{ color: colors.textSecondary }}>{CONTACT_EMAIL}</Text>
+            </View>
+
+            <View className="rounded-2xl p-4 mt-3" style={{ backgroundColor: colors.warning + "12", borderColor: colors.warning + "30", borderWidth: 1 }}>
+              <View className="flex-row items-center gap-3 mb-1.5">
+                <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: colors.warning + "20" }}>
+                  <Ionicons name="time-outline" size={18} color={colors.warning} />
+                </View>
+                <Text className="text-sm font-bold flex-1" style={{ color: colors.text }}>{t("kvkk.responseTitle")}</Text>
+              </View>
+              <Text className="text-xs leading-5" style={{ color: colors.textSecondary }}>{t("kvkk.responseDesc")}</Text>
+            </View>
+
+            <View className="rounded-2xl p-4 mt-3" style={{ backgroundColor: colors.teal + "12", borderColor: colors.teal + "30", borderWidth: 1 }}>
               <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("kvkk.exportDesc")}</Text>
               <TouchableOpacity
                 onPress={handleExport}
@@ -122,17 +202,9 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
               )}
             </View>
 
-            <View className="rounded-2xl p-4 mt-3" style={{ backgroundColor: colors.purple + "12", borderColor: colors.purple + "30", borderWidth: 1 }}>
-              <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("kvkk.contactTitle")}</Text>
-              <Text className="text-sm" style={{ color: colors.textSecondary }}>{t("kvkk.verifiedDesc")}</Text>
-              <TouchableOpacity
-                className="mt-3 h-11 rounded-xl items-center justify-center flex-row gap-2"
-                style={{ backgroundColor: colors.purple }}
-              >
-                <Ionicons name="mail-outline" size={18} color="#fff" />
-                <Text className="text-sm font-semibold" style={{ color: "#fff" }}>{t("privacy.email")}</Text>
-              </TouchableOpacity>
-            </View>
+            <Text className="text-[11px] leading-4 mt-4 px-1" style={{ color: colors.textMuted }}>
+              {t("kvkk.disclaimer")}
+            </Text>
           </View>
         </ScrollView>
       </View>
