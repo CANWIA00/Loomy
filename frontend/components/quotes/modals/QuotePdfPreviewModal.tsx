@@ -38,27 +38,33 @@ export default function QuotePdfPreviewModal() {
               style={{
                 width: "100%",
                 height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
                 backgroundColor: "#e5e5e5",
                 overflow: "auto",
+                display: "block",
               } as any}
             >
               <div
                 style={{
-                  width: "210mm",
-                  minHeight: "297mm",
-                  backgroundColor: "white",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-                  padding: "15mm",
-                  borderRadius: 4,
-                  transform: `scale(${pdfZoom / 100})`,
-                  transformOrigin: "center center",
-                  flexShrink: 0,
+                  width: 794 * (pdfZoom / 100),
+                  minHeight: 1123 * (pdfZoom / 100),
+                  margin: "0 auto",
                 } as any}
-                dangerouslySetInnerHTML={{ __html: pdfPreviewHtml }}
-              />
+              >
+                <div
+                  style={{
+                    width: "210mm",
+                    minHeight: "297mm",
+                    backgroundColor: "white",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                    padding: "15mm",
+                    borderRadius: 4,
+                    transform: `scale(${pdfZoom / 100})`,
+                    transformOrigin: "top left",
+                    flexShrink: 0,
+                  } as any}
+                  dangerouslySetInnerHTML={{ __html: pdfPreviewHtml }}
+                />
+              </div>
             </div>
           ) : (
             <ScrollView
@@ -70,6 +76,9 @@ export default function QuotePdfPreviewModal() {
                 padding: 12,
               }}
               showsVerticalScrollIndicator={true}
+              maximumZoomScale={3}
+              minimumZoomScale={0.2}
+              bouncesZoom={true}
             >
               <View
                 style={{
@@ -92,7 +101,28 @@ export default function QuotePdfPreviewModal() {
                     height: Math.max((Dimensions.get("window").width - 24) * 1.414, 700),
                     backgroundColor: "white",
                   }}
-                  scrollEnabled={false}
+                  scrollEnabled={true}
+                  setSupportMultipleWindows
+                  javaScriptEnabled
+                  domStorageEnabled
+                  injectedJavaScript={`
+                    (function() {
+                      var meta = document.createElement('meta');
+                      meta.name = 'viewport';
+                      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes, viewport-fit=cover';
+                      document.head.appendChild(meta);
+                      document.body.style.zoom = ${(pdfZoom / 100).toFixed(2)};
+                      document.documentElement.style.zoom = ${(pdfZoom / 100).toFixed(2)};
+                      document.body.style.transformOrigin = 'top left';
+                      document.addEventListener('dblclick', function(e) {
+                        var s = document.body.style.zoom;
+                        var cur = s ? parseFloat(s) : 1;
+                        document.body.style.zoom = cur > 1.1 ? 1 : 2;
+                        document.documentElement.style.zoom = cur > 1.1 ? 1 : 2;
+                      });
+                    })();
+                    true;
+                  `}
                 />
               </View>
             </ScrollView>
@@ -101,17 +131,17 @@ export default function QuotePdfPreviewModal() {
         <View className="px-4 py-3 border-t" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
           <View className="flex-row items-center justify-center gap-4 mb-3">
             <TouchableOpacity
-              onPress={() => setPdfZoom((z) => Math.max(20, z - 10))}
+              onPress={() => setPdfZoom((z) => Math.max(20, z - 20))}
               className="w-9 h-9 rounded-lg items-center justify-center"
               style={{ backgroundColor: colors.bgInput }}
             >
               <Ionicons name="remove" size={20} color={colors.text} />
             </TouchableOpacity>
-            <Text className="text-sm font-semibold min-w-[50px] text-center" style={{ color: colors.text }}>
+            <Text className="text-sm font-semibold min-w-[70px] text-center" style={{ color: colors.text }}>
               %{pdfZoom}
             </Text>
             <TouchableOpacity
-              onPress={() => setPdfZoom((z) => Math.min(150, z + 10))}
+              onPress={() => setPdfZoom((z) => Math.min(400, z + 20))}
               className="w-9 h-9 rounded-lg items-center justify-center"
               style={{ backgroundColor: colors.bgInput }}
             >
