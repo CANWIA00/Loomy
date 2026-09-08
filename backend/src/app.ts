@@ -13,10 +13,30 @@ import devRoutes from "./routes/dev";
 import translateRoutes from "./routes/translate";
 import currencyRatesRoutes from "./routes/currencyRates";
 
+const ALLOWED_ORIGINS = (
+  process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+    : [
+        "https://app.loomy-app.com",
+        "https://loomy-omega.vercel.app",
+        "https://loomy-app.com",
+        "https://www.loomy-app.com",
+        "http://localhost:8081",
+        "http://localhost:3000",
+        "http://localhost:5173",
+      ]
+).filter(Boolean);
+
 const app = express();
 
 app.use(cors({
-  origin: "*",
+  origin(origin, callback) {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error("Origin not allowed by CORS"));
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"],
 }));
