@@ -548,7 +548,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       const html = generateServicePDFHtml(data, t, locale.startsWith("tr") ? "tr" : "en");
 
       if (Platform.OS === "web") {
-        const fileName = `${data.customerName || "servis"} - ${data.documentDate || ""}`.replace(/[\\/:*?"<>|]+/g, "-");
+        const fileName = [t("svc.pdfFileName"), data.customerName, data.documentDate].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g, "-").trim();
         await downloadWebPdf(html, fileName);
       } else {
         const { uri } = await Print.printToFileAsync({
@@ -605,7 +605,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     try {
       const html = await buildPdfHtml(record);
       if (Platform.OS === "web") {
-        const fileName = `${record.customer || "servis"} - ${record.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
+        const fileName = [t("svc.pdfFileName"), record.customer, record.tarih].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g, "-").trim();
         await shareWebPdf(html, fileName);
       } else {
         const uri = await printPdfToFile(html);

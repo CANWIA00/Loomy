@@ -348,7 +348,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     try {
       const html = generateHtml(data);
       if (Platform.OS === "web") {
-        const fileName = `${data.customerName || "teklif"} - ${data.documentDate || ""}`.replace(/[\\/:*?"<>|]+/g, "-");
+        const fileName = [t("qot.pdfFileName"), data.customerName, data.documentDate].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g, "-").trim();
         await downloadWebPdf(html, fileName);
       } else {
         const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -398,7 +398,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     try {
       const pdfData = await resolvePdfData(record);
       const html = generateHtml(pdfData);
-      const fileName = `${record.customer || "teklif"} - ${record.tarih}`.replace(/[\\/:*?"<>|]+/g, "-");
+      const fileName = [t("qot.pdfFileName"), record.customer, record.tarih].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g, "-").trim();
       if (Platform.OS === "web") {
         await shareWebPdf(html, fileName);
       } else {
