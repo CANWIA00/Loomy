@@ -41,24 +41,19 @@ export default function CompanyCard() {
     handleCopyInviteCode,
   } = useProfil();
 
+  if (!company) return null;
+
   const inputStyle = {
     backgroundColor: colors.bgInput,
     color: colors.text,
     fontSize: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: colors.primary + "4D",
+    marginTop: 8,
   };
-  const labelStyle = {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: "500" as const,
-    marginBottom: 4,
-  };
-
-  if (!company) return null;
 
   const pickLogo = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -87,12 +82,89 @@ export default function CompanyCard() {
     }
   };
 
+  const fields = [
+    {
+      key: "address",
+      label: t("prf.address"),
+      icon: "location-outline" as const,
+      color: colors.primary,
+      value: company.address,
+      editValue: editCompanyAddress,
+      setEditValue: setEditCompanyAddress,
+    },
+    {
+      key: "phone",
+      label: t("prf.companyPhone"),
+      icon: "call-outline" as const,
+      color: colors.teal,
+      value: company.phone,
+      editValue: editCompanyPhone,
+      setEditValue: setEditCompanyPhone,
+      keyboardType: "phone-pad" as const,
+    },
+    {
+      key: "gsm",
+      label: t("prf.companyGsm"),
+      icon: "phone-portrait-outline" as const,
+      color: colors.purple,
+      value: company.gsm || "-",
+      editValue: editCompanyGsm,
+      setEditValue: setEditCompanyGsm,
+      keyboardType: "phone-pad" as const,
+    },
+    {
+      key: "email",
+      label: t("prf.companyEmail"),
+      icon: "mail-outline" as const,
+      color: colors.pink,
+      value: company.email,
+      editValue: editCompanyEmail,
+      setEditValue: setEditCompanyEmail,
+      keyboardType: "email-address" as const,
+    },
+    {
+      key: "fax",
+      label: t("prf.companyFax"),
+      icon: "print-outline" as const,
+      color: colors.warning,
+      value: company.fax || "-",
+      editValue: editCompanyFax,
+      setEditValue: setEditCompanyFax,
+      keyboardType: "phone-pad" as const,
+    },
+    {
+      key: "website",
+      label: t("prf.companyWebsite"),
+      icon: "globe-outline" as const,
+      color: colors.teal,
+      value: company.website || "-",
+      editValue: editCompanyWebsite,
+      setEditValue: setEditCompanyWebsite,
+      keyboardType: "url" as const,
+    },
+    {
+      key: "tax",
+      label: t("prf.taxNumber"),
+      icon: "receipt-outline" as const,
+      color: colors.danger,
+      value: company.taxNumber || "-",
+      editValue: editCompanyTaxNumber,
+      setEditValue: setEditCompanyTaxNumber,
+      keyboardType: "number-pad" as const,
+    },
+  ];
+
   return (
-    <View style={{ backgroundColor: colors.bgCard, borderRadius: 16, padding: 16, marginTop: 16 }}>
+    <View style={{ backgroundColor: colors.bgCard, borderRadius: 20, borderColor: colors.border, borderWidth: 1, marginTop: 16 }} className="p-4">
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center gap-3">
-          <Ionicons name="business-outline" size={20} color={colors.primary} />
-          <Text style={{ color: colors.text, fontWeight: "600" }}>{t("prf.companyInfo")}</Text>
+          <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: colors.purple + "18" }}>
+            <Ionicons name="business-outline" size={18} color={colors.purple} />
+          </View>
+          <View className="flex-1">
+            <Text style={{ color: colors.text, fontWeight: "700" }} className="text-[15px]">{t("prf.companyInfo")}</Text>
+            <Text style={{ color: colors.textMuted }} className="text-xs">{t("prf.companyDesc")}</Text>
+          </View>
         </View>
         {isAdmin && !editingCompany && (
           <TouchableOpacity
@@ -108,24 +180,24 @@ export default function CompanyCard() {
 
       <View className="flex-row items-center gap-4 mb-4">
         {editingCompany ? (
-          <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center" }}>
+          <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center" }}>
             <Ionicons name="image-outline" size={24} color={colors.textMuted} />
           </View>
         ) : company.logoUrl ? (
           <SvgAwareImage
             uri={company.logoUrl}
-            style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.bgInput }}
+            style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: colors.bgInput }}
             resizeMode="cover"
           />
         ) : (
-          <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.primary + "15", alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="business" size={24} color={colors.primary} />
+          <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: colors.purple + "18", alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="business" size={24} color={colors.purple} />
           </View>
         )}
         <View className="flex-1">
           {editingCompany ? (
             <TextInput
-              style={inputStyle}
+              style={{ ...inputStyle, marginTop: 0 }}
               value={editCompanyName}
               onChangeText={setEditCompanyName}
               editable={!saving}
@@ -133,208 +205,137 @@ export default function CompanyCard() {
               placeholderTextColor={colors.textMuted}
             />
           ) : (
-            <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>{company.name}</Text>
+            <>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }} numberOfLines={1}>{company.name}</Text>
+              {isAdmin && company.invitationCode ? (
+                <TouchableOpacity className="flex-row items-center gap-1.5 mt-1.5 self-start" onPress={handleCopyInviteCode}>
+                  <View className="flex-row items-center gap-1.5 rounded-lg px-2.5 py-1" style={{ backgroundColor: colors.primary + "15", borderColor: colors.primary + "30", borderWidth: 1 }}>
+                    <Ionicons name="copy-outline" size={12} color={colors.primary} />
+                    <Text style={{ color: colors.primary, fontSize: 12, fontFamily: "monospace", fontWeight: "700" }}>{company.invitationCode}</Text>
+                  </View>
+                </TouchableOpacity>
+              ) : null}
+            </>
           )}
         </View>
       </View>
 
-      <View className="gap-3">
-        {isAdmin && company.invitationCode && (
-          <View>
-            <Text style={labelStyle}>{t("prf.invitationCode")}</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.bgInput, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.primary + "4D" }}>
-              <Text style={{ color: colors.primary, fontSize: 14, fontFamily: "monospace", fontWeight: "600" }}>{company.invitationCode}</Text>
-              <TouchableOpacity onPress={handleCopyInviteCode} style={{ marginLeft: 8 }}>
-                <Ionicons name="copy-outline" size={18} color={colors.primary} />
-              </TouchableOpacity>
+      {isAdmin && company.invitationCode && !editingCompany && (
+        <View className="rounded-xl px-3.5 py-2.5 mb-4" style={{ backgroundColor: colors.primary + "0D", borderColor: colors.primary + "22", borderWidth: 1 }}>
+          <Text style={{ color: colors.textSecondary }} className="text-xs leading-5">{t("prf.invitationHint")}</Text>
+        </View>
+      )}
+
+      <View className="flex-row flex-wrap gap-3">
+        {fields.map((field) => (
+          <View
+            key={field.key}
+            className="rounded-2xl p-3.5"
+            style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1, flexGrow: 1, flexBasis: 0, minWidth: 150 }}
+          >
+            <View className="flex-row items-center gap-2">
+              <View className="w-7 h-7 rounded-lg items-center justify-center" style={{ backgroundColor: field.color + "18" }}>
+                <Ionicons name={field.icon} size={14} color={field.color} />
+              </View>
+              <Text className="text-[11px] font-bold uppercase tracking-wide" style={{ color: colors.textMuted }}>
+                {field.label}
+              </Text>
             </View>
-            <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>{t("prf.invitationHint")}</Text>
-          </View>
-        )}
-        <View>
-          <Text style={labelStyle}>{t("prf.address")}</Text>
-          {editingCompany ? (
-            <TextInput
-              style={inputStyle}
-              value={editCompanyAddress}
-              onChangeText={setEditCompanyAddress}
-              editable={!saving}
-              placeholder={t("prf.address")}
-              placeholderTextColor={colors.textMuted}
-            />
-          ) : (
-            <Text style={{ color: colors.text, fontSize: 14 }}>{company.address}</Text>
-          )}
-        </View>
-        <View>
-          <Text style={labelStyle}>{t("prf.companyPhone")}</Text>
-          {editingCompany ? (
-            <TextInput
-              style={inputStyle}
-              value={editCompanyPhone}
-              onChangeText={setEditCompanyPhone}
-              editable={!saving}
-              keyboardType="phone-pad"
-              placeholder={t("prf.companyPhone")}
-              placeholderTextColor={colors.textMuted}
-            />
-          ) : (
-            <Text style={{ color: colors.text, fontSize: 14 }}>{company.phone}</Text>
-          )}
-        </View>
-        <View>
-          <Text style={labelStyle}>{t("prf.companyGsm")}</Text>
-          {editingCompany ? (
-            <TextInput
-              style={inputStyle}
-              value={editCompanyGsm}
-              onChangeText={setEditCompanyGsm}
-              editable={!saving}
-              keyboardType="phone-pad"
-              placeholder={t("prf.companyGsm")}
-              placeholderTextColor={colors.textMuted}
-            />
-          ) : (
-            <Text style={{ color: colors.text, fontSize: 14 }}>{company.gsm || "-"}</Text>
-          )}
-        </View>
-        <View>
-          <Text style={labelStyle}>{t("prf.companyEmail")}</Text>
-          {editingCompany ? (
-            <TextInput
-              style={inputStyle}
-              value={editCompanyEmail}
-              onChangeText={setEditCompanyEmail}
-              editable={!saving}
-              keyboardType="email-address"
-              placeholder={t("prf.companyEmail")}
-              placeholderTextColor={colors.textMuted}
-            />
-          ) : (
-            <Text style={{ color: colors.text, fontSize: 14 }}>{company.email}</Text>
-          )}
-        </View>
-        <View>
-          <Text style={labelStyle}>{t("prf.companyFax")}</Text>
-          {editingCompany ? (
-            <TextInput
-              style={inputStyle}
-              value={editCompanyFax}
-              onChangeText={setEditCompanyFax}
-              editable={!saving}
-              keyboardType="phone-pad"
-              placeholder={t("prf.companyFax")}
-              placeholderTextColor={colors.textMuted}
-            />
-          ) : (
-            <Text style={{ color: colors.text, fontSize: 14 }}>{company.fax || "-"}</Text>
-          )}
-        </View>
-        <View>
-          <Text style={labelStyle}>{t("prf.companyWebsite")}</Text>
-          {editingCompany ? (
-            <TextInput
-              style={inputStyle}
-              value={editCompanyWebsite}
-              onChangeText={setEditCompanyWebsite}
-              editable={!saving}
-              keyboardType="url"
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder={t("prf.companyWebsite")}
-              placeholderTextColor={colors.textMuted}
-            />
-          ) : (
-            <Text style={{ color: colors.text, fontSize: 14 }}>{company.website || "-"}</Text>
-          )}
-        </View>
-        <View>
-          <Text style={labelStyle}>{t("prf.taxNumber")}</Text>
-          {editingCompany ? (
-            <TextInput
-              style={inputStyle}
-              value={editCompanyTaxNumber}
-              onChangeText={setEditCompanyTaxNumber}
-              editable={!saving}
-              keyboardType="number-pad"
-              placeholder={t("prf.taxNumber")}
-              placeholderTextColor={colors.textMuted}
-            />
-          ) : (
-            <Text style={{ color: colors.text, fontSize: 14 }}>{company.taxNumber || "-"}</Text>
-          )}
-        </View>
-        {editingCompany && (
-          <View>
-            <Text style={labelStyle}>{t("prf.logo")}</Text>
-            <View className="flex-row items-center gap-3">
-              <TouchableOpacity
-                style={{ flex: 1, backgroundColor: colors.bgInput, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.primary + "4D", flexDirection: "row", alignItems: "center", gap: 8 }}
-                onPress={pickLogo}
-                disabled={saving}
-              >
-                <Ionicons name="image-outline" size={18} color={colors.primary} />
-                <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                  {editCompanyLogo ? t("prf.logoSelected") : t("prf.logoSelect")}
-                </Text>
-              </TouchableOpacity>
-              {editCompanyLogo && (
-                <TouchableOpacity onPress={() => setEditCompanyLogo(null)} disabled={saving}>
-                  <Ionicons name="close-circle" size={20} color={colors.danger} />
-                </TouchableOpacity>
-              )}
-            </View>
-            {editCompanyLogo && (
-              <SvgAwareImage uri={editCompanyLogo} style={{ width: "100%", height: 64, borderRadius: 8, marginTop: 8, backgroundColor: colors.bgInput }} resizeMode="contain" />
+            {editingCompany ? (
+              <TextInput
+                style={inputStyle}
+                value={field.editValue}
+                onChangeText={field.setEditValue}
+                editable={!saving}
+                keyboardType={field.keyboardType as any}
+                placeholder={field.label}
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize={field.key === "website" ? "none" : undefined}
+                autoCorrect={field.key !== "website"}
+              />
+            ) : (
+              <Text style={{ color: colors.text, fontSize: 13.5, fontWeight: "500", marginTop: 8 }} numberOfLines={1}>
+                {field.value}
+              </Text>
             )}
           </View>
-        )}
-        <View>
-          <Text style={labelStyle}>{t("prf.stamp")}</Text>
-          {editingCompany && (
-            <View className="flex-row items-center gap-3 mb-2">
-              <TouchableOpacity
-                style={{ flex: 1, backgroundColor: colors.bgInput, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.primary + "4D", flexDirection: "row", alignItems: "center", gap: 8 }}
-                onPress={pickStamp}
-                disabled={saving}
-              >
-                <Ionicons name="image-outline" size={18} color={colors.primary} />
-                <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                  {editCompanyStamp ? t("prf.stampSelected") : t("prf.stampSelect")}
-                </Text>
-              </TouchableOpacity>
+        ))}
+      </View>
+
+      {editingCompany && (
+        <View className="flex-row flex-wrap gap-3 mt-4">
+          <View className="rounded-2xl p-3.5 flex-1 min-w-[150px]" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
+            <View className="flex-row items-center gap-2 mb-2">
+              <View className="w-7 h-7 rounded-lg items-center justify-center" style={{ backgroundColor: colors.teal + "18" }}>
+                <Ionicons name="image-outline" size={14} color={colors.teal} />
+              </View>
+              <Text className="text-[11px] font-bold uppercase tracking-wide" style={{ color: colors.textMuted }}>{t("prf.logo")}</Text>
+            </View>
+            <TouchableOpacity
+              style={{ backgroundColor: colors.bgInput, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.primary + "4D", flexDirection: "row", alignItems: "center", gap: 8 }}
+              onPress={pickLogo}
+              disabled={saving}
+            >
+              <Ionicons name="image-outline" size={18} color={colors.primary} />
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                {editCompanyLogo ? t("prf.logoSelected") : t("prf.logoSelect")}
+              </Text>
+            </TouchableOpacity>
+            {editCompanyLogo && (
+              <SvgAwareImage uri={editCompanyLogo} style={{ width: "100%", height: 56, borderRadius: 8, marginTop: 8, backgroundColor: colors.bgInput }} resizeMode="contain" />
+            )}
+          </View>
+
+          <View className="rounded-2xl p-3.5 flex-1 min-w-[150px]" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
+            <View className="flex-row items-center gap-2 mb-2">
+              <View className="w-7 h-7 rounded-lg items-center justify-center" style={{ backgroundColor: colors.danger + "18" }}>
+                <Ionicons name="image-outline" size={14} color={colors.danger} />
+              </View>
+              <Text className="text-[11px] font-bold uppercase tracking-wide" style={{ color: colors.textMuted }}>{t("prf.stamp")}</Text>
+            </View>
+            <TouchableOpacity
+              style={{ backgroundColor: colors.bgInput, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.primary + "4D", flexDirection: "row", alignItems: "center", gap: 8 }}
+              onPress={pickStamp}
+              disabled={saving}
+            >
+              <Ionicons name="image-outline" size={18} color={colors.primary} />
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                {editCompanyStamp ? t("prf.stampSelected") : t("prf.stampSelect")}
+              </Text>
+            </TouchableOpacity>
+            <View className="flex-row items-center gap-2 mt-2">
+              {(editCompanyStamp || company.stampUrl) ? (
+                <SvgAwareImage
+                  uri={(editCompanyStamp || company.stampUrl) as string}
+                  style={{ width: 72, height: 72, borderRadius: 8, backgroundColor: colors.bgInput }}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={{ height: 72, borderRadius: 8, borderWidth: 1, borderStyle: "dashed", borderColor: colors.textMuted + "55", backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center", flex: 1 }}>
+                  <Ionicons name="image-outline" size={24} color={colors.textMuted} />
+                </View>
+              )}
               {editCompanyStamp && (
                 <TouchableOpacity onPress={() => setEditCompanyStamp(null)} disabled={saving}>
                   <Ionicons name="close-circle" size={20} color={colors.danger} />
                 </TouchableOpacity>
               )}
             </View>
-          )}
-          {(editingCompany ? editCompanyStamp || company.stampUrl : company.stampUrl) ? (
-            <SvgAwareImage
-              uri={(editingCompany ? editCompanyStamp || company.stampUrl : company.stampUrl) as string}
-              style={{ width: 110, height: 110, borderRadius: 8, alignSelf: "flex-start", backgroundColor: colors.bgInput }}
-              resizeMode="contain"
-            />
-          ) : (
-            <View style={{ height: 110, borderRadius: 8, borderWidth: 1, borderStyle: "dashed", borderColor: colors.textMuted + "55", backgroundColor: colors.bgInput, alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="image-outline" size={26} color={colors.textMuted} />
-            </View>
-          )}
+          </View>
         </View>
-      </View>
+      )}
 
       {editingCompany && (
         <View className="flex-row gap-3 mt-5">
           <TouchableOpacity
-            style={{ flex: 1, backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 13, alignItems: "center" }}
+            style={{ flex: 1, backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingVertical: 13, alignItems: "center" }}
             onPress={cancelEditingCompany}
             disabled={saving}
           >
             <Text style={{ color: colors.danger, fontSize: 14, fontWeight: "600" }}>{t("common.cancel")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={{ flex: 1, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+            style={{ flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
             onPress={handleUpdateCompany}
             disabled={saving}
           >

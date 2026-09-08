@@ -413,6 +413,13 @@ const translations: Record<Lang, Record<string, string>> = {
 
     // Profile
     "prf.title": "Profil",
+    "prf.greeting": "Hoş geldiniz",
+    "prf.personalDesc": "Hesap ve iletişim bilgileriniz",
+    "prf.companyDesc": "İşletmenizin kurumsal bilgileri",
+    "prf.roleAdmin": "Admin",
+    "prf.roleUser": "Kullanıcı",
+    "prf.dangerZone": "Tehlikeli İşlemler",
+    "prf.adminDesc": "Davet kodu oluşturma ve işletme bilgilerini yönetme yetkinize sahipsiniz.",
     "prf.info": "Bilgiler",
     "prf.name": "Ad Soyad",
     "prf.email": "E-posta",
@@ -426,6 +433,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "prf.save": "Kaydet",
     "prf.adminPrivileges": "Admin Yetkileri",
     "prf.companyInfo": "Kurumsal Bilgiler",
+    "prf.companyName": "Şirket Adı",
     "prf.invitationCode": "Davet Kodu",
     "prf.invitationHint": "Bu kodu paylaşıp çalışan kaydı yapabilirsiniz.",
     "prf.address": "Adres",
@@ -1308,6 +1316,13 @@ const translations: Record<Lang, Record<string, string>> = {
 
     // Profile
     "prf.title": "Profile",
+    "prf.greeting": "Welcome back",
+    "prf.personalDesc": "Your account & contact details",
+    "prf.companyDesc": "Your business details",
+    "prf.roleAdmin": "Admin",
+    "prf.roleUser": "User",
+    "prf.dangerZone": "Danger Zone",
+    "prf.adminDesc": "You have access to create invitation codes and manage business information.",
     "prf.info": "Info",
     "prf.name": "Full Name",
     "prf.email": "Email",
@@ -1321,6 +1336,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "prf.save": "Save",
     "prf.adminPrivileges": "Admin Privileges",
     "prf.companyInfo": "Company Information",
+    "prf.companyName": "Company Name",
     "prf.invitationCode": "Invitation Code",
     "prf.invitationHint": "Share this code to register employees.",
     "prf.address": "Address",
