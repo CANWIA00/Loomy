@@ -1,6 +1,7 @@
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { toSafeFileName } from "./fileName";
+import { notifyPdfShared } from "./pdfNotify";
 
 export async function sharePdfFile(
   uri: string,
@@ -12,7 +13,9 @@ export async function sharePdfFile(
   try {
     new File(uri).copy(dest, { overwrite: true });
     await Sharing.shareAsync(dest.uri, shareOptions);
+    notifyPdfShared();
   } catch {
     await Sharing.shareAsync(uri, shareOptions);
+    notifyPdfShared();
   }
 }

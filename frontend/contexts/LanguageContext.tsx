@@ -3,6 +3,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type Lang = "tr" | "en";
 
+let currentLang: Lang = "tr";
+
+export function translate(key: string, params?: Record<string, string>): string {
+  const dict = translations[currentLang] || translations.tr;
+  let text = dict?.[key] || translations.tr[key] || key;
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      text = text.replace(new RegExp(`\\{${k}\\}`, "g"), v);
+    });
+  }
+  return text;
+}
+
 const translations: Record<Lang, Record<string, string>> = {
   tr: {
     // Tab bar
@@ -600,6 +613,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "common.copyEmail": "E-posta Adresini Kopyala",
     "common.emailCopied": "E-posta adresi panoya kopyalandı",
     "common.service": "Servis",
+    "common.pdfShared": "PDF paylaşıldı.",
+    "common.pdfDownloaded": "PDF indirildi.",
 
     // Privacy
     "privacy.title": "Gizlilik Politikası ve KVKK Aydınlatma Metni",
@@ -1506,6 +1521,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "common.warning": "Warning",
     "common.copyEmail": "Copy Email Address",
     "common.emailCopied": "Email address copied to clipboard",
+    "common.pdfShared": "PDF shared.",
+    "common.pdfDownloaded": "PDF downloaded.",
     "common.service": "Service",
 
     // Privacy
@@ -1835,6 +1852,10 @@ const LanguageContext = createContext<LanguageContextType>({
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>("tr");
+
+  useEffect(() => {
+    currentLang = lang;
+  }, [lang]);
 
   useEffect(() => {
     AsyncStorage.getItem("language").then((v) => {

@@ -1,6 +1,7 @@
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { toSafeFileName } from "./fileName";
+import { notifyPdfShared, notifyPdfDownloaded } from "./pdfNotify";
 
 const A4_WIDTH_PX = 794;
 const A4_WIDTH_MM = 210;
@@ -73,6 +74,7 @@ async function shareWebPdfFile(html: string, fileName: string): Promise<void> {
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     await navigator.share({ files: [file], title: safeName });
+    notifyPdfShared();
     return;
   }
 
@@ -84,6 +86,7 @@ async function shareWebPdfFile(html: string, fileName: string): Promise<void> {
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  notifyPdfDownloaded();
 }
 
 export async function shareWebPdf(html: string, fileName: string): Promise<void> {
@@ -101,6 +104,7 @@ async function downloadWebPdfFile(html: string, fileName: string): Promise<void>
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
+  notifyPdfDownloaded();
 }
 
 export async function downloadWebPdf(html: string, fileName: string): Promise<void> {
