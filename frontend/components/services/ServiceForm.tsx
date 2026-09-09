@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -15,6 +15,16 @@ const formatDateInput = (v: string) => {
   if (digits.length > 2) formatted = digits.slice(0, 2) + "/" + digits.slice(2);
   if (digits.length > 4) formatted = digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
   return formatted;
+};
+
+const formatTimeInput = (v: string) => {
+  const digits = v.replace(/\D/g, "").slice(0, 4);
+  if (digits.length >= 3) {
+    const h = Math.min(23, parseInt(digits.slice(0, 2), 10) || 0);
+    const m = Math.min(59, parseInt(digits.slice(2), 10) || 0);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+  return digits;
 };
 
 const getCurrentTime = () => {
@@ -261,105 +271,40 @@ function CustomerRow({ address }: { address?: TemplateField }) {
   );
 }
 
-function TimeField({
-  field,
-  value,
-  onChange,
-  nowLabel,
-}: {
-  field: TemplateField;
-  value: string;
-  onChange: (v: string) => void;
-  nowLabel: string;
-}) {
+function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
   const { colors } = useTheme();
-  const { lang } = useLanguage();
-  const minuteRef = useRef<TextInput>(null);
+  const { lang, t } = useLanguage();
+  const { form, updateForm } = useServices();
 
-  const colonIndex = value.indexOf(":");
-  const hourStr = colonIndex !== -1 ? value.slice(0, colonIndex) : "";
-  const minStr = colonIndex !== -1 ? value.slice(colonIndex + 1) : "";
-  const [h, m] = [parseInt(hourStr, 10) || 0, parseInt(minStr, 10) || 0];
-
-  const setHour = (raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 2);
-    let hh = parseInt(digits || "0", 10);
-    if (!Number.isNaN(hh) && hh > 23) hh = 23;
-    onChange(`${String(hh).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    if (digits.length === 2) minuteRef.current?.focus();
-  };
-
-  const setMinute = (raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 2);
-    let mm = parseInt(digits || "0", 10);
-    if (!Number.isNaN(mm) && mm > 59) mm = 59;
-    onChange(`${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`);
-  };
-
-  return (
+  const renderTimeField = (field: TemplateField, value: string, isEnd: boolean) => (
     <View className="flex-1">
       <FieldLabel>{labelOf(field, lang)}</FieldLabel>
-      <View className="flex-row items-center gap-1">
+      <View className="relative flex-1">
         <TextInput
-          className="h-10 w-12 border rounded-lg px-1 text-center text-sm"
+          className="w-full h-10 border rounded-lg px-3 pr-12 text-sm"
           style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder="HH"
+          placeholder="HH:MM"
           placeholderTextColor={colors.textMuted}
           keyboardType="number-pad"
-          maxLength={2}
-          selectTextOnFocus
-          value={hourStr}
-          onChangeText={setHour}
+          maxLength={5}
+          value={value}
+          onChangeText={(v) => updateForm(isEnd ? "endTime" : "startTime", formatTimeInput(v))}
         />
-        <Text className="text-lg font-bold" style={{ color: colors.textMuted }}>:</Text>
-        <TextInput
-          ref={minuteRef}
-          className="h-10 w-12 border rounded-lg px-1 text-center text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder="MM"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="number-pad"
-          maxLength={2}
-          selectTextOnFocus
-          value={minStr}
-          onChangeText={setMinute}
-        />
-        <View className="flex-1" />
         <TouchableOpacity
-          className="h-8 px-2.5 flex-row items-center justify-center rounded-lg"
-          style={{ backgroundColor: colors.primary + '1A' }}
-          onPress={() => onChange(getCurrentTime())}
+          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 items-center justify-center rounded-lg"
+          style={{ backgroundColor: colors.primary + '1A', maxWidth: 32 }}
+          onPress={() => updateForm(isEnd ? "endTime" : "startTime", getCurrentTime())}
         >
-          <Ionicons name="time-outline" size={14} color={colors.primary} />
-          <Text className="text-[11px] font-medium ml-0.5" style={{ color: colors.primary }}>{nowLabel}</Text>
+          <Ionicons name="time-outline" size={16} color={colors.primary} />
         </TouchableOpacity>
       </View>
     </View>
   );
-}
-
-function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
-  const { t } = useLanguage();
-  const { form, updateForm } = useServices();
 
   return (
     <View className="flex-row gap-3 mb-3">
-      {start && (
-        <TimeField
-          field={start}
-          value={form.startTime}
-          onChange={(v) => updateForm("startTime", v)}
-          nowLabel={t("svc.now")}
-        />
-      )}
-      {end && (
-        <TimeField
-          field={end}
-          value={form.endTime}
-          onChange={(v) => updateForm("endTime", v)}
-          nowLabel={t("svc.now")}
-        />
-      )}
+      {start && renderTimeField(start, form.startTime, false)}
+      {end && renderTimeField(end, form.endTime, true)}
     </View>
   );
 }
