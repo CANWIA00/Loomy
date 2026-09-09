@@ -69,24 +69,27 @@ function DateField({
         >
           <Ionicons name="calendar-outline" size={20} color={colors.primary} />
         </TouchableOpacity>
-        {quickOptions.length > 0 && (
-          <View className="flex-row items-center pr-1">
-            <Text className="mx-1" style={{ color: colors.textMuted }}>/</Text>
-            {quickOptions.map((opt, i) => (
+      </View>
+      {quickOptions.length > 0 && (
+        <View className="flex-row flex-wrap gap-1.5 mt-1.5">
+          {quickOptions.map((opt) => {
+            const active = value === computeValidUntil(base, opt.days, opt.months);
+            return (
               <TouchableOpacity
                 key={opt.label}
                 onPress={() => onChange(computeValidUntil(base, opt.days, opt.months))}
-                style={{ paddingVertical: 8 }}
+                className="px-2.5 py-1 rounded-full border"
+                style={{
+                  backgroundColor: active ? colors.primary : colors.bgInput,
+                  borderColor: active ? colors.primary : colors.border,
+                }}
               >
-                <View className="flex-row items-center">
-                  {i > 0 && <Text className="mx-1" style={{ color: colors.textMuted }}>/</Text>}
-                  <Text className="text-xs font-medium" style={{ color: colors.primary }}>{opt.label}</Text>
-                </View>
+                <Text className="text-[11px] font-medium" style={{ color: active ? "white" : colors.primary }}>{opt.label}</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -307,7 +310,13 @@ export default function QuoteForm() {
         </View>
 
         <View className="flex-row gap-3">
-          <DateField label={t("qot.documentDate")} value={form.documentDate} onChange={(v) => updateForm("documentDate", v)} placeholder={t("qot.datePlaceholder")} />
+          <DateField
+            label={t("qot.documentDate")}
+            value={form.documentDate}
+            onChange={(v) => updateForm("documentDate", v)}
+            placeholder={t("qot.datePlaceholder")}
+            quickOptions={[{ label: t("qot.today"), days: 0, months: 0 }]}
+          />
           <DateField
             label={t("qot.validUntil")}
             value={form.validUntil}
@@ -315,6 +324,7 @@ export default function QuoteForm() {
             placeholder={t("qot.datePlaceholder")}
             base={form.documentDate}
             quickOptions={[
+              { label: t("qot.today"), days: 0, months: 0 },
               { label: t("qot.valid1Day"), days: 1, months: 0 },
               { label: t("qot.valid1Week"), days: 7, months: 0 },
               { label: t("qot.valid2Week"), days: 14, months: 0 },
