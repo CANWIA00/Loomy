@@ -48,6 +48,7 @@ interface ServicesContextValue {
   setNewCustomerModal: (v: boolean) => void;
   newCustomerForm: NewCustomerFormData;
   updateNewCustomerForm: (key: keyof NewCustomerFormData, value: string) => void;
+  resetNewCustomerForm: () => void;
   createNewCustomer: () => void;
   mapSelectorVisible: boolean;
   setMapSelectorVisible: (v: boolean) => void;
@@ -631,6 +632,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const updateNewCustomerForm = (key: keyof NewCustomerFormData, value: string) =>
     setNewCustomerForm((prev) => ({ ...prev, [key]: value }));
 
+  const resetNewCustomerForm = () => setNewCustomerForm({ ...initialNewCustomerForm });
+
   const createNewCustomer = () => {
     if (!newCustomerForm.companyName) {
       Alert.alert(t("svc.warning"), t("svc.errorCompanyRequired"));
@@ -647,6 +650,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         serviceAddress: yeni.address || "",
         phone: yeni.phone || "",
       }));
+      resetNewCustomerForm();
       setNewCustomerModal(false);
     }).catch(() => {
       Alert.alert(t("svc.error"), t("svc.errorCustomerAdd"));
@@ -709,6 +713,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setNewCustomerModal,
     newCustomerForm,
     updateNewCustomerForm,
+    resetNewCustomerForm,
     createNewCustomer,
     mapSelectorVisible,
     setMapSelectorVisible,

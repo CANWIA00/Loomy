@@ -710,6 +710,7 @@ export default function ServiceForm() {
     setNewCustomerModal,
     newCustomerForm,
     updateNewCustomerForm,
+    resetNewCustomerForm,
     createNewCustomer,
     templates,
     activeTemplate,
@@ -740,6 +741,7 @@ export default function ServiceForm() {
     selectCustomer(m.id, m.companyName, m.address || "", m.phone || "");
 
   const openNewCustomerModal = () => {
+    resetNewCustomerForm();
     setCustomerSelectModal(false);
     setNewCustomerModal(true);
   };
