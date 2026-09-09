@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
-import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -95,6 +95,8 @@ function DateField({
 }
 
 export default function QuoteForm() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { convert: convertTry, rates, refresh: refreshRates, loading: loadingRates, stale: ratesStale } = useCurrency();
@@ -385,8 +387,8 @@ export default function QuoteForm() {
                   value={line.details}
                   onChangeText={(v) => updateLine(idx, "details", v)}
                 />
-                <View className="flex-col md:flex-row md:items-start md:justify-start md:gap-x-1">
-                <View className="md:max-w-[200px]">
+                <View style={isDesktop ? { flexDirection: "row", alignItems: "flex-start", gap: 4 } : undefined}>
+                <View style={isDesktop ? { maxWidth: 220 } : undefined}>
                   <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
                   <View className="flex-row items-center gap-1">
                     <TextInput
@@ -406,8 +408,8 @@ export default function QuoteForm() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                <View className="flex-row items-end gap-2 mt-1.5 md:mt-0 md:justify-start">
-                  <View className="flex-1 md:max-w-[200px]">
+                <View className="flex-row items-end gap-2 mt-1.5" style={isDesktop ? { marginTop: 0 } : undefined}>
+                  <View className="flex-1" style={isDesktop ? { maxWidth: 220 } : undefined}>
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}</Text>
                     <TextInput
                       className="w-full h-9 border rounded-lg px-2.5 text-sm"
@@ -434,7 +436,7 @@ export default function QuoteForm() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                <View className="flex-row items-end justify-end mt-1.5 md:mt-0 md:ml-auto">
+                <View className="flex-row items-end justify-end mt-1.5" style={isDesktop ? { marginTop: 0, marginLeft: "auto" } : undefined}>
                   <View className="items-end">
                     <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(lineTotal)} {getCurrencySymbol(line.currency)}</Text>
                     {line.currency !== "TRY" && convertTry(lineTotal, line.currency) !== null && (
