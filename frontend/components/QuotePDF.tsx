@@ -40,6 +40,13 @@ export function generateQuotePDFHtml(
 ): string {
   const lines = (data.lines || []).filter((l) => l && (l.name || l.details) && l.quantity > 0);
 
+  const titleSuffix = lang === "tr" ? "Teklifi" : "Quote";
+  const displayTitle = data.title
+    ? new RegExp(`${titleSuffix}$`, "i").test(data.title.trim())
+      ? data.title
+      : `${data.title.trim()} ${titleSuffix}`
+    : "";
+
   const currencyGroups: Record<string, { subTotal: number; kdv: number; grandTotal: number }> = {};
   lines.forEach((l) => {
     const cur = l.currency || "TRY";
@@ -178,14 +185,8 @@ export function generateQuotePDFHtml(
       font-weight: bold;
       letter-spacing: 0.5px;
     }
-    .title-sub {
-      font-size: 10px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      margin-top: 2px;
-    }
     .quote-title {
-      font-size: 9px;
+      font-size: 10px;
       font-weight: bold;
       margin-top: 3px;
     }
@@ -363,10 +364,9 @@ export function generateQuotePDFHtml(
       <div class="company-left">
         ${data.companyLogo ? `<img class="company-logo" src="${data.companyLogo}" onerror="this.style.display='none'" />` : ""}
       </div>
-      <div class="header-title">
+<div class="header-title">
         <div class="title">${escapeHtml(data.companyName)}</div>
-        <div class="title-sub">${lang === "tr" ? "Teklif" : "Quote"}</div>
-        ${data.title ? `<div class="quote-title">${escapeHtml(data.title)}</div>` : ""}
+        ${displayTitle ? `<div class="quote-title">${escapeHtml(displayTitle)}</div>` : ""}
       </div>
       <div class="title-area">
         <div class="title-date">${t("qot.date")} ${escapeHtml(data.documentDate) || ""}</div>
