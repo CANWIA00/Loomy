@@ -23,6 +23,18 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
     doc.body.style.margin = "0";
     doc.body.style.padding = `0 ${MARGIN_MM}mm`;
 
+    await new Promise<void>((resolve) => {
+      if (doc.readyState === "complete") resolve();
+      else iframe.addEventListener("load", () => resolve(), { once: true });
+    });
+
+    const images = Array.from(doc.images || []);
+    if (images.length) {
+      await Promise.all(
+        images.map((img) => (img.decode ? img.decode().catch(() => undefined) : Promise.resolve()))
+      );
+    }
+
     const node = doc.body;
     const width = A4_WIDTH_PX;
     const height = Math.max(node.scrollHeight, A4_WIDTH_PX * (A4_HEIGHT_MM / 210));

@@ -421,6 +421,8 @@ export default function QuoteForm() {
                       </Text>
                     )}
                   </View>
+                </View>
+                <View className="flex-row items-end gap-2 mt-1.5">
                   <View>
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.currency")}</Text>
                     <TouchableOpacity

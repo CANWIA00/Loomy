@@ -1,4 +1,18 @@
+import { Platform } from "react-native";
+import { File } from "expo-file-system";
+
 const cache = new Map<string, string>();
+
+async function nativeFileToDataUrl(src: string): Promise<string | null> {
+  if (Platform.OS === "web" || !src.startsWith("file:")) return null;
+  try {
+    const raw = await new File(src).base64();
+    if (!raw || !raw.length) return null;
+    return `data:image/png;base64,${raw}`;
+  } catch {
+    return null;
+  }
+}
 
 async function fetchToDataUrl(src: string): Promise<string | null> {
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
@@ -26,6 +40,11 @@ export async function embedImage(src?: string | null): Promise<string | null> {
   if (src.startsWith("data:")) return src;
   const cached = cache.get(src);
   if (cached) return cached;
+  const nativeData = await nativeFileToDataUrl(src);
+  if (nativeData) {
+    cache.set(src, nativeData);
+    return nativeData;
+  }
   const dataUrl = await fetchToDataUrl(src);
   if (dataUrl) {
     cache.set(src, dataUrl);
