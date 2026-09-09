@@ -19,12 +19,8 @@ const formatDateInput = (v: string) => {
 
 const formatTimeInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 4);
-  if (digits.length >= 3) {
-    const h = Math.min(23, parseInt(digits.slice(0, 2), 10) || 0);
-    const m = Math.min(59, parseInt(digits.slice(2), 10) || 0);
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-  }
-  return digits;
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
 };
 
 const getCurrentTime = () => {
