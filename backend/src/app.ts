@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import authRoutes from "./routes/auth";
 import profileRoutes from "./routes/profile";
 import customerRoutes from "./routes/customer";
@@ -29,6 +30,8 @@ const ALLOWED_ORIGINS = (
 ).filter(Boolean);
 
 const app = express();
+
+app.use(compression());
 
 app.use(cors({
   origin(origin, callback) {

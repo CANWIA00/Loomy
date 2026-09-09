@@ -10,7 +10,7 @@ async function imageToSvgDataUri(dataUri: string, applyContrast: boolean): Promi
     const buffer = Buffer.from(base64, "base64");
     const image = await Jimp.read(buffer);
 
-    const maxSize = 600;
+    const maxSize = 260;
     if (image.bitmap.width > maxSize || image.bitmap.height > maxSize) {
       if (image.bitmap.width >= image.bitmap.height) {
         image.resize({ w: maxSize });
@@ -42,9 +42,9 @@ async function imageToSvgDataUri(dataUri: string, applyContrast: boolean): Promi
       data: Uint8Array.from(image.bitmap.data),
     };
     const svg = ImageTracer.imagedataToSVG(imagedata, {
-      pathomit: 4,
-      numberofcolors: 8,
-      colorquantcycles: 3,
+      pathomit: 12,
+      numberofcolors: 4,
+      colorquantcycles: 2,
     });
 
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
