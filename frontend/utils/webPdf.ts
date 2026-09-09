@@ -21,7 +21,7 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
     doc.close();
 
     doc.body.style.margin = "0";
-    doc.body.style.padding = `0 ${MARGIN_MM}mm`;
+    doc.body.style.padding = "0";
 
     await new Promise<void>((resolve) => {
       if (doc.readyState === "complete") resolve();
@@ -47,10 +47,17 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
     });
 
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const imgWmm = width * PX_TO_MM;
     const imgHmm = height * PX_TO_MM;
-    const scale = Math.min(1, A4_HEIGHT_MM / imgHmm);
+    const availW = A4_WIDTH_MM - MARGIN_MM * 2;
+    const availH = A4_HEIGHT_MM - MARGIN_MM * 2;
+    const scale = Math.min(availW / imgWmm, availH / imgHmm);
+    const w = imgWmm * scale;
+    const h = imgHmm * scale;
+    const x = (A4_WIDTH_MM - w) / 2;
+    const y = (A4_HEIGHT_MM - h) / 2;
 
-    pdf.addImage(dataUrl, "PNG", 0, 0, A4_WIDTH_MM * scale, imgHmm * scale);
+    pdf.addImage(dataUrl, "PNG", x, y, w, h);
 
     return pdf.output("blob");
   } finally {
