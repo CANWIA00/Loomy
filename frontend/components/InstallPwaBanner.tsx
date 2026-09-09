@@ -60,6 +60,7 @@ export default function InstallPwaBanner() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const platform = detectPlatform();
 
@@ -137,6 +138,11 @@ export default function InstallPwaBanner() {
       return;
     }
 
+    if (platform === "ios") {
+      setShowHint(true);
+      return;
+    }
+
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
@@ -208,6 +214,11 @@ export default function InstallPwaBanner() {
             {deferred ? t("pwa.install") : "Ana Ekrana Ekle"}
           </Text>
         </Pressable>
+        {showHint && (
+          <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 10, textAlign: "center" }}>
+            {"Safari'nin altındaki Paylaş düğmesine (oklu kutu) dokunup \u201CAna Ekrana Ekle\u201Dyı seç."}
+          </Text>
+        )}
       </View>
     </View>
   );
