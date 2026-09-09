@@ -385,7 +385,7 @@ export default function QuoteForm() {
                   value={line.details}
                   onChangeText={(v) => updateLine(idx, "details", v)}
                 />
-                <View className="flex-col md:flex-row md:items-end md:justify-between md:gap-2">
+                <View className="flex-col md:flex-row md:items-end md:justify-start md:gap-x-1">
                 <View className="md:max-w-[200px]">
                   <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
                   <View className="flex-row items-center gap-1">
@@ -406,7 +406,7 @@ export default function QuoteForm() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                <View className="flex-row items-end gap-2 mt-1.5 md:mt-0 md:flex-1 md:justify-center">
+                <View className="flex-row items-end gap-2 mt-1.5 md:mt-0 md:justify-start">
                   <View className="flex-1 md:max-w-[200px]">
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}</Text>
                     <TextInput
@@ -434,7 +434,7 @@ export default function QuoteForm() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                <View className="flex-row items-end justify-end mt-1.5 md:mt-0">
+                <View className="flex-row items-end justify-end mt-1.5 md:mt-0 md:ml-auto">
                   <View className="items-end">
                     <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(lineTotal)} {getCurrencySymbol(line.currency)}</Text>
                     {line.currency !== "TRY" && convertTry(lineTotal, line.currency) !== null && (
