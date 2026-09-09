@@ -132,19 +132,19 @@ export function generateQuotePDFHtml(
 <head>
   <meta charset="UTF-8" />
   <style>
-    @page { margin: 12mm; size: A4; }
+    @page { margin: 8mm; size: A4; }
     html, body {
       margin: 0;
       padding: 0;
     }
     body {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 10px;
+      font-size: 8.5px;
       color: #222238;
     }
     .content-wrapper {
       padding-bottom: 0;
-      min-height: 270mm;
+      min-height: 264mm;
       display: flex;
       flex-direction: column;
     }
@@ -152,10 +152,10 @@ export function generateQuotePDFHtml(
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       border-bottom: 2px solid #222238;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      padding-bottom: 5px;
+      margin-bottom: 8px;
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -174,46 +174,46 @@ export function generateQuotePDFHtml(
       text-align: center;
     }
     .title {
-      font-size: 18px;
+      font-size: 15px;
       font-weight: bold;
       letter-spacing: 0.5px;
     }
     .title-sub {
-      font-size: 12px;
+      font-size: 10px;
       font-weight: bold;
       letter-spacing: 1px;
       margin-top: 2px;
     }
     .quote-title {
-      font-size: 11px;
+      font-size: 9px;
       font-weight: bold;
-      margin-top: 4px;
+      margin-top: 3px;
     }
     .title-area {
       flex: 1;
       text-align: right;
     }
     .title-date {
-      font-size: 9px;
+      font-size: 7px;
       color: #444;
-      margin-top: 2px;
+      margin-top: 1px;
       text-align: right;
     }
     .section {
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
     .section-title {
-      font-size: 10px;
+      font-size: 7.5px;
       font-weight: bold;
       text-transform: uppercase;
       border-bottom: 1px solid #222238;
-      padding-bottom: 2px;
-      margin-bottom: 5px;
+      padding-bottom: 1px;
+      margin-bottom: 3px;
     }
     .two-column {
       display: flex;
-      gap: 24px;
-      margin-bottom: 8px;
+      gap: 16px;
+      margin-bottom: 5px;
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -227,28 +227,28 @@ export function generateQuotePDFHtml(
       gap: 1px;
     }
     .info-item {
-      font-size: 10px;
-      line-height: 1.45;
+      font-size: 8px;
+      line-height: 1.3;
     }
     .label {
       font-weight: bold;
     }
     .items-table {
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
     .qthead {
       display: flex;
       align-items: center;
       border-bottom: 1.5px solid #222238;
-      padding: 4px 0;
+      padding: 2px 0;
       break-inside: avoid;
       page-break-inside: avoid;
     }
     .qth {
-      font-size: 9px;
+      font-size: 7px;
       font-weight: bold;
       text-transform: uppercase;
-      padding: 0 6px;
+      padding: 0 4px;
     }
     .qth.num {
       text-align: right;
@@ -258,13 +258,13 @@ export function generateQuotePDFHtml(
       display: flex;
       align-items: flex-start;
       border-bottom: 1px solid #ddd;
-      padding: 5px 0;
+      padding: 3px 0;
       break-inside: avoid;
       page-break-inside: avoid;
     }
     .qcell {
-      font-size: 10px;
-      padding: 0 6px;
+      font-size: 8px;
+      padding: 0 4px;
     }
     .qcell.num {
       text-align: right;
@@ -272,12 +272,12 @@ export function generateQuotePDFHtml(
     }
     .prod-name {
       font-weight: bold;
-      font-size: 10px;
+      font-size: 8px;
     }
     .prod-details {
-      font-size: 9px;
+      font-size: 7px;
       color: #666;
-      margin-top: 1px;
+      margin-top: 0;
     }
     .total-section {
       display: flex;
@@ -287,10 +287,10 @@ export function generateQuotePDFHtml(
     }
     .total-table {
       border-collapse: collapse;
-      min-width: 200px;
+      min-width: 180px;
     }
     .total-table td {
-      padding: 3px 6px;
+      padding: 2px 4px;
     }
     .total-row .tot-label {
       font-weight: normal;
@@ -300,10 +300,10 @@ export function generateQuotePDFHtml(
       font-weight: bold;
     }
     .converted {
-      font-size: 8px;
+      font-size: 6px;
       color: #666;
       font-weight: normal;
-      margin-top: 1px;
+      margin-top: 0;
     }
     .grand-row .tot-label {
       font-weight: bold;
@@ -311,49 +311,49 @@ export function generateQuotePDFHtml(
     }
     .grand-row .grand-value {
       font-weight: bold;
-      font-size: 13px;
+      font-size: 11px;
       border-top: 1.5px solid #222238;
       color: #222238;
     }
     .notes-content {
-      font-size: 10px;
+      font-size: 6.5px;
       white-space: pre-wrap;
-      color: #333;
+      color: #444;
       break-inside: avoid;
       page-break-inside: avoid;
     }
     .footer {
-      margin-top: 14px;
+      margin-top: 6px;
       border-top: 1px solid #ddd;
-      padding-top: 6px;
+      padding-top: 4px;
       text-align: center;
     }
     .footer-push {
       margin-top: auto;
     }
     .footer-text {
-      font-size: 9px;
+      font-size: 6.5px;
       color: #999;
-      line-height: 1.5;
+      line-height: 1.3;
       text-align: center;
     }
     .privacy-note {
-      margin-top: 10px;
-      padding-top: 6px;
+      margin-top: 4px;
+      padding-top: 3px;
       border-top: 1px solid #eee;
       text-align: center;
       page-break-inside: avoid;
     }
     .privacy-title {
-      font-size: 7px;
+      font-size: 5.5px;
       font-weight: bold;
       color: #888;
     }
     .privacy-body {
-      font-size: 7px;
+      font-size: 5.5px;
       color: #888;
-      line-height: 1.4;
-      margin-top: 1px;
+      line-height: 1.2;
+      margin-top: 0;
     }
   </style>
 </head>

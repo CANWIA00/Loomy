@@ -581,7 +581,7 @@ export default function CustomerDetailScreen() {
         const { uri } = await Print.printToFileAsync({
           html,
           base64: false,
-          margins: { top: 34, bottom: 34, left: 34, right: 34 },
+          margins: { top: 24, bottom: 24, left: 24, right: 24 },
         });
         await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle, UTI: "com.adobe.pdf" });
       }

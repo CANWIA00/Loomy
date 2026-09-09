@@ -2,10 +2,10 @@ import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 
 const A4_WIDTH_PX = 794;
+const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
-const PX_TO_MM = 210 / A4_WIDTH_PX;
+const PX_TO_MM = A4_WIDTH_MM / A4_WIDTH_PX;
 const MARGIN_MM = 12;
-const CONTENT_LIMIT_MM = A4_HEIGHT_MM - MARGIN_MM * 2 - 6;
 
 async function htmlToPdfBlob(html: string): Promise<Blob> {
   const iframe = document.createElement("iframe");
@@ -37,7 +37,7 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
 
     const node = doc.body;
     const width = A4_WIDTH_PX;
-    const height = Math.max(node.scrollHeight, A4_WIDTH_PX * (A4_HEIGHT_MM / 210));
+    const height = Math.max(node.scrollHeight, A4_WIDTH_PX * (A4_HEIGHT_MM / A4_WIDTH_MM));
 
     const dataUrl = await toPng(node, {
       width,
@@ -46,48 +46,16 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
       backgroundColor: "#ffffff",
     });
 
-    const pageStarts = computePageStarts(node);
-
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const imgH = height * PX_TO_MM;
+    const imgHmm = height * PX_TO_MM;
+    const scale = Math.min(1, A4_HEIGHT_MM / imgHmm);
 
-    pageStarts.forEach((start, index) => {
-      if (index > 0) pdf.addPage();
-      pdf.addImage(dataUrl, "PNG", 0, MARGIN_MM - start, 210, imgH);
-    });
+    pdf.addImage(dataUrl, "PNG", 0, 0, A4_WIDTH_MM * scale, imgHmm * scale);
 
     return pdf.output("blob");
   } finally {
     iframe.remove();
   }
-}
-
-function computePageStarts(node: HTMLElement): number[] {
-  const starts: number[] = [0];
-  const nodeTop = node.getBoundingClientRect().top;
-  const trs = Array.from(node.querySelectorAll(".items-table .quote-row"));
-
-  if (!trs.length) return starts;
-
-  const rowBottoms: number[] = trs.map(
-    (tr) => (tr.getBoundingClientRect().bottom - nodeTop) * PX_TO_MM
-  );
-
-  const firstRowTopMm = (trs[0].getBoundingClientRect().top - nodeTop) * PX_TO_MM;
-  let pageStart = firstRowTopMm;
-  let pageLimit = firstRowTopMm + CONTENT_LIMIT_MM;
-  let prevBottom = firstRowTopMm;
-
-  for (const bottom of rowBottoms) {
-    if (bottom > pageLimit) {
-      if (prevBottom > pageStart) starts.push(prevBottom);
-      pageStart = prevBottom;
-      pageLimit = pageStart + CONTENT_LIMIT_MM;
-    }
-    prevBottom = bottom;
-  }
-
-  return starts;
 }
 
 async function shareWebPdfFile(html: string, fileName: string): Promise<void> {
