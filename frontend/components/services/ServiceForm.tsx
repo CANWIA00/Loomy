@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -277,49 +277,186 @@ function CustomerRow({ address }: { address?: TemplateField }) {
   );
 }
 
-function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
+function TimePickerModal({
+  visible,
+  value,
+  label,
+  onClose,
+  onConfirm,
+}: {
+  visible: boolean;
+  value: string;
+  label: string;
+  onClose: () => void;
+  onConfirm: (time: string) => void;
+}) {
   const { colors } = useTheme();
-  const { lang } = useLanguage();
-  const { form, updateForm } = useServices();
+  const { t } = useLanguage();
+  const [h, m] = (value || "00:00").split(":").map((n) => parseInt(n, 10) || 0);
+  const [hour, setHour] = useState(h);
+  const [minute, setMinute] = useState(m);
 
-  const renderTimeField = (field: TemplateField, value: string, isEnd: boolean) => (
-    <View className="flex-1">
-      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
-      <View className="relative flex-1">
-        <TextInput
-          className="w-full h-10 border rounded-lg px-3 pr-20 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder="HH:MM"
-          placeholderTextColor={colors.textMuted}
-          value={value}
-          onChangeText={(v) => updateForm(isEnd ? "endTime" : "startTime", formatTimeInput(v))}
-        />
-        <View className="absolute right-0.5 top-0 bottom-0 flex-row items-center">
-          <TouchableOpacity
-            className="h-10 w-6 items-center justify-center"
-            onPress={() => {
-              const now = getCurrentTime();
-              updateForm(isEnd ? "endTime" : "startTime", isEnd && now === form.startTime ? adjustTime(now, 10) : now);
-            }}
-          >
-            <Ionicons name="time-outline" size={16} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity className="h-10 w-6 items-center justify-center" onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, 10))}>
-            <Ionicons name="chevron-up" size={16} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity className="h-10 w-6 items-center justify-center" onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, -10))}>
-            <Ionicons name="chevron-down" size={16} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
+  useEffect(() => {
+    const [nh, nm] = (value || "00:00").split(":").map((n) => parseInt(n, 10) || 0);
+    setHour(nh);
+    setMinute(nm);
+  }, [value, visible]);
+
+  const clampWrap = (n: number, min: number, max: number) =>
+    n < min ? max : n > max ? min : n;
+
+  const renderStep = (
+    stepper: ReactNode,
+    onStepDown: () => void,
+    onStepUp: () => void,
+    onNow: () => void
+  ) => (
+    <View className="flex-row items-center justify-between">
+      <TouchableOpacity
+        className="w-16 h-16 rounded-2xl items-center justify-center"
+        style={{ backgroundColor: colors.bgInput }}
+        onPress={onStepDown}
+      >
+        <Ionicons name="remove" size={30} color={colors.primary} />
+      </TouchableOpacity>
+      <View className="items-center flex-1">
+        <TouchableOpacity onPress={onNow} className="px-2 py-1 rounded-lg" style={{ backgroundColor: colors.primary + '1A' }}>
+          <Text className="text-[11px] font-semibold" style={{ color: colors.primary }}>{t("svc.now")}</Text>
+        </TouchableOpacity>
+        {stepper}
       </View>
+      <TouchableOpacity
+        className="w-16 h-16 rounded-2xl items-center justify-center"
+        style={{ backgroundColor: colors.bgInput }}
+        onPress={onStepUp}
+      >
+        <Ionicons name="add" size={30} color={colors.primary} />
+      </TouchableOpacity>
     </View>
   );
 
+  const chooseNow = () => {
+    const now = new Date();
+    setHour(now.getHours());
+    setMinute(now.getMinutes());
+  };
+
   return (
-    <View className="flex-row gap-3 mb-3">
-      {start && renderTimeField(start, form.startTime, false)}
-      {end && renderTimeField(end, form.endTime, true)}
-    </View>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View className="flex-1 justify-center items-center bg-black/60">
+        <View className="rounded-2xl w-11/12 max-w-xs p-5" style={{ backgroundColor: colors.bgCard }}>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-lg font-bold" style={{ color: colors.text }}>{label}</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+
+          {renderStep(
+            <Text className="text-5xl font-bold my-1" style={{ color: colors.text }}>
+              {String(hour).padStart(2, "0")}
+            </Text>,
+            () => setHour((v) => clampWrap(v - 1, 0, 23)),
+            () => setHour((v) => clampWrap(v + 1, 0, 23)),
+            chooseNow
+          )}
+          <Text className="text-center text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.hour")}</Text>
+
+          <View className="my-2 h-10 items-center justify-center">
+            <Text className="text-3xl font-bold" style={{ color: colors.primary }}>:</Text>
+          </View>
+
+          {renderStep(
+            <Text className="text-5xl font-bold my-1" style={{ color: colors.text }}>
+              {String(minute).padStart(2, "0")}
+            </Text>,
+            () => setMinute((v) => clampWrap(v - 5, 0, 55)),
+            () => setMinute((v) => clampWrap(v + 5, 0, 55)),
+            chooseNow
+          )}
+          <Text className="text-center text-xs font-medium mb-4" style={{ color: colors.textSecondary }}>{t("svc.minute")}</Text>
+
+          <View className="flex-row gap-3">
+            <TouchableOpacity
+              className="flex-1 h-12 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.bgInput }}
+              onPress={onClose}
+            >
+              <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("svc.cancel")}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 h-12 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.primary }}
+              onPress={() => {
+                onConfirm(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
+                onClose();
+              }}
+            >
+              <Text className="font-semibold" style={{ color: "white" }}>{t("common.ok")}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
+  const { colors } = useTheme();
+  const { lang, t } = useLanguage();
+  const { form, updateForm } = useServices();
+  const [pickerField, setPickerField] = useState<"start" | "end" | null>(null);
+
+  const renderTimeField = (field: TemplateField, value: string, isEnd: boolean) => {
+    const open = () => setPickerField(isEnd ? "end" : "start");
+    return (
+      <View className="flex-1">
+        <FieldLabel>{labelOf(field, lang)}</FieldLabel>
+        <View className="relative flex-1">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            className="w-full h-10 border rounded-lg px-3 pr-24 justify-center"
+            style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+            onPress={open}
+          >
+            <Text className="text-sm" style={{ color: value ? colors.text : colors.textMuted }}>
+              {value || "HH:MM"}
+            </Text>
+          </TouchableOpacity>
+          <View className="absolute right-1 top-0 bottom-0 flex-row items-center">
+            <TouchableOpacity className="h-10 w-9 items-center justify-center" onPress={open}>
+              <Ionicons name="time-outline" size={18} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity className="h-10 w-9 items-center justify-center" onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, 10))}>
+              <Ionicons name="chevron-up" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+            <TouchableOpacity className="h-10 w-9 items-center justify-center" onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, -10))}>
+              <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const pickerValue = pickerField === "start" ? form.startTime : pickerField === "end" ? form.endTime : "";
+  const pickerLabel = pickerField === "start" ? (start ? labelOf(start, lang) : t("svc.startTime")) : pickerField === "end" ? (end ? labelOf(end, lang) : t("svc.endTime")) : "";
+
+  return (
+    <>
+      <View className="flex-row gap-3 mb-3">
+        {start && renderTimeField(start, form.startTime, false)}
+        {end && renderTimeField(end, form.endTime, true)}
+      </View>
+
+      <TimePickerModal
+        visible={pickerField !== null}
+        value={pickerValue}
+        label={pickerLabel}
+        onClose={() => setPickerField(null)}
+        onConfirm={(time) => updateForm(pickerField === "start" ? "startTime" : "endTime", time)}
+      />
+    </>
   );
 }
 
