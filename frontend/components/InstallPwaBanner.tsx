@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -55,11 +56,19 @@ function markInstalled(): void {
 export default function InstallPwaBanner() {
   const { t } = useLanguage();
   const { colors } = useTheme();
+  const { user } = useAuth();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
 
   const platform = detectPlatform();
+
+  function dontShowAgain(): void {
+    markInstalled();
+    setInstalled(true);
+    setVisible(false);
+  }
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -99,9 +108,26 @@ export default function InstallPwaBanner() {
     };
   }, []);
 
-  if (Platform.OS !== "web") return null;
+  if (Platform.OS !== "web" || !user) return null;
   if (isStandalone() || readFlag(KEY_INSTALLED)) return null;
   if (!visible || installed) return null;
+
+  const steps =
+    platform === "ios"
+      ? [
+          "Safari'nin altındaki Paylaş (yukarı ok işaretli kutu) butonuna dokun.",
+          "Aşağı kaydır ve \u201CAna Ekrana Ekle\u201D seçeneğine dokun.",
+          "Sağ üstteki \u201CEkle\u201D butonuna dokun; uygulama ana ekrana yer işareti olarak eklenir.",
+        ]
+      : platform === "android"
+        ? [
+            "Tarayıcının sağ üst menüsünden (\u22EE) \u201CUygulamayı yükle\u201D seçeneğini seç.",
+            "Açılan pencerede \u201CYükle\u201D onayına dokun.",
+          ]
+        : [
+            "Tarayıcı adres çubuğunun sağındaki kurulum simgesini seç.",
+            "Açılan pencerede \u201CYükle\u201D butonuna tıkla.",
+          ];
 
   const title = deferred
     ? t("pwa.installTitle")
@@ -180,7 +206,49 @@ export default function InstallPwaBanner() {
           </Pressable>
         </View>
         <Text style={{ color: colors.textSecondary, fontSize: 13.5, lineHeight: 19, marginBottom: 12 }}>{desc}</Text>
-        {deferred && (
+        {showSteps ? (
+          <View style={{ gap: 10 }}>
+            {steps.map((s, i) => (
+              <View key={i} style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
+                <View
+                  style={{
+                    backgroundColor: colors.primary,
+                    borderRadius: 999,
+                    width: 22,
+                    height: 22,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginTop: 1,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>{i + 1}</Text>
+                </View>
+                <Text style={{ color: colors.textSecondary, fontSize: 13.5, lineHeight: 19, flex: 1 }}>{s}</Text>
+              </View>
+            ))}
+            <View style={{ gap: 8, marginTop: 4 }}>
+              <Pressable
+                onPress={dontShowAgain}
+                style={{
+                  backgroundColor: colors.primary,
+                  borderRadius: 10,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>
+                  {"Kurulumu tamamladım, bir daha sorma"}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowSteps(false)}
+                style={{ paddingVertical: 6, alignItems: "center" }}
+              >
+                <Text style={{ color: colors.textMuted, fontSize: 14 }}>{"Geri"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : deferred ? (
           <Pressable
             onPress={handleInstall}
             style={{
@@ -191,6 +259,18 @@ export default function InstallPwaBanner() {
             }}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>{t("pwa.install")}</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => setShowSteps(true)}
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: 10,
+              paddingVertical: 12,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>{"Ana Ekrana Ekle"}</Text>
           </Pressable>
         )}
       </View>
