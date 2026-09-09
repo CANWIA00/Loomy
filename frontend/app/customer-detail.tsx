@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import { sharePdfFile } from "../utils/sharePdf";
 import { WebView } from "react-native-webview";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -583,7 +584,7 @@ export default function CustomerDetailScreen() {
           base64: false,
           margins: { top: 24, bottom: 24, left: 24, right: 24 },
         });
-        await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle, UTI: "com.adobe.pdf" });
+        await sharePdfFile(uri, fileName, { mimeType: "application/pdf", dialogTitle, UTI: "com.adobe.pdf" });
       }
     } catch (error) {
       Alert.alert(t("common.warning"), t("svc.errorPdfCreate") + (error as any).message);

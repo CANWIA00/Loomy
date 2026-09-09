@@ -2,10 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { Alert, Platform, type ScrollView } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
+
 import { generateQuotePDFHtml } from "../QuotePDF";
 import { shareWebPdf, downloadWebPdf } from "../../utils/webPdf";
 import { embedImage } from "../../utils/pdfAssets";
+import { sharePdfFile } from "../../utils/sharePdf";
 import { profileApi } from "../../api/profile";
 import { quoteApi, QuoteRecord } from "../../api/quotes";
 import { customerApi, Customer } from "../../api/customers";
@@ -363,12 +364,13 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         const fileName = [t("qot.pdfFileName"), data.customerName, data.documentDate].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g, "-").trim();
         await downloadWebPdf(html, fileName);
       } else {
+        const fileName = [t("qot.pdfFileName"), data.customerName, data.documentDate].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g, "-").trim();
         const { uri } = await Print.printToFileAsync({
           html,
           base64: false,
           margins: { top: 24, bottom: 24, left: 24, right: 24 },
         });
-        await Sharing.shareAsync(uri, {
+        await sharePdfFile(uri, fileName, {
           mimeType: "application/pdf",
           dialogTitle: t("qot.pdfDialogTitle"),
           UTI: "com.adobe.pdf",
@@ -423,7 +425,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           base64: false,
           margins: { top: 24, bottom: 24, left: 24, right: 24 },
         });
-        await Sharing.shareAsync(uri, {
+        await sharePdfFile(uri, fileName, {
           mimeType: "application/pdf",
           dialogTitle: t("qot.pdfDialogTitle"),
           UTI: "com.adobe.pdf",
