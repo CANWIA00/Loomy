@@ -1,5 +1,6 @@
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
+import { toSafeFileName } from "./fileName";
 
 const A4_WIDTH_PX = 794;
 const A4_WIDTH_MM = 210;
@@ -67,17 +68,18 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
 
 async function shareWebPdfFile(html: string, fileName: string): Promise<void> {
   const blob = await htmlToPdfBlob(html);
-  const file = new File([blob], `${fileName}.pdf`, { type: "application/pdf" });
+  const safeName = toSafeFileName(fileName) || "document";
+  const file = new File([blob], `${safeName}.pdf`, { type: "application/pdf" });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    await navigator.share({ files: [file], title: fileName });
+    await navigator.share({ files: [file], title: safeName });
     return;
   }
 
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `${fileName}.pdf`;
+  anchor.download = `${safeName}.pdf`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -90,10 +92,11 @@ export async function shareWebPdf(html: string, fileName: string): Promise<void>
 
 async function downloadWebPdfFile(html: string, fileName: string): Promise<void> {
   const blob = await htmlToPdfBlob(html);
+  const safeName = toSafeFileName(fileName) || "document";
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `${fileName}.pdf`;
+  anchor.download = `${safeName}.pdf`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
