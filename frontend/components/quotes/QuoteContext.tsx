@@ -18,6 +18,13 @@ interface DeleteAlertState {
   record: QuoteRecord | null;
 }
 
+interface ResultAlertState {
+  visible: boolean;
+  type: "success" | "error";
+  title: string;
+  message: string;
+}
+
 interface QuoteContextValue {
   loading: boolean;
   refreshRecords: () => void;
@@ -56,6 +63,8 @@ interface QuoteContextValue {
   deleteAlert: DeleteAlertState;
   setDeleteAlert: (v: DeleteAlertState) => void;
   handleDelete: (record: QuoteRecord) => void;
+  resultAlert: ResultAlertState;
+  setResultAlert: (v: ResultAlertState) => void;
   pdfPreviewVisible: boolean;
   setPdfPreviewVisible: (v: boolean) => void;
   pdfPreviewHtml: string;
@@ -93,6 +102,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<DeleteAlertState>({ visible: false, record: null });
+  const [resultAlert, setResultAlert] = useState<ResultAlertState>({ visible: false, type: "success", title: "", message: "" });
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -232,15 +242,15 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
             ? { ...payload, tryRates: rates }
             : payload;
         await quoteApi.update(editingId, updatePayload);
-        Alert.alert(t("qot.success"), t("qot.successUpdated"));
+        setResultAlert({ visible: true, type: "success", title: t("qot.success"), message: t("qot.successUpdated") });
       } else {
         await quoteApi.create(rates ? { ...payload, tryRates: rates } : payload);
-        Alert.alert(t("qot.success"), t("qot.successCreated"));
+        setResultAlert({ visible: true, type: "success", title: t("qot.success"), message: t("qot.successCreated") });
       }
       resetForm();
       fetchRecords();
     } catch {
-      Alert.alert(t("qot.error"), t("qot.errorSave"));
+      setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorSave") });
     } finally {
       setLoading(false);
     }
@@ -489,6 +499,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     deleteAlert,
     setDeleteAlert,
     handleDelete,
+    resultAlert,
+    setResultAlert,
     pdfPreviewVisible,
     setPdfPreviewVisible,
     pdfPreviewHtml,

@@ -18,6 +18,8 @@ function QuotesScreenInner() {
     deleteAlert,
     setDeleteAlert,
     handleDelete,
+    resultAlert,
+    setResultAlert,
     scrollRef,
   } = useQuotes();
 
@@ -60,6 +62,14 @@ function QuotesScreenInner() {
         }}
         confirmText={t("common.delete")}
         confirmColor={colors.danger}
+      />
+
+      <CustomAlert
+        visible={resultAlert.visible}
+        type={resultAlert.type}
+        title={resultAlert.title}
+        message={resultAlert.message}
+        onClose={() => setResultAlert({ visible: false, type: "success", title: "", message: "" })}
       />
 
       <QuotePdfPreviewModal />

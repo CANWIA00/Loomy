@@ -18,6 +18,13 @@ interface DeleteAlertState {
   record: ServiceRecord | null;
 }
 
+interface ResultAlertState {
+  visible: boolean;
+  type: "success" | "error";
+  title: string;
+  message: string;
+}
+
 interface ServicesContextValue {
   loading: boolean;
   refreshRecords: () => void;
@@ -71,6 +78,8 @@ interface ServicesContextValue {
   deleteAlert: DeleteAlertState;
   setDeleteAlert: (v: DeleteAlertState) => void;
   handleDelete: (record: ServiceRecord) => void;
+  resultAlert: ResultAlertState;
+  setResultAlert: (v: ResultAlertState) => void;
   signatureModal: boolean;
   setSignatureModal: (v: boolean) => void;
   handleSignatureSave: (paths: any[]) => void;
@@ -129,6 +138,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const handledEditIdRef = useRef<string>("");
   const [saveAlertVisible, setSaveAlertVisible] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<DeleteAlertState>({ visible: false, record: null });
+  const [resultAlert, setResultAlert] = useState<ResultAlertState>({ visible: false, type: "success", title: "", message: "" });
   const technicianSignatureRef = useRef<any>(null);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const companyLogoRef = useRef<string | null>(null);
@@ -358,14 +368,14 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           templateName: activeTemplate?.name || undefined,
           templateConfig: templateSnapshot(templateConfig),
         });
-        Alert.alert(t("svc.success"), t("svc.successUpdated"));
+        setResultAlert({ visible: true, type: "success", title: t("svc.success"), message: t("svc.successUpdated") });
         setIsEditing(false);
         setEditingId(null);
         originalFormRef.current = null;
         setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
         fetchRecords();
       } catch {
-        Alert.alert(t("svc.error"), t("svc.errorUpdate"));
+        setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorUpdate") });
       } finally {
         setLoading(false);
       }
@@ -459,11 +469,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         templateName: activeTemplate?.name || undefined,
         templateConfig: templateSnapshot(templateConfig),
       });
-      Alert.alert(t("svc.success"), t("svc.successCreated"));
+      setResultAlert({ visible: true, type: "success", title: t("svc.success"), message: t("svc.successCreated") });
 
       fetchRecords();
     } catch {
-      Alert.alert(t("svc.error"), t("svc.errorSave"));
+      setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorSave") });
     } finally {
       setLoading(false);
       setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
@@ -736,6 +746,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     deleteAlert,
     setDeleteAlert,
     handleDelete,
+    resultAlert,
+    setResultAlert,
     signatureModal,
     setSignatureModal,
     handleSignatureSave,

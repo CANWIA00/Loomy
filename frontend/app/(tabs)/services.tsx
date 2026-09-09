@@ -25,6 +25,8 @@ function ServicesScreenInner() {
     deleteAlert,
     setDeleteAlert,
     handleDelete,
+    resultAlert,
+    setResultAlert,
     mapSelectorVisible,
     setMapSelectorVisible,
     updateForm,
@@ -88,6 +90,14 @@ function ServicesScreenInner() {
         }}
         confirmText={t("common.delete")}
         confirmColor={colors.danger}
+      />
+
+      <CustomAlert
+        visible={resultAlert.visible}
+        type={resultAlert.type}
+        title={resultAlert.title}
+        message={resultAlert.message}
+        onClose={() => setResultAlert({ visible: false, type: "success", title: "", message: "" })}
       />
 
       <SignatureModal />
