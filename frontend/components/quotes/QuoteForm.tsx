@@ -385,7 +385,7 @@ export default function QuoteForm() {
                   value={line.details}
                   onChangeText={(v) => updateLine(idx, "details", v)}
                 />
-                <View style={{ maxWidth: 280 }}>
+                <View className="md:max-w-[200px]">
                   <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
                   <View className="flex-row items-center gap-1">
                     <TextInput
@@ -406,7 +406,7 @@ export default function QuoteForm() {
                   </View>
                 </View>
                 <View className="flex-row items-end gap-2 mt-1.5">
-                  <View className="flex-1" style={{ maxWidth: 280 }}>
+                  <View className="flex-1 md:max-w-[200px]">
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}</Text>
                     <TextInput
                       className="w-full h-9 border rounded-lg px-2.5 text-sm"
