@@ -53,7 +53,7 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
 function computePageStarts(node: HTMLElement): number[] {
   const starts: number[] = [0];
   const nodeTop = node.getBoundingClientRect().top;
-  const trs = Array.from(node.querySelectorAll(".items-table tbody tr"));
+  const trs = Array.from(node.querySelectorAll(".items-table .quote-row"));
 
   if (!trs.length) return starts;
 

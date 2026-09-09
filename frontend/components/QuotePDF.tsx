@@ -60,17 +60,17 @@ export function generateQuotePDFHtml(
       const totalTry = convertToTry(total, cur, data.tryRates);
       const showTry = cur !== "TRY" && totalTry !== null;
       return `
-      <tr>
-        <td class="num">${i + 1}</td>
-        <td>
+      <div class="quote-row">
+        <div class="qcell num" style="width:22px">${i + 1}</div>
+        <div class="qcell" style="flex:1">
           <div class="prod-name">${escapeHtml(l.name)}</div>
           ${l.details ? `<div class="prod-details">${escapeHtml(l.details)}</div>` : ""}
-        </td>
-        <td class="num">${l.quantity}</td>
-        <td class="num">${escapeHtml(l.unit || "Adet")}</td>
-        <td class="num">${formatMoney(l.unitPrice)} ${sym}</td>
-        <td class="num">${formatMoney(total)} ${sym}${showTry ? `<div class="converted">≈ ${formatMoney(totalTry!)} ₺</div>` : ""}</td>
-      </tr>`;
+        </div>
+        <div class="qcell num" style="width:34px">${l.quantity}</div>
+        <div class="qcell num" style="width:44px">${escapeHtml(l.unit || "Adet")}</div>
+        <div class="qcell num" style="width:62px">${formatMoney(l.unitPrice)} ${sym}</div>
+        <div class="qcell num" style="width:74px">${formatMoney(total)} ${sym}${showTry ? `<div class="converted">≈ ${formatMoney(totalTry!)} ₺</div>` : ""}</div>
+      </div>`;
     })
     .join("");
 
@@ -234,31 +234,39 @@ export function generateQuotePDFHtml(
       font-weight: bold;
     }
     .items-table {
-      width: 100%;
-      border-collapse: collapse;
       margin-bottom: 8px;
     }
-    .items-table thead {
-      display: table-header-group;
-    }
-    .items-table tbody tr {
+    .qthead {
+      display: flex;
+      align-items: center;
+      border-bottom: 1.5px solid #222238;
+      padding: 4px 0;
       break-inside: avoid;
       page-break-inside: avoid;
     }
-    .items-table th {
-      text-align: left;
+    .qth {
       font-size: 9px;
       font-weight: bold;
       text-transform: uppercase;
-      border-bottom: 1.5px solid #222238;
-      padding: 4px 6px;
+      padding: 0 6px;
     }
-    .items-table td {
+    .qth.num {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .quote-row {
+      display: flex;
+      align-items: flex-start;
       border-bottom: 1px solid #ddd;
-      padding: 5px 6px;
-      vertical-align: top;
+      padding: 5px 0;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
-    .items-table .num {
+    .qcell {
+      font-size: 10px;
+      padding: 0 6px;
+    }
+    .qcell.num {
       text-align: right;
       white-space: nowrap;
     }
@@ -401,21 +409,17 @@ export function generateQuotePDFHtml(
 
     <div class="section">
       <div class="section-title">${t("qot.items")}</div>
-      <table class="items-table">
-        <thead>
-          <tr>
-            <th class="num" style="width:20px">#</th>
-            <th>${t("qot.product")}</th>
-            <th class="num" style="width:40px">${t("qot.quantity")}</th>
-            <th class="num" style="width:50px">${t("qot.unit")}</th>
-            <th class="num" style="width:70px">${t("qot.unitPrice")}</th>
-            <th class="num" style="width:80px">${t("qot.total")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows || `<tr><td colspan="6" style="color:#888">${t("qot.noItems")}</td></tr>`}
-        </tbody>
-      </table>
+      <div class="items-table">
+        <div class="qthead">
+          <div class="qth num" style="width:22px">#</div>
+          <div class="qth" style="flex:1">${t("qot.product")}</div>
+          <div class="qth num" style="width:34px">${t("qot.quantity")}</div>
+          <div class="qth num" style="width:44px">${t("qot.unit")}</div>
+          <div class="qth num" style="width:62px">${t("qot.unitPrice")}</div>
+          <div class="qth num" style="width:74px">${t("qot.total")}</div>
+        </div>
+        ${rows || `<div class="quote-row"><div class="qcell" style="color:#888">${t("qot.noItems")}</div></div>`}
+      </div>
     </div>
 
     <div class="section">
