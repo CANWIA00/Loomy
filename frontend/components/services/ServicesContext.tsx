@@ -225,6 +225,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   useFocusEffect(
     useCallback(() => {
       fetchRecords();
+      fetchCustomers();
       fetchTemplates();
       profileApi.getProfile().then((res) => {
         const sig = res.data.user?.signature;
@@ -260,7 +261,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           };
         }
       }).catch(() => {});
-    }, [fetchRecords, fetchTemplates])
+    }, [fetchRecords, fetchCustomers, fetchTemplates])
   );
 
   const requireSignature = (): boolean => {
