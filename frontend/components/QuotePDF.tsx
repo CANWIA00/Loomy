@@ -140,9 +140,13 @@ export function generateQuotePDFHtml(
   <meta charset="UTF-8" />
   <style>
     @page { margin: 8mm; size: A4; }
-    html, body {
+    html {
+      height: 100%;
+    }
+    body {
       margin: 0;
       padding: 0;
+      min-height: 100%;
     }
     body {
       font-family: Arial, Helvetica, sans-serif;
@@ -150,8 +154,9 @@ export function generateQuotePDFHtml(
       color: #222238;
     }
     .content-wrapper {
-      padding-bottom: 0;
-      min-height: 264mm;
+      position: relative;
+      padding-bottom: 36px;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
@@ -339,8 +344,12 @@ export function generateQuotePDFHtml(
       text-align: center;
     }
     .privacy-note {
-      margin-top: 4px;
-      padding-top: 3px;
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 0;
+      margin: 0;
+      padding-top: 4px;
       border-top: 1px solid #eee;
       text-align: center;
       page-break-inside: avoid;
