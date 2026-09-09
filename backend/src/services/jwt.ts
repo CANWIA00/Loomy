@@ -1,6 +1,16 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `${name} ortam değişkeni zorunludur. Sunucu güvenli token üretemeyeceği için başlatılamadı.`
+    );
+  }
+  return value;
+}
+
+const JWT_SECRET = requireEnv("JWT_SECRET");
 const JWT_EXPIRES_IN = "24h";
 
 interface TokenPayload {

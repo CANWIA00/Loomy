@@ -58,7 +58,7 @@ export async function authenticate(
       return;
     }
 
-    req.user = { id: user.id, email: user.email, role: user.role, companyId: decoded.companyId || user.companyId || undefined };
+    req.user = { id: user.id, email: user.email, role: user.role, companyId: user.companyId || undefined };
     next();
   } catch (error) {
     res.status(401).json({ message: "Geçersiz veya süresi dolmuş token." });

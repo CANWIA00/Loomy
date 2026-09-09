@@ -57,7 +57,9 @@ app.use("/api/service-templates", serviceTemplateRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/appointments", appointmentRoutes);
-app.use("/api/dev", devRoutes);
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api/dev", devRoutes);
+}
 app.use("/api", translateRoutes);
 app.use("/api/rates", currencyRatesRoutes);
 app.use("/api/apply", applyRoutes);
