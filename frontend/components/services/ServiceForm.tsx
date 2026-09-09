@@ -295,15 +295,15 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
         <View className="absolute right-1 top-0 bottom-0 flex-row items-center gap-0.5">
           <TouchableOpacity
             className="h-10 w-8 items-center justify-center"
-            onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, 10))}
-          >
-            <Ionicons name="chevron-up" size={18} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="h-10 w-8 items-center justify-center"
             onPress={() => updateForm(isEnd ? "endTime" : "startTime", getCurrentTime())}
           >
             <Ionicons name="time-outline" size={16} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="h-10 w-8 items-center justify-center"
+            onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, 10))}
+          >
+            <Ionicons name="chevron-up" size={18} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity
             className="h-10 w-8 items-center justify-center"
