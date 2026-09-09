@@ -156,6 +156,8 @@ export function generateQuotePDFHtml(
       border-bottom: 2px solid #222238;
       padding-bottom: 8px;
       margin-bottom: 12px;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .company-left {
       flex: 1;
@@ -212,6 +214,8 @@ export function generateQuotePDFHtml(
       display: flex;
       gap: 24px;
       margin-bottom: 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .two-column .section {
       flex: 1;
@@ -233,6 +237,13 @@ export function generateQuotePDFHtml(
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 8px;
+    }
+    .items-table thead {
+      display: table-header-group;
+    }
+    .items-table tbody tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .items-table th {
       text-align: left;
@@ -263,6 +274,8 @@ export function generateQuotePDFHtml(
     .total-section {
       display: flex;
       justify-content: flex-end;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .total-table {
       border-collapse: collapse;
@@ -298,6 +311,8 @@ export function generateQuotePDFHtml(
       font-size: 10px;
       white-space: pre-wrap;
       color: #333;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .footer {
       margin-top: 14px;
