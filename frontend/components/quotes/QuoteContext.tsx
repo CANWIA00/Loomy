@@ -363,7 +363,11 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         const fileName = [t("qot.pdfFileName"), data.customerName, data.documentDate].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g, "-").trim();
         await downloadWebPdf(html, fileName);
       } else {
-        const { uri } = await Print.printToFileAsync({ html, base64: false });
+        const { uri } = await Print.printToFileAsync({
+          html,
+          base64: false,
+          margins: { top: 34, bottom: 34, left: 34, right: 34 },
+        });
         await Sharing.shareAsync(uri, {
           mimeType: "application/pdf",
           dialogTitle: t("qot.pdfDialogTitle"),
@@ -414,7 +418,11 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       if (Platform.OS === "web") {
         await shareWebPdf(html, fileName);
       } else {
-        const { uri } = await Print.printToFileAsync({ html, base64: false });
+        const { uri } = await Print.printToFileAsync({
+          html,
+          base64: false,
+          margins: { top: 34, bottom: 34, left: 34, right: 34 },
+        });
         await Sharing.shareAsync(uri, {
           mimeType: "application/pdf",
           dialogTitle: t("qot.pdfDialogTitle"),

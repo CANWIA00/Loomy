@@ -578,7 +578,11 @@ export default function CustomerDetailScreen() {
         if (download) await downloadWebPdf(html, fileName);
         else await shareWebPdf(html, fileName);
       } else {
-        const { uri } = await Print.printToFileAsync({ html, base64: false });
+        const { uri } = await Print.printToFileAsync({
+          html,
+          base64: false,
+          margins: { top: 34, bottom: 34, left: 34, right: 34 },
+        });
         await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle, UTI: "com.adobe.pdf" });
       }
     } catch (error) {

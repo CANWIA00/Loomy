@@ -4,8 +4,8 @@ import { jsPDF } from "jspdf";
 const A4_WIDTH_PX = 794;
 const A4_HEIGHT_MM = 297;
 const PX_TO_MM = 210 / A4_WIDTH_PX;
-const CONTENT_MM = A4_HEIGHT_MM - 12 - 12; // 297 - üst padding - alt padding
-const FOOTER_FREE_MM = 20;
+const MARGIN_MM = 12;
+const CONTENT_LIMIT_MM = A4_HEIGHT_MM - MARGIN_MM * 2 - 6;
 
 async function htmlToPdfBlob(html: string): Promise<Blob> {
   const iframe = document.createElement("iframe");
@@ -21,7 +21,7 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
     doc.close();
 
     doc.body.style.margin = "0";
-    doc.body.style.padding = "12mm";
+    doc.body.style.padding = `0 ${MARGIN_MM}mm`;
 
     const node = doc.body;
     const width = A4_WIDTH_PX;
@@ -41,7 +41,7 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
 
     pageStarts.forEach((start, index) => {
       if (index > 0) pdf.addPage();
-      pdf.addImage(dataUrl, "PNG", 0, -start, 210, imgH);
+      pdf.addImage(dataUrl, "PNG", 0, MARGIN_MM - start, 210, imgH);
     });
 
     return pdf.output("blob");
@@ -63,14 +63,14 @@ function computePageStarts(node: HTMLElement): number[] {
 
   const firstRowTopMm = (trs[0].getBoundingClientRect().top - nodeTop) * PX_TO_MM;
   let pageStart = firstRowTopMm;
-  let pageLimit = A4_HEIGHT_MM - FOOTER_FREE_MM; // ilk sayfa: alt pay bırak
+  let pageLimit = firstRowTopMm + CONTENT_LIMIT_MM;
   let prevBottom = firstRowTopMm;
 
   for (const bottom of rowBottoms) {
     if (bottom > pageLimit) {
       if (prevBottom > pageStart) starts.push(prevBottom);
       pageStart = prevBottom;
-      pageLimit = pageStart + CONTENT_MM;
+      pageLimit = pageStart + CONTENT_LIMIT_MM;
     }
     prevBottom = bottom;
   }
