@@ -28,6 +28,12 @@ const getCurrentTime = () => {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 };
 
+const adjustTime = (value: string, deltaMinutes: number) => {
+  const [h = 0, m = 0] = (value || "00:00").split(":").map((n) => parseInt(n, 10) || 0);
+  const total = (h * 60 + m + deltaMinutes + 24 * 60) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
 const labelOf = (field: TemplateField, lang: string) => (lang === "tr" ? field.labelTr : field.labelEn);
 
 function FieldLabel({ children }: { children: ReactNode }) {
@@ -277,7 +283,7 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
       <FieldLabel>{labelOf(field, lang)}</FieldLabel>
       <View className="relative flex-1">
         <TextInput
-          className="w-full h-10 border rounded-lg px-3 pr-12 text-sm"
+          className="w-full h-10 border rounded-lg px-3 pr-28 text-sm"
           style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
           placeholder="HH:MM"
           placeholderTextColor={colors.textMuted}
@@ -286,13 +292,26 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
           value={value}
           onChangeText={(v) => updateForm(isEnd ? "endTime" : "startTime", formatTimeInput(v))}
         />
-        <TouchableOpacity
-          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 items-center justify-center rounded-lg"
-          style={{ backgroundColor: colors.primary + '1A', maxWidth: 32 }}
-          onPress={() => updateForm(isEnd ? "endTime" : "startTime", getCurrentTime())}
-        >
-          <Ionicons name="time-outline" size={16} color={colors.primary} />
-        </TouchableOpacity>
+        <View className="absolute right-1 top-0 bottom-0 flex-row items-center gap-0.5">
+          <TouchableOpacity
+            className="h-10 w-8 items-center justify-center"
+            onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, 10))}
+          >
+            <Ionicons name="chevron-up" size={18} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="h-10 w-8 items-center justify-center"
+            onPress={() => updateForm(isEnd ? "endTime" : "startTime", getCurrentTime())}
+          >
+            <Ionicons name="time-outline" size={16} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="h-10 w-8 items-center justify-center"
+            onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, -10))}
+          >
+            <Ionicons name="chevron-down" size={18} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
