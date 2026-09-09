@@ -385,7 +385,7 @@ export default function QuoteForm() {
                   value={line.details}
                   onChangeText={(v) => updateLine(idx, "details", v)}
                 />
-                <View className="flex-col md:flex-row md:items-end md:justify-start md:gap-x-1">
+                <View className="flex-col md:flex-row md:items-start md:justify-start md:gap-x-1">
                 <View className="md:max-w-[200px]">
                   <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
                   <View className="flex-row items-center gap-1">
