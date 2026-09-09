@@ -18,6 +18,40 @@ function detectPlatform(): PlatformKind {
   return "desktop";
 }
 
+const DISMISS_FOR_MS = 7 * 24 * 60 * 60 * 1000;
+const KEY_INSTALLED = "pwa_installed";
+const KEY_DISMISSED_AT = "pwa_dismissed_at";
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  if (typeof navigator !== "undefined" && (navigator as any).standalone === true) return true;
+  return window.matchMedia("(display-mode: standalone)").matches;
+}
+
+function readFlag(key: string): boolean {
+  try {
+    return window.localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function readDismissedAt(): number {
+  try {
+    return parseInt(window.localStorage.getItem(KEY_DISMISSED_AT) || "0", 10);
+  } catch {
+    return 0;
+  }
+}
+
+function markInstalled(): void {
+  try {
+    window.localStorage.setItem(KEY_INSTALLED, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function InstallPwaBanner() {
   const { t } = useLanguage();
   const { colors } = useTheme();
@@ -30,8 +64,11 @@ export default function InstallPwaBanner() {
   useEffect(() => {
     if (Platform.OS !== "web") return;
 
+    if (isStandalone() || readFlag(KEY_INSTALLED)) return;
+
     let shownOnce = false;
     const show = () => {
+      if (Date.now() - readDismissedAt() < DISMISS_FOR_MS) return;
       if (!shownOnce) {
         shownOnce = true;
         setVisible(true);
@@ -47,6 +84,7 @@ export default function InstallPwaBanner() {
       setInstalled(true);
       setVisible(false);
       setDeferred(null);
+      markInstalled();
     };
 
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
@@ -62,6 +100,7 @@ export default function InstallPwaBanner() {
   }, []);
 
   if (Platform.OS !== "web") return null;
+  if (isStandalone() || readFlag(KEY_INSTALLED)) return null;
   if (!visible || installed) return null;
 
   const title = deferred
@@ -84,6 +123,7 @@ export default function InstallPwaBanner() {
       await deferred.prompt();
       const { outcome } = await deferred.userChoice;
       if (outcome === "accepted") {
+        markInstalled();
         setInstalled(true);
         setVisible(false);
       }
@@ -124,7 +164,18 @@ export default function InstallPwaBanner() {
       >
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <Text style={{ color: colors.text, fontWeight: "700", fontSize: 15 }}>{title}</Text>
-          <Pressable onPress={() => setVisible(false)} hitSlop={8} style={{ padding: 4 }}>
+          <Pressable
+            onPress={() => {
+              try {
+                window.localStorage.setItem(KEY_DISMISSED_AT, String(Date.now()));
+              } catch {
+                /* ignore */
+              }
+              setVisible(false);
+            }}
+            hitSlop={8}
+            style={{ padding: 4 }}
+          >
             <Text style={{ color: colors.textMuted, fontSize: 16 }}>✕</Text>
           </Pressable>
         </View>
