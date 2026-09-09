@@ -60,15 +60,8 @@ export default function InstallPwaBanner() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [showSteps, setShowSteps] = useState(false);
 
   const platform = detectPlatform();
-
-  function dontShowAgain(): void {
-    markInstalled();
-    setInstalled(true);
-    setVisible(false);
-  }
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -112,23 +105,6 @@ export default function InstallPwaBanner() {
   if (isStandalone() || readFlag(KEY_INSTALLED)) return null;
   if (!visible || installed) return null;
 
-  const steps =
-    platform === "ios"
-      ? [
-          "Safari'nin altındaki Paylaş (yukarı ok işaretli kutu) butonuna dokun.",
-          "Aşağı kaydır ve \u201CAna Ekrana Ekle\u201D seçeneğine dokun.",
-          "Sağ üstteki \u201CEkle\u201D butonuna dokun; uygulama ana ekrana yer işareti olarak eklenir.",
-        ]
-      : platform === "android"
-        ? [
-            "Tarayıcının sağ üst menüsünden (\u22EE) \u201CUygulamayı yükle\u201D seçeneğini seç.",
-            "Açılan pencerede \u201CYükle\u201D onayına dokun.",
-          ]
-        : [
-            "Tarayıcı adres çubuğunun sağındaki kurulum simgesini seç.",
-            "Açılan pencerede \u201CYükle\u201D butonuna tıkla.",
-          ];
-
   const title = deferred
     ? t("pwa.installTitle")
     : platform === "ios"
@@ -144,19 +120,32 @@ export default function InstallPwaBanner() {
         : t("pwa.desktopDesc");
 
   const handleInstall = async () => {
-    if (!deferred) return;
-    try {
-      await deferred.prompt();
-      const { outcome } = await deferred.userChoice;
-      if (outcome === "accepted") {
-        markInstalled();
-        setInstalled(true);
+    if (deferred) {
+      try {
+        await deferred.prompt();
+        const { outcome } = await deferred.userChoice;
+        if (outcome === "accepted") {
+          markInstalled();
+          setInstalled(true);
+          setVisible(false);
+        }
+      } catch {
+        setVisible(false);
+      } finally {
+        setDeferred(null);
+      }
+      return;
+    }
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: typeof document !== "undefined" ? document.title || "Loomy" : "Loomy",
+          url: typeof window !== "undefined" ? window.location.href : undefined,
+        });
+      } catch {
         setVisible(false);
       }
-    } catch {
-      setVisible(false);
-    } finally {
-      setDeferred(null);
     }
   };
 
@@ -206,73 +195,19 @@ export default function InstallPwaBanner() {
           </Pressable>
         </View>
         <Text style={{ color: colors.textSecondary, fontSize: 13.5, lineHeight: 19, marginBottom: 12 }}>{desc}</Text>
-        {showSteps ? (
-          <View style={{ gap: 10 }}>
-            {steps.map((s, i) => (
-              <View key={i} style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
-                <View
-                  style={{
-                    backgroundColor: colors.primary,
-                    borderRadius: 999,
-                    width: 22,
-                    height: 22,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginTop: 1,
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>{i + 1}</Text>
-                </View>
-                <Text style={{ color: colors.textSecondary, fontSize: 13.5, lineHeight: 19, flex: 1 }}>{s}</Text>
-              </View>
-            ))}
-            <View style={{ gap: 8, marginTop: 4 }}>
-              <Pressable
-                onPress={dontShowAgain}
-                style={{
-                  backgroundColor: colors.primary,
-                  borderRadius: 10,
-                  paddingVertical: 12,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>
-                  {"Kurulumu tamamladım, bir daha sorma"}
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setShowSteps(false)}
-                style={{ paddingVertical: 6, alignItems: "center" }}
-              >
-                <Text style={{ color: colors.textMuted, fontSize: 14 }}>{"Geri"}</Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : deferred ? (
-          <Pressable
-            onPress={handleInstall}
-            style={{
-              backgroundColor: colors.primary,
-              borderRadius: 10,
-              paddingVertical: 12,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>{t("pwa.install")}</Text>
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={() => setShowSteps(true)}
-            style={{
-              backgroundColor: colors.primary,
-              borderRadius: 10,
-              paddingVertical: 12,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>{"Ana Ekrana Ekle"}</Text>
-          </Pressable>
-        )}
+        <Pressable
+          onPress={handleInstall}
+          style={{
+            backgroundColor: colors.primary,
+            borderRadius: 10,
+            paddingVertical: 12,
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>
+            {deferred ? t("pwa.install") : "Ana Ekrana Ekle"}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
