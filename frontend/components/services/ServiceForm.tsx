@@ -17,25 +17,9 @@ const formatDateInput = (v: string) => {
   return formatted;
 };
 
-const formatTimeInput = (v: string) => {
-  const digits = v.replace(/\D/g, "").slice(0, 4);
-  if (digits.length >= 3) {
-    const h = Math.min(23, parseInt(digits.slice(0, 2), 10) || 0);
-    const m = Math.min(59, parseInt(digits.slice(2), 10) || 0);
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-  }
-  return digits;
-};
-
 const getCurrentTime = () => {
   const now = new Date();
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-};
-
-const adjustTime = (value: string, deltaMinutes: number) => {
-  const [h = 0, m = 0] = (value || "00:00").split(":").map((n) => parseInt(n, 10) || 0);
-  const total = (h * 60 + m + deltaMinutes + 24 * 60) % (24 * 60);
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
 
 const labelOf = (field: TemplateField, lang: string) => (lang === "tr" ? field.labelTr : field.labelEn);
@@ -415,7 +399,7 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
         <View className="relative flex-1">
           <TouchableOpacity
             activeOpacity={0.7}
-            className="w-full h-10 border rounded-lg px-3 pr-24 justify-center"
+            className="w-full h-10 border rounded-lg px-3 pr-16 justify-center"
             style={{ backgroundColor: colors.bg, borderColor: colors.border }}
             onPress={open}
           >
@@ -423,17 +407,14 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
               {value || "HH:MM"}
             </Text>
           </TouchableOpacity>
-          <View className="absolute right-1 top-0 bottom-0 flex-row items-center">
-            <TouchableOpacity className="h-10 w-9 items-center justify-center" onPress={open}>
-              <Ionicons name="time-outline" size={18} color={colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity className="h-10 w-9 items-center justify-center" onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, 10))}>
-              <Ionicons name="chevron-up" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity className="h-10 w-9 items-center justify-center" onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, -10))}>
-              <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2.5 flex-row items-center justify-center rounded-lg"
+            style={{ backgroundColor: colors.primary + '1A' }}
+            onPress={() => updateForm(isEnd ? "endTime" : "startTime", getCurrentTime())}
+          >
+            <Ionicons name="time-outline" size={16} color={colors.primary} />
+            <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("svc.now")}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
