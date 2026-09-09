@@ -385,27 +385,27 @@ export default function QuoteForm() {
                   value={line.details}
                   onChangeText={(v) => updateLine(idx, "details", v)}
                 />
-                <View className="flex-row gap-2">
-                  <View className="flex-1">
-                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
-                    <View className="flex-row items-center gap-1">
-                      <TextInput
-                        className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
-                        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
-                        keyboardType="decimal-pad"
-                        value={formatNumericInput(line.quantity)}
-                        onChangeText={(v) => updateLine(idx, "quantity", v)}
-                      />
-                      <TouchableOpacity
-                        className="h-9 border rounded-lg px-2 flex-row items-center justify-center"
-                        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, minWidth: 52 }}
-                        onPress={() => setUnitModalIdx(idx)}
-                      >
-                        <Text className="text-xs font-medium" style={{ color: colors.text }}>{line.unit || "Adet"}</Text>
-                        <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 3 }} />
-                      </TouchableOpacity>
-                    </View>
+                <View>
+                  <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
+                  <View className="flex-row items-center gap-1">
+                    <TextInput
+                      className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      keyboardType="decimal-pad"
+                      value={formatNumericInput(line.quantity)}
+                      onChangeText={(v) => updateLine(idx, "quantity", v)}
+                    />
+                    <TouchableOpacity
+                      className="h-9 border rounded-lg px-2 flex-row items-center justify-center"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, minWidth: 56 }}
+                      onPress={() => setUnitModalIdx(idx)}
+                    >
+                      <Text className="text-xs font-medium" style={{ color: colors.text }}>{line.unit || "Adet"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 3 }} />
+                    </TouchableOpacity>
                   </View>
+                </View>
+                <View className="flex-row items-end gap-2 mt-1.5">
                   <View className="flex-1">
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}</Text>
                     <TextInput
@@ -421,20 +421,20 @@ export default function QuoteForm() {
                       </Text>
                     )}
                   </View>
-                </View>
-                <View className="flex-row items-end gap-2 mt-1.5">
                   <View>
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.currency")}</Text>
                     <TouchableOpacity
                       className="h-9 border rounded-lg px-2 flex-row items-center justify-center"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, minWidth: 60 }}
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, minWidth: 64 }}
                       onPress={() => setCurrencyModalIdx(idx)}
                     >
                       <Text className="text-sm font-medium" style={{ color: colors.text }}>{line.currency || "TRY"}</Text>
                       <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 4 }} />
                     </TouchableOpacity>
                   </View>
-                  <View className="flex-1 items-end justify-end pb-1.5">
+                </View>
+                <View className="flex-row items-end justify-end mt-1.5">
+                  <View className="items-end">
                     <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(lineTotal)} {getCurrencySymbol(line.currency)}</Text>
                     {line.currency !== "TRY" && convertTry(lineTotal, line.currency) !== null && (
                       <Text className="text-[10px]" style={{ color: colors.textMuted }}>≈ {formatMoney(convertTry(lineTotal, line.currency)!)} ₺</Text>
