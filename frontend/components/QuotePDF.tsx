@@ -30,7 +30,7 @@ function renderCompanyFooter(
   if (data.companyWebsite) extra.push(`Web: ${escapeHtml(data.companyWebsite)}`);
   if (extra.length) lines.push(`<div class="footer-text">${extra.join(" &nbsp;&nbsp; ")}</div>`);
   if (data.companyTaxNumber) lines.push(`<div class="footer-text">${lang === "tr" ? "Vergi No" : "Tax No"}: ${escapeHtml(data.companyTaxNumber)}</div>`);
-  return `<div class="footer footer-push">\n${lines.join("\n    ")}\n  </div>`;
+  return lines.join("\n    ");
 }
 
 export function generateQuotePDFHtml(
@@ -95,7 +95,7 @@ export function generateQuotePDFHtml(
       <td class="num grand-value">${formatMoney(currencyGroups[cur].grandTotal)} ${sym}${grandTry !== null ? `<div class="converted">≈ ${formatMoney(grandTry)} ₺</div>` : ""}</td>
     </tr>`;
     })
-    .join(`<tr><td colspan="5" style="height:6px"></td></tr>`);
+    .join(`<tr><td colspan="6" style="height:6px"></td></tr>`);
 
   const grandTotalTry = Object.keys(currencyGroups).reduce((s, cur) => {
     const conv = convertToTry(currencyGroups[cur].grandTotal, cur, data.tryRates);
@@ -126,13 +126,15 @@ export function generateQuotePDFHtml(
     </tr>`
     : "";
 
+  const pageFooter = renderCompanyFooter(data, lang, t);
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
   <style>
-    @page { margin: 12mm; size: A4; }
+    @page { margin: 24mm 12mm 27mm 12mm; size: A4; }
     html, body {
       margin: 0;
       padding: 0;
@@ -142,28 +144,32 @@ export function generateQuotePDFHtml(
       font-size: 10px;
       color: #222238;
     }
-    .content-wrapper {
-      padding-bottom: 0;
-      min-height: 270mm;
-      display: flex;
-      flex-direction: column;
-    }
-    .company-header {
+
+    .page-header {
+      position: fixed;
+      top: -24mm;
+      left: -12mm;
+      right: -12mm;
+      height: 21mm;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
       border-bottom: 2px solid #222238;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      padding: 0 12mm;
+      background: #ffffff;
+      z-index: 10;
     }
-    .company-left {
+    .head-side {
       flex: 1;
       display: flex;
       align-items: center;
     }
+    .head-side.right {
+      justify-content: flex-end;
+    }
     .company-logo {
-      max-height: 48px;
+      max-height: 16mm;
       max-width: 140px;
       object-fit: contain;
     }
@@ -172,24 +178,20 @@ export function generateQuotePDFHtml(
       text-align: center;
     }
     .title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
       letter-spacing: 0.5px;
     }
     .title-sub {
-      font-size: 12px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      margin-top: 2px;
-    }
-    .quote-title {
       font-size: 11px;
       font-weight: bold;
-      margin-top: 4px;
+      letter-spacing: 1px;
+      margin-top: 1px;
     }
-    .title-area {
-      flex: 1;
-      text-align: right;
+    .quote-title {
+      font-size: 10px;
+      font-weight: bold;
+      margin-top: 2px;
     }
     .title-date {
       font-size: 9px;
@@ -197,8 +199,45 @@ export function generateQuotePDFHtml(
       margin-top: 2px;
       text-align: right;
     }
+
+    .page-footer {
+      position: fixed;
+      bottom: -27mm;
+      left: -12mm;
+      right: -12mm;
+      padding: 3mm 12mm 0;
+      border-top: 1px solid #ddd;
+      background: #ffffff;
+      z-index: 10;
+    }
+    .footer-text {
+      font-size: 8px;
+      color: #777;
+      line-height: 1.45;
+      text-align: center;
+    }
+    .privacy-note {
+      margin-top: 5px;
+      padding-top: 4px;
+      border-top: 1px solid #eee;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .privacy-title {
+      font-size: 7px;
+      font-weight: bold;
+      color: #888;
+    }
+    .privacy-body {
+      font-size: 7px;
+      color: #888;
+      line-height: 1.4;
+      margin-top: 1px;
+    }
+
     .section {
       margin-bottom: 8px;
+      page-break-inside: avoid;
     }
     .section-title {
       font-size: 10px;
@@ -212,6 +251,7 @@ export function generateQuotePDFHtml(
       display: flex;
       gap: 24px;
       margin-bottom: 8px;
+      page-break-inside: avoid;
     }
     .two-column .section {
       flex: 1;
@@ -229,10 +269,17 @@ export function generateQuotePDFHtml(
     .label {
       font-weight: bold;
     }
+
     .items-table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 8px;
+    }
+    .items-table thead {
+      display: table-header-group;
+    }
+    .items-table tr {
+      page-break-inside: avoid;
     }
     .items-table th {
       text-align: left;
@@ -241,6 +288,7 @@ export function generateQuotePDFHtml(
       text-transform: uppercase;
       border-bottom: 1.5px solid #222238;
       padding: 4px 6px;
+      background: #ffffff;
     }
     .items-table td {
       border-bottom: 1px solid #ddd;
@@ -260,13 +308,17 @@ export function generateQuotePDFHtml(
       color: #666;
       margin-top: 1px;
     }
+
     .total-section {
+      margin-top: 10px;
       display: flex;
       justify-content: flex-end;
+      page-break-inside: avoid;
     }
     .total-table {
       border-collapse: collapse;
       min-width: 200px;
+      page-break-inside: avoid;
     }
     .total-table td {
       padding: 3px 6px;
@@ -299,58 +351,35 @@ export function generateQuotePDFHtml(
       white-space: pre-wrap;
       color: #333;
     }
-    .footer {
-      margin-top: 14px;
-      border-top: 1px solid #ddd;
-      padding-top: 6px;
-      text-align: center;
-    }
-    .footer-push {
-      margin-top: auto;
-    }
-    .footer-text {
-      font-size: 9px;
-      color: #999;
-      line-height: 1.5;
-      text-align: center;
-    }
-    .privacy-note {
-      margin-top: 10px;
-      padding-top: 6px;
-      border-top: 1px solid #eee;
-      text-align: center;
-      page-break-inside: avoid;
-    }
-    .privacy-title {
-      font-size: 7px;
-      font-weight: bold;
-      color: #888;
-    }
-    .privacy-body {
-      font-size: 7px;
-      color: #888;
-      line-height: 1.4;
-      margin-top: 1px;
-    }
   </style>
 </head>
 <body>
-  <div class="content-wrapper">
-    <div class="company-header">
-      <div class="company-left">
-        ${data.companyLogo ? `<img class="company-logo" src="${data.companyLogo}" onerror="this.style.display='none'" />` : ""}
-      </div>
-      <div class="header-title">
-        <div class="title">${escapeHtml(data.companyName)}</div>
-        <div class="title-sub">${lang === "tr" ? "Teklif" : "Quote"}</div>
-        ${data.title ? `<div class="quote-title">${escapeHtml(data.title)}</div>` : ""}
-      </div>
-      <div class="title-area">
-        <div class="title-date">${t("qot.date")} ${escapeHtml(data.documentDate) || ""}</div>
+  <div class="page-header">
+    <div class="head-side">
+      ${data.companyLogo ? `<img class="company-logo" src="${data.companyLogo}" onerror="this.style.display='none'" />` : ""}
+    </div>
+    <div class="header-title">
+      <div class="title">${escapeHtml(data.companyName)}</div>
+      <div class="title-sub">${lang === "tr" ? "Teklif" : "Quote"}</div>
+      ${data.title ? `<div class="quote-title">${escapeHtml(data.title)}</div>` : ""}
+    </div>
+    <div class="head-side right">
+      <div>
+        <div class="title-date">${t("qot.date")} ${escapeHtml(data.documentDate)}</div>
         ${data.validUntil ? `<div class="title-date">${t("qot.validUntil")} ${escapeHtml(data.validUntil)}</div>` : ""}
       </div>
     </div>
+  </div>
 
+  <div class="page-footer">
+    ${pageFooter}
+    <div class="privacy-note">
+      <div class="privacy-title">${t("pdf.privacyNoteTitle")}</div>
+      <div class="privacy-body">${t("pdf.privacyNoteBody")}</div>
+    </div>
+  </div>
+
+  <div class="content">
     <div class="two-column">
       <div class="section">
         <div class="section-title">${t("qot.companyInfo")}</div>
@@ -380,11 +409,6 @@ export function generateQuotePDFHtml(
     </div>
 
     <div class="section">
-      <div class="section-title">${t("qot.notes")}</div>
-      <div class="notes-content">${escapeHtml(data.notes)}</div>
-    </div>
-
-    <div class="section">
       <div class="section-title">${t("qot.items")}</div>
       <table class="items-table">
         <thead>
@@ -404,21 +428,17 @@ export function generateQuotePDFHtml(
     </div>
 
     <div class="section">
-      <div class="total-section">
-        <table class="total-table">
-          <tbody>
-            ${totals}
-            ${tryInfoRows}
-          </tbody>
-        </table>
-      </div>
+      <div class="section-title">${t("qot.notes")}</div>
+      <div class="notes-content">${escapeHtml(data.notes)}</div>
     </div>
 
-    ${renderCompanyFooter(data, lang, t)}
-
-    <div class="privacy-note">
-      <div class="privacy-title">${t("pdf.privacyNoteTitle")}</div>
-      <div class="privacy-body">${t("pdf.privacyNoteBody")}</div>
+    <div class="section total-section">
+      <table class="total-table">
+        <tbody>
+          ${totals}
+          ${tryInfoRows}
+        </tbody>
+      </table>
     </div>
   </div>
 </body>
