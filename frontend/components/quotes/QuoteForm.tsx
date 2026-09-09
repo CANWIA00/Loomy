@@ -6,7 +6,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../api/customers";
-import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol } from "./types";
+import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, formatNumericInput } from "./types";
 
 const formatRate = (rate: number) =>
   rate.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -121,6 +121,7 @@ export default function QuoteForm() {
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
+  const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
   const addBtnRef = useRef<View>(null);
 
   const handleAddLine = () => {
@@ -179,6 +180,18 @@ export default function QuoteForm() {
               <Ionicons name="close-outline" size={16} color={colors.danger} />
             </TouchableOpacity>
           )}
+        </View>
+
+        <View className="mb-3">
+          <FieldLabel>{t("qot.quoteTitle")}</FieldLabel>
+          <TextInput
+            className="w-full h-10 border rounded-lg px-3 text-sm"
+            style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+            placeholder={t("qot.quoteTitlePlaceholder")}
+            placeholderTextColor={colors.textMuted}
+            value={form.title}
+            onChangeText={(v) => updateForm("title", v)}
+          />
         </View>
 
         <View className="flex-row gap-3 mb-3">
@@ -375,13 +388,23 @@ export default function QuoteForm() {
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
-                    <TextInput
-                      className="w-full h-9 border rounded-lg px-2.5 text-sm"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
-                      keyboardType="decimal-pad"
-                      value={String(line.quantity)}
-                      onChangeText={(v) => updateLine(idx, "quantity", v)}
-                    />
+                    <View className="flex-row items-center gap-1">
+                      <TextInput
+                        className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
+                        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                        keyboardType="decimal-pad"
+                        value={formatNumericInput(line.quantity)}
+                        onChangeText={(v) => updateLine(idx, "quantity", v)}
+                      />
+                      <TouchableOpacity
+                        className="h-9 border rounded-lg px-2 flex-row items-center justify-center"
+                        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, minWidth: 52 }}
+                        onPress={() => setUnitModalIdx(idx)}
+                      >
+                        <Text className="text-xs font-medium" style={{ color: colors.text }}>{line.unit || "Adet"}</Text>
+                        <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 3 }} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                   <View className="flex-1">
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}</Text>
@@ -389,7 +412,7 @@ export default function QuoteForm() {
                       className="w-full h-9 border rounded-lg px-2.5 text-sm"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
-                      value={String(line.unitPrice)}
+                      value={formatNumericInput(line.unitPrice)}
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
                     />
                     {line.currency !== "TRY" && convertTry(Number(line.unitPrice) || 0, line.currency) !== null && (
@@ -645,6 +668,35 @@ export default function QuoteForm() {
                 <Text className="text-[11px] font-medium ml-1" style={{ color: colors.primary }}>{t("qot.refreshRates")}</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={unitModalIdx !== null} transparent animationType="fade" onRequestClose={() => setUnitModalIdx(null)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-60 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("qot.unit")}</Text>
+              <TouchableOpacity onPress={() => setUnitModalIdx(null)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {UNIT_OPTIONS.map((u, i, arr) => (
+              <TouchableOpacity
+                key={u}
+                className="flex-row items-center px-3 py-3"
+                style={i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  if (unitModalIdx !== null) updateLine(unitModalIdx, "unit", u);
+                  setUnitModalIdx(null);
+                }}
+              >
+                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{u}</Text>
+                {form.lines[unitModalIdx ?? 0]?.unit === u && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       </Modal>

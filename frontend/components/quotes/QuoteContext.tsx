@@ -11,7 +11,7 @@ import { quoteApi, QuoteRecord } from "../../api/quotes";
 import { customerApi, Customer } from "../../api/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
-import { initialQuoteForm, emptyLine, type QuoteFormData, type QuotePdfData, type QuoteFilter } from "./types";
+import { initialQuoteForm, emptyLine, parseNumericInput, type QuoteFormData, type QuotePdfData, type QuoteFilter } from "./types";
 
 interface DeleteAlertState {
   visible: boolean;
@@ -30,7 +30,7 @@ interface QuoteContextValue {
   refreshRecords: () => void;
   form: QuoteFormData;
   updateForm: (key: keyof QuoteFormData, value: string) => void;
-  updateLine: (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency", value: string) => void;
+  updateLine: (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency" | "unit", value: string) => void;
   addLine: () => void;
   removeLine: (index: number) => void;
   scrollRef: React.RefObject<ScrollView | null>;
@@ -174,14 +174,12 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const updateForm = (key: keyof QuoteFormData, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const updateLine = (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency", value: string) =>
+  const updateLine = (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency" | "unit", value: string) =>
     setForm((prev) => {
       const lines = prev.lines.map((l, i) => {
         if (i !== index) return l;
         if (key === "quantity" || key === "unitPrice") {
-          const cleaned = value.replace(/[^0-9.,]/g, "").replace(",", ".");
-          const num = parseFloat(cleaned);
-          return { ...l, [key]: isNaN(num) ? 0 : num };
+          return { ...l, [key]: parseNumericInput(value) };
         }
         return { ...l, [key]: value };
       });
@@ -211,6 +209,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           quantity: Number(l.quantity) || 0,
           unitPrice: Number(l.unitPrice) || 0,
           currency: l.currency || "TRY",
+          unit: l.unit || "Adet",
         })),
       };
     setForm(finalForm);
@@ -221,6 +220,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const payload: Omit<QuoteRecord, "id"> = {
+        title: dataToSave.title || "",
         tarih: dataToSave.documentDate || new Date().toLocaleDateString(locale),
         customer: dataToSave.customerName,
         customerId: selectedCustomerId || undefined,
@@ -269,6 +269,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const handleEdit = (record: QuoteRecord) => {
     setForm({
+      title: record.title || "",
       customerName: record.customer || "",
       contactPerson: record.contactPerson || "",
       email: record.email || "",
@@ -316,6 +317,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     const savedRates =
       record.tryRates && record.tryRates.rates && Object.keys(record.tryRates.rates).length ? record.tryRates : null;
     return {
+    title: record.title || "",
     customerName: record.customer,
     contactPerson: record.contactPerson,
     documentDate: record.tarih,

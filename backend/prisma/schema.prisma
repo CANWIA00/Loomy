@@ -176,6 +176,7 @@ model Appointment {
 
 model QuoteRecord {
   id            Int      @id @default(autoincrement())
+  title         String?
   documentDate  String
   customerName  String
   customerId    String?
@@ -187,7 +188,7 @@ model QuoteRecord {
   address       String?
   subscriberNo  String?
   notes         String?
-  lines         String   @default("[]") // JSON string: [{name, details, quantity, unitPrice, currency}]
+  lines         String   @default("[]") // JSON string: [{name, details, quantity, unitPrice, currency, unit}]
   validUntil    String?
   tryRates      String? // JSON string: TCMB rate snapshot at creation time
   companyId     String

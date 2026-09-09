@@ -7,10 +7,12 @@ export interface QuoteLine {
   quantity: number;
   unitPrice: number;
   currency: string;
+  unit: string;
 }
 
 export interface QuoteRecord {
   id: number;
+  title: string;
   tarih: string;
   customer: string;
   customerId?: string;
@@ -29,6 +31,7 @@ export interface QuoteRecord {
 
 interface QuoteRecordBackend {
   id: number;
+  title?: string;
   documentDate: string;
   customerName: string;
   customerId?: string;
@@ -54,6 +57,7 @@ function toFrontend(b: QuoteRecordBackend): QuoteRecord {
   }
   return {
     id: b.id,
+    title: b.title || "",
     tarih: b.documentDate,
     customer: b.customerName,
     customerId: b.customerId || undefined,
@@ -73,6 +77,7 @@ function toFrontend(b: QuoteRecordBackend): QuoteRecord {
 
 function toBackend(f: Partial<QuoteRecord>): Record<string, any> {
   const data: Record<string, any> = {};
+  if (f.title !== undefined) data.title = f.title;
   if (f.tarih !== undefined) data.documentDate = f.tarih;
   if (f.customer !== undefined) data.customerName = f.customer;
   if (f.customerId !== undefined) data.customerId = f.customerId;

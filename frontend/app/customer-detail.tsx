@@ -545,6 +545,7 @@ export default function CustomerDetailScreen() {
 
   const resolveQuotePdf = async (q: QuoteRecord): Promise<QuotePdfData> => {
     const base: QuotePdfData = {
+      title: q.title || "",
       customerName: q.customer,
       contactPerson: q.contactPerson,
       documentDate: q.tarih,

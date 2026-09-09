@@ -121,9 +121,16 @@ export default function QuoteRecordsSection() {
                 style={{ borderColor: colors.borderAlt }}
               >
                 <Text className="w-24 text-xs" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
-                <Text className="flex-1 text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
-                  {k.customer}
-                </Text>
+                <View className="flex-1">
+                  <Text className="text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
+                    {k.customer}
+                  </Text>
+                  {k.title ? (
+                    <Text className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                      {k.title}
+                    </Text>
+                  ) : null}
+                </View>
                 <View className="w-28 items-end">
                   <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
                     {totalLabels}

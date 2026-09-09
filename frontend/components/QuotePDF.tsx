@@ -67,6 +67,7 @@ export function generateQuotePDFHtml(
           ${l.details ? `<div class="prod-details">${escapeHtml(l.details)}</div>` : ""}
         </td>
         <td class="num">${l.quantity}</td>
+        <td class="num">${escapeHtml(l.unit || "Adet")}</td>
         <td class="num">${formatMoney(l.unitPrice)} ${sym}</td>
         <td class="num">${formatMoney(total)} ${sym}${showTry ? `<div class="converted">≈ ${formatMoney(totalTry!)} ₺</div>` : ""}</td>
       </tr>`;
@@ -82,15 +83,15 @@ export function generateQuotePDFHtml(
       const grandTry = isTry ? null : convertToTry(currencyGroups[cur].grandTotal, cur, data.tryRates);
       return `
     <tr class="total-row">
-      <td class="tot-label" colspan="4">${lang === "tr" ? "Ara Toplam" : "Subtotal"} (${cur})</td>
+      <td class="tot-label" colspan="5">${lang === "tr" ? "Ara Toplam" : "Subtotal"} (${cur})</td>
       <td class="num tot-value">${formatMoney(currencyGroups[cur].subTotal)} ${sym}${subTry !== null ? `<div class="converted">≈ ${formatMoney(subTry)} ₺</div>` : ""}</td>
     </tr>
     <tr class="total-row">
-      <td class="tot-label" colspan="4">${lang === "tr" ? `KDV (%${Math.round(KDV_RATE * 100)})` : `VAT (${Math.round(KDV_RATE * 100)}%)`}</td>
+      <td class="tot-label" colspan="5">${lang === "tr" ? `KDV (%${Math.round(KDV_RATE * 100)})` : `VAT (${Math.round(KDV_RATE * 100)}%)`}</td>
       <td class="num tot-value">${formatMoney(currencyGroups[cur].kdv)} ${sym}${kdvTry !== null ? `<div class="converted">≈ ${formatMoney(kdvTry)} ₺</div>` : ""}</td>
     </tr>
     <tr class="grand-row">
-      <td class="tot-label" colspan="4">${lang === "tr" ? "Genel Toplam" : "Grand Total"} (${cur})</td>
+      <td class="tot-label" colspan="5">${lang === "tr" ? "Genel Toplam" : "Grand Total"} (${cur})</td>
       <td class="num grand-value">${formatMoney(currencyGroups[cur].grandTotal)} ${sym}${grandTry !== null ? `<div class="converted">≈ ${formatMoney(grandTry)} ₺</div>` : ""}</td>
     </tr>`;
     })
@@ -108,20 +109,19 @@ export function generateQuotePDFHtml(
   const tryInfoRows = ratesAvailable
     ? `
     <tr class="total-row">
-      <td class="tot-label" colspan="4">${rateLabel} (${data.tryRates!.source} · ${escapeHtml(data.tryRates!.rateDate)})</td>
+      <td class="tot-label" colspan="5">${rateLabel} (${data.tryRates!.source} · ${escapeHtml(data.tryRates!.rateDate)})</td>
     </tr>
     ${Object.keys(currencyGroups)
       .filter((cur) => cur !== "TRY")
       .map(
-        (cur) => `
-    <tr class="total-row">
-      <td class="tot-label" colspan="4">1 ${cur}</td>
+        (cur) => `<tr class="total-row">
+      <td class="tot-label" colspan="5">1 ${cur}</td>
       <td class="num tot-value">${data.tryRates!.rates[cur].toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ₺</td>
     </tr>`
       )
       .join("")}
     <tr class="grand-row">
-      <td class="tot-label" colspan="4">${lang === "tr" ? "Genel Toplam (₺)" : "Grand Total (₺)"}</td>
+      <td class="tot-label" colspan="5">${lang === "tr" ? "Genel Toplam (₺)" : "Grand Total (₺)"}</td>
       <td class="num grand-value">≈ ${formatMoney(grandTotalTry)} ₺</td>
     </tr>`
     : "";
@@ -181,6 +181,11 @@ export function generateQuotePDFHtml(
       font-weight: bold;
       letter-spacing: 1px;
       margin-top: 2px;
+    }
+    .quote-title {
+      font-size: 11px;
+      font-weight: bold;
+      margin-top: 4px;
     }
     .title-area {
       flex: 1;
@@ -338,6 +343,7 @@ export function generateQuotePDFHtml(
       <div class="header-title">
         <div class="title">${escapeHtml(data.companyName)}</div>
         <div class="title-sub">${lang === "tr" ? "Teklif" : "Quote"}</div>
+        ${data.title ? `<div class="quote-title">${escapeHtml(data.title)}</div>` : ""}
       </div>
       <div class="title-area">
         <div class="title-date">${t("qot.date")} ${escapeHtml(data.documentDate) || ""}</div>
@@ -386,12 +392,13 @@ export function generateQuotePDFHtml(
             <th class="num" style="width:20px">#</th>
             <th>${t("qot.product")}</th>
             <th class="num" style="width:40px">${t("qot.quantity")}</th>
+            <th class="num" style="width:50px">${t("qot.unit")}</th>
             <th class="num" style="width:70px">${t("qot.unitPrice")}</th>
             <th class="num" style="width:80px">${t("qot.total")}</th>
           </tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="5" style="color:#888">${t("qot.noItems")}</td></tr>`}
+          ${rows || `<tr><td colspan="6" style="color:#888">${t("qot.noItems")}</td></tr>`}
         </tbody>
       </table>
     </div>

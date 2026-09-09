@@ -40,7 +40,7 @@ export async function createQuoteRecord(
 ): Promise<void> {
   try {
     const {
-      documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
+      title, documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
       notes, lines, validUntil, tryRates,
     } = req.body;
     const companyId = req.user!.companyId!;
@@ -52,6 +52,7 @@ export async function createQuoteRecord(
 
     const record = await prisma.quoteRecord.create({
       data: {
+        title: title || null,
         documentDate: documentDate || new Date().toLocaleDateString("tr-TR"),
         customerName: customerName.trim(),
         customerId: customerId || null,
@@ -85,7 +86,7 @@ export async function updateQuoteRecord(
     const id = parseInt(String(req.params.id));
     const companyId = req.user!.companyId!;
     const {
-      documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
+      title, documentDate, customerName, customerId, contactPerson, email, phone, fax, website, subscriberNo, address,
       notes, lines, validUntil, tryRates,
     } = req.body;
 
@@ -101,6 +102,7 @@ export async function updateQuoteRecord(
     const record = await prisma.quoteRecord.update({
       where: { id },
       data: {
+        title: title ?? existing.title,
         documentDate: documentDate ?? existing.documentDate,
         customerName: customerName?.trim() ?? existing.customerName,
         customerId: customerId ?? existing.customerId,

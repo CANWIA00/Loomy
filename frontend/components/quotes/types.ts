@@ -19,6 +19,7 @@ export function getCurrencySymbol(code: string): string {
 }
 
 export interface QuoteFormData {
+  title: string;
   customerName: string;
   contactPerson: string;
   email: string;
@@ -33,9 +34,14 @@ export interface QuoteFormData {
   lines: QuoteLine[];
 }
 
-export const emptyLine = (): QuoteLine => ({ name: "", details: "", quantity: 1, unitPrice: 0, currency: "TRY" });
+export const UNIT_OPTIONS = ["Adet", "cm", "metre", "kg", "gram"] as const;
+
+export type UnitOption = (typeof UNIT_OPTIONS)[number];
+
+export const emptyLine = (): QuoteLine => ({ name: "", details: "", quantity: 1, unitPrice: 0, currency: "TRY", unit: "Adet" });
 
 export const initialQuoteForm: QuoteFormData = {
+  title: "",
   customerName: "",
   contactPerson: "",
   email: "",
@@ -50,7 +56,18 @@ export const initialQuoteForm: QuoteFormData = {
   lines: [emptyLine()],
 };
 
+export function parseNumericInput(value: string): number {
+  const cleaned = value.replace(/[^0-9.,]/g, "").replace(/\.(?=.*\.)/g, "").replace(",", ".");
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+}
+
+export function formatNumericInput(value: number): string {
+  return String(value || 0).replace(".", ",");
+}
+
 export interface QuotePdfData {
+  title: string;
   customerName: string;
   contactPerson: string;
   documentDate: string;
