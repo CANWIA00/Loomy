@@ -4,6 +4,7 @@ import prisma from "../prisma";
 import { generateToken } from "../services/jwt";
 import { AuthRequest } from "../middleware/auth";
 import { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from "../services/email";
+import { attemptKey, isBlocked, recordFailure, clearAttempts } from "../utils/rateLimit";
 
 export const PRIVACY_POLICY_VERSION = "1.0";
 
@@ -298,12 +299,22 @@ export async function login(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const limiterKey = attemptKey(req, email, "login");
+
+    if (isBlocked(limiterKey)) {
+      res.status(429).json({
+        message: "Çok fazla hatalı giriş denemesi. Lütfen 15 dakika sonra tekrar deneyin.",
+      });
+      return;
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
       include: { company: true },
     });
 
     if (!user) {
+      recordFailure(limiterKey);
       res.status(401).json({ message: "E-posta veya şifre hatalı." });
       return;
     }
@@ -334,9 +345,12 @@ export async function login(req: Request, res: Response): Promise<void> {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
+      recordFailure(limiterKey);
       res.status(401).json({ message: "E-posta veya şifre hatalı." });
       return;
     }
+
+    clearAttempts(limiterKey);
 
     const token = generateToken({
       id: user.id,

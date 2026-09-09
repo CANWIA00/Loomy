@@ -4,6 +4,7 @@ import crypto from "crypto";
 import prisma from "../prisma";
 import { Role } from "@prisma/client";
 import { generateDevToken } from "../services/jwt";
+import { attemptKey, isBlocked, recordFailure, clearAttempts } from "../utils/rateLimit";
 
 function paramId(req: Request): string {
   return String(req.params.id);
@@ -26,6 +27,15 @@ export async function devLogin(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const limiterKey = attemptKey(req, email, "dev-login");
+
+    if (isBlocked(limiterKey)) {
+      res.status(429).json({
+        message: "Çok fazla hatalı deneme. Lütfen 15 dakika sonra tekrar deneyin.",
+      });
+      return;
+    }
+
     const expectedEmail = process.env.DEV_EMAIL;
     const expectedPassword = process.env.DEV_PASSWORD;
 
@@ -40,9 +50,12 @@ export async function devLogin(req: Request, res: Response): Promise<void> {
       crypto.timingSafeEqual(Buffer.from(password), Buffer.from(expectedPassword));
 
     if (!emailOk || !passwordOk) {
+      recordFailure(limiterKey);
       res.status(401).json({ message: "E-posta veya şifre hatalı." });
       return;
     }
+
+    clearAttempts(limiterKey);
 
     const token = generateDevToken();
     res.json({ token, email: email.trim().toLowerCase() });
