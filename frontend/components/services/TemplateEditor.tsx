@@ -8,20 +8,19 @@ import { useAuth } from "../../contexts/AuthContext";
 import { templateApi, ServiceTemplate } from "../../api/templates";
 import { serviceApi } from "../../api/services";
 import { translateLabel } from "../../api/translate";
-import { type TemplateChipGroup, type TemplateField, type ServiceTemplateConfig } from "./types";
+import { type TemplateChipGroup, type TemplateField, type ServiceTemplateConfig, defaultTemplateConfig } from "./types";
 import CustomAlert from "../CustomAlert";
 
 const sortGroups = (a: TemplateChipGroup, b: TemplateChipGroup) => a.order - b.order;
 
 const GROUP_INPUT_TYPES = ["multi", "radio", "select", "text"] as const;
 
-const FIXED_FIELD_KEYS = ["customerName", "serviceAddress", "startTime", "endTime", "phone", "technician", "documentDate"] as const;
-
 const normalizeFields = (fields: TemplateField[]): TemplateField[] => {
-  const kept = fields.filter((f) => f.key === "details" || f.key === "fee" || f.key.startsWith("custom_"));
-  if (!kept.some((f) => f.key === "details")) kept.unshift({ key: "details", labelTr: "Detaylar", labelEn: "Details", enabled: true, order: 10 });
-  if (!kept.some((f) => f.key === "fee")) kept.push({ key: "fee", labelTr: "Servis Ücreti", labelEn: "Service Fee", enabled: true, order: 20 });
-  return kept;
+  const defaults = defaultTemplateConfig().fields;
+  const byKey = new Map<string, TemplateField>();
+  fields.forEach((f) => byKey.set(f.key, f));
+  defaults.forEach((d) => { if (!byKey.has(d.key)) byKey.set(d.key, d); });
+  return [...byKey.values()].sort((a, b) => a.order - b.order);
 };
 
 export default function TemplateEditor() {
@@ -284,7 +283,14 @@ export default function TemplateEditor() {
     }
   };
 
-  const toggleOptionalField = (key: string) => {
+  const setFieldRequired = (key: string, required: boolean) => {
+    if (!draftFields) return;
+    setDraftFields(draftFields.map((f) =>
+      f.key === key ? { ...f, required, enabled: required ? true : f.enabled } : f
+    ));
+  };
+
+  const toggleFieldVisibility = (key: string) => {
     if (!draftFields) return;
     setDraftFields(draftFields.map((f) => (f.key === key ? { ...f, enabled: !f.enabled } : f)));
   };
@@ -295,13 +301,8 @@ export default function TemplateEditor() {
     const maxOrder = draftFields.reduce((max, f) => Math.max(max, f.order || 0), 0);
     setDraftFields([
       ...draftFields,
-      { key, labelTr: t("tpl.newFieldTr"), labelEn: t("tpl.newFieldEn"), enabled: true, order: maxOrder + 1 },
+      { key, labelTr: t("tpl.newFieldTr"), labelEn: t("tpl.newFieldEn"), enabled: true, required: false, order: maxOrder + 1 },
     ]);
-  };
-
-  const toggleCustomField = (key: string) => {
-    if (!draftFields) return;
-    setDraftFields(draftFields.map((f) => (f.key === key ? { ...f, enabled: !f.enabled } : f)));
   };
 
   const deleteCustomField = (key: string) => {
@@ -426,55 +427,39 @@ export default function TemplateEditor() {
                     )}
                   </View>
 
-                  <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.optionalFields")}</Text>
-                  <Text className="text-xs mb-2" style={{ color: colors.textMuted }}>{t("tpl.optionalFieldsHint")}</Text>
-                  {draftFields && draftFields.filter((f) => f.key === "details" || f.key === "fee").map((f) => {
-                    const fLabel = labelOf(f.labelTr, f.labelEn);
-                    return (
-                      <View key={f.key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
-                        <Text className="flex-1 text-sm" style={{ color: f.enabled ? colors.text : colors.textMuted }}>{fLabel}</Text>
-                        <Switch
-                          value={f.enabled}
-                          onValueChange={() => toggleOptionalField(f.key)}
-                          trackColor={{ false: colors.border, true: colors.primary }}
-                          thumbColor="#fff"
-                        />
-                      </View>
-                    );
-                  })}
-
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.customFieldsSection")}</Text>
                   <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.customFieldsHint")}</Text>
-                  {FIXED_FIELD_KEYS.map((key) => (
-                    <View key={key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.borderAlt, backgroundColor: colors.bgCard2 }}>
-                      <Ionicons name="lock-closed" size={15} color={colors.textMuted} />
-                      <Text className="flex-1 text-sm ml-2" style={{ color: colors.textSecondary }}>{t(`svc.${key}`)}</Text>
-                      <Text className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.bg, color: colors.textMuted }}>
-                        {t("tpl.fixedLocked")}
-                      </Text>
-                    </View>
-                  ))}
-                  <View className="h-px my-2" style={{ backgroundColor: colors.border }} />
-                  {draftFields && draftFields.filter((f) => f.key.startsWith("custom_")).map((f) => {
+                  {draftFields && draftFields.map((f) => {
                     const fLabel = labelOf(f.labelTr, f.labelEn);
+                    const isCustom = f.key.startsWith("custom_");
                     return (
                       <View key={f.key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
-                        <Text className="flex-1 text-sm" style={{ color: f.enabled ? colors.text : colors.textMuted }}>{fLabel}</Text>
-                        <TouchableOpacity
-                          className="px-1.5"
-                          onPress={() => setEditNameModal({ kind: "customField", groupKey: f.key, value: fLabel })}
-                        >
-                          <Ionicons name="create-outline" size={18} color={colors.teal} />
+                        <Ionicons name={f.required ? "lock-closed" : "lock-open-outline"} size={14} color={f.required ? colors.primary : colors.textMuted} />
+                        <Text className="flex-1 text-sm ml-2" style={{ color: (f.required || f.enabled) ? colors.text : colors.textMuted }}>{fLabel}</Text>
+                        <View className="flex-row rounded-lg overflow-hidden border mr-1" style={{ borderColor: colors.border }}>
+                          <TouchableOpacity onPress={() => setFieldRequired(f.key, true)} className="px-2 h-7 items-center justify-center" style={{ backgroundColor: f.required ? colors.primary : colors.bgInput }}>
+                            <Text className="text-[10px] font-medium" style={{ color: f.required ? "white" : colors.textSecondary }}>{t("tpl.required")}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => setFieldRequired(f.key, false)} className="px-2 h-7 items-center justify-center" style={{ backgroundColor: f.required ? colors.bgInput : colors.primary }}>
+                            <Text className="text-[10px]" style={{ color: f.required ? colors.textSecondary : "white" }}>{t("tpl.optional")}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        {!f.required && (
+                          <Switch
+                            value={f.enabled}
+                            onValueChange={() => toggleFieldVisibility(f.key)}
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor="#fff"
+                          />
+                        )}
+                        <TouchableOpacity className="px-1.5 ml-1" onPress={() => setEditNameModal({ kind: "customField", groupKey: f.key, value: fLabel })}>
+                          <Ionicons name="create-outline" size={16} color={colors.teal} />
                         </TouchableOpacity>
-                        <TouchableOpacity className="px-1.5" onPress={() => deleteCustomField(f.key)}>
-                          <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                        </TouchableOpacity>
-                        <Switch
-                          value={f.enabled}
-                          onValueChange={() => toggleCustomField(f.key)}
-                          trackColor={{ false: colors.border, true: colors.primary }}
-                          thumbColor="#fff"
-                        />
+                        {isCustom && (
+                          <TouchableOpacity className="px-1.5" onPress={() => deleteCustomField(f.key)}>
+                            <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                          </TouchableOpacity>
+                        )}
                       </View>
                     );
                   })}

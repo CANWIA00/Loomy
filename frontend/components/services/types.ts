@@ -99,6 +99,7 @@ export interface TemplateField {
   labelEn: string;
   enabled: boolean;
   order: number;
+  required?: boolean;
   inputType?: TemplateFieldInputType;
   options?: TemplateChipOption[];
 }
@@ -126,21 +127,38 @@ export interface ServiceTemplateConfig {
 
 export const isCustomField = (key: string) => key.startsWith("custom_");
 
+export function effectiveFields(cfg?: ServiceTemplateConfig | null): TemplateField[] {
+  const defaults = defaultTemplateConfig().fields;
+  const configFields: TemplateField[] = (cfg && Array.isArray(cfg.fields) && cfg.fields.length) ? cfg.fields : defaults;
+  const byKey = new Map<string, TemplateField>();
+  configFields.forEach((f) => byKey.set(f.key, f));
+  defaults.forEach((d) => { if (!byKey.has(d.key)) byKey.set(d.key, d); });
+  return [...byKey.values()]
+    .filter((f) => f.required === true || f.enabled !== false)
+    .sort((a, b) => a.order - b.order);
+}
+
 export const FIELD_INPUT_TYPES: TemplateFieldInputType[] = ["text", "number", "textarea", "select", "radio", "multi"];
 
 export const fieldNeedsOptions = (type?: TemplateFieldInputType) =>
   type === "select" || type === "radio" || type === "multi";
 
-export const OPTIONAL_FIELDS = ["details", "fee"] as const;
-export const FIXED_FIELDS = ["serviceAddress", "startTime", "endTime", "phone", "technician", "documentDate"] as const;
+export const BASE_FIELD_KEYS = ["customerName", "serviceAddress", "startTime", "endTime", "phone", "technician", "documentDate"] as const;
 
 export function defaultTemplateConfig(): ServiceTemplateConfig {
   return {
     fields: [
-      { key: "details", labelTr: "Detaylar", labelEn: "Details", enabled: true, order: 10 },
-      { key: "fee", labelTr: "Servis Ücreti", labelEn: "Service Fee", enabled: true, order: 20 },
-      { key: "custom_internalIp", labelTr: "Dahili IP", labelEn: "Internal IP", enabled: true, order: 30 },
-      { key: "custom_externalIp", labelTr: "Harici IP", labelEn: "External IP", enabled: true, order: 40 },
+      { key: "customerName", labelTr: "Müşteri Adı", labelEn: "Customer Name", enabled: true, order: 10, required: true },
+      { key: "serviceAddress", labelTr: "Servis Adresi", labelEn: "Service Address", enabled: true, order: 20, required: true },
+      { key: "startTime", labelTr: "Başlangıç Saati", labelEn: "Start Time", enabled: true, order: 30, required: true },
+      { key: "endTime", labelTr: "Bitiş Saati", labelEn: "End Time", enabled: true, order: 40, required: true },
+      { key: "phone", labelTr: "Müşteri Telefonu", labelEn: "Customer Phone", enabled: true, order: 50, required: true },
+      { key: "technician", labelTr: "Teknisyen", labelEn: "Technician", enabled: true, order: 60, required: true },
+      { key: "documentDate", labelTr: "Belge Tarihi", labelEn: "Document Date", enabled: true, order: 70, required: true },
+      { key: "details", labelTr: "Detaylar", labelEn: "Details", enabled: true, order: 80, required: false },
+      { key: "fee", labelTr: "Servis Ücreti", labelEn: "Service Fee", enabled: true, order: 90, required: false },
+      { key: "custom_internalIp", labelTr: "Dahili IP", labelEn: "Internal IP", enabled: true, order: 100, required: false },
+      { key: "custom_externalIp", labelTr: "Harici IP", labelEn: "External IP", enabled: true, order: 110, required: false },
     ],
     chipGroups: [
       {

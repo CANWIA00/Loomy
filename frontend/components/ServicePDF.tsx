@@ -155,10 +155,20 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
 `;
   };
 
+  const fieldsConfig: any[] = data.templateConfig && Array.isArray(data.templateConfig.fields) && data.templateConfig.fields.length
+    ? data.templateConfig.fields
+    : null;
+
+  const fieldActive = (key: string): boolean => {
+    if (!fieldsConfig) return true;
+    const f = fieldsConfig.find((x: any) => x.key === key);
+    if (!f) return false;
+    return f.required === true || f.enabled !== false;
+  };
+
   const renderCustomFields = (): string => {
-    const cfg = data.templateConfig;
-    const fields = cfg && Array.isArray(cfg.fields) ? cfg.fields : [];
-    const customFields = fields.filter((f: any) => String(f.key || "").startsWith("custom_") && f.enabled !== false);
+    if (!fieldsConfig) return "";
+    const customFields = fieldsConfig.filter((f: any) => String(f.key || "").startsWith("custom_") && (f.required === true || f.enabled !== false));
     if (!customFields.length) return "";
     const items = customFields
       .map((f: any) => {
@@ -413,13 +423,15 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
 
   ${renderCustomFields()}
 
+  ${fieldActive("details") ? `
   <div class="section">
     <div class="section-title">${t("pdf.detailsNotes")}</div>
     <div class="details-content">
       ${escapeHtml(data.details || '')}
     </div>
-  </div>
+  </div>` : ''}
 
+  ${fieldActive("fee") ? `
   <div class="section section-push">
     <div class="section-title">${t("pdf.serviceFee")}</div>
     <div class="fee-content">
@@ -428,7 +440,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
         t("pdf.freeService")
       }
     </div>
-  </div>
+  </div>` : ''}
 
   <div class="signature-section">
     <div class="signature-box">

@@ -6,7 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useServices } from "./ServicesContext";
-import { type TemplateField, type TemplateChipGroup } from "./types";import SvgAwareImage from "../SvgAwareImage";
+import { type TemplateField, type TemplateChipGroup, effectiveFields } from "./types";import SvgAwareImage from "../SvgAwareImage";
 import { getCurrentAddress } from "../../utils/location";
 
 const formatDateInput = (v: string) => {
@@ -178,14 +178,15 @@ function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
   );
 }
 
-function FeeField() {
+function FeeField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { lang } = useLanguage();
   const { form, updateForm } = useServices();
+  const label = labelOf(field, lang);
 
   return (
     <View className="mb-3">
-      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.fee")}</Text>
+      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
       <TextInput
         className="w-full h-10 border rounded-lg px-3 text-sm"
         style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
@@ -199,14 +200,15 @@ function FeeField() {
   );
 }
 
-function TechnicianField() {
+function TechnicianField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { lang } = useLanguage();
   const { form } = useServices();
+  const label = labelOf(field, lang);
 
   return (
     <View className="mb-3">
-      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.technician")}</Text>
+      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
       <View className="w-full h-10 border rounded-lg px-3 items-center justify-center flex-row" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
         <Ionicons name="person-outline" size={14} color={colors.primary} />
         <Text className="text-sm ml-1.5 flex-1" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>{form.technician || "-"}</Text>
@@ -215,14 +217,15 @@ function TechnicianField() {
   );
 }
 
-function DocumentDateField() {
+function DocumentDateField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { form, updateForm } = useServices();
+  const label = labelOf(field, lang);
 
   return (
     <View className="mb-3">
-      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.documentDate")}</Text>
+      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
       <View className="flex-row items-center">
         <TextInput
           className="flex-1 h-10 border rounded-lg px-3 text-sm"
@@ -247,15 +250,16 @@ function DocumentDateField() {
   );
 }
 
-function CustomerRow() {
+function CustomerRow({ customerName, address }: { customerName?: TemplateField; address?: TemplateField }) {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { form, updateForm, setMapSelectorVisible } = useServices();
 
-  return (
-    <View className="flex-row gap-3 mb-3">
-      <View className="flex-1">
-        <FieldLabel>{t("svc.customerName")}</FieldLabel>
+  const cols: ReactNode[] = [];
+  if (customerName) {
+    cols.push(
+      <View key="name" className="flex-1">
+        <FieldLabel>{labelOf(customerName, lang)}</FieldLabel>
         <TextInput
           className="w-full h-10 border rounded-lg px-3 text-sm"
           style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
@@ -265,8 +269,12 @@ function CustomerRow() {
           onChangeText={(v) => updateForm("customerName", v)}
         />
       </View>
-      <View className="flex-1">
-        <FieldLabel>{t("svc.serviceAddress")}</FieldLabel>
+    );
+  }
+  if (address) {
+    cols.push(
+      <View key="address" className="flex-1">
+        <FieldLabel>{labelOf(address, lang)}</FieldLabel>
         <View className="relative flex-1">
           <TextInput
             className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
@@ -281,18 +289,20 @@ function CustomerRow() {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
-  );
+    );
+  }
+  if (!cols.length) return null;
+  return <View className="flex-row gap-3 mb-3">{cols}</View>;
 }
 
-function TimeRow() {
+function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { lang } = useLanguage();
   const { form, updateForm } = useServices();
 
-  const renderTimeField = (label: string, value: string, isEnd: boolean) => (
-    <View className="flex-1">
-      <FieldLabel>{label}</FieldLabel>
+  const renderTimeField = (field: TemplateField, value: string, isEnd: boolean) => (
+    <View key={field.key} className="flex-1">
+      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
       <View className="relative flex-1">
         <TextInput
           className="w-full h-10 border rounded-lg px-3 pr-28 text-sm"
@@ -328,23 +338,23 @@ function TimeRow() {
     </View>
   );
 
-  return (
-    <View className="flex-row gap-3 mb-3">
-      {renderTimeField(t("svc.startTime"), form.startTime, false)}
-      {renderTimeField(t("svc.endTime"), form.endTime, true)}
-    </View>
-  );
+  const cols: ReactNode[] = [];
+  if (start) cols.push(renderTimeField(start, form.startTime, false));
+  if (end) cols.push(renderTimeField(end, form.endTime, true));
+  if (!cols.length) return null;
+  return <View className="flex-row gap-3 mb-3">{cols}</View>;
 }
 
-function ContactRow() {
+function ContactRow({ phone }: { phone?: TemplateField }) {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { form, updateForm } = useServices();
 
+  if (!phone) return null;
   return (
     <View className="flex-row gap-3 mb-3">
       <View className="flex-1">
-        <FieldLabel>{t("svc.phone")}</FieldLabel>
+        <FieldLabel>{labelOf(phone, lang)}</FieldLabel>
         <TextInput
           className="w-full h-10 border rounded-lg px-3 text-sm"
           style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
@@ -409,11 +419,11 @@ function SingleField({ field }: { field: TemplateField }) {
   }
 
   if (field.key === "fee") {
-    return <FeeField />;
+    return <FeeField field={field} />;
   }
 
   if (field.key === "documentDate") {
-    return <DocumentDateField />;
+    return <DocumentDateField field={field} />;
   }
 
   if (inputType === "number") {
@@ -629,12 +639,19 @@ export default function ServiceForm() {
     setNewCustomerModal(true);
   };
 
-  const groups = templateConfig.chipGroups.filter((g) => g.enabled && g.options.length > 0).sort((a, b) => a.order - b.order);
-  const fields = templateConfig.fields.filter((f) => f.enabled).sort((a, b) => a.order - b.order);
-  const customFields = fields.filter((f) => f.key.startsWith("custom_"));
+  const groups = templateConfig.chipGroups.filter((g) => g.enabled !== false && g.options.length > 0).sort((a, b) => a.order - b.order);
+  const fields = effectiveFields(templateConfig);
 
+  const customerNameField = fields.find((f) => f.key === "customerName");
+  const addressField = fields.find((f) => f.key === "serviceAddress");
+  const startTimeField = fields.find((f) => f.key === "startTime");
+  const endTimeField = fields.find((f) => f.key === "endTime");
+  const phoneField = fields.find((f) => f.key === "phone");
+  const technicianField = fields.find((f) => f.key === "technician");
+  const documentDateField = fields.find((f) => f.key === "documentDate");
   const detailsField = fields.find((f) => f.key === "details");
   const feeField = fields.find((f) => f.key === "fee");
+  const customFields = fields.filter((f) => f.key.startsWith("custom_"));
 
   const orderedGroups = [...groups].sort((a, b) => a.order - b.order);
 
@@ -903,13 +920,13 @@ export default function ServiceForm() {
           </View>
         </Modal>
 
-        <CustomerRow />
+        <CustomerRow customerName={customerNameField} address={addressField} />
 
-        <TimeRow />
+        <TimeRow start={startTimeField} end={endTimeField} />
 
-        <ContactRow />
+        <ContactRow phone={phoneField} />
 
-        {feeField && <FeeField />}
+        {feeField && <FeeField field={feeField} />}
 
         {detailsField && <SingleField field={detailsField} />}
 
@@ -938,9 +955,9 @@ export default function ServiceForm() {
           </View>
         )}
 
-        <TechnicianField />
+        {technicianField && <TechnicianField field={technicianField} />}
 
-        <DocumentDateField />
+        {documentDateField && <DocumentDateField field={documentDateField} />}
 
         <View className="flex-row gap-2 mt-1">
           <TouchableOpacity
