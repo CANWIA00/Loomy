@@ -34,7 +34,7 @@ export interface QuoteFormData {
   lines: QuoteLine[];
 }
 
-export const UNIT_OPTIONS = ["Adet", "cm", "metre", "kg", "gram"] as const;
+export const UNIT_OPTIONS = ["Adet", "Kutu", "Koli", "Kg", "Gram", "metre", "cm", "lt", "ml"] as const;
 
 export type UnitOption = (typeof UNIT_OPTIONS)[number];
 

@@ -459,7 +459,7 @@ export default function QuoteForm() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                <View className="flex-row items-end gap-2 mt-1.5" style={isDesktop ? { marginTop: 0 } : undefined}>
+                <View className="flex-row items-end gap-2 mt-4" style={isDesktop ? { marginTop: 0 } : undefined}>
                   <View className="flex-1" style={isDesktop ? { maxWidth: 220 } : undefined}>
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}</Text>
                     <TextInput
