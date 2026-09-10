@@ -546,6 +546,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "tpl.typeSelect": "Select",
     "tpl.typeRadio": "Radio",
     "tpl.typeMulti": "Çoklu Seçim",
+    "tpl.itemsLabel": "öğe",
+    "tpl.editGroupName": "Grup Adını Düzenle",
+    "tpl.editOptionName": "Seçenek Adını Düzenle",
     "tpl.preset.general": "Genel Servis",
     "tpl.preset.generalDesc": "Tüm standart alanlar ve seçenekler dahil",
     "tpl.preset.alarm": "Alarm Bakım",
@@ -561,7 +564,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "tpl.preset.commissioning": "Devreye Alma",
     "tpl.preset.commissioningDesc": "Sistemi devreye alma, eğitim ve test",
     "tpl.preset.blank": "Sıfırdan Başla",
-    "tpl.preset blankDesc": "Boş şablon ile başlayıp tümünü siz düzenleyin",
+    "tpl.preset.blankDesc": "Boş şablon ile başlayıp tümünü siz düzenleyin",
 
     // Login
     "login.subtitle": "Servis Takip Platformu",
@@ -1469,6 +1472,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "tpl.typeSelect": "Select",
     "tpl.typeRadio": "Radio",
     "tpl.typeMulti": "Multi Select",
+    "tpl.itemsLabel": "items",
+    "tpl.editGroupName": "Edit Group Name",
+    "tpl.editOptionName": "Edit Option Name",
     "tpl.preset.general": "General Service",
     "tpl.preset.generalDesc": "All standard fields and options included",
     "tpl.preset.alarm": "Alarm Maintenance",

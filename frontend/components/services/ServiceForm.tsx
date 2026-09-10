@@ -44,7 +44,7 @@ function FieldLabel({ children }: { children: ReactNode }) {
 function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
   const { colors } = useTheme();
   const { lang } = useLanguage();
-  const { form, toggleChip, setGroupValue } = useServices();
+  const { form, toggleChip, setGroupValue, updateCustomField } = useServices();
   const [selectOpen, setSelectOpen] = useState(false);
   const label = lang === "tr" ? group.labelTr : group.labelEn;
   const inputType = group.inputType || "multi";
@@ -57,6 +57,31 @@ function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
         : form.customChips[group.key] || [];
 
   if (!group.options.length) return null;
+
+  if (inputType === "text") {
+    return (
+      <View className="mb-3">
+        <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
+        {group.options.map((opt) => {
+          const optLabel = lang === "tr" ? opt.labelTr : opt.labelEn;
+          const value = form.customValues[opt.key] || "";
+          return (
+            <View key={opt.key} className="mb-2">
+              <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{optLabel}</Text>
+              <TextInput
+                className="w-full h-10 border rounded-lg px-3 text-sm"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                value={value}
+                onChangeText={(v) => updateCustomField(opt.key, v)}
+                placeholder={optLabel}
+                placeholderTextColor={colors.textMuted}
+              />
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
 
   if (inputType === "select") {
     const value = selected.length ? selected[selected.length - 1] : "";

@@ -115,7 +115,7 @@ export interface TemplateChipGroup {
   labelEn: string;
   enabled: boolean;
   order: number;
-  inputType?: "radio" | "select" | "multi";
+  inputType?: "radio" | "select" | "multi" | "text";
   options: TemplateChipOption[];
 }
 

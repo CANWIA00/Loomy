@@ -104,6 +104,22 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
         .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
         .map((g: any) => {
           const title = (lang === "tr" ? g.labelTr : g.labelEn) || g.labelTr || g.labelEn || "";
+          const inputType = g.inputType || "multi";
+
+          if (inputType === "text") {
+            const items = (g.options || [])
+              .map((o: any) => {
+                const label = (lang === "tr" ? o.labelTr : o.labelEn) || o.labelTr || o.labelEn || "";
+                const value = (data.customValues || {})[o.key] || "";
+                if (!value) return "";
+                return `<div class="info-item"><span class="label">${escapeHtml(label)}</span> <span class="value">${escapeHtml(value)}</span></div>`;
+              })
+              .filter(Boolean)
+              .join("");
+            if (!items) return "";
+            return `<div class="section"><div class="section-title">${escapeHtml(title)}</div><div class="info-list">${items}</div></div>`;
+          }
+
           const values =
             g.key === "services"
               ? data.services || []
