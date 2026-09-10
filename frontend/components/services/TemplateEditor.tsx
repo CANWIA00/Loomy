@@ -426,17 +426,6 @@ export default function TemplateEditor() {
                     )}
                   </View>
 
-                  <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.fixedFields")}</Text>
-                  <Text className="text-xs mb-2" style={{ color: colors.textMuted }}>{t("tpl.fixedFieldsHint")}</Text>
-                  <View className="flex-row flex-wrap gap-1.5 mb-4">
-                    {FIXED_FIELD_KEYS.map((key) => (
-                      <View key={key} className="flex-row items-center px-2.5 h-7 rounded-lg" style={{ backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border }}>
-                        <Ionicons name="lock-closed" size={10} color={colors.textMuted} />
-                        <Text className="text-[11px] ml-1.5" style={{ color: colors.textSecondary }}>{t(`svc.${key}`)}</Text>
-                      </View>
-                    ))}
-                  </View>
-
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.optionalFields")}</Text>
                   <Text className="text-xs mb-2" style={{ color: colors.textMuted }}>{t("tpl.optionalFieldsHint")}</Text>
                   {draftFields && draftFields.filter((f) => f.key === "details" || f.key === "fee").map((f) => {
@@ -456,6 +445,16 @@ export default function TemplateEditor() {
 
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.customFieldsSection")}</Text>
                   <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.customFieldsHint")}</Text>
+                  {FIXED_FIELD_KEYS.map((key) => (
+                    <View key={key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.borderAlt, backgroundColor: colors.bgCard2 }}>
+                      <Ionicons name="lock-closed" size={15} color={colors.textMuted} />
+                      <Text className="flex-1 text-sm ml-2" style={{ color: colors.textSecondary }}>{t(`svc.${key}`)}</Text>
+                      <Text className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.bg, color: colors.textMuted }}>
+                        {t("tpl.fixedLocked")}
+                      </Text>
+                    </View>
+                  ))}
+                  <View className="h-px my-2" style={{ backgroundColor: colors.border }} />
                   {draftFields && draftFields.filter((f) => f.key.startsWith("custom_")).map((f) => {
                     const fLabel = labelOf(f.labelTr, f.labelEn);
                     return (
