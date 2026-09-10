@@ -418,8 +418,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       services: record.hizmetler || [],
       technical: record.teknik || [],
       customChips: record.customChips || {},
-      customValues: record.customValues || {},
+      customValues: { ...(record.customValues || {}) },
     };
+    if (record.dahiliIp && !editForm.customValues.custom_internalIp) editForm.customValues.custom_internalIp = record.dahiliIp;
+    if (record.hariciIp && !editForm.customValues.custom_externalIp) editForm.customValues.custom_externalIp = record.hariciIp;
     originalFormRef.current = { ...editForm };
     setForm(editForm);
     setEditingId(record.id);

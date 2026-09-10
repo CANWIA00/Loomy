@@ -178,33 +178,23 @@ function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
   );
 }
 
-function FeeTechnicianRow({ field }: { field: TemplateField }) {
+function FeeField() {
   const { colors } = useTheme();
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   const { form, updateForm } = useServices();
-  const label = lang === "tr" ? field.labelTr : field.labelEn;
 
   return (
-    <View className="flex-row gap-3 mb-3">
-      <View className="flex-1">
-        <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
-        <TextInput
-          className="w-full h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder="0.00"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="decimal-pad"
-          value={form.fee}
-          onChangeText={(v) => updateForm("fee", v.replace(/[^0-9.]/g, ""))}
-        />
-      </View>
-      <View className="flex-1">
-        <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.technician")}</Text>
-        <View className="w-full h-10 border rounded-lg px-3 items-center justify-center flex-row" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-          <Ionicons name="person-outline" size={14} color={colors.primary} />
-          <Text className="text-sm ml-1.5 flex-1" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>{form.technician || "-"}</Text>
-        </View>
-      </View>
+    <View className="mb-3">
+      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.fee")}</Text>
+      <TextInput
+        className="w-full h-10 border rounded-lg px-3 text-sm"
+        style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+        placeholder="0.00"
+        placeholderTextColor={colors.textMuted}
+        keyboardType="decimal-pad"
+        value={form.fee}
+        onChangeText={(v) => updateForm("fee", v.replace(/[^0-9.]/g, ""))}
+      />
     </View>
   );
 }
@@ -225,15 +215,14 @@ function TechnicianField() {
   );
 }
 
-function DocumentDateField({ field }: { field: TemplateField }) {
+function DocumentDateField() {
   const { colors } = useTheme();
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   const { form, updateForm } = useServices();
-  const label = lang === "tr" ? field.labelTr : field.labelEn;
 
   return (
     <View className="mb-3">
-      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
+      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.documentDate")}</Text>
       <View className="flex-row items-center">
         <TextInput
           className="flex-1 h-10 border rounded-lg px-3 text-sm"
@@ -258,9 +247,9 @@ function DocumentDateField({ field }: { field: TemplateField }) {
   );
 }
 
-function CustomerRow({ address }: { address?: TemplateField }) {
+function CustomerRow() {
   const { colors } = useTheme();
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   const { form, updateForm, setMapSelectorVisible } = useServices();
 
   return (
@@ -276,36 +265,34 @@ function CustomerRow({ address }: { address?: TemplateField }) {
           onChangeText={(v) => updateForm("customerName", v)}
         />
       </View>
-      {address && (
-        <View className="flex-1">
-          <FieldLabel>{labelOf(address, lang)}</FieldLabel>
-          <View className="relative flex-1">
-            <TextInput
-              className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
-              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-              placeholder={t("svc.serviceAddressPlaceholder")}
-              placeholderTextColor={colors.textMuted}
-              value={form.serviceAddress}
-              onChangeText={(v) => updateForm("serviceAddress", v)}
-            />
-            <TouchableOpacity className="absolute right-2 top-1/2 -translate-y-1/2" onPress={() => setMapSelectorVisible(true)}>
-              <Ionicons name="locate-outline" size={20} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
+      <View className="flex-1">
+        <FieldLabel>{t("svc.serviceAddress")}</FieldLabel>
+        <View className="relative flex-1">
+          <TextInput
+            className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
+            style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+            placeholder={t("svc.serviceAddressPlaceholder")}
+            placeholderTextColor={colors.textMuted}
+            value={form.serviceAddress}
+            onChangeText={(v) => updateForm("serviceAddress", v)}
+          />
+          <TouchableOpacity className="absolute right-2 top-1/2 -translate-y-1/2" onPress={() => setMapSelectorVisible(true)}>
+            <Ionicons name="locate-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
         </View>
-      )}
+      </View>
     </View>
   );
 }
 
-function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
+function TimeRow() {
   const { colors } = useTheme();
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   const { form, updateForm } = useServices();
 
-  const renderTimeField = (field: TemplateField, value: string, isEnd: boolean) => (
+  const renderTimeField = (label: string, value: string, isEnd: boolean) => (
     <View className="flex-1">
-      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
+      <FieldLabel>{label}</FieldLabel>
       <View className="relative flex-1">
         <TextInput
           className="w-full h-10 border rounded-lg px-3 pr-28 text-sm"
@@ -343,44 +330,31 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
 
   return (
     <View className="flex-row gap-3 mb-3">
-      {start && renderTimeField(start, form.startTime, false)}
-      {end && renderTimeField(end, form.endTime, true)}
+      {renderTimeField(t("svc.startTime"), form.startTime, false)}
+      {renderTimeField(t("svc.endTime"), form.endTime, true)}
     </View>
   );
 }
 
-function ContactRow({ phone, internalIp }: { phone?: TemplateField; internalIp?: TemplateField }) {
+function ContactRow() {
   const { colors } = useTheme();
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   const { form, updateForm } = useServices();
 
   return (
     <View className="flex-row gap-3 mb-3">
-      {phone && (
-        <View className="flex-1">
-          <FieldLabel>{labelOf(phone, lang)}</FieldLabel>
-          <TextInput
-            className="w-full h-10 border rounded-lg px-3 text-sm"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-            placeholder={t("svc.phonePlaceholder")}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="phone-pad"
-            value={form.phone}
-            onChangeText={(v) => updateForm("phone", v)}
-          />
-        </View>
-      )}
-      {internalIp && (
-        <View className="flex-1">
-          <FieldLabel>{labelOf(internalIp, lang)}</FieldLabel>
-          <TextInput
-            className="w-full h-10 border rounded-lg px-3 text-sm"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-            value={form.internalIp}
-            onChangeText={(v) => updateForm("internalIp", v)}
-          />
-        </View>
-      )}
+      <View className="flex-1">
+        <FieldLabel>{t("svc.phone")}</FieldLabel>
+        <TextInput
+          className="w-full h-10 border rounded-lg px-3 text-sm"
+          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          placeholder={t("svc.phonePlaceholder")}
+          placeholderTextColor={colors.textMuted}
+          keyboardType="phone-pad"
+          value={form.phone}
+          onChangeText={(v) => updateForm("phone", v)}
+        />
+      </View>
     </View>
   );
 }
@@ -435,11 +409,11 @@ function SingleField({ field }: { field: TemplateField }) {
   }
 
   if (field.key === "fee") {
-    return <FeeTechnicianRow field={field} />;
+    return <FeeField />;
   }
 
   if (field.key === "documentDate") {
-    return <DocumentDateField field={field} />;
+    return <DocumentDateField />;
   }
 
   if (inputType === "number") {
@@ -596,7 +570,7 @@ function SingleField({ field }: { field: TemplateField }) {
 
 export default function ServiceForm() {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user } = useAuth();
   const {
     companyLogo,
@@ -624,6 +598,7 @@ export default function ServiceForm() {
     activeTemplate,
     selectTemplate,
     templateConfig,
+    updateCustomField,
   } = useServices();
 
   const isAdmin = user?.role === "ADMIN";
@@ -656,23 +631,12 @@ export default function ServiceForm() {
 
   const groups = templateConfig.chipGroups.filter((g) => g.enabled && g.options.length > 0).sort((a, b) => a.order - b.order);
   const fields = templateConfig.fields.filter((f) => f.enabled).sort((a, b) => a.order - b.order);
+  const customFields = fields.filter((f) => f.key.startsWith("custom_"));
 
-  const addressField = fields.find((f) => f.key === "serviceAddress");
-  const startTimeField = fields.find((f) => f.key === "startTime");
-  const endTimeField = fields.find((f) => f.key === "endTime");
-  const phoneField = fields.find((f) => f.key === "phone");
-  const internalIpField = fields.find((f) => f.key === "internalIp");
-  const feeEnabled = fields.some((f) => f.key === "fee");
+  const detailsField = fields.find((f) => f.key === "details");
+  const feeField = fields.find((f) => f.key === "fee");
 
-  const usedKeys = new Set(["serviceAddress", "startTime", "endTime", "phone", "internalIp"]);
-  const soloFields = fields.filter((f) => !usedKeys.has(f.key));
-  const orderedItems = [
-    ...soloFields.map((f) => ({ kind: "field" as const, field: f })),
-    ...groups.map((g) => ({ kind: "group" as const, group: g })),
-  ].sort((a, b) =>
-    (a.kind === "field" ? a.field.order : a.group.order) -
-    (b.kind === "field" ? b.field.order : b.group.order)
-  );
+  const orderedGroups = [...groups].sort((a, b) => a.order - b.order);
 
   return (
     <>
@@ -939,25 +903,44 @@ export default function ServiceForm() {
           </View>
         </Modal>
 
-        <CustomerRow address={addressField} />
+        <CustomerRow />
 
-        {(startTimeField || endTimeField) && (
-          <TimeRow start={startTimeField} end={endTimeField} />
+        <TimeRow />
+
+        <ContactRow />
+
+        {feeField && <FeeField />}
+
+        {detailsField && <SingleField field={detailsField} />}
+
+        {orderedGroups.map((g) => (
+          <ChipGroupSection key={g.key} group={g} />
+        ))}
+
+        {customFields.length > 0 && (
+          <View className="mb-3">
+            <Text className="text-xs font-bold mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.customerDetails")}</Text>
+            {customFields.map((cf) => (
+              <View key={cf.key} className="mb-2">
+                <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>
+                  {lang === "tr" ? cf.labelTr : cf.labelEn}
+                </Text>
+                <TextInput
+                  className="w-full h-10 border rounded-lg px-3 text-sm"
+                  style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                  value={form.customValues[cf.key] || ""}
+                  onChangeText={(v) => updateCustomField(cf.key, v)}
+                  placeholder={lang === "tr" ? cf.labelTr : cf.labelEn}
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+            ))}
+          </View>
         )}
 
-        {(phoneField || internalIpField) && (
-          <ContactRow phone={phoneField} internalIp={internalIpField} />
-        )}
+        <TechnicianField />
 
-        {orderedItems.map((item) =>
-          item.kind === "group" ? (
-            <ChipGroupSection key={item.group.key} group={item.group} />
-          ) : (
-            <SingleField key={item.field.key} field={item.field} />
-          )
-        )}
-
-        {!feeEnabled && <TechnicianField key="technician-only" />}
+        <DocumentDateField />
 
         <View className="flex-row gap-2 mt-1">
           <TouchableOpacity

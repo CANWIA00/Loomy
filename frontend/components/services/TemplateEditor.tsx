@@ -8,12 +8,21 @@ import { useAuth } from "../../contexts/AuthContext";
 import { templateApi, ServiceTemplate } from "../../api/templates";
 import { serviceApi } from "../../api/services";
 import { translateLabel } from "../../api/translate";
-import { type TemplateChipGroup, type TemplateChipOption } from "./types";
+import { type TemplateChipGroup, type TemplateField, type ServiceTemplateConfig } from "./types";
 import CustomAlert from "../CustomAlert";
 
 const sortGroups = (a: TemplateChipGroup, b: TemplateChipGroup) => a.order - b.order;
 
 const GROUP_INPUT_TYPES = ["multi", "radio", "select", "text"] as const;
+
+const FIXED_FIELD_KEYS = ["customerName", "serviceAddress", "startTime", "endTime", "phone", "technician", "documentDate"] as const;
+
+const normalizeFields = (fields: TemplateField[]): TemplateField[] => {
+  const kept = fields.filter((f) => f.key === "details" || f.key === "fee" || f.key.startsWith("custom_"));
+  if (!kept.some((f) => f.key === "details")) kept.unshift({ key: "details", labelTr: "Detaylar", labelEn: "Details", enabled: true, order: 10 });
+  if (!kept.some((f) => f.key === "fee")) kept.push({ key: "fee", labelTr: "Servis Ücreti", labelEn: "Service Fee", enabled: true, order: 20 });
+  return kept;
+};
 
 export default function TemplateEditor() {
   const { colors } = useTheme();
@@ -24,6 +33,7 @@ export default function TemplateEditor() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draft, setDraft] = useState<TemplateChipGroup[] | null>(null);
+  const [draftFields, setDraftFields] = useState<TemplateField[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
@@ -31,13 +41,13 @@ export default function TemplateEditor() {
   const [createModal, setCreateModal] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [editNameModal, setEditNameModal] = useState<{ kind: "group" | "option"; groupKey: string; optionKey?: string; value: string } | null>(null);
+  const [editNameModal, setEditNameModal] = useState<{ kind: "group" | "option" | "customField"; groupKey: string; optionKey?: string; value: string } | null>(null);
   const [translating, setTranslating] = useState(false);
   const [applyAlert, setApplyAlert] = useState<{
     oldName: string;
     newName: string;
-    config: TemplateChipGroup[];
-    oldState: { name: string; groups: TemplateChipGroup[] } | null;
+    config: ServiceTemplateConfig;
+    oldState: { name: string; groups: TemplateChipGroup[]; fields: TemplateField[] } | null;
     count: number;
   } | null>(null);
 
@@ -63,9 +73,11 @@ export default function TemplateEditor() {
     if (selected) {
       setDraftName(selected.name);
       setDraft(JSON.parse(JSON.stringify(selected.chipGroups)) as TemplateChipGroup[]);
+      setDraftFields(normalizeFields(JSON.parse(JSON.stringify(selected.fields)) as TemplateField[]));
     } else {
       setDraftName("");
       setDraft(null);
+      setDraftFields(null);
     }
   }, [selected]);
 
@@ -77,7 +89,7 @@ export default function TemplateEditor() {
     try {
       const created = await templateApi.create({
         name: newTemplateName.trim(),
-        fields: [],
+        fields: normalizeFields([]),
         chipGroups: [],
       });
       setTemplates((prev) => [...prev, created.data]);
@@ -93,14 +105,14 @@ export default function TemplateEditor() {
   };
 
   const handleSave = async () => {
-    if (!draftName.trim() || !draft || !selectedId) return;
+    if (!draftName.trim() || !draft || !draftFields || !selectedId) return;
     const oldName = selected?.name || draftName.trim();
     const oldState = selected
-      ? { name: selected.name, groups: JSON.parse(JSON.stringify(selected.chipGroups)) as TemplateChipGroup[] }
+      ? { name: selected.name, groups: JSON.parse(JSON.stringify(selected.chipGroups)) as TemplateChipGroup[], fields: JSON.parse(JSON.stringify(selected.fields)) as TemplateField[] }
       : null;
     setSaving(true);
     try {
-      await templateApi.update(selectedId, { name: draftName.trim(), fields: selected?.fields || [], chipGroups: draft });
+      await templateApi.update(selectedId, { name: draftName.trim(), fields: draftFields, chipGroups: draft });
       await loadTemplates();
       let count = 0;
       try {
@@ -108,7 +120,7 @@ export default function TemplateEditor() {
         count = c.data.count || 0;
       } catch {}
       if (count > 0) {
-        setApplyAlert({ oldName, newName: draftName.trim(), config: draft, oldState, count });
+        setApplyAlert({ oldName, newName: draftName.trim(), config: { fields: draftFields, chipGroups: draft }, oldState, count });
       } else {
         AlertNew(t("common.success"), t("tpl.saved"));
       }
@@ -140,10 +152,11 @@ export default function TemplateEditor() {
     setApplyAlert(null);
     setSaving(true);
     try {
-      await templateApi.update(selectedId, { name: oldState.name, fields: selected?.fields || [], chipGroups: oldState.groups });
+      await templateApi.update(selectedId, { name: oldState.name, fields: oldState.fields, chipGroups: oldState.groups });
       await loadTemplates();
       setDraftName(oldState.name);
       setDraft(JSON.parse(JSON.stringify(oldState.groups)) as TemplateChipGroup[]);
+      setDraftFields(normalizeFields(JSON.parse(JSON.stringify(oldState.fields)) as TemplateField[]));
       AlertNew(t("common.info"), t("tpl.operationCancelled"));
     } catch {
       AlertNew(t("common.error"), t("tpl.errorSave"));
@@ -244,7 +257,7 @@ export default function TemplateEditor() {
   };
 
   const saveNameEdit = async () => {
-    if (!editNameModal || !draft) return;
+    if (!editNameModal) return;
     const val = editNameModal.value.trim();
     if (!val) { setEditNameModal(null); return; }
     setTranslating(true);
@@ -252,9 +265,13 @@ export default function TemplateEditor() {
       const { tr, en } = await translateLabel(val);
       const finalTr = lang === "tr" ? val : tr || val;
       const finalEn = lang === "en" ? val : en || val;
-      if (editNameModal.kind === "group") {
+      if (editNameModal.kind === "customField" && draftFields) {
+        setDraftFields(draftFields.map((f) =>
+          f.key === editNameModal.groupKey ? { ...f, labelTr: finalTr, labelEn: finalEn } : f
+        ));
+      } else if (editNameModal.kind === "group" && draft) {
         setDraft(draft.map((g) => (g.key === editNameModal.groupKey ? { ...g, labelTr: finalTr, labelEn: finalEn } : g)));
-      } else if (editNameModal.optionKey) {
+      } else if (editNameModal.kind === "option" && editNameModal.optionKey && draft) {
         setDraft(draft.map((g) =>
           g.key === editNameModal.groupKey
             ? { ...g, options: g.options.map((o) => (o.key === editNameModal.optionKey ? { ...o, labelTr: finalTr, labelEn: finalEn } : o)) }
@@ -265,6 +282,31 @@ export default function TemplateEditor() {
       setTranslating(false);
       setEditNameModal(null);
     }
+  };
+
+  const toggleOptionalField = (key: string) => {
+    if (!draftFields) return;
+    setDraftFields(draftFields.map((f) => (f.key === key ? { ...f, enabled: !f.enabled } : f)));
+  };
+
+  const addCustomField = () => {
+    if (!draftFields) return;
+    const key = `custom_${Date.now()}`;
+    const maxOrder = draftFields.reduce((max, f) => Math.max(max, f.order || 0), 0);
+    setDraftFields([
+      ...draftFields,
+      { key, labelTr: t("tpl.newFieldTr"), labelEn: t("tpl.newFieldEn"), enabled: true, order: maxOrder + 1 },
+    ]);
+  };
+
+  const toggleCustomField = (key: string) => {
+    if (!draftFields) return;
+    setDraftFields(draftFields.map((f) => (f.key === key ? { ...f, enabled: !f.enabled } : f)));
+  };
+
+  const deleteCustomField = (key: string) => {
+    if (!draftFields) return;
+    setDraftFields(draftFields.filter((f) => f.key !== key));
   };
 
   if (!isAdmin) {
@@ -339,7 +381,7 @@ export default function TemplateEditor() {
                 </TouchableOpacity>
               </View>
 
-              {selected && draft && (
+              {selected && draft && draftFields && (
                 <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
                   <View className="flex-row items-center gap-2 mb-3">
                     <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{t("tpl.name")}</Text>
@@ -383,6 +425,68 @@ export default function TemplateEditor() {
                       </TouchableOpacity>
                     )}
                   </View>
+
+                  <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.fixedFields")}</Text>
+                  <Text className="text-xs mb-2" style={{ color: colors.textMuted }}>{t("tpl.fixedFieldsHint")}</Text>
+                  <View className="flex-row flex-wrap gap-1.5 mb-4">
+                    {FIXED_FIELD_KEYS.map((key) => (
+                      <View key={key} className="flex-row items-center px-2.5 h-7 rounded-lg" style={{ backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border }}>
+                        <Ionicons name="lock-closed" size={10} color={colors.textMuted} />
+                        <Text className="text-[11px] ml-1.5" style={{ color: colors.textSecondary }}>{t(`svc.${key}`)}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.optionalFields")}</Text>
+                  <Text className="text-xs mb-2" style={{ color: colors.textMuted }}>{t("tpl.optionalFieldsHint")}</Text>
+                  {draftFields && draftFields.filter((f) => f.key === "details" || f.key === "fee").map((f) => {
+                    const fLabel = labelOf(f.labelTr, f.labelEn);
+                    return (
+                      <View key={f.key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
+                        <Text className="flex-1 text-sm" style={{ color: f.enabled ? colors.text : colors.textMuted }}>{fLabel}</Text>
+                        <Switch
+                          value={f.enabled}
+                          onValueChange={() => toggleOptionalField(f.key)}
+                          trackColor={{ false: colors.border, true: colors.primary }}
+                          thumbColor="#fff"
+                        />
+                      </View>
+                    );
+                  })}
+
+                  <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.customFieldsSection")}</Text>
+                  <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.customFieldsHint")}</Text>
+                  {draftFields && draftFields.filter((f) => f.key.startsWith("custom_")).map((f) => {
+                    const fLabel = labelOf(f.labelTr, f.labelEn);
+                    return (
+                      <View key={f.key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
+                        <Text className="flex-1 text-sm" style={{ color: f.enabled ? colors.text : colors.textMuted }}>{fLabel}</Text>
+                        <TouchableOpacity
+                          className="px-1.5"
+                          onPress={() => setEditNameModal({ kind: "customField", groupKey: f.key, value: fLabel })}
+                        >
+                          <Ionicons name="create-outline" size={18} color={colors.teal} />
+                        </TouchableOpacity>
+                        <TouchableOpacity className="px-1.5" onPress={() => deleteCustomField(f.key)}>
+                          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                        </TouchableOpacity>
+                        <Switch
+                          value={f.enabled}
+                          onValueChange={() => toggleCustomField(f.key)}
+                          trackColor={{ false: colors.border, true: colors.primary }}
+                          thumbColor="#fff"
+                        />
+                      </View>
+                    );
+                  })}
+                  <TouchableOpacity
+                    className="flex-row items-center justify-center h-10 rounded-lg border border-dashed mb-5"
+                    style={{ borderColor: colors.border, backgroundColor: colors.bg }}
+                    onPress={addCustomField}
+                  >
+                    <Ionicons name="add" size={16} color={colors.primary} />
+                    <Text className="text-sm font-medium ml-1" style={{ color: colors.primary }}>{t("tpl.addCustomField")}</Text>
+                  </TouchableOpacity>
 
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.groupsSection")}</Text>
                   <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.groupsHint")}</Text>
@@ -553,7 +657,7 @@ export default function TemplateEditor() {
           <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-lg font-bold" style={{ color: colors.text }}>
-                {editNameModal?.kind === "group" ? t("tpl.editGroupName") : t("tpl.editOptionName")}
+                {editNameModal?.kind === "group" ? t("tpl.editGroupName") : editNameModal?.kind === "customField" ? t("tpl.editCustomFieldName") : t("tpl.editOptionName")}
               </Text>
               <TouchableOpacity onPress={() => setEditNameModal(null)}>
                 <Ionicons name="close" size={24} color={colors.textMuted} />
