@@ -9,6 +9,7 @@ interface Props {
   visible: boolean;
   invoice: InvoiceRecord | null;
   onClose: () => void;
+  onDelete?: (invoice: InvoiceRecord) => void;
 }
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -22,7 +23,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function InvoiceDetailModal({ visible, invoice, onClose }: Props) {
+export default function InvoiceDetailModal({ visible, invoice, onClose, onDelete }: Props) {
   const { colors } = useTheme();
   const { t } = useLanguage();
 
@@ -99,6 +100,16 @@ export default function InvoiceDetailModal({ visible, invoice, onClose }: Props)
               </View>
             ))}
           </ScrollView>
+
+          {onDelete ? (
+            <TouchableOpacity
+              className="h-11 rounded-lg items-center justify-center mt-3"
+              style={{ backgroundColor: colors.danger }}
+              onPress={() => onDelete(invoice)}
+            >
+              <Text style={{ color: "white" }} className="font-semibold">{t("stock.delete")}</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     </Modal>

@@ -8,6 +8,7 @@ import {
   addStockTransaction,
   listInvoices,
   importInvoiceXml,
+  deleteInvoice,
 } from "../controllers/stockController";
 import { authenticate, isAdmin } from "../middleware/auth";
 
@@ -17,6 +18,7 @@ router.use(authenticate, isAdmin);
 
 router.get("/invoices", listInvoices);
 router.post("/import-xml", importInvoiceXml);
+router.delete("/invoices/:id", deleteInvoice);
 
 router.get("/", listStockItems);
 router.post("/", createStockItem);

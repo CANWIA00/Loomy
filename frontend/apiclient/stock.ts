@@ -146,4 +146,7 @@ export const stockApi = {
 
   importXml: (xml: string, fileName?: string) =>
     apiClient.post<ImportResult>("/stock/import-xml", { xml, fileName, dryRun: false }),
+
+  deleteInvoice: (id: number) =>
+    apiClient.delete(`/stock/invoices/${id}`),
 };

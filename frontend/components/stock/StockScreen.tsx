@@ -161,6 +161,18 @@ export default function StockScreen() {
     }
   };
 
+  const doDeleteInvoice = async (inv: InvoiceRecord) => {
+    setInvoiceDetail(null);
+    try {
+      await stockApi.deleteInvoice(inv.id);
+      await loadItems();
+      loadInvoices();
+      setAlert({ visible: true, type: "success", title: t("stock.title"), message: t("stock.invoiceDeleted") });
+    } catch {
+      setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
+    }
+  };
+
   const lowStockCount = items.filter((i) => i.quantity <= i.minQuantity).length;
   const searchQ = search.trim().toLowerCase();
   const filteredItems = (itemFilter === "low" ? items.filter((i) => i.quantity <= i.minQuantity) : items)
@@ -436,6 +448,7 @@ export default function StockScreen() {
         visible={invoiceDetail !== null}
         invoice={invoiceDetail}
         onClose={() => setInvoiceDetail(null)}
+        onDelete={doDeleteInvoice}
       />
 
       <CustomAlert

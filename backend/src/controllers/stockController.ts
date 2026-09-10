@@ -444,3 +444,40 @@ export async function importInvoiceXml(
     res.status(500).json({ message: "Sunucu hatası: " + error.message });
   }
 }
+
+export async function deleteInvoice(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const id = Number(req.params.id);
+    const companyId = req.user!.companyId!;
+
+    const invoice = await prisma.invoice.findFirst({
+      where: { id, companyId },
+      include: {
+        transactions: { select: { id: true, stockItemId: true, change: true } },
+      },
+    });
+
+    if (!invoice) {
+      res.status(404).json({ message: "Fatura bulunamadı." });
+      return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const tr of invoice.transactions) {
+        await tx.stockItem.update({
+          where: { id: tr.stockItemId },
+          data: { quantity: { decrement: tr.change } },
+        });
+      }
+      await tx.invoice.delete({ where: { id } });
+    });
+
+    res.json({ message: "Fatura silindi ve stok miktarları geri alındı." });
+  } catch (error: any) {
+    console.error("DeleteInvoice error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
