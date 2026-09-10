@@ -40,11 +40,19 @@ export function formatDate(value: string | null | undefined): string {
 }
 
 export function parseNumericInput(value: string): number {
-  const cleaned = String(value || "")
-    .replace(/[^0-9.,\-]/g, "")
-    .replace(/\.(?=.*\.)/g, "")
-    .replace(",", ".");
-  const num = parseFloat(cleaned);
+  const cleaned = String(value || "").trim();
+  if (!cleaned) return 0;
+
+  let s = cleaned.replace(/[^0-9.,\-]/g, "");
+  const lastDot = s.lastIndexOf(".");
+  const lastComma = s.lastIndexOf(",");
+  const decimalSep = lastDot > lastComma ? "." : ",";
+  if (decimalSep === ",") {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else {
+    s = s.replace(/,/g, "");
+  }
+  const num = parseFloat(s);
   return Number.isFinite(num) ? num : 0;
 }
 

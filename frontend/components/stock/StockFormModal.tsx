@@ -122,7 +122,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   <TextInput
                     value={initialQty}
                     onChangeText={(v) => setInitialQty(v.replace(/[^0-9.,]/g, ""))}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                     editable={!isEdit}
                     className="rounded-lg px-3 py-2.5"
                     style={{ backgroundColor: colors.bgInput, color: colors.text, opacity: isEdit ? 0.5 : 1 }}
@@ -133,7 +133,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   <TextInput
                     value={minQty}
                     onChangeText={(v) => setMinQty(v.replace(/[^0-9.,]/g, ""))}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                     className="rounded-lg px-3 py-2.5"
                     style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
@@ -146,7 +146,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   <TextInput
                     value={unitPrice}
                     onChangeText={(v) => setUnitPrice(v.replace(/[^0-9.,]/g, ""))}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                     className="rounded-lg px-3 py-2.5"
                     style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
@@ -156,7 +156,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   <TextInput
                     value={vatRate}
                     onChangeText={(v) => setVatRate(v.replace(/[^0-9.,]/g, ""))}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                     className="rounded-lg px-3 py-2.5"
                     style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
