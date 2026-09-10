@@ -27,6 +27,8 @@ export default function StockCard() {
   const { colors } = useTheme();
   const { t } = useLanguage();
 
+  const [expanded, setExpanded] = useState(false);
+
   const [items, setItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -115,18 +117,35 @@ export default function StockCard() {
 
   return (
     <View className="rounded-2xl p-4" style={{ backgroundColor: colors.bgCard }}>
-      <View className="flex-row items-center mb-3">
-        <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: colors.teal + "15" }}>
-          <Ionicons name="cube" size={20} color={colors.teal} />
-        </View>
-        <View className="ml-3 flex-1">
-          <Text style={{ color: colors.text }} className="text-lg font-bold">{t("dash.stock")}</Text>
-          <Text style={{ color: colors.textSecondary }} className="text-sm">
-            {t("dash.stock.desc")}
-          </Text>
-        </View>
+      <View className="flex-row items-center mb-0">
         <TouchableOpacity
-          className="h-8 px-3 rounded-lg items-center justify-center"
+          className="flex-row items-center flex-1"
+          activeOpacity={0.7}
+          onPress={() => setExpanded((v) => !v)}
+        >
+          <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: colors.teal + "15" }}>
+            <Ionicons name="cube" size={20} color={colors.teal} />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text style={{ color: colors.text }} className="text-lg font-bold">{t("dash.stock")}</Text>
+            <Text style={{ color: colors.textSecondary }} className="text-sm">
+              {t("dash.stock.desc")}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="w-8 h-8 rounded-lg items-center justify-center"
+          style={{ backgroundColor: colors.bgCard2 }}
+          onPress={() => setExpanded((v) => !v)}
+        >
+          <Ionicons
+            name={expanded ? "chevron-up" : "chevron-down"}
+            size={18}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="h-8 px-3 rounded-lg items-center justify-center ml-2"
           style={{ backgroundColor: colors.primary }}
           onPress={() => router.push("/stock" as any)}
         >
@@ -134,7 +153,9 @@ export default function StockCard() {
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row gap-2 mb-3">
+      {!expanded ? null : (
+        <>
+          <View className="flex-row gap-2 my-3">
         <View className="flex-1 rounded-xl px-3 py-2.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
           <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.totalProducts")}</Text>
           <Text className="text-lg font-bold" style={{ color: colors.text }}>{loading ? "-" : items.length}</Text>
@@ -216,6 +237,8 @@ export default function StockCard() {
           <Ionicons name="checkmark-circle-outline" size={28} color={colors.success} />
           <Text className="text-xs mt-2 text-center" style={{ color: colors.textMuted }}>{t("dash.stock.noLowStock")}</Text>
         </View>
+      )}
+        </>
       )}
 
       <StockDetailModal

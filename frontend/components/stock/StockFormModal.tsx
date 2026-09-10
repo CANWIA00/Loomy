@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { StockItem } from "../../apiclient/stock";
-import { parseNumericInput } from "./format";
+import { parseNumericInput, CURRENCIES, getCurrencySymbol } from "./format";
 
 interface Props {
   visible: boolean;
@@ -38,6 +39,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
   const [supplierName, setSupplierName] = useState("");
   const [supplierTaxNumber, setSupplierTaxNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [currencyModal, setCurrencyModal] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -98,12 +100,16 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                 </View>
                 <View className="flex-1">
                   <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.currency")}</Text>
-                  <TextInput
-                    value={currency}
-                    onChangeText={setCurrency}
-                    style={{ backgroundColor: colors.bgInput, color: colors.text }}
-                    className="rounded-lg px-3 py-2.5"
-                  />
+                  <TouchableOpacity
+                    onPress={() => setCurrencyModal(true)}
+                    className="rounded-lg px-3 py-2.5 flex-row items-center"
+                    style={{ backgroundColor: colors.bgInput }}
+                  >
+                    <Text style={{ color: colors.text }} className="flex-1">
+                      {currency} {getCurrencySymbol(currency)}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -198,6 +204,37 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal visible={currencyModal} transparent animationType="fade" onRequestClose={() => setCurrencyModal(false)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-72 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("stock.currency")}</Text>
+              <TouchableOpacity onPress={() => setCurrencyModal(false)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {CURRENCIES.map((c, i, arr) => (
+              <TouchableOpacity
+                key={c.code}
+                className="flex-row items-center px-3 py-3"
+                style={i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  setCurrency(c.code);
+                  setCurrencyModal(false);
+                }}
+              >
+                <Text className="text-base mr-2" style={{ color: colors.text }}>{c.symbol}</Text>
+                <View className="flex-1">
+                  <Text className="text-sm font-medium" style={{ color: colors.text }}>{c.code}</Text>
+                  <Text className="text-xs" style={{ color: colors.textMuted }}>{c.label}</Text>
+                </View>
+                {currency === c.code && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 }

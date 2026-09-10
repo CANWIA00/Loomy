@@ -1,4 +1,15 @@
-export const CURRENCIES = ["TRY", "USD", "EUR", "GBP"] as const;
+export interface CurrencyOption {
+  code: string;
+  symbol: string;
+  label: string;
+}
+
+export const CURRENCIES: CurrencyOption[] = [
+  { code: "TRY", symbol: "₺", label: "Türk Lirası" },
+  { code: "USD", symbol: "$", label: "US Dollar" },
+  { code: "EUR", symbol: "€", label: "Euro" },
+  { code: "GBP", symbol: "£", label: "British Pound" },
+];
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   TRY: "₺",
