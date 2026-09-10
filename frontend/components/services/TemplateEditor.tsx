@@ -8,7 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { templateApi, ServiceTemplate } from "../../api/templates";
 import { serviceApi } from "../../api/services";
 import { translateLabel } from "../../api/translate";
-import { type TemplateChipGroup, type TemplateField, type ServiceTemplateConfig, defaultTemplateConfig } from "./types";
+import { type TemplateChipGroup, type TemplateField, type ServiceTemplateConfig, defaultTemplateConfig, isGeneralField } from "./types";
 import CustomAlert from "../CustomAlert";
 
 const sortGroups = (a: TemplateChipGroup, b: TemplateChipGroup) => a.order - b.order;
@@ -310,6 +310,41 @@ export default function TemplateEditor() {
     setDraftFields(draftFields.filter((f) => f.key !== key));
   };
 
+  const renderFieldRow = (f: TemplateField) => {
+    const fLabel = labelOf(f.labelTr, f.labelEn);
+    const isCustom = f.key.startsWith("custom_");
+    return (
+      <View key={f.key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
+        <Ionicons name={f.required ? "lock-closed" : "lock-open-outline"} size={14} color={f.required ? colors.primary : colors.textMuted} />
+        <Text className="flex-1 text-sm ml-2" style={{ color: (f.required || f.enabled) ? colors.text : colors.textMuted }}>{fLabel}</Text>
+        <View className="flex-row rounded-lg overflow-hidden border mr-1" style={{ borderColor: colors.border }}>
+          <TouchableOpacity onPress={() => setFieldRequired(f.key, true)} className="px-2 h-7 items-center justify-center" style={{ backgroundColor: f.required ? colors.primary : colors.bgInput }}>
+            <Text className="text-[10px] font-medium" style={{ color: f.required ? "white" : colors.textSecondary }}>{t("tpl.required")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setFieldRequired(f.key, false)} className="px-2 h-7 items-center justify-center" style={{ backgroundColor: f.required ? colors.bgInput : colors.primary }}>
+            <Text className="text-[10px]" style={{ color: f.required ? colors.textSecondary : "white" }}>{t("tpl.optional")}</Text>
+          </TouchableOpacity>
+        </View>
+        {!f.required && (
+          <Switch
+            value={f.enabled}
+            onValueChange={() => toggleFieldVisibility(f.key)}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor="#fff"
+          />
+        )}
+        <TouchableOpacity className="px-1.5 ml-1" onPress={() => setEditNameModal({ kind: "customField", groupKey: f.key, value: fLabel })}>
+          <Ionicons name="create-outline" size={16} color={colors.teal} />
+        </TouchableOpacity>
+        {isCustom && (
+          <TouchableOpacity className="px-1.5" onPress={() => deleteCustomField(f.key)}>
+            <Ionicons name="trash-outline" size={16} color={colors.danger} />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
   if (!isAdmin) {
     return (
       <ScrollView className="flex-1" style={{ backgroundColor: colors.bg }}>
@@ -429,40 +464,7 @@ export default function TemplateEditor() {
 
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.customFieldsSection")}</Text>
                   <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.customFieldsHint")}</Text>
-                  {draftFields && draftFields.map((f) => {
-                    const fLabel = labelOf(f.labelTr, f.labelEn);
-                    const isCustom = f.key.startsWith("custom_");
-                    return (
-                      <View key={f.key} className="flex-row items-center px-3 py-2.5 rounded-xl border mb-2" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
-                        <Ionicons name={f.required ? "lock-closed" : "lock-open-outline"} size={14} color={f.required ? colors.primary : colors.textMuted} />
-                        <Text className="flex-1 text-sm ml-2" style={{ color: (f.required || f.enabled) ? colors.text : colors.textMuted }}>{fLabel}</Text>
-                        <View className="flex-row rounded-lg overflow-hidden border mr-1" style={{ borderColor: colors.border }}>
-                          <TouchableOpacity onPress={() => setFieldRequired(f.key, true)} className="px-2 h-7 items-center justify-center" style={{ backgroundColor: f.required ? colors.primary : colors.bgInput }}>
-                            <Text className="text-[10px] font-medium" style={{ color: f.required ? "white" : colors.textSecondary }}>{t("tpl.required")}</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={() => setFieldRequired(f.key, false)} className="px-2 h-7 items-center justify-center" style={{ backgroundColor: f.required ? colors.bgInput : colors.primary }}>
-                            <Text className="text-[10px]" style={{ color: f.required ? colors.textSecondary : "white" }}>{t("tpl.optional")}</Text>
-                          </TouchableOpacity>
-                        </View>
-                        {!f.required && (
-                          <Switch
-                            value={f.enabled}
-                            onValueChange={() => toggleFieldVisibility(f.key)}
-                            trackColor={{ false: colors.border, true: colors.primary }}
-                            thumbColor="#fff"
-                          />
-                        )}
-                        <TouchableOpacity className="px-1.5 ml-1" onPress={() => setEditNameModal({ kind: "customField", groupKey: f.key, value: fLabel })}>
-                          <Ionicons name="create-outline" size={16} color={colors.teal} />
-                        </TouchableOpacity>
-                        {isCustom && (
-                          <TouchableOpacity className="px-1.5" onPress={() => deleteCustomField(f.key)}>
-                            <Ionicons name="trash-outline" size={16} color={colors.danger} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    );
-                  })}
+                  {draftFields && draftFields.filter((f) => !isGeneralField(f.key)).map((f) => renderFieldRow(f))}
                   <TouchableOpacity
                     className="flex-row items-center justify-center h-10 rounded-lg border border-dashed mb-5"
                     style={{ borderColor: colors.border, backgroundColor: colors.bg }}
@@ -471,6 +473,10 @@ export default function TemplateEditor() {
                     <Ionicons name="add" size={16} color={colors.primary} />
                     <Text className="text-sm font-medium ml-1" style={{ color: colors.primary }}>{t("tpl.addCustomField")}</Text>
                   </TouchableOpacity>
+
+                  <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.generalFieldsSection")}</Text>
+                  <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.generalFieldsHint")}</Text>
+                  {draftFields && draftFields.filter((f) => isGeneralField(f.key)).map((f) => renderFieldRow(f))}
 
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.groupsSection")}</Text>
                   <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.groupsHint")}</Text>

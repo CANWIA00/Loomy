@@ -125,6 +125,9 @@ export interface ServiceTemplateConfig {
   chipGroups: TemplateChipGroup[];
 }
 
+export const GENERAL_FIELD_KEYS = ["technician", "documentDate", "details", "fee"] as const;
+export const isGeneralField = (key: string) => (GENERAL_FIELD_KEYS as readonly string[]).includes(key);
+
 export const isCustomField = (key: string) => key.startsWith("custom_");
 
 export function effectiveFields(cfg?: ServiceTemplateConfig | null): TemplateField[] {
