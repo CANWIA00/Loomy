@@ -11,13 +11,12 @@ interface Props {
   onImported: (summary: { created: number; updated: number; totalLines: number }) => void;
 }
 
-function FileInput({ onFile }: { onFile: (name: string, content: string) => void }) {
+function FileInput({ triggerRef, onFile }: { triggerRef: React.MutableRefObject<any | null>; onFile: (name: string, content: string) => void }) {
   if (Platform.OS !== "web") return null;
-  const ref = useRef<any>(null);
   return React.createElement("input", {
     type: "file",
     accept: ".xml,text/xml,application/xml",
-    ref: (el: any) => { ref.current = el; },
+    ref: (el: any) => { triggerRef.current = el; },
     style: { display: "none" },
     onChange: (e: any) => {
       const file = e.target?.files?.[0];
@@ -117,7 +116,7 @@ export default function InvoiceImportModal({ visible, onClose, onImported }: Pro
             </TouchableOpacity>
           ) : null}
 
-          <FileInput onFile={onFileChosen} />
+          <FileInput triggerRef={fileTriggerRef} onFile={onFileChosen} />
 
           {fileName && !busy && !error ? (
             <View className="rounded-lg px-3 py-2 mb-3 flex-row items-center" style={{ backgroundColor: colors.success + "22", borderColor: colors.success + "66", borderWidth: 1 }}>
