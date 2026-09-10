@@ -178,42 +178,101 @@ function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
   );
 }
 
-function FeeField({ field }: { field: TemplateField }) {
+function FieldCell({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
-  const { lang } = useLanguage();
-  const { form, updateForm } = useServices();
+  const { lang, t } = useLanguage();
+  const { form, updateForm, updateCustomField } = useServices();
   const label = labelOf(field, lang);
 
+  const inputProps = {
+    className: "w-full h-10 border rounded-lg px-3 text-sm",
+    style: { backgroundColor: colors.bg, borderColor: colors.border, color: colors.text },
+    placeholderTextColor: colors.textMuted,
+  };
+
+  if (field.key === "technician") {
+    return (
+      <View className="flex-1 mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <View className="w-full h-10 border rounded-lg px-3 items-center justify-center flex-row" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+          <Ionicons name="person-outline" size={14} color={colors.primary} />
+          <Text className="text-sm ml-1.5 flex-1" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>{form.technician || "-"}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (field.key === "fee") {
+    return (
+      <View className="flex-1 mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <TextInput
+          {...inputProps}
+          placeholder="0.00"
+          keyboardType="decimal-pad"
+          value={form.fee}
+          onChangeText={(v) => updateForm("fee", v.replace(/[^0-9.]/g, ""))}
+        />
+      </View>
+    );
+  }
+
+  if (field.key === "phone") {
+    return (
+      <View className="flex-1 mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <TextInput
+          {...inputProps}
+          placeholder={t("svc.phonePlaceholder")}
+          keyboardType="phone-pad"
+          value={form.phone}
+          onChangeText={(v) => updateForm("phone", v)}
+        />
+      </View>
+    );
+  }
+
+  const isCustom = field.key.startsWith("custom_");
+  const customVal = isCustom
+    ? form.customValues[field.key] || ""
+    : field.key === "internalIp"
+      ? form.internalIp
+      : field.key === "externalIp"
+        ? form.externalIp
+        : form.customValues[field.key] || "";
+
+  const customUpdate = (v: string) => {
+    if (isCustom) updateCustomField(field.key, v);
+    else if (field.key === "internalIp") updateForm("internalIp", v);
+    else if (field.key === "externalIp") updateForm("externalIp", v);
+    else updateCustomField(field.key, v);
+  };
+
   return (
-    <View className="mb-3">
-      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
+    <View className="flex-1 mb-3">
+      <FieldLabel>{label}</FieldLabel>
       <TextInput
-        className="w-full h-10 border rounded-lg px-3 text-sm"
-        style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-        placeholder="0.00"
-        placeholderTextColor={colors.textMuted}
-        keyboardType="decimal-pad"
-        value={form.fee}
-        onChangeText={(v) => updateForm("fee", v.replace(/[^0-9.]/g, ""))}
+        {...inputProps}
+        placeholder={label}
+        value={customVal}
+        onChangeText={customUpdate}
       />
     </View>
   );
 }
 
-function TechnicianField({ field }: { field: TemplateField }) {
-  const { colors } = useTheme();
-  const { lang } = useLanguage();
-  const { form } = useServices();
-  const label = labelOf(field, lang);
-
+function FieldPairRow({ fields }: { fields: TemplateField[] }) {
+  if (!fields.length) return null;
+  const rows: TemplateField[][] = [];
+  for (let i = 0; i < fields.length; i += 2) rows.push(fields.slice(i, i + 2));
   return (
-    <View className="mb-3">
-      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
-      <View className="w-full h-10 border rounded-lg px-3 items-center justify-center flex-row" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-        <Ionicons name="person-outline" size={14} color={colors.primary} />
-        <Text className="text-sm ml-1.5 flex-1" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>{form.technician || "-"}</Text>
-      </View>
-    </View>
+    <>
+      {rows.map((row, ri) => (
+        <View key={ri} className="flex-row gap-3">
+          {row.map((f) => <FieldCell key={f.key} field={f} />)}
+        </View>
+      ))}
+    </>
   );
 }
 
@@ -345,30 +404,6 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
   return <View className="flex-row gap-3 mb-3">{cols}</View>;
 }
 
-function ContactRow({ phone }: { phone?: TemplateField }) {
-  const { colors } = useTheme();
-  const { lang, t } = useLanguage();
-  const { form, updateForm } = useServices();
-
-  if (!phone) return null;
-  return (
-    <View className="flex-row gap-3 mb-3">
-      <View className="flex-1">
-        <FieldLabel>{labelOf(phone, lang)}</FieldLabel>
-        <TextInput
-          className="w-full h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder={t("svc.phonePlaceholder")}
-          placeholderTextColor={colors.textMuted}
-          keyboardType="phone-pad"
-          value={form.phone}
-          onChangeText={(v) => updateForm("phone", v)}
-        />
-      </View>
-    </View>
-  );
-}
-
 function SingleField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
@@ -419,7 +454,20 @@ function SingleField({ field }: { field: TemplateField }) {
   }
 
   if (field.key === "fee") {
-    return <FeeField field={field} />;
+    return (
+      <View className="mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <TextInput
+          className="w-full h-10 border rounded-lg px-3 text-sm"
+          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          placeholder="0.00"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="decimal-pad"
+          value={form.fee}
+          onChangeText={(v) => updateForm("fee", v.replace(/[^0-9.]/g, ""))}
+        />
+      </View>
+    );
   }
 
   if (field.key === "documentDate") {
@@ -580,7 +628,7 @@ function SingleField({ field }: { field: TemplateField }) {
 
 export default function ServiceForm() {
   const { colors } = useTheme();
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const {
     companyLogo,
@@ -608,7 +656,6 @@ export default function ServiceForm() {
     activeTemplate,
     selectTemplate,
     templateConfig,
-    updateCustomField,
   } = useServices();
 
   const isAdmin = user?.role === "ADMIN";
@@ -924,38 +971,15 @@ export default function ServiceForm() {
 
         <TimeRow start={startTimeField} end={endTimeField} />
 
-        <ContactRow phone={phoneField} />
-
-        {feeField && <FeeField field={feeField} />}
-
-        {detailsField && <SingleField field={detailsField} />}
+        <FieldPairRow fields={[phoneField, ...customFields].filter((f): f is TemplateField => !!f)} />
 
         {orderedGroups.map((g) => (
           <ChipGroupSection key={g.key} group={g} />
         ))}
 
-        {customFields.length > 0 && (
-          <View className="mb-3">
-            <Text className="text-xs font-bold mb-1.5" style={{ color: colors.textSecondary }}>{t("svc.customerDetails")}</Text>
-            {customFields.map((cf) => (
-              <View key={cf.key} className="mb-2">
-                <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>
-                  {lang === "tr" ? cf.labelTr : cf.labelEn}
-                </Text>
-                <TextInput
-                  className="w-full h-10 border rounded-lg px-3 text-sm"
-                  style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-                  value={form.customValues[cf.key] || ""}
-                  onChangeText={(v) => updateCustomField(cf.key, v)}
-                  placeholder={lang === "tr" ? cf.labelTr : cf.labelEn}
-                  placeholderTextColor={colors.textMuted}
-                />
-              </View>
-            ))}
-          </View>
-        )}
+        {detailsField && <SingleField field={detailsField} />}
 
-        {technicianField && <TechnicianField field={technicianField} />}
+        <FieldPairRow fields={[feeField, technicianField].filter((f): f is TemplateField => !!f)} />
 
         {documentDateField && <DocumentDateField field={documentDateField} />}
 
