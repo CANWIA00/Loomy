@@ -40,6 +40,9 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
   const [supplierTaxNumber, setSupplierTaxNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [currencyModal, setCurrencyModal] = useState(false);
+  const [unitModal, setUnitModal] = useState(false);
+
+  const UNIT_OPTIONS = ["Adet", "Kutu", "Koli", "Kg", "Gram", "metre", "cm", "lt", "ml"] as const;
 
   useEffect(() => {
     if (visible) {
@@ -89,14 +92,14 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
               <View className="flex-row gap-2 mb-3">
                 <View className="flex-1">
                   <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.unit")}</Text>
-                  <TextInput
-                    value={unit}
-                    onChangeText={setUnit}
-                    placeholder={t("stock.unitPlaceholder")}
-                    placeholderTextColor={colors.textMuted}
-                    className="rounded-lg px-3 py-2.5"
-                    style={{ backgroundColor: colors.bgInput, color: colors.text }}
-                  />
+                  <TouchableOpacity
+                    onPress={() => setUnitModal(true)}
+                    className="rounded-lg px-3 py-2.5 flex-row items-center"
+                    style={{ backgroundColor: colors.bgInput }}
+                  >
+                    <Text style={{ color: colors.text }} className="flex-1">{unit}</Text>
+                    <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
                 </View>
                 <View className="flex-1">
                   <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.currency")}</Text>
@@ -115,7 +118,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
 
               <View className="flex-row gap-2 mb-3">
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.initialQty")}</Text>
+                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.qty")} ({unit})</Text>
                   <TextInput
                     value={initialQty}
                     onChangeText={(v) => setInitialQty(v.replace(/[^0-9.,]/g, ""))}
@@ -126,7 +129,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.minQty")}</Text>
+                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.minQty")} ({unit})</Text>
                   <TextInput
                     value={minQty}
                     onChangeText={(v) => setMinQty(v.replace(/[^0-9.,]/g, ""))}
@@ -204,6 +207,33 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal visible={unitModal} transparent animationType="fade" onRequestClose={() => setUnitModal(false)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-72 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("stock.unit")}</Text>
+              <TouchableOpacity onPress={() => setUnitModal(false)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {UNIT_OPTIONS.map((u, i, arr) => (
+              <TouchableOpacity
+                key={u}
+                className="flex-row items-center px-3 py-3"
+                style={i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  setUnit(u);
+                  setUnitModal(false);
+                }}
+              >
+                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{u}</Text>
+                {unit === u && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={currencyModal} transparent animationType="fade" onRequestClose={() => setCurrencyModal(false)}>
         <View className="flex-1 justify-center items-center bg-black/60">
