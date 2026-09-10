@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, useEffect, useCallback, type ReactNode } from "react";
 import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -6,6 +6,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../apiclient/customers";
+import { stockApi, type StockItem } from "../../apiclient/stock";
 import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, formatNumericInput } from "./types";
 
 const formatRate = (rate: number) =>
@@ -125,6 +126,34 @@ export default function QuoteForm() {
   const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
   const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
   const addBtnRef = useRef<View>(null);
+
+  const [stockSuggestions, setStockSuggestions] = useState<StockItem[]>([]);
+  const [stockSearchIdx, setStockSearchIdx] = useState<number | null>(null);
+  const stockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const searchStock = useCallback((q: string, idx: number) => {
+    if (stockTimerRef.current) clearTimeout(stockTimerRef.current);
+    if (!q.trim() || q.trim().length < 2) {
+      setStockSuggestions([]);
+      setStockSearchIdx(null);
+      return;
+    }
+    stockTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await stockApi.list(q.trim());
+        setStockSuggestions(res.data.content.slice(0, 8));
+        setStockSearchIdx(idx);
+      } catch {
+        setStockSuggestions([]);
+      }
+    }, 300);
+  }, []);
+
+  const selectStockItem = (idx: number, name: string) => {
+    updateLine(idx, "name", name);
+    setStockSuggestions([]);
+    setStockSearchIdx(null);
+  };
 
   const handleAddLine = () => {
     addLine();
@@ -356,16 +385,41 @@ export default function QuoteForm() {
             return (
               <View key={idx} className="rounded-xl border p-2.5 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.borderAlt }}>
                 <View className="flex-row items-center gap-2 mb-2">
-                  <View className="flex-1">
+                  <View className="flex-1" style={{ zIndex: stockSearchIdx === idx ? 50 : 1 }}>
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.productName")}</Text>
-                    <TextInput
-                      className="w-full h-9 border rounded-lg px-2.5 text-sm"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
-                      placeholder={t("qot.productNamePlaceholder")}
-                      placeholderTextColor={colors.textMuted}
-                      value={line.name}
-                      onChangeText={(v) => updateLine(idx, "name", v)}
-                    />
+                    <View>
+                      <TextInput
+                        className="w-full h-9 border rounded-lg px-2.5 text-sm"
+                        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                        placeholder={t("qot.productNamePlaceholder")}
+                        placeholderTextColor={colors.textMuted}
+                        value={line.name}
+                        onChangeText={(v) => {
+                          updateLine(idx, "name", v);
+                          searchStock(v, idx);
+                        }}
+                        onBlur={() => setTimeout(() => { setStockSuggestions([]); setStockSearchIdx(null); }, 200)}
+                      />
+                      {stockSearchIdx === idx && stockSuggestions.length > 0 ? (
+                        <View className="absolute top-9 left-0 right-0 rounded-lg border overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, zIndex: 100, maxHeight: 160 }}>
+                          <ScrollView keyboardShouldPersistTaps="handled">
+                            {stockSuggestions.map((s) => (
+                              <TouchableOpacity
+                                key={s.id}
+                                className="px-3 py-2 border-b"
+                                style={{ borderBottomColor: colors.border }}
+                                onPress={() => selectStockItem(idx, s.name)}
+                              >
+                                <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>{s.name}</Text>
+                                <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                                  {s.quantity} {s.unit} {s.supplierName ? `· ${s.supplierName}` : ""}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      ) : null}
+                    </View>
                   </View>
                   <TouchableOpacity
                     onPress={() => removeLine(idx)}
