@@ -45,11 +45,11 @@ function DashboardScreenInner() {
         </Text>
 
         <View className="flex-col gap-4">
+          {isAdmin && <StockCard />}
+
           <ServicesCard />
 
           {isAdmin && <QuotesCard />}
-
-          {isAdmin && <StockCard />}
 
           <View className="flex-col md:flex-row gap-4">
             <CustomersCard />
