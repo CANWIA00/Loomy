@@ -10,6 +10,7 @@ import QuotesCard from "../../components/dashboard/QuotesCard";
 import CustomersCard from "../../components/dashboard/CustomersCard";
 import PlanCard from "../../components/dashboard/PlanCard";
 import PaymentsCard from "../../components/dashboard/PaymentsCard";
+import StockCard from "../../components/dashboard/StockCard";
 import SettingsCard from "../../components/dashboard/SettingsCard";
 import PlanDetailModal from "../../components/dashboard/modals/PlanDetailModal";
 
@@ -47,6 +48,8 @@ function DashboardScreenInner() {
           <ServicesCard />
 
           {isAdmin && <QuotesCard />}
+
+          {isAdmin && <StockCard />}
 
           <View className="flex-col md:flex-row gap-4">
             <CustomersCard />

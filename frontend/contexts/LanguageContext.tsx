@@ -230,6 +230,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "dash.team": "Ekip",
     "dash.notes": "Notlar",
     "dash.goToPlan": "Plan Sayfasına Git",
+    "dash.stock": "Stok",
+    "dash.stock.desc": "Ürün stoklarını yönetin ve e-faturaları içe aktarın",
+    "dash.stock.lowStock": "KRİTİK STOK",
+    "dash.stock.noLowStock": "Kritik seviyede ürün yok.",
 
     // Payments
     "pay.title": "Ödeme Yönetimi",
@@ -1240,6 +1244,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "dash.team": "Team",
     "dash.notes": "Notes",
     "dash.goToPlan": "Go to Plan Page",
+    "dash.stock": "Stock",
+    "dash.stock.desc": "Manage product stock and import e-invoices",
+    "dash.stock.lowStock": "LOW STOCK",
+    "dash.stock.noLowStock": "No products at critical level.",
 
     // Payments
     "pay.title": "Payment Management",
