@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -9,7 +10,7 @@ interface Props {
   visible: boolean;
   invoice: InvoiceRecord | null;
   onClose: () => void;
-  onDelete?: (invoice: InvoiceRecord) => void;
+  onDelete?: (invoice: InvoiceRecord, revertStock: boolean) => void;
 }
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -26,11 +27,17 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function InvoiceDetailModal({ visible, invoice, onClose, onDelete }: Props) {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!invoice) return null;
 
+  const handleClose = () => {
+    setConfirmDelete(false);
+    onClose();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
         <View className="rounded-2xl p-5 w-full max-w-md" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, maxHeight: "88%" }}>
           <View className="flex-row items-start justify-between mb-3">
@@ -40,7 +47,7 @@ export default function InvoiceDetailModal({ visible, invoice, onClose, onDelete
                 <Text className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{invoice.invoiceType}</Text>
               ) : null}
             </View>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity onPress={handleClose}>
               <Text style={{ color: colors.textMuted }} className="text-xl">✕</Text>
             </TouchableOpacity>
           </View>
@@ -102,13 +109,42 @@ export default function InvoiceDetailModal({ visible, invoice, onClose, onDelete
           </ScrollView>
 
           {onDelete ? (
-            <TouchableOpacity
-              className="h-11 rounded-lg items-center justify-center mt-3"
-              style={{ backgroundColor: colors.danger }}
-              onPress={() => onDelete(invoice)}
-            >
-              <Text style={{ color: "white" }} className="font-semibold">{t("stock.delete")}</Text>
-            </TouchableOpacity>
+            confirmDelete ? (
+              <View className="mt-3 rounded-xl p-3" style={{ backgroundColor: colors.danger + "22", borderColor: colors.danger + "55", borderWidth: 1 }}>
+                <Text className="text-sm font-semibold mb-2" style={{ color: colors.danger }}>{t("stock.invoiceDeleteConfirm")}</Text>
+                <View className="flex-row gap-2">
+                  <TouchableOpacity
+                    className="flex-1 h-11 rounded-lg items-center justify-center"
+                    style={{ backgroundColor: colors.bgInput }}
+                    onPress={() => setConfirmDelete(false)}
+                  >
+                    <Text style={{ color: colors.textSecondary }} className="font-semibold text-sm">{t("common.cancel")}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 h-11 rounded-lg items-center justify-center"
+                    style={{ backgroundColor: colors.danger }}
+                    onPress={() => onDelete(invoice, true)}
+                  >
+                    <Text style={{ color: "white" }} className="font-semibold text-sm">{t("stock.invoiceDeleteRevert")}</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  className="h-9 rounded-lg items-center justify-center mt-2"
+                  style={{ backgroundColor: colors.danger + "44" }}
+                  onPress={() => onDelete(invoice, false)}
+                >
+                  <Text style={{ color: colors.danger }} className="font-semibold text-xs">{t("stock.invoiceDeleteNoRevert")}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                className="h-11 rounded-lg items-center justify-center mt-3"
+                style={{ backgroundColor: colors.danger }}
+                onPress={() => setConfirmDelete(true)}
+              >
+                <Text style={{ color: "white" }} className="font-semibold">{t("stock.delete")}</Text>
+              </TouchableOpacity>
+            )
           ) : null}
         </View>
       </View>

@@ -161,10 +161,10 @@ export default function StockScreen() {
     }
   };
 
-  const doDeleteInvoice = async (inv: InvoiceRecord) => {
+  const doDeleteInvoice = async (inv: InvoiceRecord, revertStock: boolean) => {
     setInvoiceDetail(null);
     try {
-      await stockApi.deleteInvoice(inv.id);
+      await stockApi.deleteInvoice(inv.id, revertStock);
       await loadItems();
       loadInvoices();
       setAlert({ visible: true, type: "success", title: t("stock.title"), message: t("stock.invoiceDeleted") });

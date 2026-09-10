@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "StockTransaction" ADD COLUMN "vatRate" DOUBLE PRECISION,
+ADD COLUMN "vatAmount" DOUBLE PRECISION;

@@ -141,10 +141,20 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
                         </Text>
                         <Text className="text-xs" style={{ color: colors.textMuted }}>{reasonLabel(tr.reason, t)}</Text>
                       </View>
-                      <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
-                        {formatDateTime(tr.createdAt)}
-                        {tr.invoice ? ` · ${tr.invoice.invoiceNo}` : ""}
-                      </Text>
+<Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
+                      {formatDateTime(tr.createdAt)}
+                      {tr.invoice ? ` · ${tr.invoice.invoiceNo}` : ""}
+                    </Text>
+                    {tr.vatRate != null && tr.vatRate > 0 ? (
+                      <View className="flex-row items-center gap-1 mt-0.5">
+                        <Text className="text-[10px]" style={{ color: colors.textMuted }}>KDV %{formatQty(tr.vatRate)}</Text>
+                        {tr.vatAmount != null ? (
+                          <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                            ({formatMoney(tr.vatAmount, tr.currency)})
+                          </Text>
+                        ) : null}
+                      </View>
+                    ) : null}
                     </View>
                     <Text className="text-xs" style={{ color: colors.textMuted }}>
                       {tr.unitPrice != null ? formatMoney(tr.unitPrice, tr.currency) : ""}

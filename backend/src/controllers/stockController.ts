@@ -123,6 +123,8 @@ export async function createStockItem(
             reason: REASON_INITIAL,
             unitPrice: item.unitPrice,
             currency: item.currency,
+            vatRate: item.vatRate || null,
+            vatAmount: item.unitPrice != null ? Math.round(item.unitPrice * initialQty * (item.vatRate || 0)) / 100 : null,
             companyId,
           },
         });
@@ -232,6 +234,11 @@ export async function addStockTransaction(
           reason: REASON_MANUAL,
           unitPrice: unitPrice != null && unitPrice !== "" ? Number(unitPrice) : null,
           currency: currency?.trim() || existing.currency,
+          vatRate: existing.vatRate || null,
+          vatAmount:
+            unitPrice != null && unitPrice !== "" ?
+              Math.round(Number(unitPrice) * Math.abs(delta) * (existing.vatRate || 0)) / 100 :
+              null,
           note: note?.trim() || null,
           companyId,
         },
@@ -416,6 +423,8 @@ export async function importInvoiceXml(
             reason: REASON_INVOICE,
             unitPrice: line.unitPrice || null,
             currency: parsed.currency,
+            vatRate: line.vatRate || null,
+            vatAmount: line.lineAmount != null ? Math.round(line.lineAmount * (line.vatRate || 0)) / 100 : null,
             invoiceId: invoice.id,
             note: parsed.invoiceNo,
             companyId,
@@ -452,6 +461,7 @@ export async function deleteInvoice(
   try {
     const id = Number(req.params.id);
     const companyId = req.user!.companyId!;
+    const revertStock = String(req.query?.revertStock ?? "true").toLowerCase() !== "false";
 
     const invoice = await prisma.invoice.findFirst({
       where: { id, companyId },
@@ -466,16 +476,22 @@ export async function deleteInvoice(
     }
 
     await prisma.$transaction(async (tx) => {
-      for (const tr of invoice.transactions) {
-        await tx.stockItem.update({
-          where: { id: tr.stockItemId },
-          data: { quantity: { decrement: tr.change } },
-        });
+      if (revertStock) {
+        for (const tr of invoice.transactions) {
+          await tx.stockItem.update({
+            where: { id: tr.stockItemId },
+            data: { quantity: { decrement: tr.change } },
+          });
+        }
       }
       await tx.invoice.delete({ where: { id } });
     });
 
-    res.json({ message: "Fatura silindi ve stok miktarları geri alındı." });
+    res.json({
+      message: revertStock
+        ? "Fatura silindi ve stok miktarları geri alındı."
+        : "Fatura silindi. Stok miktarları değiştirilmedi.",
+    });
   } catch (error: any) {
     console.error("DeleteInvoice error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });

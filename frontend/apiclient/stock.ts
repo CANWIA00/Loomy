@@ -25,6 +25,8 @@ export interface StockTransaction {
   reason: string;
   unitPrice: number | null;
   currency: string;
+  vatRate: number | null;
+  vatAmount: number | null;
   note: string | null;
   createdAt: string;
   invoice?: { id: number; invoiceNo: string; date: string | null };
@@ -147,6 +149,8 @@ export const stockApi = {
   importXml: (xml: string, fileName?: string) =>
     apiClient.post<ImportResult>("/stock/import-xml", { xml, fileName, dryRun: false }),
 
-  deleteInvoice: (id: number) =>
-    apiClient.delete(`/stock/invoices/${id}`),
+  deleteInvoice: (id: number, revertStock = true) =>
+    apiClient.delete(`/stock/invoices/${id}`, {
+      params: { revertStock },
+    }),
 };

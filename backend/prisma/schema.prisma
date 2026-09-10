@@ -238,6 +238,8 @@ model StockTransaction {
   reason      String   @default("MANUAL")
   unitPrice   Float?
   currency    String   @default("TRY")
+  vatRate     Float?
+  vatAmount   Float?
   invoiceId   Int?
   note        String?
   companyId   String
