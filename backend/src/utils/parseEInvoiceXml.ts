@@ -127,10 +127,37 @@ export function parseEInvoiceXml(xml: string): ParsedEInvoice {
   const lines = asArray<any>(inv.InvoiceLine).map((line) => {
     const item = line.Item ?? {};
     const priceNode = line.Price?.PriceAmount;
-    const vatNodes = item.ClassifiedTaxCategory
-      ? asArray<any>(item.ClassifiedTaxCategory)
-      : [];
-    const vatRateValue = (vatNodes[0] && (vatNodes[0].Percent ?? vatNodes[0].TaxPercent)) ?? null;
+
+    // VatRate: try ClassifiedTaxCategory → TaxCategory → line TaxTotal
+    let vatRateValue: number | null = null;
+
+    const classifiedTax = item.ClassifiedTaxCategory ?? item.TaxCategory;
+    if (classifiedTax) {
+      const nodes = asArray<any>(classifiedTax);
+      for (const node of nodes) {
+        const pct = node.Percent ?? node.TaxPercent;
+        if (pct != null) {
+          vatRateValue = toNum(pct);
+          if (vatRateValue != null) break;
+        }
+      }
+    }
+
+    // Fallback: line-level TaxTotal/TaxSubtotal/TaxCategory
+    if (vatRateValue == null) {
+      const taxSubs = asArray<any>(line.TaxTotal?.TaxSubtotal);
+      for (const sub of taxSubs) {
+        const cat = sub?.TaxCategory;
+        if (cat) {
+          const pct = cat.Percent ?? cat.TaxPercent;
+          if (pct != null) {
+            vatRateValue = toNum(pct);
+            if (vatRateValue != null) break;
+          }
+        }
+      }
+    }
+
     const name = toStr(item.Name) ?? "Adsız Ürün";
     const quantity = toNum(line.InvoicedQuantity) ?? 0;
     const lineAmount = toNum(line.LineExtensionAmount) ?? 0;
@@ -143,7 +170,7 @@ export function parseEInvoiceXml(xml: string): ParsedEInvoice {
       unit: resolveUnit(nodeAttr(line.InvoicedQuantity, "unitCode") ?? null),
       unitPrice,
       lineAmount,
-      vatRate: toNum(vatRateValue) ?? 0,
+      vatRate: vatRateValue ?? 0,
     };
   });
 
@@ -160,7 +187,13 @@ export function parseEInvoiceXml(xml: string): ParsedEInvoice {
     supplierTaxNumber: toStr(partyLegalEntity.CompanyID) ?? null,
     supplierAddress,
     totalAmount: toNum(payable) ?? toNum(lmt.TaxInclusiveAmount) ?? null,
-    vatAmount: toNum(inv.TaxTotal?.TaxAmount) ?? null,
+    vatAmount:
+      toNum(inv.TaxTotal?.TaxAmount) ??
+      asArray<any>(inv.TaxTotal?.TaxSubtotal).reduce<number | null>((sum, sub) => {
+        const amt = toNum(sub?.TaxAmount);
+        if (amt == null) return sum;
+        return (sum ?? 0) + amt;
+      }, null),
     currency,
     lines,
   };

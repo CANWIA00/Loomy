@@ -79,10 +79,17 @@ export default function InvoiceDetailModal({ visible, invoice, onClose }: Props)
                     {t("stock.amount")}: {formatMoney(line.lineAmount, invoice.currency)}
                   </Text>
                 ) : null}
-                {line.vatRate != null ? (
-                  <Text className="text-xs" style={{ color: colors.textMuted }}>
-                    {t("stock.vat")}: %{formatQty(line.vatRate)}
-                  </Text>
+                {line.vatRate != null && line.vatRate > 0 ? (
+                  <>
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>
+                      {t("stock.vat")}: %{formatQty(line.vatRate)}
+                    </Text>
+                    {line.lineAmount != null ? (
+                      <Text className="text-xs" style={{ color: colors.textMuted }}>
+                        {t("stock.vat")} {t("stock.amount").toLowerCase()}: {formatMoney(line.lineAmount * line.vatRate / 100, invoice.currency)}
+                      </Text>
+                    ) : null}
+                  </>
                 ) : null}
                 {line.stockItem ? (
                   <Text className="text-[10px] mt-1" style={{ color: colors.teal }}>

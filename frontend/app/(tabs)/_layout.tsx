@@ -7,12 +7,12 @@ import { useAuth } from "../../contexts/AuthContext";
 
 const allTabs: Record<string, { titleKey: string; icon: string; adminOnly?: boolean }> = {
   dashboard: { titleKey: "tab.home", icon: "home" },
+  stock: { titleKey: "tab.stock", icon: "cube", adminOnly: true },
   services: { titleKey: "tab.services", icon: "construct" },
   quotes: { titleKey: "tab.quotes", icon: "document-text", adminOnly: true },
   customers: { titleKey: "tab.customers", icon: "people" },
   schedule: { titleKey: "tab.schedule", icon: "calendar" },
   payments: { titleKey: "tab.payments", icon: "card", adminOnly: true },
-  stock: { titleKey: "tab.stock", icon: "cube", adminOnly: true },
   settings: { titleKey: "tab.settings", icon: "settings" },
 };
 
