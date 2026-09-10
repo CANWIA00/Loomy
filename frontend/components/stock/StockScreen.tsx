@@ -10,6 +10,7 @@ import { formatMoney, formatQty, formatDate } from "./format";
 import StockFormModal from "./StockFormModal";
 import StockDetailModal from "./StockDetailModal";
 import InvoiceImportModal from "./InvoiceImportModal";
+import InvoiceDetailModal from "./InvoiceDetailModal";
 
 type AlertState = {
   visible: boolean;
@@ -37,6 +38,7 @@ export default function StockScreen() {
   const [formVisible, setFormVisible] = useState(false);
   const [formItem, setFormItem] = useState<StockItem | null>(null);
   const [importVisible, setImportVisible] = useState(false);
+  const [invoiceDetail, setInvoiceDetail] = useState<InvoiceRecord | null>(null);
   const [adjusting, setAdjusting] = useState(false);
   const [alert, setAlert] = useState<AlertState>(emptyAlert);
 
@@ -309,7 +311,13 @@ export default function StockScreen() {
                 </View>
               ) : (
                 invoices.map((inv) => (
-                  <View key={inv.id} className="rounded-xl px-4 py-3 mb-2" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}>
+                  <TouchableOpacity
+                    key={inv.id}
+                    className="rounded-xl px-4 py-3 mb-2"
+                    style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}
+                    onPress={() => setInvoiceDetail(inv)}
+                    activeOpacity={0.7}
+                  >
                     <View className="flex-row items-center justify-between mb-1">
                       <Text className="text-sm font-bold" style={{ color: colors.text }}>{inv.invoiceNo}</Text>
                       {inv.totalAmount != null ? (
@@ -333,8 +341,8 @@ export default function StockScreen() {
                           +{inv.lines.length - 4} {t("stock.line")}
                         </Text>
                       ) : null}
-                    </View>
-                  </View>
+</View>
+                  </TouchableOpacity>
                 ))
               )}
               {invoicesLoading && invoices.length > 0 ? (
@@ -395,6 +403,12 @@ export default function StockScreen() {
             message: t("stock.importSuccess", { created: String(summary.created), updated: String(summary.updated) }),
           });
         }}
+      />
+
+      <InvoiceDetailModal
+        visible={invoiceDetail !== null}
+        invoice={invoiceDetail}
+        onClose={() => setInvoiceDetail(null)}
       />
 
       <CustomAlert

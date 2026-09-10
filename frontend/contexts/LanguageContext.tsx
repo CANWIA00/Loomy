@@ -80,6 +80,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "stock.loadMore": "Daha Fazla",
     "stock.edit": "Düzenle",
     "stock.accessDenied": "Bu sayfaya erişim yetkiniz yok.",
+    "stock.address": "Adres",
 
     // Teklifler
     "qot.title": "Teklifler",
@@ -1094,6 +1095,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "stock.loadMore": "Load More",
     "stock.edit": "Edit",
     "stock.accessDenied": "You do not have access to this page.",
+    "stock.address": "Address",
 
     // Quotes
     "qot.title": "Quotes",
