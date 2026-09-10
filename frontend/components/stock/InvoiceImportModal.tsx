@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react";
-import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { stockApi, type ParsedEInvoice } from "../../apiclient/stock";
-import { formatMoney, formatQty, formatDate } from "./format";
+import { stockApi } from "../../apiclient/stock";
 
 interface Props {
   visible: boolean;
@@ -38,14 +38,12 @@ export default function InvoiceImportModal({ visible, onClose, onImported }: Pro
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [preview, setPreview] = useState<ParsedEInvoice | null>(null);
   const fileTriggerRef = useRef<any>(null);
 
   const reset = () => {
     setPastedXml("");
     setFileName(null);
     setError(null);
-    setPreview(null);
     setBusy(false);
   };
 
@@ -54,7 +52,18 @@ export default function InvoiceImportModal({ visible, onClose, onImported }: Pro
     onClose();
   };
 
-  const runPreview = async (xml: string, name?: string) => {
+  const handleError = (err: any) => {
+    const status = err.response?.status;
+    let msg = err.response?.data?.message || err.message || "Error";
+    if (status === 409) {
+      const m = (err.response?.data?.message || "").match(/"([^"]+)"/)?.[1] || "";
+      setError(t("stock.alreadyImported", { invoiceNo: m }));
+    } else {
+      setError(t("stock.parseError", { message: msg }));
+    }
+  };
+
+  const runImport = async (xml: string, name?: string) => {
     if (!xml.trim()) {
       setError(t("stock.previewEmpty"));
       return;
@@ -62,28 +71,7 @@ export default function InvoiceImportModal({ visible, onClose, onImported }: Pro
     setBusy(true);
     setError(null);
     try {
-      const res = await stockApi.previewXml(xml, name);
-      setPreview(res.data.invoice);
-      setFileName(name || null);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Error";
-      setError(t("stock.parseError", { message: msg }));
-      setPreview(null);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const confirmImport = async () => {
-    if (!preview) return;
-    setBusy(true);
-    setError(null);
-    try {
-      let xml = pastedXml;
-      if (!xml.trim() && fileName && (fileContentRef.current)) {
-        xml = fileContentRef.current;
-      }
-      const res = await stockApi.importXml(xml, fileName ?? undefined);
+      const res = await stockApi.importXml(xml, name);
       onImported({
         created: res.data.created,
         updated: res.data.updated,
@@ -91,28 +79,19 @@ export default function InvoiceImportModal({ visible, onClose, onImported }: Pro
       });
       reset();
     } catch (err: any) {
-      const status = err.response?.status;
-      const msg = err.response?.data?.message || err.message || "Error";
-      if (status === 409) {
-        setError(t("stock.alreadyImported", { invoiceNo: (err.response?.data?.message || "").match(/"([^"]+)"/)?.[1] || "" }));
-      } else {
-        setError(msg);
-      }
+      handleError(err);
     } finally {
       setBusy(false);
     }
   };
 
-  const fileContentRef = useRef("");
-
   const pickFile = () => {
-    fileTriggerRef.current?.click();
+    if (!busy) fileTriggerRef.current?.click();
   };
 
   const onFileChosen = (name: string, content: string) => {
-    fileContentRef.current = content;
     setFileName(name);
-    runPreview(content, name);
+    runImport(content, name);
   };
 
   return (
@@ -128,35 +107,24 @@ export default function InvoiceImportModal({ visible, onClose, onImported }: Pro
 
           {Platform.OS === "web" ? (
             <TouchableOpacity
-              className="h-11 rounded-lg items-center justify-center mb-3 flex-row gap-2"
+              className="h-12 rounded-lg items-center justify-center mb-3 flex-row gap-2"
               style={{ backgroundColor: colors.primary }}
               onPress={pickFile}
+              disabled={busy}
             >
-              {busy ? <ActivityIndicator size="small" color="white" /> : null}
+              {busy && !fileName ? <ActivityIndicator size="small" color="white" /> : null}
               <Text style={{ color: "white" }} className="font-semibold">{t("stock.chooseFile")}</Text>
             </TouchableOpacity>
           ) : null}
 
           <FileInput onFile={onFileChosen} />
 
-          <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.pasteXml")}</Text>
-          <TextInput
-            value={pastedXml}
-            onChangeText={setPastedXml}
-            multiline
-            className="rounded-lg px-3 py-2 mb-2"
-            style={{ backgroundColor: colors.bgInput, color: colors.text, minHeight: 90, textAlignVertical: "top" }}
-          />
-          <Text className="text-[10px] mb-3" style={{ color: colors.textMuted }}>{t("stock.importHint")}</Text>
-
-          <TouchableOpacity
-            className="h-9 rounded-lg items-center justify-center mb-3"
-            style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}
-            disabled={busy || !pastedXml.trim()}
-            onPress={() => runPreview(pastedXml)}
-          >
-            <Text style={{ color: colors.primary }} className="text-xs font-semibold">{t("stock.preview")}</Text>
-          </TouchableOpacity>
+          {fileName && !busy && !error ? (
+            <View className="rounded-lg px-3 py-2 mb-3 flex-row items-center" style={{ backgroundColor: colors.success + "22", borderColor: colors.success + "66", borderWidth: 1 }}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+              <Text className="text-xs ml-2 flex-1" style={{ color: colors.success }}>{fileName}</Text>
+            </View>
+          ) : null}
 
           {error ? (
             <View className="rounded-lg px-3 py-2 mb-3" style={{ backgroundColor: colors.danger + "22", borderColor: colors.danger + "66", borderWidth: 1 }}>
@@ -164,62 +132,43 @@ export default function InvoiceImportModal({ visible, onClose, onImported }: Pro
             </View>
           ) : null}
 
-          {busy && !preview && !error ? (
-            <View className="items-center justify-center py-6">
-              <ActivityIndicator size="large" color={colors.primary} />
+          {busy ? (
+            <View className="items-center justify-center py-4">
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>{t("stock.loading")}</Text>
             </View>
           ) : null}
 
-          {preview ? (
-            <View className="rounded-xl p-3 mb-3" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
-              <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("stock.preview")}</Text>
-                {fileName ? <Text className="text-[10px]" style={{ color: colors.textMuted }}>{fileName}</Text> : null}
-              </View>
-              <Text className="text-xs" style={{ color: colors.textSecondary }}>
-                {preview.invoiceNo}
-                {preview.supplierName ? ` · ${preview.supplierName}` : ""}
-                {preview.date ? ` · ${formatDate(preview.date)}` : ""}
-              </Text>
-              {preview.totalAmount != null ? (
-                <Text className="text-xs mt-1" style={{ color: colors.textSecondary }}>
-                  {t("stock.amount")}: {formatMoney(preview.totalAmount, preview.currency)}
-                </Text>
-              ) : null}
-              <Text className="text-xs mt-1" style={{ color: colors.textMuted }}>{t("stock.previewLines", { count: String(preview.lines.length) })}</Text>
+          <Text className="text-xs mb-1 mt-3" style={{ color: colors.textSecondary }}>{t("stock.pasteXml")}</Text>
+          <TextInput
+            value={pastedXml}
+            onChangeText={setPastedXml}
+            multiline
+            className="rounded-lg px-3 py-2 mb-2"
+            style={{ backgroundColor: colors.bgInput, color: colors.text, minHeight: 80, textAlignVertical: "top" }}
+          />
+          <Text className="text-[10px] mb-3" style={{ color: colors.textMuted }}>{t("stock.importHint")}</Text>
 
-              <ScrollView style={{ maxHeight: 180 }} nestedScrollEnabled>
-                {preview.lines.map((line, i) => (
-                  <View key={i} className="flex-row items-center justify-between py-1.5 border-b" style={{ borderColor: colors.border }}>
-                    <Text className="text-xs flex-1 mr-2" style={{ color: colors.text }} numberOfLines={1}>{line.name}</Text>
-                    <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>
-                      {formatQty(line.quantity)} {line.unit}
-                    </Text>
-                    <Text className="text-xs ml-2" style={{ color: colors.textMuted }}>{formatMoney(line.unitPrice, preview.currency)}</Text>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          ) : null}
-
-          <View className="flex-row gap-2">
-            <TouchableOpacity
-              className="flex-1 h-11 rounded-lg items-center justify-center"
-              style={{ backgroundColor: colors.bgInput }}
-              onPress={handleClose}
-            >
-              <Text style={{ color: colors.textSecondary }} className="font-semibold">{t("common.cancel")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="h-11 rounded-lg items-center justify-center px-6 flex-row gap-2"
-              style={{ backgroundColor: colors.primary }}
-              disabled={busy || !preview}
-              onPress={confirmImport}
-            >
-              {busy && preview ? <ActivityIndicator size="small" color="white" /> : null}
+          <TouchableOpacity
+            className="h-11 rounded-lg items-center justify-center mb-3"
+            style={{ backgroundColor: colors.primary }}
+            disabled={busy || !pastedXml.trim()}
+            onPress={() => runImport(pastedXml)}
+          >
+            {busy && pastedXml.trim() ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
               <Text style={{ color: "white" }} className="font-semibold">{t("stock.confirmImport")}</Text>
-            </TouchableOpacity>
-          </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="h-11 rounded-lg items-center justify-center"
+            style={{ backgroundColor: colors.bgInput }}
+            onPress={handleClose}
+          >
+            <Text style={{ color: colors.textSecondary }} className="font-semibold">{t("common.cancel")}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
