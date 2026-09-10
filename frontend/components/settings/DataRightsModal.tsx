@@ -6,7 +6,7 @@ import * as Sharing from "expo-sharing";
 import * as Clipboard from "expo-clipboard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { profileApi } from "../../api/profile";
+import { profileApi } from "../../apiclient/profile";
 
 interface DataRightsModalProps {
   visible: boolean;

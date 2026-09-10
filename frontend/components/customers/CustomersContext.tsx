@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { customerApi, type Customer } from "../../api/customers";
+import { customerApi, type Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { PAGE_SIZE } from "./types";
 

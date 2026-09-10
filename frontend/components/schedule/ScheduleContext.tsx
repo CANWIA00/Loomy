@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import type { Mode } from "react-native-big-calendar";
-import { teamApi, type Team, type CompanyUser } from "../../api/teams";
-import { appointmentApi, type Appointment } from "../../api/appointments";
-import { customerApi } from "../../api/customers";
+import { teamApi, type Team, type CompanyUser } from "../../apiclient/teams";
+import { appointmentApi, type Appointment } from "../../apiclient/appointments";
+import { customerApi } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { durationToMs, parseSaat, dateToStr, strToDate } from "../../utils/date";
 import { TEAM_COLORS, type CustomerOption, type PlanFilter, type ScheduleEvent } from "./types";

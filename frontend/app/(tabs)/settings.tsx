@@ -10,7 +10,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import SettingsMenu from "../../components/settings/SettingsMenu";
 import PrivacyModal from "../../components/settings/PrivacyModal";
 import DataRightsModal from "../../components/settings/DataRightsModal";
-import { profileApi } from "../../api/profile";
+import { profileApi } from "../../apiclient/profile";
 
 export default function SettingsScreen() {
   const { logout } = useAuth();

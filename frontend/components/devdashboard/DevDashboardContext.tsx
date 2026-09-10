@@ -8,7 +8,7 @@ import {
   type CompanySummary,
   type CompanyDetail,
   type DevStats,
-} from "../../api/dev";
+} from "../../apiclient/dev";
 import { formatDate, paymentInfo, type Tab } from "./types";
 
 type KeyFilter = "all" | "used" | "active" | "available";

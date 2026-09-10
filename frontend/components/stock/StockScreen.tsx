@@ -5,7 +5,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import ScreenHeader from "../ScreenHeader";
 import CustomAlert from "../CustomAlert";
-import { stockApi, type StockItem, type StockItemDetail, type InvoiceRecord, type StockItemInput } from "../../api/stock";
+import { stockApi, type StockItem, type StockItemDetail, type InvoiceRecord, type StockItemInput } from "../../apiclient/stock";
 import { formatMoney, formatQty, formatDate } from "./format";
 import StockFormModal from "./StockFormModal";
 import StockDetailModal from "./StockDetailModal";

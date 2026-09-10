@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import type { StockItem } from "../../api/stock";
+import type { StockItem } from "../../apiclient/stock";
 import { parseNumericInput } from "./format";
 
 interface Props {

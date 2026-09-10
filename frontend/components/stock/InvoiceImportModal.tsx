@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { stockApi, type ParsedEInvoice } from "../../api/stock";
+import { stockApi, type ParsedEInvoice } from "../../apiclient/stock";
 import { formatMoney, formatQty, formatDate } from "./format";
 
 interface Props {

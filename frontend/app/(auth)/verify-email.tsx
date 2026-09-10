@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { authApi } from "../../api/auth";
+import { authApi } from "../../apiclient/auth";
 import AuthLayout from "../../components/auth/AuthLayout";
 import CodeInput from "../../components/auth/CodeInput";
 import type { CodeInputHandle } from "../../components/auth/CodeInput";

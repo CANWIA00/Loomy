@@ -1,4 +1,4 @@
-import type { QuoteLine } from "../../api/quotes";
+import type { QuoteLine } from "../../apiclient/quotes";
 import type { TryRatesData } from "../../utils/currencyRates";
 
 export interface CurrencyOption {

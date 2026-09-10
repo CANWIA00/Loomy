@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { authApi, User, CompanyRequestDto } from "../api/auth";
-import { setOnUnauthorized } from "../api/client";
+import { authApi, User, CompanyRequestDto } from "../apiclient/auth";
+import { setOnUnauthorized } from "../apiclient/client";
 
 interface AuthContextType {
   user: User | null;

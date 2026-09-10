@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
-import type { Appointment } from "../../api/appointments";
+import type { Appointment } from "../../apiclient/appointments";
 import type { ScheduleEvent } from "./types";
 
 const CELL_HEIGHT = Math.max(500 - 30, 1200) / 24;

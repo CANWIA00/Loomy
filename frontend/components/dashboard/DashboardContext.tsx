@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { customerApi, type Customer } from "../../api/customers";
-import { paymentApi, type PaymentSummary, type PaymentRecord } from "../../api/payments";
-import { appointmentApi, type Appointment } from "../../api/appointments";
-import { teamApi, type Team } from "../../api/teams";
+import { customerApi, type Customer } from "../../apiclient/customers";
+import { paymentApi, type PaymentSummary, type PaymentRecord } from "../../apiclient/payments";
+import { appointmentApi, type Appointment } from "../../apiclient/appointments";
+import { teamApi, type Team } from "../../apiclient/teams";
 import { useAuth } from "../../contexts/AuthContext";
 import { dateToStr } from "../../utils/date";
 import type { PlanFilter, ToggleAlertState } from "./types";

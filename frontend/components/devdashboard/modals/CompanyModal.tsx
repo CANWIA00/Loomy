@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useDevDashboard } from "../DevDashboardContext";
 import { formatDate, paymentInfo } from "../types";
-import type { CompanySummary } from "../../../api/dev";
+import type { CompanySummary } from "../../../apiclient/dev";
 
 export default function CompanyModal() {
   const { colors } = useTheme();

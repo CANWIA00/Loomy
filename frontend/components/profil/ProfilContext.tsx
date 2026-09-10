@@ -2,8 +2,8 @@ import { createContext, useCallback, useContext, useState, type ReactNode } from
 import { Alert } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
-import { profileApi, type CompanyDto, type UserProfile } from "../../api/profile";
-import { authApi, type User } from "../../api/auth";
+import { profileApi, type CompanyDto, type UserProfile } from "../../apiclient/profile";
+import { authApi, type User } from "../../apiclient/auth";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { SignaturePath } from "./types";

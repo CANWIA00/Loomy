@@ -5,7 +5,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { useQuotes } from "./QuoteContext";
-import type { Customer } from "../../api/customers";
+import type { Customer } from "../../apiclient/customers";
 import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, formatNumericInput } from "./types";
 
 const formatRate = (rate: number) =>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import type { StockItemDetail, StockTransaction } from "../../api/stock";
+import type { StockItemDetail, StockTransaction } from "../../apiclient/stock";
 import { formatMoney, formatQty, formatDate, formatDateTime, parseNumericInput } from "./format";
 
 interface Props {

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { authApi } from "../../api/auth";
+import { authApi } from "../../apiclient/auth";
 import AuthLayout from "../../components/auth/AuthLayout";
 import FormField from "../../components/auth/FormField";
 import PrimaryButton from "../../components/auth/PrimaryButton";

@@ -1,4 +1,4 @@
-import type { PaymentRecord } from "../../api/payments";
+import type { PaymentRecord } from "../../apiclient/payments";
 
 export type TimeFilter = "all" | "gun" | "hafta" | "ay";
 export type StatusFilter = "all" | "odendi" | "bekliyor";

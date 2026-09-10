@@ -1,4 +1,4 @@
-import type { PaymentRecord } from "../../api/payments";
+import type { PaymentRecord } from "../../apiclient/payments";
 
 export type PlanFilter = "today" | "tomorrow" | "week";
 

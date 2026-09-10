@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Alert } from "react-native";
-import { paymentApi, type PaymentRecord, type PaymentSummary } from "../../api/payments";
+import { paymentApi, type PaymentRecord, type PaymentSummary } from "../../apiclient/payments";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { LIST_SIZE, parseDate, type StatusOption, type StatusFilter, type TimeFilter, type ToggleAlertState } from "./types";
 

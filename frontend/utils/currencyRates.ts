@@ -1,4 +1,4 @@
-import { BASE_URL } from "../api/client";
+import { BASE_URL } from "../apiclient/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface TryRatesData {

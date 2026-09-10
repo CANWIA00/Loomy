@@ -5,9 +5,9 @@ import { router } from "expo-router";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { templateApi, ServiceTemplate } from "../../api/templates";
-import { serviceApi } from "../../api/services";
-import { translateLabel } from "../../api/translate";
+import { templateApi, ServiceTemplate } from "../../apiclient/templates";
+import { serviceApi } from "../../apiclient/services";
+import { translateLabel } from "../../apiclient/translate";
 import { type TemplateChipGroup, type TemplateField, type ServiceTemplateConfig, defaultTemplateConfig, isGeneralField } from "./types";
 import CustomAlert from "../CustomAlert";
 

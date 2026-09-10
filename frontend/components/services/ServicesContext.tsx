@@ -6,10 +6,10 @@ import * as Sharing from "expo-sharing";
 import { generateServicePDFHtml } from "../ServicePDF";
 import { shareWebPdf, downloadWebPdf } from "../../utils/webPdf";
 import { embedImage } from "../../utils/pdfAssets";
-import { profileApi } from "../../api/profile";
-import { serviceApi, ServiceRecord } from "../../api/services";
-import { customerApi, Customer } from "../../api/customers";
-import { templateApi, ServiceTemplate } from "../../api/templates";
+import { profileApi } from "../../apiclient/profile";
+import { serviceApi, ServiceRecord } from "../../apiclient/services";
+import { customerApi, Customer } from "../../apiclient/customers";
+import { templateApi, ServiceTemplate } from "../../apiclient/templates";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField } from "./types";
 

@@ -3,7 +3,7 @@ import { View, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
-import { devApi, getDevToken, setDevSession } from "../../api/dev";
+import { devApi, getDevToken, setDevSession } from "../../apiclient/dev";
 import AuthLayout from "../../components/auth/AuthLayout";
 import FormField from "../../components/auth/FormField";
 import PrimaryButton from "../../components/auth/PrimaryButton";
