@@ -28,6 +28,7 @@ export default function StockScreen() {
   const { t } = useLanguage();
 
   const [mode, setMode] = useState<"items" | "invoices">("items");
+  const [itemFilter, setItemFilter] = useState<"all" | "low">("all");
 
   const [items, setItems] = useState<StockItem[]>([]);
   const [search, setSearch] = useState("");
@@ -161,6 +162,9 @@ export default function StockScreen() {
   };
 
   const lowStockCount = items.filter((i) => i.quantity <= i.minQuantity).length;
+  const searchQ = search.trim().toLowerCase();
+  const filteredItems = (itemFilter === "low" ? items.filter((i) => i.quantity <= i.minQuantity) : items)
+    .filter((i) => !searchQ || i.name.toLowerCase().includes(searchQ) || (i.supplierName || "").toLowerCase().includes(searchQ));
   const totalByCurrency = items.reduce<Record<string, number>>((acc, i) => {
     if (i.unitPrice == null) return acc;
     const cur = i.currency || "TRY";
@@ -230,7 +234,7 @@ export default function StockScreen() {
                 </View>
               </View>
 
-              <View className="rounded-lg px-3 py-2.5 mb-4 flex-row items-center" style={{ backgroundColor: colors.bgInput }}>
+              <View className="rounded-lg px-3 py-2.5 mb-3 flex-row items-center" style={{ backgroundColor: colors.bgInput }}>
                 <Ionicons name="search-outline" size={18} color={colors.textMuted} />
                 <TextInput
                   value={search}
@@ -242,17 +246,40 @@ export default function StockScreen() {
                 />
               </View>
 
+              <View className="flex-row gap-2 mb-4">
+                <TouchableOpacity
+                  className="flex-1 h-9 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: itemFilter === "all" ? colors.primary : colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}
+                  onPress={() => setItemFilter("all")}
+                >
+                  <Text style={{ color: itemFilter === "all" ? "white" : colors.textSecondary }} className="font-semibold text-xs">
+                    {t("stock.allItems")} ({items.length})
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 h-9 rounded-lg items-center justify-center flex-row gap-1"
+                  style={{ backgroundColor: itemFilter === "low" ? colors.warning : colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}
+                  onPress={() => setItemFilter("low")}
+                >
+                  <Text style={{ color: itemFilter === "low" ? "white" : colors.textSecondary }} className="font-semibold text-xs">
+                    {t("stock.lowStock")} ({lowStockCount})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               {loading ? (
                 <View className="items-center justify-center py-10">
                   <ActivityIndicator size="large" color={colors.primary} />
                 </View>
-              ) : items.length === 0 ? (
+              ) : filteredItems.length === 0 ? (
                 <View className="rounded-xl px-4 py-8 items-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
                   <Ionicons name="cube-outline" size={32} color={colors.textMuted} />
-                  <Text className="text-sm mt-2 text-center" style={{ color: colors.textMuted }}>{t("stock.empty")}</Text>
+                  <Text className="text-sm mt-2 text-center" style={{ color: colors.textMuted }}>
+                    {searchQ ? t("stock.noResults") : itemFilter === "low" ? t("stock.noLowStock") : t("stock.empty")}
+                  </Text>
                 </View>
               ) : (
-                items.map((item) => {
+                filteredItems.map((item) => {
                   const low = item.quantity <= item.minQuantity;
                   return (
                     <TouchableOpacity

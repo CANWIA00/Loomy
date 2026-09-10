@@ -42,6 +42,7 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
         <View className="rounded-2xl p-5 w-full max-w-md" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, maxHeight: "88%" }}>
+
           <View className="flex-row items-start justify-between mb-3">
             <View className="flex-1 mr-3">
               <Text className="text-lg font-bold" style={{ color: colors.text }}>{item.name}</Text>
@@ -59,7 +60,7 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 4 }}>
             <View className="flex-row gap-2 mb-4">
               <View
                 className="flex-1 rounded-xl px-4 py-3"
@@ -126,47 +127,53 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
             </View>
 
             <Text className="text-sm font-semibold mb-2" style={{ color: colors.text }}>{t("stock.history")}</Text>
-            {item.transactions.length === 0 ? (
-              <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("stock.historyEmpty")}</Text>
-            ) : (
-              item.transactions.map((tr: StockTransaction) => (
-                <View key={tr.id} className="flex-row items-center justify-between rounded-lg px-3 py-2 mb-1.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
-                  <View className="flex-1 mr-2">
-                    <View className="flex-row items-center gap-2">
-                      <Text className="font-bold" style={{ color: tr.change > 0 ? colors.success : colors.danger }}>
-                        {tr.change > 0 ? "+" : ""}{formatQty(tr.change)}
+          </ScrollView>
+
+          {item.transactions.length > 0 ? (
+            <View style={{ maxHeight: 180 }} className="mb-3">
+              <ScrollView showsVerticalScrollIndicator nestedScrollEnabled>
+                {item.transactions.map((tr: StockTransaction) => (
+                  <View key={tr.id} className="flex-row items-center justify-between rounded-lg px-3 py-2 mb-1.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
+                    <View className="flex-1 mr-2">
+                      <View className="flex-row items-center gap-2">
+                        <Text className="font-bold" style={{ color: tr.change > 0 ? colors.success : colors.danger }}>
+                          {tr.change > 0 ? "+" : ""}{formatQty(tr.change)}
+                        </Text>
+                        <Text className="text-xs" style={{ color: colors.textMuted }}>{reasonLabel(tr.reason, t)}</Text>
+                      </View>
+                      <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
+                        {formatDateTime(tr.createdAt)}
+                        {tr.invoice ? ` · ${tr.invoice.invoiceNo}` : ""}
                       </Text>
-                      <Text className="text-xs" style={{ color: colors.textMuted }}>{reasonLabel(tr.reason, t)}</Text>
                     </View>
-                    <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
-                      {formatDateTime(tr.createdAt)}
-                      {tr.invoice ? ` · ${tr.invoice.invoiceNo}` : ""}
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>
+                      {tr.unitPrice != null ? formatMoney(tr.unitPrice, tr.currency) : ""}
                     </Text>
                   </View>
-                  <Text className="text-xs" style={{ color: colors.textMuted }}>
-                    {tr.unitPrice != null ? formatMoney(tr.unitPrice, tr.currency) : ""}
-                  </Text>
-                </View>
-              ))
-            )}
-
-            <View className="flex-row gap-2 mt-3 mb-1">
-              <TouchableOpacity
-                className="flex-1 h-11 rounded-lg items-center justify-center"
-                style={{ backgroundColor: colors.danger }}
-                onPress={() => onDelete(item)}
-              >
-                <Text style={{ color: "white" }} className="font-semibold">{t("stock.delete")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="flex-1 h-11 rounded-lg items-center justify-center"
-                style={{ backgroundColor: colors.primary }}
-                onPress={() => onEdit(item)}
-              >
-                <Text style={{ color: "white" }} className="font-semibold">{t("stock.edit")}</Text>
-              </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
-          </ScrollView>
+          ) : (
+            <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("stock.historyEmpty")}</Text>
+          )}
+
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              className="flex-1 h-11 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.danger }}
+              onPress={() => onDelete(item)}
+            >
+              <Text style={{ color: "white" }} className="font-semibold">{t("stock.delete")}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 h-11 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.primary }}
+              onPress={() => onEdit(item)}
+            >
+              <Text style={{ color: "white" }} className="font-semibold">{t("stock.edit")}</Text>
+            </TouchableOpacity>
+          </View>
+
         </View>
       </View>
     </Modal>
