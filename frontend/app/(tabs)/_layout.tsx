@@ -12,6 +12,7 @@ const allTabs: Record<string, { titleKey: string; icon: string; adminOnly?: bool
   customers: { titleKey: "tab.customers", icon: "people" },
   schedule: { titleKey: "tab.schedule", icon: "calendar" },
   payments: { titleKey: "tab.payments", icon: "card", adminOnly: true },
+  stock: { titleKey: "tab.stock", icon: "cube", adminOnly: true },
   settings: { titleKey: "tab.settings", icon: "settings" },
 };
 

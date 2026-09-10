@@ -63,6 +63,10 @@ model Company {
   teams          Team[]
   appointments   Appointment[]
   quoteRecords   QuoteRecord[]
+  stockItems     StockItem[]
+  invoices       Invoice[]
+  invoiceLines   InvoiceLine[]
+  stockTransactions StockTransaction[]
 }
 
 model ServiceRecord {
@@ -199,6 +203,94 @@ model QuoteRecord {
 
   @@index([companyId])
   @@index([customerId])
+}
+
+model StockItem {
+  id                Int      @id @default(autoincrement())
+  name              String
+  unit              String   @default("AD")
+  quantity          Float    @default(0)
+  minQuantity       Float    @default(0)
+  unitPrice         Float?
+  currency          String   @default("TRY")
+  vatRate           Float    @default(0)
+  supplierName      String?
+  supplierTaxNumber String?
+  lastInvoiceNo     String?
+  lastInvoiceDate   String?
+  notes             String?
+  companyId         String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  company      Company            @relation(fields: [companyId], references: [id])
+  transactions StockTransaction[]
+  invoiceLines InvoiceLine[]
+
+  @@index([companyId])
+  @@index([name])
+}
+
+model StockTransaction {
+  id          Int      @id @default(autoincrement())
+  stockItemId Int
+  change      Float
+  reason      String   @default("MANUAL")
+  unitPrice   Float?
+  currency    String   @default("TRY")
+  invoiceId   Int?
+  note        String?
+  companyId   String
+  createdAt   DateTime @default(now())
+
+  stockItem StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+  invoice   Invoice?  @relation(fields: [invoiceId], references: [id])
+  company   Company   @relation(fields: [companyId], references: [id])
+
+  @@index([stockItemId])
+  @@index([companyId])
+}
+
+model Invoice {
+  id                 Int      @id @default(autoincrement())
+  invoiceNo          String
+  invoiceType        String?
+  date               String?
+  supplierName       String?
+  supplierTaxNumber  String?
+  supplierAddress    String?
+  totalAmount        Float?
+  currency           String   @default("TRY")
+  vatAmount          Float?
+  rawName            String?
+  companyId          String
+  createdAt          DateTime @default(now())
+
+  company      Company            @relation(fields: [companyId], references: [id])
+  lines        InvoiceLine[]
+  transactions StockTransaction[]
+
+  @@index([companyId])
+  @@unique([companyId, invoiceNo])
+}
+
+model InvoiceLine {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int
+  name        String
+  quantity    Float
+  unit        String?
+  unitPrice   Float?
+  lineAmount  Float?
+  vatRate     Float?
+  stockItemId Int?
+  companyId   String
+
+  invoice   Invoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  stockItem StockItem? @relation(fields: [stockItemId], references: [id])
+  company   Company    @relation(fields: [companyId], references: [id])
+
+  @@index([invoiceId])
 }
 
 model AdminKey {
