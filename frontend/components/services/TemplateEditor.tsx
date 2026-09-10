@@ -8,7 +8,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { templateApi, ServiceTemplate } from "../../api/templates";
 import { serviceApi } from "../../api/services";
 import { translateLabel } from "../../api/translate";
-import { defaultTemplateConfig, isCustomField, FIELD_INPUT_TYPES, fieldNeedsOptions, type TemplateField, type TemplateChipGroup, type TemplateFieldInputType } from "./types";
+import { defaultTemplateConfig, isCustomField, FIELD_INPUT_TYPES, fieldNeedsOptions, type TemplateField, type TemplateChipGroup, type TemplateFieldInputType, type ServiceTemplateConfig } from "./types";
+import { TEMPLATE_PRESETS, type TemplatePreset } from "./presets";
 import CustomAlert from "../CustomAlert";
 
 type FieldModalState = { kind: "field"; key: string; labelTr: string; labelEn: string; inputType: TemplateFieldInputType };
@@ -41,7 +42,7 @@ export default function TemplateEditor() {
   const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
   const [createModal, setCreateModal] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
-  const [createFromSelected, setCreateFromSelected] = useState(true);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [pendingFieldModal, setPendingFieldModal] = useState<FieldModalState | null>(null);
   const [applyAlert, setApplyAlert] = useState<{
     oldName: string;
@@ -297,20 +298,26 @@ export default function TemplateEditor() {
     if (!newTemplateName.trim()) return;
     setSaving(true);
     try {
-      let fields = defaultTemplateConfig().fields;
-      let chipGroups = defaultTemplateConfig().chipGroups;
-      if (createFromSelected && selected && draft) {
-        fields = JSON.parse(JSON.stringify(draft.fields));
-        chipGroups = JSON.parse(JSON.stringify(draft.chipGroups));
+      let config: ServiceTemplateConfig;
+      if (selectedPresetId === "__blank__") {
+        config = defaultTemplateConfig();
+      } else if (selectedPresetId) {
+        const preset = TEMPLATE_PRESETS.find((p) => p.id === selectedPresetId);
+        config = preset ? JSON.parse(JSON.stringify(preset.config)) : defaultTemplateConfig();
+      } else if (selected && draft) {
+        config = { fields: JSON.parse(JSON.stringify(draft.fields)), chipGroups: JSON.parse(JSON.stringify(draft.chipGroups)) };
+      } else {
+        config = defaultTemplateConfig();
       }
       const created = await templateApi.create({
         name: newTemplateName.trim(),
-        fields,
-        chipGroups,
+        fields: config.fields,
+        chipGroups: config.chipGroups,
       });
       setTemplates((prev) => [...prev, created.data]);
       setSelectedId(created.data.id);
       setCreateModal(false);
+      setSelectedPresetId(null);
       AlertNew(t("tpl.created"), t("tpl.createdMsg"));
     } catch {
       AlertNew(t("common.error"), t("tpl.errorSave"));
@@ -506,7 +513,7 @@ export default function TemplateEditor() {
                   style={{ borderColor: colors.border, backgroundColor: colors.bg }}
                   onPress={() => {
                     setNewTemplateName("");
-                    setCreateFromSelected(!!selected);
+                    setSelectedPresetId(null);
                     setCreateModal(true);
                   }}
                   disabled={saving}
@@ -716,13 +723,14 @@ export default function TemplateEditor() {
 
       <Modal visible={createModal} transparent animationType="fade" onRequestClose={() => setCreateModal(false)}>
         <View className="flex-1 justify-center items-center bg-black/60">
-          <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
-            <View className="flex-row items-center justify-between mb-4">
+          <View className="rounded-2xl w-11/12 max-w-lg p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
               <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("tpl.createTitle")}</Text>
               <TouchableOpacity onPress={() => setCreateModal(false)}>
                 <Ionicons name="close" size={24} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
+
             <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("tpl.name")}</Text>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
@@ -732,27 +740,82 @@ export default function TemplateEditor() {
               placeholder={t("tpl.namePlaceholder")}
               placeholderTextColor={colors.textMuted}
             />
-            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("tpl.createSource")}</Text>
-            {selected && (
+
+            <Text className="text-xs font-semibold mb-2" style={{ color: colors.textSecondary }}>{t("tpl.createSource")}</Text>
+
+            <ScrollView style={{ maxHeight: 340 }} nestedScrollEnabled>
+              {selected && (
+                <TouchableOpacity
+                  className="flex-row items-center px-3 py-3 rounded-xl mb-2"
+                  style={{
+                    backgroundColor: selectedPresetId === null ? colors.primary + "1A" : colors.bg,
+                    borderColor: selectedPresetId === null ? colors.primary : colors.border,
+                    borderWidth: 1,
+                  }}
+                  onPress={() => setSelectedPresetId(null)}
+                >
+                  <View className="w-9 h-9 rounded-lg items-center justify-center mr-3" style={{ backgroundColor: colors.primary + "22" }}>
+                    <Ionicons name="copy-outline" size={18} color={colors.primary} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold" style={{ color: colors.text }}>{t("tpl.createCopy")}</Text>
+                    <Text className="text-[11px] mt-0.5" style={{ color: colors.textMuted }}>{selected.name}</Text>
+                  </View>
+                  <Ionicons name={selectedPresetId === null ? "radio-button-on" : "radio-button-off"} size={18} color={selectedPresetId === null ? colors.primary : colors.textMuted} />
+                </TouchableOpacity>
+              )}
+
+              {TEMPLATE_PRESETS.map((preset) => {
+                const active = selectedPresetId === preset.id;
+                const enabledFields = preset.config.fields.filter((f) => f.enabled).length;
+                const enabledOptions = preset.config.chipGroups.reduce((sum, g) => sum + (g.enabled ? g.options.length : 0), 0);
+                return (
+                  <TouchableOpacity
+                    key={preset.id}
+                    className="flex-row items-center px-3 py-3 rounded-xl mb-2"
+                    style={{
+                      backgroundColor: active ? colors.primary + "1A" : colors.bg,
+                      borderColor: active ? colors.primary : colors.border,
+                      borderWidth: 1,
+                    }}
+                    onPress={() => setSelectedPresetId(preset.id)}
+                  >
+                    <View className="w-9 h-9 rounded-lg items-center justify-center mr-3" style={{ backgroundColor: colors.primary + "22" }}>
+                      <Ionicons name={preset.icon as any} size={18} color={colors.primary} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-sm font-semibold" style={{ color: colors.text }}>{t(preset.nameKey)}</Text>
+                      <Text className="text-[11px] mt-0.5" style={{ color: colors.textMuted }}>{t(preset.descKey)}</Text>
+                      <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
+                        {enabledFields} {t("tpl.fieldsSection").toLowerCase()}, {enabledOptions} {t("tpl.addOption").toLowerCase().replace("ekle", "")}
+                      </Text>
+                    </View>
+                    <Ionicons name={active ? "radio-button-on" : "radio-button-off"} size={18} color={active ? colors.primary : colors.textMuted} />
+                  </TouchableOpacity>
+                );
+              })}
+
               <TouchableOpacity
-                className="flex-row items-center px-3 h-10 rounded-lg mb-2"
-                style={{ backgroundColor: createFromSelected ? colors.primary + '1A' : colors.bg, borderColor: colors.border, borderWidth: 1 }}
-                onPress={() => setCreateFromSelected(true)}
+                className="flex-row items-center px-3 py-3 rounded-xl mb-2"
+                style={{
+                  backgroundColor: selectedPresetId === "__blank__" ? colors.primary + "1A" : colors.bg,
+                  borderColor: selectedPresetId === "__blank__" ? colors.primary : colors.border,
+                  borderWidth: 1,
+                }}
+                onPress={() => setSelectedPresetId("__blank__")}
               >
-                <Ionicons name={createFromSelected ? "radio-button-on" : "radio-button-off"} size={18} color={createFromSelected ? colors.primary : colors.textMuted} />
-                <Text className="text-sm ml-2 flex-1" style={{ color: colors.text }}>{t("tpl.createCopy")}</Text>
-                {selected && <Text className="text-xs" style={{ color: colors.textMuted }}>{selected.name}</Text>}
+                <View className="w-9 h-9 rounded-lg items-center justify-center mr-3" style={{ backgroundColor: colors.bgInput }}>
+                  <Ionicons name="add-circle-outline" size={18} color={colors.textSecondary} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold" style={{ color: colors.text }}>{t("tpl.preset.blank")}</Text>
+                  <Text className="text-[11px] mt-0.5" style={{ color: colors.textMuted }}>{t("tpl.preset.blankDesc")}</Text>
+                </View>
+                <Ionicons name={selectedPresetId === "__blank__" ? "radio-button-on" : "radio-button-off"} size={18} color={selectedPresetId === "__blank__" ? colors.primary : colors.textMuted} />
               </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              className="flex-row items-center px-3 h-10 rounded-lg mb-4"
-              style={{ backgroundColor: !createFromSelected ? colors.primary + '1A' : colors.bg, borderColor: colors.border, borderWidth: 1 }}
-              onPress={() => setCreateFromSelected(false)}
-            >
-              <Ionicons name={!createFromSelected ? "radio-button-on" : "radio-button-off"} size={18} color={!createFromSelected ? colors.primary : colors.textMuted} />
-              <Text className="text-sm ml-2 flex-1" style={{ color: colors.text }}>{t("tpl.createBlank")}</Text>
-            </TouchableOpacity>
-            <View className="flex-row gap-3">
+            </ScrollView>
+
+            <View className="flex-row gap-3 mt-3">
               <TouchableOpacity
                 className="flex-1 h-10 rounded-lg items-center justify-center"
                 style={{ backgroundColor: colors.bgInput }}
@@ -764,7 +827,7 @@ export default function TemplateEditor() {
                 className="flex-1 h-10 rounded-lg items-center justify-center"
                 style={{ backgroundColor: colors.primary }}
                 onPress={handleCreate}
-                disabled={saving}
+                disabled={saving || !newTemplateName.trim()}
               >
                 {saving ? (
                   <ActivityIndicator size="small" color="white" />
