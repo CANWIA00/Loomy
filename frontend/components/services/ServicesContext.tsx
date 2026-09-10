@@ -11,7 +11,7 @@ import { serviceApi, ServiceRecord } from "../../api/services";
 import { customerApi, Customer } from "../../api/customers";
 import { templateApi, ServiceTemplate } from "../../api/templates";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { initialForm, initialNewCustomerForm, defaultTemplateConfig, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig } from "./types";
+import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField } from "./types";
 
 interface DeleteAlertState {
   visible: boolean;
@@ -106,7 +106,7 @@ export function useServices() {
 }
 
 export function ServicesProvider({ children }: { children: ReactNode }) {
-  const { t, locale } = useLanguage();
+  const { t, lang, locale } = useLanguage();
   const [form, setForm] = useState<ServiceFormData>({ ...initialForm });
   const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [filter, setFilter] = useState<RecordFilter>("all");
@@ -329,10 +329,28 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       return { ...prev, customChips: { ...prev.customChips, [groupKey]: labels } };
     });
 
+  const fieldValueByKey = useCallback((key: string): string => {
+    switch (key) {
+      case "customerName": return form.customerName;
+      case "serviceAddress": return form.serviceAddress;
+      case "startTime": return form.startTime;
+      case "endTime": return form.endTime;
+      case "phone": return form.phone;
+      case "technician": return form.technician;
+      case "documentDate": return form.documentDate;
+      case "details": return form.details;
+      case "fee": return form.fee;
+      default: return form.customValues[key] || "";
+    }
+  }, [form]);
+
   const handleSave = () => {
     if (!requireSignature()) return;
-    if (!form.customerName) {
-      Alert.alert(t("svc.warning"), t("svc.errorRequired"));
+    const required = effectiveFields(templateConfig).filter((f) => f.required === true);
+    const missing = required.filter((f) => !fieldValueByKey(f.key).trim());
+    if (missing.length) {
+      const names = missing.map((f: TemplateField) => (lang === "tr" ? f.labelTr : f.labelEn)).join(", ");
+      Alert.alert(t("svc.warning"), t("svc.errorRequiredFields", { fields: names }));
       return;
     }
     if (form.startTime && form.startTime === form.endTime) {
