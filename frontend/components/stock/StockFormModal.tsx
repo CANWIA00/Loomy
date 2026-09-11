@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Switch } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -21,6 +21,7 @@ interface Props {
     supplierName: string;
     supplierTaxNumber: string;
     notes: string;
+    lowStockAlert: boolean;
   }) => void;
 }
 
@@ -39,6 +40,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
   const [supplierName, setSupplierName] = useState("");
   const [supplierTaxNumber, setSupplierTaxNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [lowStockAlert, setLowStockAlert] = useState(true);
   const [currencyModal, setCurrencyModal] = useState(false);
   const [unitModal, setUnitModal] = useState(false);
 
@@ -48,7 +50,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
     if (visible) {
       setName(item?.name || "");
       setUnit(item?.unit || "AD");
-      setInitialQty(item ? "0" : "0");
+      setInitialQty(item ? String(item.quantity) : "0");
       setMinQty(item ? String(item.minQuantity || 0) : "0");
       setUnitPrice(item?.unitPrice != null ? String(item.unitPrice).replace(".", ",") : "");
       setVatRate(item ? String(item.vatRate || 0) : "0");
@@ -56,6 +58,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
       setSupplierName(item?.supplierName || "");
       setSupplierTaxNumber(item?.supplierTaxNumber || "");
       setNotes(item?.notes || "");
+      setLowStockAlert(item?.lowStockAlert !== false);
     }
   }, [visible, item]);
 
@@ -180,6 +183,23 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                 style={{ backgroundColor: colors.bgInput, color: colors.text, minHeight: 60, textAlignVertical: "top" }}
               />
 
+              {isEdit ? (
+                <View
+                  className="flex-row items-center justify-between rounded-lg px-3 py-2.5 mb-3"
+                  style={{ backgroundColor: colors.bgInput }}
+                >
+                  <Text className="text-xs flex-1 mr-2" style={{ color: colors.textSecondary }}>
+                    {t("stock.lowStockAlert")}
+                  </Text>
+                  <Switch
+                    value={lowStockAlert}
+                    onValueChange={setLowStockAlert}
+                    trackColor={{ true: colors.success, false: colors.border }}
+                    thumbColor="white"
+                  />
+                </View>
+              ) : null}
+
               <TouchableOpacity
                 disabled={submitDisabled}
                 className="h-11 rounded-lg items-center justify-center mb-1"
@@ -196,6 +216,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                     supplierName: supplierName.trim(),
                     supplierTaxNumber: supplierTaxNumber.trim(),
                     notes: notes.trim(),
+                    lowStockAlert,
                   })
                 }
               >
