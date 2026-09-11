@@ -387,34 +387,46 @@ export default function QuoteForm() {
                 <View className="flex-row items-center gap-2 mb-2">
                   <View className="flex-1">
                     <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.productName")}</Text>
-                    <TextInput
-                      className="w-full h-9 border rounded-lg px-2.5 text-sm"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
-                      placeholder={t("qot.productNamePlaceholder")}
-                      placeholderTextColor={colors.textMuted}
-                      value={line.name}
-                      onChangeText={(v) => {
-                        updateLine(idx, "name", v);
-                        searchStock(v, idx);
-                      }}
-                    />
+                    <View className="flex-row items-center">
+                      <TextInput
+                        className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
+                        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                        placeholder={t("qot.productNamePlaceholder")}
+                        placeholderTextColor={colors.textMuted}
+                        value={line.name}
+                        onChangeText={(v) => {
+                          updateLine(idx, "name", v);
+                          searchStock(v, idx);
+                        }}
+                      />
+                      {line.name ? (
+                        <TouchableOpacity
+                          onPress={() => {
+                            updateLine(idx, "name", "");
+                            setStockSuggestions([]);
+                            setStockSearchIdx(null);
+                          }}
+                          className="h-9 w-8 items-center justify-center"
+                        >
+                          <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
                     {stockSearchIdx === idx && stockSuggestions.length > 0 ? (
-                      <View className="rounded-lg border mt-1" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, maxHeight: 140 }}>
-                        <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                          {stockSuggestions.map((s) => (
-                            <TouchableOpacity
-                              key={s.id}
-                              className="px-3 py-2"
-                              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
-                              onPressIn={() => selectStockItem(idx, s.name)}
-                            >
-                              <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>{s.name}</Text>
-                              <Text className="text-[10px]" style={{ color: colors.textMuted }}>
-                                {s.quantity} {s.unit} {s.supplierName ? `· ${s.supplierName}` : ""}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
-                        </ScrollView>
+                      <View className="rounded-lg border mt-1" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+                        {stockSuggestions.map((s) => (
+                          <TouchableOpacity
+                            key={s.id}
+                            className="px-3 py-2"
+                            style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+                            onPress={() => selectStockItem(idx, s.name)}
+                          >
+                            <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>{s.name}</Text>
+                            <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                              {s.quantity} {s.unit} {s.supplierName ? `· ${s.supplierName}` : ""}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
                       </View>
                     ) : null}
                   </View>
