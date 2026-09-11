@@ -320,6 +320,9 @@ export default function StockScreen() {
                         <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
                           {item.unitPrice != null ? formatMoney(item.unitPrice, item.currency) : "-"}
                         </Text>
+                        <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
+                          {item.vatRate > 0 ? `KDV %${formatQty(item.vatRate)}` : "-"}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -359,8 +362,17 @@ export default function StockScreen() {
                   >
                     <View className="flex-row items-center justify-between mb-1">
                       <Text className="text-sm font-bold" style={{ color: colors.text }}>{inv.invoiceNo}</Text>
-                      {inv.totalAmount != null ? (
-                        <Text className="text-sm font-semibold" style={{ color: colors.primary }}>{formatMoney(inv.totalAmount, inv.currency)}</Text>
+                      {inv.totalAmount != null || inv.vatAmount != null ? (
+                        <View className="items-end">
+                          {inv.totalAmount != null ? (
+                            <Text className="text-sm font-semibold" style={{ color: colors.primary }}>{formatMoney(inv.totalAmount, inv.currency)}</Text>
+                          ) : null}
+                          {inv.vatAmount != null ? (
+                            <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                              KDV {formatMoney(inv.vatAmount, inv.currency)}
+                            </Text>
+                          ) : null}
+                        </View>
                       ) : null}
                     </View>
                     <Text className="text-xs" style={{ color: colors.textMuted }}>
