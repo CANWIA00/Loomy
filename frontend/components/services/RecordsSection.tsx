@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -7,10 +7,12 @@ import { useServices } from "./ServicesContext";
 import type { RecordFilter } from "./types";
 
 const FILTERS: RecordFilter[] = ["all", "gun", "ay", "yil"];
+const PAGE_SIZE = 15;
 
 export default function RecordsSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const [page, setPage] = useState(0);
   const {
     filteredRecords,
     filter,
@@ -32,6 +34,17 @@ export default function RecordsSection() {
     setDeleteAlert,
     templates,
   } = useServices();
+
+  useEffect(() => {
+    setPage(0);
+  }, [filter, filterDate, filterDocument, filterCustomer, filterTemplate]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
+  const pagedRecords = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const changePage = (delta: number) => {
+    setPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
+  };
 
   const [templateFilterOpen, setTemplateFilterOpen] = useState(false);
 
@@ -187,7 +200,7 @@ export default function RecordsSection() {
         </View>
 
         <ScrollView nestedScrollEnabled className="max-h-96" indicatorStyle={colors.indicatorBg as any}>
-          {filteredRecords.map((k) => (
+          {pagedRecords.map((k) => (
             <View
               key={k.id}
               className="flex-row items-center px-3 py-3 border-b"
@@ -234,6 +247,30 @@ export default function RecordsSection() {
           ))}
         </ScrollView>
       </View>
+
+      {totalPages > 1 ? (
+        <View className="flex-row items-center justify-center gap-3 mt-4">
+          <TouchableOpacity
+            disabled={page === 0}
+            onPress={() => changePage(-1)}
+            className="px-4 py-2 rounded-lg"
+            style={{ backgroundColor: page === 0 ? colors.bgCard : colors.primary, opacity: page === 0 ? 0.5 : 1 }}
+          >
+            <Text className="text-sm" style={{ color: "white" }}>{t("svc.previous")}</Text>
+          </TouchableOpacity>
+          <Text className="text-sm" style={{ color: colors.textSecondary }}>
+            {page + 1} / {totalPages}
+          </Text>
+          <TouchableOpacity
+            disabled={page >= totalPages - 1}
+            onPress={() => changePage(1)}
+            className="px-4 py-2 rounded-lg"
+            style={{ backgroundColor: page >= totalPages - 1 ? colors.bgCard : colors.primary, opacity: page >= totalPages - 1 ? 0.5 : 1 }}
+          >
+            <Text className="text-sm" style={{ color: "white" }}>{t("svc.next")}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
     </>
   );
 }

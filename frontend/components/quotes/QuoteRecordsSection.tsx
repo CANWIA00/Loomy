@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -9,11 +10,13 @@ import { useCurrency } from "../../contexts/CurrencyContext";
 import { convertToTry } from "../../utils/currencyRates";
 
 const FILTERS: QuoteFilter[] = ["all", "gun", "ay", "yil"];
+const PAGE_SIZE = 15;
 
 export default function QuoteRecordsSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { convert: convertTry } = useCurrency();
+  const [page, setPage] = useState(0);
   const {
     filteredRecords,
     filter,
@@ -30,6 +33,17 @@ export default function QuoteRecordsSection() {
     handleEdit,
     setDeleteAlert,
   } = useQuotes();
+
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
+  const pagedRecords = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(0);
+  }, [filter, filterDate, filterCustomer]);
+
+  const changePage = (delta: number) => {
+    setPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
+  };
 
   const filterLabel = (f: QuoteFilter) =>
     f === "all" ? t("qot.filterAll") : f === "gun" ? t("qot.filterDay") : f === "ay" ? t("qot.filterMonth") : t("qot.filterYear");
@@ -100,7 +114,7 @@ export default function QuoteRecordsSection() {
         </View>
 
         <ScrollView nestedScrollEnabled className="max-h-96" indicatorStyle={colors.indicatorBg as any}>
-          {filteredRecords.map((k) => {
+          {pagedRecords.map((k) => {
             const currencyTotals: Record<string, number> = {};
             (k.lines || []).forEach((l) => {
               const cur = l.currency || "TRY";
@@ -163,6 +177,30 @@ export default function QuoteRecordsSection() {
           })}
         </ScrollView>
       </View>
+
+      {totalPages > 1 ? (
+        <View className="flex-row items-center justify-center gap-3 mt-4">
+          <TouchableOpacity
+            disabled={page === 0}
+            onPress={() => changePage(-1)}
+            className="px-4 py-2 rounded-lg"
+            style={{ backgroundColor: page === 0 ? colors.bgCard : colors.primary, opacity: page === 0 ? 0.5 : 1 }}
+          >
+            <Text className="text-sm" style={{ color: "white" }}>{t("qot.previous")}</Text>
+          </TouchableOpacity>
+          <Text className="text-sm" style={{ color: colors.textSecondary }}>
+            {page + 1} / {totalPages}
+          </Text>
+          <TouchableOpacity
+            disabled={page >= totalPages - 1}
+            onPress={() => changePage(1)}
+            className="px-4 py-2 rounded-lg"
+            style={{ backgroundColor: page >= totalPages - 1 ? colors.bgCard : colors.primary, opacity: page >= totalPages - 1 ? 0.5 : 1 }}
+          >
+            <Text className="text-sm" style={{ color: "white" }}>{t("qot.next")}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
     </>
   );
 }
