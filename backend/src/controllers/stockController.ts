@@ -169,6 +169,7 @@ export async function updateStockItem(
       supplierName: data.supplierName?.trim() ?? existing.supplierName,
       supplierTaxNumber: data.supplierTaxNumber?.trim() ?? existing.supplierTaxNumber,
       notes: data.notes?.trim() ?? existing.notes,
+      lowStockAlert: data.lowStockAlert != null ? Boolean(data.lowStockAlert) : existing.lowStockAlert,
     };
 
     const updated = await prisma.stockItem.update({ where: { id }, data: patch });

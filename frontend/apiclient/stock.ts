@@ -14,6 +14,7 @@ export interface StockItem {
   lastInvoiceNo: string | null;
   lastInvoiceDate: string | null;
   notes: string | null;
+  lowStockAlert: boolean;
   lowStock?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -47,6 +48,7 @@ export interface StockItemInput {
   supplierName?: string;
   supplierTaxNumber?: string;
   notes?: string;
+  lowStockAlert?: boolean;
 }
 
 export interface InvoiceLine {

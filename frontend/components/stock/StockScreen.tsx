@@ -173,9 +173,19 @@ export default function StockScreen() {
     }
   };
 
-  const lowStockCount = items.filter((i) => i.quantity <= i.minQuantity).length;
+  const handleToggleAlert = async (target: StockItemDetail) => {
+    try {
+      const updated = (await stockApi.update(target.id, { lowStockAlert: !target.lowStockAlert })).data;
+      setItems((prev) => prev.map((i) => (i.id === updated.id ? { ...i, lowStockAlert: updated.lowStockAlert } : i)));
+      setDetail((prev) => (prev ? { ...prev, lowStockAlert: updated.lowStockAlert } : prev));
+    } catch {
+      setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
+    }
+  };
+
+  const lowStockCount = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).length;
   const searchQ = search.trim().toLowerCase();
-  const filteredItems = (itemFilter === "low" ? items.filter((i) => i.quantity <= i.minQuantity) : items)
+  const filteredItems = (itemFilter === "low" ? items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity) : items)
     .filter((i) => !searchQ || i.name.toLowerCase().includes(searchQ) || (i.supplierName || "").toLowerCase().includes(searchQ));
   const totalByCurrency = items.reduce<Record<string, number>>((acc, i) => {
     if (i.unitPrice == null) return acc;
@@ -292,7 +302,7 @@ export default function StockScreen() {
                 </View>
               ) : (
                 filteredItems.map((item) => {
-                  const low = item.quantity <= item.minQuantity;
+                  const low = item.lowStockAlert && item.quantity <= item.minQuantity;
                   return (
                     <TouchableOpacity
                       key={item.id}
@@ -432,6 +442,7 @@ export default function StockScreen() {
           })
         }
         onAdjust={handleAdjust}
+        onToggleAlert={handleToggleAlert}
       />
 
       <StockFormModal

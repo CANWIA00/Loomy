@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { StockItemDetail, StockTransaction } from "../../apiclient/stock";
@@ -13,6 +14,7 @@ interface Props {
   onEdit: (item: StockItemDetail) => void;
   onDelete: (item: StockItemDetail) => void;
   onAdjust: (item: StockItemDetail, change: number, note: string) => void;
+  onToggleAlert: (item: StockItemDetail) => void;
 }
 
 function reasonLabel(reason: string, t: (key: string, params?: any) => string): string {
@@ -21,7 +23,7 @@ function reasonLabel(reason: string, t: (key: string, params?: any) => string): 
   return t("stock.reasonManual");
 }
 
-export default function StockDetailModal({ visible, item, adjusting, onClose, onEdit, onDelete, onAdjust }: Props) {
+export default function StockDetailModal({ visible, item, adjusting, onClose, onEdit, onDelete, onAdjust, onToggleAlert }: Props) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const [qty, setQty] = useState("1");
@@ -55,9 +57,18 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
                 </Text>
               ) : null}
             </View>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={{ color: colors.textMuted }} className="text-xl">✕</Text>
-            </TouchableOpacity>
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity onPress={() => onToggleAlert(item)} style={{ padding: 4 }}>
+                <Ionicons
+                  name={item.lowStockAlert ? "notifications" : "notifications-off-outline"}
+                  size={20}
+                  color={item.lowStockAlert ? colors.warning : colors.textMuted}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={{ color: colors.textMuted }} className="text-xl">✕</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 4 }}>

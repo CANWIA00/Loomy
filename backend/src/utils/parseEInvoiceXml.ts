@@ -143,17 +143,16 @@ export function parseEInvoiceXml(xml: string): ParsedEInvoice {
       }
     }
 
-    // Fallback: line-level TaxTotal/TaxSubtotal/TaxCategory
+    // Fallback: line-level TaxTotal/TaxSubtotal
+    // KDV orani: TaxSubtotal.Percent veya TaxSubtotal.TaxCategory.Percent altinda olabilir
     if (vatRateValue == null) {
       const taxSubs = asArray<any>(line.TaxTotal?.TaxSubtotal);
       for (const sub of taxSubs) {
-        const cat = sub?.TaxCategory;
-        if (cat) {
-          const pct = cat.Percent ?? cat.TaxPercent;
-          if (pct != null) {
-            vatRateValue = toNum(pct);
-            if (vatRateValue != null) break;
-          }
+        const pct =
+          sub?.Percent ?? sub?.TaxPercent ?? sub?.TaxCategory?.Percent ?? sub?.TaxCategory?.TaxPercent;
+        if (pct != null) {
+          vatRateValue = toNum(pct);
+          if (vatRateValue != null) break;
         }
       }
     }

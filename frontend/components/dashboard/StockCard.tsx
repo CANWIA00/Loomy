@@ -57,7 +57,7 @@ export default function StockCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const lowStockCount = items.filter((i) => i.quantity <= i.minQuantity).length;
+  const lowStockCount = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).length;
   const totalByCurrency = items.reduce<Record<string, number>>((acc, i) => {
     if (i.unitPrice == null) return acc;
     const cur = i.currency || "TRY";
@@ -113,7 +113,17 @@ export default function StockCard() {
     }
   };
 
-  const lowStockItems = items.filter((i) => i.quantity <= i.minQuantity).slice(0, 4);
+  const handleToggleAlert = async (target: StockItemDetail) => {
+    try {
+      const updated = (await stockApi.update(target.id, { lowStockAlert: !target.lowStockAlert })).data;
+      setItems((prev) => prev.map((i) => (i.id === updated.id ? { ...i, lowStockAlert: updated.lowStockAlert } : i)));
+      setDetail((prev) => (prev ? { ...prev, lowStockAlert: updated.lowStockAlert } : prev));
+    } catch {
+      setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
+    }
+  };
+
+  const lowStockItems = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).slice(0, 4);
 
   return (
     <View className="rounded-2xl p-4" style={{ backgroundColor: colors.bgCard }}>
@@ -249,6 +259,7 @@ export default function StockCard() {
         onEdit={(item) => { setDetailVisible(false); setFormItem(item); setFormVisible(true); }}
         onDelete={() => setDetailVisible(false)}
         onAdjust={handleAdjust}
+        onToggleAlert={handleToggleAlert}
       />
 
       <StockFormModal

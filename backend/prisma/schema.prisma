@@ -219,6 +219,7 @@ model StockItem {
   lastInvoiceNo     String?
   lastInvoiceDate   String?
   notes             String?
+  lowStockAlert     Boolean  @default(true)
   companyId         String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
