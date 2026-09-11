@@ -4,6 +4,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import ScreenHeader from "../../components/ScreenHeader";
 import { PaymentsProvider, usePayments } from "../../components/payments/PaymentsContext";
 import SummarySection from "../../components/payments/SummarySection";
+import FinanceOverview from "../../components/payments/FinanceOverview";
 import PaymentsListSection from "../../components/payments/PaymentsListSection";
 import CustomAlert from "../../components/CustomAlert";
 
@@ -31,6 +32,7 @@ function PaymentsScreenInner() {
       <ScrollView style={{ backgroundColor: colors.bg }} className="flex-1" indicatorStyle={colors.indicatorBg as any}>
         <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
           <ScreenHeader title={t("pay.title")} subtitle={t("pay.subtitle")} />
+          <FinanceOverview />
           <SummarySection />
           <PaymentsListSection />
         </View>
