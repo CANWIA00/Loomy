@@ -71,8 +71,8 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View className="flex-1 items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-          <View className="rounded-2xl p-5 w-full max-w-md" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, maxHeight: "88%" }}>
-            <View className="flex-row items-center justify-between mb-4">
+          <View className="rounded-2xl p-4 w-full max-w-md" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, maxHeight: "95%" }}>
+            <View className="flex-row items-center justify-between mb-3">
               <Text className="text-lg font-bold" style={{ color: colors.text }}>
                 {isEdit ? t("stock.edit") : t("stock.addItem")}
               </Text>
@@ -81,23 +81,23 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
               </TouchableOpacity>
             </View>
 
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flexShrink: 1 }}>
-              <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.name")} *</Text>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 2 }}>
+              <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.name")} *</Text>
               <TextInput
                 value={name}
                 onChangeText={setName}
                 placeholder={t("stock.namePlaceholder")}
                 placeholderTextColor={colors.textMuted}
-                className="rounded-lg px-3 py-2.5 mb-3"
+                className="rounded-lg px-3 py-2 mb-2.5"
                 style={{ backgroundColor: colors.bgInput, color: colors.text }}
               />
 
-              <View className="flex-row gap-2 mb-3">
+              <View className="flex-row gap-2 mb-2.5">
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.unit")}</Text>
+                  <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.unit")}</Text>
                   <TouchableOpacity
                     onPress={() => setUnitModal(true)}
-                    className="rounded-lg px-3 py-2.5 flex-row items-center"
+                    className="rounded-lg px-3 py-2 flex-row items-center"
                     style={{ backgroundColor: colors.bgInput }}
                   >
                     <Text style={{ color: colors.text }} className="flex-1">{unit}</Text>
@@ -105,10 +105,10 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   </TouchableOpacity>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.currency")}</Text>
+                  <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.currency")}</Text>
                   <TouchableOpacity
                     onPress={() => setCurrencyModal(true)}
-                    className="rounded-lg px-3 py-2.5 flex-row items-center"
+                    className="rounded-lg px-3 py-2 flex-row items-center"
                     style={{ backgroundColor: colors.bgInput }}
                   >
                     <Text style={{ color: colors.text }} className="flex-1">
@@ -119,74 +119,74 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                 </View>
               </View>
 
-              <View className="flex-row gap-2 mb-3">
+              <View className="flex-row gap-2 mb-2.5">
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.qty")} ({unit})</Text>
+                  <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.qty")} ({unit})</Text>
                   <TextInput
                     value={initialQty}
                     onChangeText={(v) => setInitialQty(v.replace(/[^0-9.,]/g, ""))}
                     keyboardType="decimal-pad"
                     placeholder={isEdit ? t("stock.qtyEditHint") : t("stock.qty")}
                     placeholderTextColor={colors.textMuted}
-                    className="rounded-lg px-3 py-2.5"
+                    className="rounded-lg px-3 py-2"
                     style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.minQty")} ({unit})</Text>
+                  <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.minQty")} ({unit})</Text>
                   <TextInput
                     value={minQty}
                     onChangeText={(v) => setMinQty(v.replace(/[^0-9.,]/g, ""))}
                     keyboardType="decimal-pad"
-                    className="rounded-lg px-3 py-2.5"
+                    className="rounded-lg px-3 py-2"
                     style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
                 </View>
               </View>
 
-              <View className="flex-row gap-2 mb-3">
+              <View className="flex-row gap-2 mb-2.5">
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.unitPrice")}</Text>
+                  <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.unitPrice")}</Text>
                   <TextInput
                     value={unitPrice}
                     onChangeText={(v) => setUnitPrice(v.replace(/[^0-9.,]/g, ""))}
                     keyboardType="decimal-pad"
-                    className="rounded-lg px-3 py-2.5"
+                    className="rounded-lg px-3 py-2"
                     style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.vat")} (%)</Text>
+                  <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.vat")} (%)</Text>
                   <TextInput
                     value={vatRate}
                     onChangeText={(v) => setVatRate(v.replace(/[^0-9.,]/g, ""))}
                     keyboardType="decimal-pad"
-                    className="rounded-lg px-3 py-2.5"
+                    className="rounded-lg px-3 py-2"
                     style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
                 </View>
               </View>
 
-              <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.supplier")}</Text>
+              <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.supplier")}</Text>
               <TextInput
                 value={supplierName}
                 onChangeText={setSupplierName}
-                className="rounded-lg px-3 py-2.5 mb-3"
+                className="rounded-lg px-3 py-2 mb-2.5"
                 style={{ backgroundColor: colors.bgInput, color: colors.text }}
               />
 
-              <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.notes")}</Text>
+              <Text className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{t("stock.notes")}</Text>
               <TextInput
                 value={notes}
                 onChangeText={setNotes}
                 multiline
-                className="rounded-lg px-3 py-2.5 mb-3"
-                style={{ backgroundColor: colors.bgInput, color: colors.text, minHeight: 60, textAlignVertical: "top" }}
+                className="rounded-lg px-3 py-2 mb-2.5"
+                style={{ backgroundColor: colors.bgInput, color: colors.text, minHeight: 44, textAlignVertical: "top" }}
               />
 
               {isEdit ? (
                 <View
-                  className="flex-row items-center justify-between rounded-lg px-3 py-2.5 mb-3"
+                  className="flex-row items-center justify-between rounded-lg px-3 py-2 mb-2"
                   style={{ backgroundColor: colors.bgInput }}
                 >
                   <Text className="text-xs flex-1 mr-2" style={{ color: colors.textSecondary }}>
@@ -204,7 +204,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
 
             <TouchableOpacity
               disabled={submitDisabled}
-              className="h-11 rounded-lg items-center justify-center mt-3 mb-1"
+              className="h-10 rounded-lg items-center justify-center mt-2"
               style={{ backgroundColor: submitDisabled ? colors.bgInput : colors.primary, opacity: submitDisabled ? 0.6 : 1 }}
                 onPress={() =>
                   onSubmit({

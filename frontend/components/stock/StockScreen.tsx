@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView 
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import ScreenHeader from "../ScreenHeader";
 import CustomAlert from "../CustomAlert";
 import { stockApi, type StockItem, type StockItemDetail, type InvoiceRecord, type StockItemInput } from "../../apiclient/stock";
@@ -27,6 +28,7 @@ const emptyAlert: AlertState = { visible: false, type: "success", title: "", mes
 export default function StockScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { rates } = useCurrency();
 
   const [mode, setMode] = useState<"items" | "invoices">("items");
   const [itemFilter, setItemFilter] = useState<"all" | "low">("all");
@@ -191,9 +193,21 @@ export default function StockScreen() {
     acc[cur] = (acc[cur] || 0) + i.quantity * i.unitPrice;
     return acc;
   }, {});
-  const totalValue = Object.entries(totalByCurrency)
-    .map(([cur, val]) => formatMoney(val, cur))
-    .join(" · ");
+  const currencyParts = Object.entries(totalByCurrency).map(([cur, val]) => formatMoney(val, cur));
+  const usdRate = rates?.rates?.["USD"];
+  const totalValueUsd =
+    usdRate && usdRate > 0
+      ? Object.entries(totalByCurrency).reduce((acc, [cur, val]) => {
+          const r = rates?.rates?.[cur];
+          return acc + (r ? (val * r) / usdRate : 0);
+        }, 0)
+      : null;
+  const totalValue =
+    currencyParts.length === 0
+      ? ""
+      : totalValueUsd != null
+        ? `${currencyParts.join(" + ")} (${t("stock.totalUsd")}: ${formatMoney(totalValueUsd, "USD")})`
+        : currencyParts.join(" + ");
 
   return (
     <>

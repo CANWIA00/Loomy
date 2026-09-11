@@ -43,9 +43,9 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-        <View className="rounded-2xl p-5 w-full max-w-md" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, maxHeight: "88%" }}>
+        <View className="rounded-2xl p-4 w-full max-w-md" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, maxHeight: "95%" }}>
 
-          <View className="flex-row items-start justify-between mb-3">
+          <View className="flex-row items-start justify-between mb-2">
             <View className="flex-1 mr-3">
               <Text className="text-lg font-bold" style={{ color: colors.text }}>{item.name}</Text>
               {item.supplierName ? (
@@ -71,14 +71,14 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
             </View>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 4 }}>
-            <View className="flex-row gap-2 mb-4">
+          <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 2 }}>
+            <View className="flex-row gap-2 mb-2.5">
               <View
-                className="flex-1 rounded-xl px-4 py-3"
+                className="flex-1 rounded-xl px-3 py-2"
                 style={{ backgroundColor: lowStock ? colors.warning + "22" : colors.success + "22", borderColor: lowStock ? colors.warning + "55" : colors.success + "55", borderWidth: 1 }}
               >
                 <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.qty")}</Text>
-                <Text className="text-xl font-bold" style={{ color: lowStock ? colors.warning : colors.success }}>
+                <Text className="text-lg font-bold" style={{ color: lowStock ? colors.warning : colors.success }}>
                   {formatQty(item.quantity)} {item.unit}
                 </Text>
                 {lowStock ? (
@@ -87,15 +87,15 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
                   </Text>
                 ) : null}
               </View>
-              <View className="flex-1 rounded-xl px-4 py-3" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
+              <View className="flex-1 rounded-xl px-3 py-2" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
                 <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.unitPrice")}</Text>
-                <Text className="text-xl font-bold" style={{ color: colors.text }}>{formatMoney(item.unitPrice, item.currency)}</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.text }}>{formatMoney(item.unitPrice, item.currency)}</Text>
                 <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>KDV %{formatQty(item.vatRate)}</Text>
               </View>
             </View>
 
-            <View className="rounded-xl p-3 mb-4" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
-              <Text className="text-sm font-semibold mb-2" style={{ color: colors.text }}>{t("stock.adjustStock")}</Text>
+            <View className="rounded-xl p-2.5 mb-2.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
+              <Text className="text-sm font-semibold mb-1.5" style={{ color: colors.text }}>{t("stock.adjustStock")}</Text>
               <View className="flex-row gap-2">
                 <TextInput
                   value={qty}
@@ -132,19 +132,19 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
                 onChangeText={setNote}
                 placeholder={t("stock.notes")}
                 placeholderTextColor={colors.textMuted}
-                className="rounded-lg px-3 py-2 mt-2"
+                className="rounded-lg px-3 py-2 mt-1.5"
                 style={{ backgroundColor: colors.bgInput, color: colors.text }}
               />
             </View>
           </ScrollView>
 
-          <Text className="text-sm font-semibold mb-2" style={{ color: colors.text }}>{t("stock.history")}</Text>
+          <Text className="text-sm font-semibold mb-1.5" style={{ color: colors.text }}>{t("stock.history")}</Text>
 
           {item.transactions.length > 0 ? (
-            <View style={{ maxHeight: 180 }} className="mb-3">
+            <View style={{ maxHeight: 132 }} className="mb-2.5">
               <ScrollView showsVerticalScrollIndicator nestedScrollEnabled>
                 {item.transactions.map((tr: StockTransaction) => (
-                  <View key={tr.id} className="flex-row items-center justify-between rounded-lg px-3 py-2 mb-1.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
+                  <View key={tr.id} className="flex-row items-center justify-between rounded-lg px-3 py-1.5 mb-1" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
                     <View className="flex-1 mr-2">
                       <View className="flex-row items-center gap-2">
                         <Text className="font-bold" style={{ color: tr.change > 0 ? colors.success : colors.danger }}>
@@ -175,19 +175,19 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
               </ScrollView>
             </View>
           ) : (
-            <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("stock.historyEmpty")}</Text>
+            <Text className="text-xs mb-2.5" style={{ color: colors.textMuted }}>{t("stock.historyEmpty")}</Text>
           )}
 
           <View className="flex-row gap-2">
             <TouchableOpacity
-              className="flex-1 h-11 rounded-lg items-center justify-center"
+              className="flex-1 h-10 rounded-lg items-center justify-center"
               style={{ backgroundColor: colors.danger }}
               onPress={() => onDelete(item)}
             >
               <Text style={{ color: "white" }} className="font-semibold text-xs">{t("stock.deletePermanent")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="flex-1 h-11 rounded-lg items-center justify-center"
+              className="flex-1 h-10 rounded-lg items-center justify-center"
               style={{ backgroundColor: colors.primary }}
               onPress={() => onEdit(item)}
             >
