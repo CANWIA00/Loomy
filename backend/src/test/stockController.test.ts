@@ -2,6 +2,7 @@ import {
   importInvoiceXml,
   addStockTransaction,
   deleteInvoice,
+  updateStockItem,
 } from "../controllers/stockController";
 import prisma from "../prisma";
 
@@ -371,6 +372,40 @@ describe("deleteInvoice", () => {
 
     const res = mockRes();
     await deleteInvoice(mockReq({ params: { id: "999" } }), res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+});
+
+describe("updateStockItem", () => {
+  it("miktar değişirse yeni miktarı kaydeder ve MANUAL işlem oluşturur", async () => {
+    (prisma.stockItem.findFirst as jest.Mock).mockResolvedValue(existingItem({ quantity: 10 }));
+    (prisma.stockItem.update as jest.Mock).mockResolvedValue({ id: 10, quantity: 15 });
+
+    const res = mockRes();
+    await updateStockItem(mockReq({ params: { id: "10" }, body: { name: "SÜT", quantity: 15 } }), res);
+
+    expect(res.status).not.toHaveBeenCalled();
+    expect(lastUpdateData()).toMatchObject({ quantity: 15, name: "SÜT" });
+    const txData = (prisma.stockTransaction.create as jest.Mock).mock.calls[0][0]?.data;
+    expect(txData).toMatchObject({ change: 5, reason: "MANUAL", stockItemId: 10, companyId: "company-1" });
+  });
+
+  it("miktar aynıysa işlem oluşturmaz, sadece günceller", async () => {
+    (prisma.stockItem.findFirst as jest.Mock).mockResolvedValue(existingItem({ quantity: 10 }));
+
+    const res = mockRes();
+    await updateStockItem(mockReq({ params: { id: "10" }, body: { name: "SÜT X", quantity: 10 } }), res);
+
+    expect(lastUpdateData()).toMatchObject({ name: "SÜT X" });
+    expect(prisma.stockTransaction.create).not.toHaveBeenCalled();
+  });
+
+  it("ürün bulunamazsa 404 döner", async () => {
+    (prisma.stockItem.findFirst as jest.Mock).mockResolvedValue(null);
+
+    const res = mockRes();
+    await updateStockItem(mockReq({ params: { id: "999" }, body: { name: "YOK" } }), res);
 
     expect(res.status).toHaveBeenCalledWith(404);
   });

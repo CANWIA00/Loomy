@@ -18,6 +18,7 @@ type AlertState = {
   title: string;
   message: string;
   confirmColor?: string;
+  confirmText?: string;
   onConfirm?: () => void;
 };
 
@@ -115,10 +116,7 @@ export default function StockScreen() {
   const handleFormSubmit = async (data: StockItemInput) => {
     try {
       if (formItem) {
-        await stockApi.update(formItem.id, {
-          ...data,
-          quantity: undefined,
-        });
+        await stockApi.update(formItem.id, data);
       } else {
         await stockApi.create(data);
       }
@@ -431,16 +429,18 @@ export default function StockScreen() {
         adjusting={adjusting}
         onClose={() => setDetailVisible(false)}
         onEdit={(item) => { setDetailVisible(false); setFormItem(item); setFormVisible(true); }}
-        onDelete={(item) =>
+        onDelete={(item) => {
+          setDetailVisible(false);
           setAlert({
             visible: true,
             type: "confirm",
-            title: t("stock.delete"),
+            title: t("stock.deletePermanent"),
             message: t("stock.deleteConfirm", { name: item.name }),
             confirmColor: colors.danger,
+            confirmText: t("stock.deletePermanent"),
             onConfirm: () => doDelete(item),
-          })
-        }
+          });
+        }}
         onAdjust={handleAdjust}
         onToggleAlert={handleToggleAlert}
       />
@@ -482,7 +482,7 @@ export default function StockScreen() {
         confirmColor={alert.confirmColor}
         onClose={() => setAlert(emptyAlert)}
         onConfirm={alert.onConfirm}
-        confirmText={t("common.confirm")}
+        confirmText={alert.confirmText}
       />
     </>
   );

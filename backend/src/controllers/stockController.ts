@@ -173,7 +173,37 @@ export async function updateStockItem(
       lowStockAlert: data.lowStockAlert != null ? Boolean(data.lowStockAlert) : existing.lowStockAlert,
     };
 
-    const updated = await prisma.stockItem.update({ where: { id }, data: patch });
+    const newQty = data.quantity != null && data.quantity !== "" ? Number(data.quantity) : null;
+    const qtyChanged =
+      newQty != null && Number.isFinite(newQty) && Math.abs(newQty - existing.quantity) > 1e-6;
+
+    let updated;
+    if (qtyChanged) {
+      const finalQty = Math.max(0, newQty!);
+      const delta = finalQty - existing.quantity;
+      updated = await prisma.$transaction(async (tx) => {
+        const item = await tx.stockItem.update({
+          where: { id },
+          data: { ...patch, quantity: finalQty },
+        });
+        await tx.stockTransaction.create({
+          data: {
+            stockItemId: id,
+            change: delta,
+            reason: REASON_MANUAL,
+            unitPrice: null,
+            currency: existing.currency || "TRY",
+            vatRate: null,
+            vatAmount: null,
+            note: null,
+            companyId,
+          },
+        });
+        return item;
+      });
+    } else {
+      updated = await prisma.stockItem.update({ where: { id }, data: patch });
+    }
     res.json(updated);
   } catch (error: any) {
     console.error("UpdateStockItem error:", error);

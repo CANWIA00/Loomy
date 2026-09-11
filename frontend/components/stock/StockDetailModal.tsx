@@ -136,9 +136,9 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
                 style={{ backgroundColor: colors.bgInput, color: colors.text }}
               />
             </View>
-
-            <Text className="text-sm font-semibold mb-2" style={{ color: colors.text }}>{t("stock.history")}</Text>
           </ScrollView>
+
+          <Text className="text-sm font-semibold mb-2" style={{ color: colors.text }}>{t("stock.history")}</Text>
 
           {item.transactions.length > 0 ? (
             <View style={{ maxHeight: 180 }} className="mb-3">
@@ -184,7 +184,7 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
               style={{ backgroundColor: colors.danger }}
               onPress={() => onDelete(item)}
             >
-              <Text style={{ color: "white" }} className="font-semibold">{t("stock.delete")}</Text>
+              <Text style={{ color: "white" }} className="font-semibold text-xs">{t("stock.deletePermanent")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="flex-1 h-11 rounded-lg items-center justify-center"

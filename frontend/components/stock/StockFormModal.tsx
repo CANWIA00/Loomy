@@ -81,7 +81,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
               </TouchableOpacity>
             </View>
 
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flexShrink: 1 }}>
               <Text className="text-xs mb-1" style={{ color: colors.textSecondary }}>{t("stock.name")} *</Text>
               <TextInput
                 value={name}
@@ -126,9 +126,10 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                     value={initialQty}
                     onChangeText={(v) => setInitialQty(v.replace(/[^0-9.,]/g, ""))}
                     keyboardType="decimal-pad"
-                    editable={!isEdit}
+                    placeholder={isEdit ? t("stock.qtyEditHint") : t("stock.qty")}
+                    placeholderTextColor={colors.textMuted}
                     className="rounded-lg px-3 py-2.5"
-                    style={{ backgroundColor: colors.bgInput, color: colors.text, opacity: isEdit ? 0.5 : 1 }}
+                    style={{ backgroundColor: colors.bgInput, color: colors.text }}
                   />
                 </View>
                 <View className="flex-1">
@@ -199,11 +200,12 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   />
                 </View>
               ) : null}
+            </ScrollView>
 
-              <TouchableOpacity
-                disabled={submitDisabled}
-                className="h-11 rounded-lg items-center justify-center mb-1"
-                style={{ backgroundColor: submitDisabled ? colors.bgInput : colors.primary, opacity: submitDisabled ? 0.6 : 1 }}
+            <TouchableOpacity
+              disabled={submitDisabled}
+              className="h-11 rounded-lg items-center justify-center mt-3 mb-1"
+              style={{ backgroundColor: submitDisabled ? colors.bgInput : colors.primary, opacity: submitDisabled ? 0.6 : 1 }}
                 onPress={() =>
                   onSubmit({
                     name: name.trim(),
@@ -224,7 +226,6 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                   {isEdit ? t("stock.update") : t("stock.save")}
                 </Text>
               </TouchableOpacity>
-            </ScrollView>
           </View>
         </View>
       </KeyboardAvoidingView>
