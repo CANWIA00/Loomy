@@ -413,7 +413,13 @@ export default function QuoteForm() {
                       ) : null}
                     </View>
                     {stockSearchIdx === idx && stockSuggestions.length > 0 ? (
-                      <View className="rounded-lg border mt-1" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+                      <ScrollView
+                        nestedScrollEnabled
+                        className="rounded-lg border mt-1"
+                        style={{ backgroundColor: colors.bgCard, borderColor: colors.border, maxHeight: 240 }}
+                        keyboardShouldPersistTaps="handled"
+                        indicatorStyle={colors.indicatorBg as any}
+                      >
                         {stockSuggestions.map((s) => (
                           <TouchableOpacity
                             key={s.id}
@@ -427,7 +433,7 @@ export default function QuoteForm() {
                             </Text>
                           </TouchableOpacity>
                         ))}
-                      </View>
+                      </ScrollView>
                     ) : null}
                   </View>
                   <TouchableOpacity
