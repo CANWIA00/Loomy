@@ -15,6 +15,10 @@ export async function listStockItems(
   try {
     const companyId = _req.user!.companyId!;
     const q = String((_req.query.q as string) || "").trim();
+    const low = String(_req.query.low || "") === "true";
+    const page = parseInt(String(_req.query.page || "0")) || 0;
+    const size = parseInt(String(_req.query.size || "0")) || 0;
+    const paged = size > 0;
 
     const items = await prisma.stockItem.findMany({
       where: {
@@ -24,16 +28,40 @@ export async function listStockItems(
               name: { contains: q, mode: "insensitive" as const },
             }
           : {}),
+        ...(low ? { lowStockAlert: true } : {}),
       },
       orderBy: { name: "asc" },
     });
 
-    const content = items.map((item) => ({
-      ...item,
-      lowStock: item.quantity <= item.minQuantity,
-    }));
+    const lowFiltered = low ? items.filter((i) => i.quantity <= i.minQuantity) : items;
+    const totalElements = lowFiltered.length;
 
-    res.json({ content, totalElements: content.length });
+    const content = (paged ? lowFiltered.slice(page * size, page * size + size) : lowFiltered).map(
+      (item) => ({
+        ...item,
+        lowStock: item.quantity <= item.minQuantity,
+      })
+    );
+
+    const totalProducts = items.length;
+    const lowStockCount = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).length;
+    const totalByCurrency = items.reduce<Record<string, number>>((acc, i) => {
+      if (i.unitPrice == null) return acc;
+      const cur = i.currency || "TRY";
+      acc[cur] = (acc[cur] || 0) + i.quantity * i.unitPrice;
+      return acc;
+    }, {});
+
+    res.json({
+      content,
+      totalElements,
+      totalPages: paged ? Math.ceil(totalElements / size) : 1,
+      number: page,
+      size,
+      totalProducts,
+      lowStockCount,
+      totalByCurrency,
+    });
   } catch (error: any) {
     console.error("ListStockItems error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });

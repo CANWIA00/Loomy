@@ -3,6 +3,7 @@ import {
   addStockTransaction,
   deleteInvoice,
   updateStockItem,
+  listStockItems,
 } from "../controllers/stockController";
 import prisma from "../prisma";
 
@@ -408,5 +409,59 @@ describe("updateStockItem", () => {
     await updateStockItem(mockReq({ params: { id: "999" }, body: { name: "YOK" } }), res);
 
     expect(res.status).toHaveBeenCalledWith(404);
+  });
+});
+
+describe("listStockItems", () => {
+  const items = Array.from({ length: 45 }, (_, i) =>
+    existingItem({
+      id: i + 1,
+      name: `Ürün ${i + 1}`,
+      quantity: i < 10 ? 1 : 20,
+      minQuantity: 5,
+      lowStockAlert: true,
+      unitPrice: 100,
+      currency: "TRY",
+    })
+  );
+
+  it("page + size ile sayfalar:", async () => {
+    (prisma.stockItem.findMany as jest.Mock).mockResolvedValue(items);
+
+    const res = mockRes();
+    await listStockItems(mockReq({ query: { page: "1", size: "20" } }), res);
+
+    expect(res.status).not.toHaveBeenCalled();
+    const body = (res.json as jest.Mock).mock.calls[0][0];
+    expect(body.content).toHaveLength(20);
+    expect(body.content[0].name).toBe("Ürün 21");
+    expect(body.totalElements).toBe(45);
+    expect(body.totalPages).toBe(3);
+    expect(body.number).toBe(1);
+    expect(body.size).toBe(20);
+    expect(body.totalProducts).toBe(45);
+  });
+
+  it("low=true ise sadece kritik seviye altındaki ürünler döner", async () => {
+    (prisma.stockItem.findMany as jest.Mock).mockResolvedValue(items);
+
+    const res = mockRes();
+    await listStockItems(mockReq({ query: { low: "true", page: "0", size: "20" } }), res);
+
+    const body = (res.json as jest.Mock).mock.calls[0][0];
+    expect(body.content).toHaveLength(10);
+    expect(body.totalElements).toBe(10);
+    expect(body.totalPages).toBe(1);
+  });
+
+  it("lowStockCount ve totalByCurrency tüm ürünler üzerinden hesaplanır", async () => {
+    (prisma.stockItem.findMany as jest.Mock).mockResolvedValue(items);
+
+    const res = mockRes();
+    await listStockItems(mockReq({ query: {} }), res);
+
+    const body = (res.json as jest.Mock).mock.calls[0][0];
+    expect(body.lowStockCount).toBe(10);
+    expect(body.totalByCurrency).toEqual({ TRY: 10 * 1 * 100 + 35 * 20 * 100 });
   });
 });

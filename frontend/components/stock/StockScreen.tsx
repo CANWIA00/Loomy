@@ -36,6 +36,11 @@ export default function StockScreen() {
   const [items, setItems] = useState<StockItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [totalByCurrency, setTotalByCurrency] = useState<Record<string, number>>({});
 
   const [detail, setDetail] = useState<StockItemDetail | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
@@ -54,12 +59,19 @@ export default function StockScreen() {
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const PAGE_SIZE = 20;
+
   const loadItems = useCallback(
-    async (q = search) => {
+    async (pageNum = 0, q = search) => {
       setLoading(true);
       try {
-        const res = await stockApi.list(q);
+        const res = await stockApi.list(q || undefined, pageNum, PAGE_SIZE, itemFilter === "low");
         setItems(res.data.content);
+        setPage(res.data.number);
+        setTotalPages(res.data.totalPages);
+        setTotalProducts(res.data.totalProducts);
+        setLowStockCount(res.data.lowStockCount);
+        setTotalByCurrency(res.data.totalByCurrency);
       } catch {
         setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
       } finally {
@@ -67,13 +79,13 @@ export default function StockScreen() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [search]
+    [search, itemFilter]
   );
 
   useEffect(() => {
     if (mode !== "items") return;
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => loadItems(search), 400);
+    searchTimeout.current = setTimeout(() => loadItems(0, search), 400);
     return () => {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
     };
@@ -124,7 +136,7 @@ export default function StockScreen() {
       }
       setFormVisible(false);
       setFormItem(null);
-      await loadItems();
+      await loadItems(page, search);
       setAlert({
         visible: true,
         type: "success",
@@ -140,7 +152,7 @@ export default function StockScreen() {
     setAdjusting(true);
     try {
       await stockApi.addTransaction(target.id, { change, note: note || undefined });
-      await loadItems();
+      await loadItems(page, search);
       const refreshed = (await stockApi.get(target.id)).data;
       setDetail(refreshed);
     } catch {
@@ -155,7 +167,7 @@ export default function StockScreen() {
     setAlert(emptyAlert);
     try {
       await stockApi.remove(target.id);
-      await loadItems();
+      await loadItems(page, search);
     } catch {
       setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
     }
@@ -165,7 +177,7 @@ export default function StockScreen() {
     setInvoiceDetail(null);
     try {
       await stockApi.deleteInvoice(inv.id, revertStock);
-      await loadItems();
+      await loadItems(page, search);
       loadInvoices();
       setAlert({ visible: true, type: "success", title: t("stock.title"), message: t("stock.invoiceDeleted") });
     } catch {
@@ -178,21 +190,13 @@ export default function StockScreen() {
       const updated = (await stockApi.update(target.id, { lowStockAlert: !target.lowStockAlert })).data;
       setItems((prev) => prev.map((i) => (i.id === updated.id ? { ...i, lowStockAlert: updated.lowStockAlert } : i)));
       setDetail((prev) => (prev ? { ...prev, lowStockAlert: updated.lowStockAlert } : prev));
+      await loadItems(page, search);
     } catch {
       setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
     }
   };
 
-  const lowStockCount = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).length;
   const searchQ = search.trim().toLowerCase();
-  const filteredItems = (itemFilter === "low" ? items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity) : items)
-    .filter((i) => !searchQ || i.name.toLowerCase().includes(searchQ) || (i.supplierName || "").toLowerCase().includes(searchQ));
-  const totalByCurrency = items.reduce<Record<string, number>>((acc, i) => {
-    if (i.unitPrice == null) return acc;
-    const cur = i.currency || "TRY";
-    acc[cur] = (acc[cur] || 0) + i.quantity * i.unitPrice;
-    return acc;
-  }, {});
   const currencyParts = Object.entries(totalByCurrency).map(([cur, val]) => formatMoney(val, cur));
   const usdRate = rates?.rates?.["USD"];
   const totalValueUsd =
@@ -250,7 +254,7 @@ export default function StockScreen() {
               <View className="flex-row flex-wrap gap-2 mb-4">
                 <View className="flex-1 min-w-[120px] rounded-xl px-3 py-2.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
                   <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.totalProducts")}</Text>
-                  <Text className="text-lg font-bold" style={{ color: colors.text }}>{items.length}</Text>
+                  <Text className="text-lg font-bold" style={{ color: colors.text }}>{totalProducts}</Text>
                 </View>
                 <View className="flex-1 min-w-[120px] rounded-xl px-3 py-2.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
                   <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.lowStockCount")}</Text>
@@ -285,16 +289,16 @@ export default function StockScreen() {
                 <TouchableOpacity
                   className="flex-1 h-9 rounded-lg items-center justify-center"
                   style={{ backgroundColor: itemFilter === "all" ? colors.primary : colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}
-                  onPress={() => setItemFilter("all")}
+                  onPress={() => { setItemFilter("all"); setPage(0); }}
                 >
                   <Text style={{ color: itemFilter === "all" ? "white" : colors.textSecondary }} className="font-semibold text-xs">
-                    {t("stock.allItems")} ({items.length})
+                    {t("stock.allItems")} ({totalProducts})
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="flex-1 h-9 rounded-lg items-center justify-center flex-row gap-1"
                   style={{ backgroundColor: itemFilter === "low" ? colors.warning : colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}
-                  onPress={() => setItemFilter("low")}
+                  onPress={() => { setItemFilter("low"); setPage(0); }}
                 >
                   <Text style={{ color: itemFilter === "low" ? "white" : colors.textSecondary }} className="font-semibold text-xs">
                     {t("stock.lowStock")} ({lowStockCount})
@@ -306,7 +310,7 @@ export default function StockScreen() {
                 <View className="items-center justify-center py-10">
                   <ActivityIndicator size="large" color={colors.primary} />
                 </View>
-              ) : filteredItems.length === 0 ? (
+              ) : items.length === 0 ? (
                 <View className="rounded-xl px-4 py-8 items-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
                   <Ionicons name="cube-outline" size={32} color={colors.textMuted} />
                   <Text className="text-sm mt-2 text-center" style={{ color: colors.textMuted }}>
@@ -314,7 +318,7 @@ export default function StockScreen() {
                   </Text>
                 </View>
               ) : (
-                filteredItems.map((item) => {
+                items.map((item) => {
                   const low = item.lowStockAlert && item.quantity <= item.minQuantity;
                   return (
                     <TouchableOpacity
@@ -351,6 +355,29 @@ export default function StockScreen() {
                   );
                 })
               )}
+              {totalPages > 1 ? (
+                <View className="flex-row items-center justify-center gap-3 mt-5">
+                  <TouchableOpacity
+                    disabled={page === 0 || loading}
+                    onPress={() => loadItems(page - 1, search)}
+                    className="px-4 py-2 rounded-lg"
+                    style={{ backgroundColor: page === 0 || loading ? colors.bgCard : colors.primary, opacity: page === 0 || loading ? 0.5 : 1 }}
+                  >
+                    <Text className="text-sm" style={{ color: "white" }}>{t("stock.previous")}</Text>
+                  </TouchableOpacity>
+                  <Text className="text-sm" style={{ color: colors.textSecondary }}>
+                    {page + 1} / {totalPages}
+                  </Text>
+                  <TouchableOpacity
+                    disabled={page >= totalPages - 1 || loading}
+                    onPress={() => loadItems(page + 1, search)}
+                    className="px-4 py-2 rounded-lg"
+                    style={{ backgroundColor: page >= totalPages - 1 || loading ? colors.bgCard : colors.primary, opacity: page >= totalPages - 1 || loading ? 0.5 : 1 }}
+                  >
+                    <Text className="text-sm" style={{ color: "white" }}>{t("stock.next")}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
             </>
           ) : (
             <>
@@ -472,7 +499,7 @@ export default function StockScreen() {
         onClose={() => setImportVisible(false)}
         onImported={(summary) => {
           setImportVisible(false);
-          loadItems();
+          loadItems(page, search);
           setAlert({
             visible: true,
             type: "success",

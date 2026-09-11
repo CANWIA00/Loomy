@@ -115,10 +115,26 @@ export interface ImportResult {
   totalLines: number;
 }
 
+export interface StockItemPage {
+  content: StockItem[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  totalProducts: number;
+  lowStockCount: number;
+  totalByCurrency: Record<string, number>;
+}
+
 export const stockApi = {
-  list: (q?: string) =>
-    apiClient.get<{ content: StockItem[]; totalElements: number }>("/stock", {
-      params: q ? { q } : undefined,
+  list: (q?: string, page = 0, size = 0, low = false) =>
+    apiClient.get<StockItemPage>("/stock", {
+      params: {
+        ...(q ? { q } : {}),
+        page,
+        size,
+        low: low ? "true" : undefined,
+      },
     }),
 
   get: (id: number) =>
