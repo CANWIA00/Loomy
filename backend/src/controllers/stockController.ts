@@ -2,6 +2,7 @@ import { Response } from "express";
 import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
 import { parseEInvoiceXml } from "../utils/parseEInvoiceXml";
+import { mergeStockEntry } from "../utils/stockPricing";
 
 const REASON_INITIAL = "INITIAL";
 const REASON_MANUAL = "MANUAL";
@@ -223,22 +224,38 @@ export async function addStockTransaction(
       return;
     }
 
+    const pricePatch: Record<string, unknown> = {};
+    const incomingPrice = unitPrice != null && unitPrice !== "" ? Number(unitPrice) : null;
+    let mergedVat: number | null = existing.vatRate || null;
+    if (incomingPrice != null) {
+      const merged = mergeStockEntry(
+        { unitPrice: existing.unitPrice, vatRate: existing.vatRate },
+        { unitPrice: incomingPrice }
+      );
+      pricePatch.unitPrice = merged.unitPrice;
+      pricePatch.vatRate = merged.vatRate;
+      mergedVat = merged.vatRate || null;
+    }
+
     const updated = await prisma.$transaction(async (tx) => {
       const item = await tx.stockItem.update({
         where: { id },
-        data: { quantity: Math.max(0, existing.quantity + delta) },
+        data: {
+          quantity: Math.max(0, existing.quantity + delta),
+          ...pricePatch,
+        },
       });
       await tx.stockTransaction.create({
         data: {
           stockItemId: id,
           change: delta,
           reason: REASON_MANUAL,
-          unitPrice: unitPrice != null && unitPrice !== "" ? Number(unitPrice) : null,
+          unitPrice: incomingPrice,
           currency: currency?.trim() || existing.currency,
-          vatRate: existing.vatRate || null,
+          vatRate: mergedVat,
           vatAmount:
-            unitPrice != null && unitPrice !== "" ?
-              Math.round(Number(unitPrice) * Math.abs(delta) * (existing.vatRate || 0)) / 100 :
+            incomingPrice != null ?
+              Math.round(incomingPrice * Math.abs(delta) * (existing.vatRate || 0)) / 100 :
               null,
           note: note?.trim() || null,
           companyId,
@@ -368,14 +385,18 @@ export async function importInvoiceXml(
         });
 
         if (stockItem) {
+          const merged = mergeStockEntry(
+            { unitPrice: stockItem.unitPrice, vatRate: stockItem.vatRate, unit: stockItem.unit },
+            { unitPrice: line.unitPrice, vatRate: line.vatRate, unit: line.unit }
+          );
           stockItem = await tx.stockItem.update({
             where: { id: stockItem.id },
             data: {
               quantity: { increment: line.quantity },
-              unit: stockItem.unit || line.unit,
-              unitPrice: line.unitPrice || stockItem.unitPrice,
+              unit: merged.unit,
+              unitPrice: merged.unitPrice,
               currency: parsed.currency || stockItem.currency,
-              vatRate: line.vatRate || stockItem.vatRate,
+              vatRate: merged.vatRate,
               supplierName: parsed.supplierName ?? stockItem.supplierName,
               supplierTaxNumber: parsed.supplierTaxNumber ?? stockItem.supplierTaxNumber,
               lastInvoiceNo: parsed.invoiceNo,
