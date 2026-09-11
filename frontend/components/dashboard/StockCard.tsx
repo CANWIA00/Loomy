@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import CustomAlert from "../CustomAlert";
 import { stockApi, type StockItem, type StockItemDetail, type StockItemInput } from "../../apiclient/stock";
 import { formatMoney, formatQty } from "../stock/format";
@@ -26,6 +27,7 @@ export default function StockCard() {
   const router = useRouter();
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { rates } = useCurrency();
 
   const [expanded, setExpanded] = useState(false);
 
@@ -66,7 +68,16 @@ export default function StockCard() {
   }, {});
   const totalValue = Object.entries(totalByCurrency)
     .map(([cur, val]) => formatMoney(val, cur))
-    .join(" · ");
+    .join(" + ");
+  const usdRate = rates?.rates?.["USD"];
+  const totalValueUsd =
+    usdRate && usdRate > 0
+      ? Object.entries(totalByCurrency).reduce((acc, [cur, val]) => {
+          const r = rates?.rates?.[cur];
+          return acc + (r ? (val * r) / usdRate : 0);
+        }, 0)
+      : null;
+  const totalValueUsdStr = totalValueUsd != null ? formatMoney(totalValueUsd, "USD") : null;
 
   const openDetail = async (item: StockItem) => {
     try {
@@ -179,6 +190,11 @@ export default function StockCard() {
           <Text className="text-base font-bold" style={{ color: colors.text }} numberOfLines={1} adjustsFontSizeToFit>
             {loading ? "-" : totalValue || "-"}
           </Text>
+          {!loading && totalValueUsdStr ? (
+            <Text className="text-[11px] mt-0.5" style={{ color: colors.primary }} numberOfLines={1} adjustsFontSizeToFit>
+              {t("stock.totalUsd")}: {totalValueUsdStr}
+            </Text>
+          ) : null}
         </View>
       </View>
 

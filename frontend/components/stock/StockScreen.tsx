@@ -202,12 +202,8 @@ export default function StockScreen() {
           return acc + (r ? (val * r) / usdRate : 0);
         }, 0)
       : null;
-  const totalValue =
-    currencyParts.length === 0
-      ? ""
-      : totalValueUsd != null
-        ? `${currencyParts.join(" + ")} (${t("stock.totalUsd")}: ${formatMoney(totalValueUsd, "USD")})`
-        : currencyParts.join(" + ");
+  const totalValueUsdStr = totalValueUsd != null ? formatMoney(totalValueUsd, "USD") : null;
+  const totalValue = currencyParts.join(" + ");
 
   return (
     <>
@@ -262,9 +258,14 @@ export default function StockScreen() {
                 </View>
                 <View className="flex-1 rounded-xl px-3 py-2.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
                   <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.totalValue")}</Text>
-                  <Text className="text-lg font-bold" style={{ color: colors.text }} numberOfLines={1} adjustsFontSizeToFit>
+                  <Text className="text-base font-bold" style={{ color: colors.text }} numberOfLines={1} adjustsFontSizeToFit>
                     {totalValue || "-"}
                   </Text>
+                  {totalValueUsdStr ? (
+                    <Text className="text-[11px] mt-0.5" style={{ color: colors.primary }} numberOfLines={1} adjustsFontSizeToFit>
+                      {t("stock.totalUsd")}: {totalValueUsdStr}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
 
