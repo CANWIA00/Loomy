@@ -111,7 +111,7 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
                     className="rounded-lg px-3 py-2 flex-row items-center"
                     style={{ backgroundColor: colors.bgInput }}
                   >
-                    <Text style={{ color: colors.text }} className="flex-1">
+                    <Text style={{ color: colors.text }} className="flex-1" numberOfLines={1}>
                       {currency} {getCurrencySymbol(currency)}
                     </Text>
                     <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
