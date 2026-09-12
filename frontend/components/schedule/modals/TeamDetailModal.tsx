@@ -153,71 +153,9 @@ export default function TeamDetailModal() {
           )}
         </View>
 
-        <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.teamLeader")}</Text>
-        <View className="border rounded-xl px-3 py-2.5 mb-2 flex-row items-center"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
-          <View className="w-8 h-8 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.purple }}>
-            <Text className="text-white text-xs font-bold">{leaderDraft.charAt(0)}</Text>
-          </View>
-          <View className="flex-1">
-            <Text className="text-sm" style={{ color: colors.text }}>{leaderDraft}</Text>
-            {emails[leaderDraft] ? (
-              <Text className="text-xs" style={{ color: colors.textMuted }}>{emails[leaderDraft]}</Text>
-            ) : null}
-          </View>
-          <View className="rounded-md px-2 py-0.5" style={{ backgroundColor: colors.purple + '22' }}>
-            <Text className="text-[10px] font-semibold" style={{ color: colors.purple }}>{t("sch.teamLeader")}</Text>
-          </View>
-        </View>
-
-        {isAdmin && (
-          <>
-            <TouchableOpacity
-              className="flex-row items-center justify-between h-10 rounded-lg px-3 mb-1"
-              style={{ backgroundColor: colors.primary + '15' }}
-              onPress={() => setLeaderOpen(!leaderOpen)}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center">
-                <Ionicons name="swap-horizontal-outline" size={16} color={colors.primary} />
-                <Text className="text-xs font-medium ml-2" style={{ color: colors.primary }}>{t("sch.changeLeader")}</Text>
-              </View>
-              <Ionicons name={leaderOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.primary} />
-            </TouchableOpacity>
-            {leaderOpen && (
-              <View className="border rounded-lg mb-2 max-h-32 overflow-hidden" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
-                <ScrollView nestedScrollEnabled bounces={false} keyboardShouldPersistTaps="handled">
-                  {leaderCandidates.length === 0 ? (
-                    <Text className="text-sm text-center py-3" style={{ color: colors.textMuted }}>{t("sch.noPersonnelLeft")}</Text>
-                  ) : (
-                    leaderCandidates.map((u) => (
-                      <TouchableOpacity
-                        key={u.id}
-                        className="px-3 py-2 border-b flex-row items-center"
-                        style={{ borderColor: colors.border }}
-                        onPress={() => handleChangeLeader(u)}
-                        activeOpacity={0.7}
-                      >
-                        <View className="w-7 h-7 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
-                          <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{u.name.charAt(0)}</Text>
-                        </View>
-                        <View className="flex-1">
-                          <Text className="text-sm" style={{ color: colors.text }}>{u.name}</Text>
-                          <Text className="text-xs" style={{ color: colors.textMuted }}>{u.email}</Text>
-                        </View>
-                        <Ionicons name="create-outline" size={16} color={colors.primary} />
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </ScrollView>
-              </View>
-            )}
-          </>
-        )}
-
         <View className="flex-row items-center justify-between mt-3 mb-1">
           <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>
-            {t("sch.personnel")} ({membersDraft.length})
+            {t("sch.personnel")} ({membersDraft.length + 1})
           </Text>
           {isAdmin && (
             <TouchableOpacity
@@ -273,9 +211,65 @@ export default function TeamDetailModal() {
         )}
 
         <View className="mt-1 mb-2">
-          {membersDraft.length === 0 ? (
-            <Text className="text-sm text-center py-4" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
-          ) : membersDraft.map((memberName) => (
+          <TouchableOpacity
+            disabled={!isAdmin}
+            onPress={() => setLeaderOpen(!leaderOpen)}
+            activeOpacity={0.7}
+            className="border rounded-xl px-3 py-2.5 mb-1 flex-row items-center"
+            style={{ backgroundColor: colors.bg, borderColor: leaderOpen ? colors.purple : colors.border }}
+          >
+            <View className="w-8 h-8 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.purple }}>
+              <Text className="text-white text-xs font-bold">{leaderDraft.charAt(0)}</Text>
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-medium" style={{ color: colors.text }}>{leaderDraft}</Text>
+              {emails[leaderDraft] ? (
+                <Text className="text-xs" style={{ color: colors.textMuted }}>{emails[leaderDraft]}</Text>
+              ) : null}
+            </View>
+            <View className="flex-row items-center">
+              <Ionicons name="shield-checkmark-outline" size={14} color={colors.purple} />
+              <Text className="text-[10px] font-semibold ml-1" style={{ color: colors.purple }}>{t("sch.teamLeader")}</Text>
+            </View>
+            {isAdmin && (
+              <Ionicons name={leaderOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.primary} style={{ marginLeft: 8 }} />
+            )}
+          </TouchableOpacity>
+
+          {isAdmin && leaderOpen && (
+            <View className="border rounded-lg mb-2 max-h-40 overflow-hidden" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
+              <View className="px-3 py-1.5 flex-row items-center" style={{ backgroundColor: colors.purple + '15' }}>
+                <Ionicons name="swap-horizontal-outline" size={13} color={colors.purple} />
+                <Text className="text-xs font-medium ml-1.5" style={{ color: colors.purple }}>{t("sch.changeLeader")}</Text>
+              </View>
+              <ScrollView nestedScrollEnabled bounces={false} keyboardShouldPersistTaps="handled">
+                {leaderCandidates.length === 0 ? (
+                  <Text className="text-sm text-center py-3" style={{ color: colors.textMuted }}>{t("sch.noPersonnelLeft")}</Text>
+                ) : (
+                  leaderCandidates.map((u) => (
+                    <TouchableOpacity
+                      key={u.id}
+                      className="px-3 py-2 border-b flex-row items-center"
+                      style={{ borderColor: colors.border }}
+                      onPress={() => handleChangeLeader(u)}
+                      activeOpacity={0.7}
+                    >
+                      <View className="w-7 h-7 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
+                        <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{u.name.charAt(0)}</Text>
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-sm" style={{ color: colors.text }}>{u.name}</Text>
+                        <Text className="text-xs" style={{ color: colors.textMuted }}>{u.email}</Text>
+                      </View>
+                      <Ionicons name="shield-checkmark-outline" size={15} color={colors.purple} />
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+          )}
+
+          {membersDraft.length === 0 ? null : membersDraft.map((memberName) => (
             <View key={memberName} className="border rounded-xl px-3 py-2.5 mb-1 flex-row items-center"
               style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
               <View className="w-8 h-8 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.bgInput }}>
