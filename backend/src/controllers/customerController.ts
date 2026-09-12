@@ -84,10 +84,12 @@ export async function getAllCustomersSimple(
 ): Promise<void> {
   try {
     const companyId = req.user!.companyId!;
+    const limit = parseInt(String(req.query.limit || "0")) || 0;
     const customers = await prisma.customer.findMany({
       where: { companyId },
       orderBy: { companyName: "asc" },
       select: { id: true, companyName: true, subscriberNo: true, contactPerson: true, phone: true, contactPhone: true, fax: true, website: true, address: true, email: true },
+      ...(limit > 0 ? { take: limit } : {}),
     });
     res.json(customers);
   } catch (error: any) {

@@ -20,11 +20,16 @@ function mapAppointment(a: any) {
 export async function getAppointments(req: AuthRequest, res: Response): Promise<void> {
   try {
     const companyId = req.user!.companyId!;
-    const { date, teamId } = req.query;
+    const { date, teamId, from, to } = req.query;
 
     const where: any = { companyId };
     if (date) where.date = String(date);
     if (teamId) where.teamId = parseInt(String(teamId));
+    if (from || to) {
+      where.date = {};
+      if (from) where.date.gte = String(from);
+      if (to) where.date.lte = String(to);
+    }
 
     const appointments = await prisma.appointment.findMany({
       where,

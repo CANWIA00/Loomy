@@ -220,6 +220,19 @@ export default function CompanyCard() {
         </View>
       </View>
 
+      {!editingCompany && company.stampUrl ? (
+        <View className="flex-row items-center gap-3 mb-4">
+          <View className="flex-1">
+            <Text style={{ color: colors.textMuted }} className="text-[11px] font-bold uppercase tracking-wide mb-1.5">{t("prf.stamp")}</Text>
+            <SvgAwareImage
+              uri={company.stampUrl}
+              style={{ width: 80, height: 80, borderRadius: 8, backgroundColor: colors.bgInput }}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+      ) : null}
+
       {isAdmin && company.invitationCode && !editingCompany && (
         <View className="rounded-xl px-3.5 py-2.5 mb-4" style={{ backgroundColor: colors.primary + "0D", borderColor: colors.primary + "22", borderWidth: 1 }}>
           <Text style={{ color: colors.textSecondary }} className="text-xs leading-5">{t("prf.invitationHint")}</Text>

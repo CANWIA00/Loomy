@@ -31,7 +31,10 @@ export default function StockCard() {
 
   const [expanded, setExpanded] = useState(false);
 
-  const [items, setItems] = useState<StockItem[]>([]);
+  const [lowStockItems, setLowStockItems] = useState<StockItem[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [totalByCurrency, setTotalByCurrency] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   const [detail, setDetail] = useState<StockItemDetail | null>(null);
@@ -45,8 +48,11 @@ export default function StockCard() {
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await stockApi.list();
-      setItems(res.data.content);
+      const res = await stockApi.list(undefined, 0, 4, true);
+      setLowStockItems(res.data.content);
+      setTotalProducts(res.data.totalProducts);
+      setLowStockCount(res.data.lowStockCount);
+      setTotalByCurrency(res.data.totalByCurrency);
     } catch {
       setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
     } finally {
@@ -59,13 +65,6 @@ export default function StockCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const lowStockCount = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).length;
-  const totalByCurrency = items.reduce<Record<string, number>>((acc, i) => {
-    if (i.unitPrice == null) return acc;
-    const cur = i.currency || "TRY";
-    acc[cur] = (acc[cur] || 0) + i.quantity * i.unitPrice;
-    return acc;
-  }, {});
   const totalValue = Object.entries(totalByCurrency)
     .map(([cur, val]) => formatMoney(val, cur))
     .join(" + ");
@@ -127,14 +126,12 @@ export default function StockCard() {
   const handleToggleAlert = async (target: StockItemDetail) => {
     try {
       const updated = (await stockApi.update(target.id, { lowStockAlert: !target.lowStockAlert })).data;
-      setItems((prev) => prev.map((i) => (i.id === updated.id ? { ...i, lowStockAlert: updated.lowStockAlert } : i)));
+      setLowStockItems((prev) => prev.map((i) => (i.id === updated.id ? { ...i, lowStockAlert: updated.lowStockAlert } : i)));
       setDetail((prev) => (prev ? { ...prev, lowStockAlert: updated.lowStockAlert } : prev));
     } catch {
       setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
     }
   };
-
-  const lowStockItems = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).slice(0, 4);
 
   return (
     <View className="rounded-2xl p-4" style={{ backgroundColor: colors.bgCard }}>
@@ -179,7 +176,7 @@ export default function StockCard() {
           <View className="flex-row flex-wrap gap-2 my-3">
         <View className="flex-1 min-w-[120px] rounded-xl px-3 py-2.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
           <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.totalProducts")}</Text>
-          <Text className="text-lg font-bold" style={{ color: colors.text }}>{loading ? "-" : items.length}</Text>
+          <Text className="text-lg font-bold" style={{ color: colors.text }}>{loading ? "-" : totalProducts}</Text>
         </View>
         <View className="flex-1 min-w-[120px] rounded-xl px-3 py-2.5" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}>
           <Text className="text-xs" style={{ color: colors.textMuted }}>{t("stock.lowStockCount")}</Text>

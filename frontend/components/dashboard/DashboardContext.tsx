@@ -101,10 +101,20 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    customerApi.getAllSimple().then((res) => setCustomers(res.data)).catch(() => {});
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 7);
+
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const toStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    customerApi.getAllSimple(5).then((res) => setCustomers(res.data)).catch(() => {});
     fetchPayments();
     Promise.all([
-      appointmentApi.getAll().catch(() => ({ data: [] })),
+      appointmentApi.getAll({ from: toStr(weekStart), to: toStr(weekEnd) }).catch(() => ({ data: [] })),
       teamApi.getAll().catch(() => ({ data: [] })),
     ]).then(([aptRes, teamRes]) => {
       setTodayAppointments(aptRes.data);

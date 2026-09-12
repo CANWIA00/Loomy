@@ -30,8 +30,8 @@ export const customerApi = {
   search: (query: string, page: number = 0, size: number = 20) =>
     apiClient.get<CustomerPageResponse>("/customers/search", { params: { q: query, page, size } }),
 
-  getAllSimple: () =>
-    apiClient.get<Customer[]>("/customers/all"),
+  getAllSimple: (limit?: number) =>
+    apiClient.get<Customer[]>("/customers/all", { params: limit ? { limit } : {} }),
 
   getById: (id: string) =>
     apiClient.get<Customer>(`/customers/${id}`),
