@@ -8,7 +8,7 @@ import FinanceOverview from "../../components/payments/FinanceOverview";
 import PaymentsListSection from "../../components/payments/PaymentsListSection";
 import CustomAlert from "../../components/CustomAlert";
 
-function PaymentsScreenInner() {
+function FinansScreenInner() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const {
@@ -56,10 +56,10 @@ function PaymentsScreenInner() {
   );
 }
 
-export default function PaymentsScreen() {
+export default function FinansScreen() {
   return (
     <PaymentsProvider>
-      <PaymentsScreenInner />
+      <FinansScreenInner />
     </PaymentsProvider>
   );
 }

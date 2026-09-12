@@ -14,7 +14,7 @@ export default function PaymentsCard() {
   return (
     <TouchableOpacity
       activeOpacity={0.7}
-      onPress={() => router.push("/payments" as any)}
+      onPress={() => router.push("/finans" as any)}
     >
       <View className="rounded-2xl p-4" style={{ backgroundColor: colors.bgCard }}>
         <View className="flex-row items-center mb-4">
@@ -101,7 +101,7 @@ export default function PaymentsCard() {
                       className="flex-row items-center justify-between px-3 py-2.5 border-b"
                       style={{ borderColor: colors.border }}
                     >
-                      <TouchableOpacity className="flex-1" onPress={() => router.push("/payments" as any)}>
+                      <TouchableOpacity className="flex-1" onPress={() => router.push("/finans" as any)}>
                         <Text style={{ color: colors.text }} className="text-sm font-medium">{s.customer}</Text>
                         <Text style={{ color: colors.textMuted }} className="text-xs mt-0.5">{s.serviceType || t("dash.service")} · {s.tarih}</Text>
                       </TouchableOpacity>

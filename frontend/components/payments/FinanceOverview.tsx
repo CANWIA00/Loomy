@@ -6,6 +6,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { financeApi, type FinanceOverview as FinanceOverviewData } from "../../apiclient/finance";
 import { formatMoney } from "../stock/format";
+import FinanceChart, { type FinanceChartPoint } from "./FinanceChart";
 
 function sumToTry(map: Record<string, number>, convert: (a: number, c: string) => number | null): number | null {
   let missing = false;
@@ -107,6 +108,7 @@ export default function FinanceOverview() {
       ) : (
         <Text className="text-[11px] mb-3" style={{ color: colors.textMuted }}>{t("pay.financeTryNote")}</Text>
       )}
+      <Text className="text-[10px] mb-3" style={{ color: colors.textMuted }}>{t("pay.financeSignNote")}</Text>
 
       <View style={{ borderColor: colors.border }} className="border rounded-xl overflow-hidden">
         <Row
@@ -115,6 +117,7 @@ export default function FinanceOverview() {
           icon="cube-outline"
           color={colors.teal}
           sub={t("pay.financeStockSub")}
+          sign="+"
         />
         <Row
           label={t("pay.financeExpense")}
@@ -122,6 +125,7 @@ export default function FinanceOverview() {
           icon="receipt-outline"
           color={colors.danger}
           sub={t("pay.financeExpenseSub")}
+          sign="-"
         />
         <Row
           label={t("pay.financePending")}
@@ -129,6 +133,7 @@ export default function FinanceOverview() {
           icon="trending-up-outline"
           color={colors.warning}
           sub={t("pay.financePendingSub", { count: String((data.pendingCount || 0)) })}
+          sign="+"
         />
         <Row
           label={t("pay.financePaid")}
@@ -136,6 +141,7 @@ export default function FinanceOverview() {
           icon="cash-outline"
           color={colors.success}
           sub={t("pay.financePaidSub", { count: String(data.paidCount || 0) })}
+          sign="+"
         />
         <View className="flex-row items-center justify-between px-3 py-2.5"
           style={{ backgroundColor: colors.bgCard2 }}>
@@ -144,10 +150,21 @@ export default function FinanceOverview() {
             <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("pay.financeNet")}</Text>
           </View>
           <Text className="text-base font-bold" style={{ color: net != null && net < 0 ? colors.danger : colors.success }}>
-            {netStr}
+            {net != null ? "= " : ""}{netStr}
           </Text>
         </View>
       </View>
+
+      {stockTry != null && expenseTry != null ? (
+        <FinanceChart
+          points={[
+            { label: t("pay.chartStock"), value: stockTry, color: colors.teal },
+            { label: t("pay.chartExpense"), value: expenseTry, color: colors.danger },
+            { label: t("pay.chartPending"), value: pending, color: colors.warning },
+            { label: t("pay.chartPaid"), value: paid, color: colors.success },
+          ] as FinanceChartPoint[]}
+        />
+      ) : null}
 
       <View className="flex-row flex-wrap gap-3 mt-3">
         <View className="flex-1 min-w-[140px]">
@@ -176,12 +193,14 @@ function Row({
   sub,
   icon,
   color,
+  sign,
 }: {
   label: string;
   value: string;
   sub: string;
   icon: React.ComponentProps<typeof Ionicons>["name"];
   color: string;
+  sign?: "+" | "-";
 }) {
   const { colors } = useTheme();
   return (
@@ -194,9 +213,19 @@ function Row({
           <Text className="text-[10px]" style={{ color: colors.textMuted }}>{sub}</Text>
         </View>
       </View>
-      <Text className="text-sm font-bold ml-2" style={{ color: colors.text }} numberOfLines={2} adjustsFontSizeToFit>
-        {value}
-      </Text>
+      <View className="flex-row items-center ml-2">
+        {sign ? (
+          <Text
+            className="text-sm font-bold mr-1"
+            style={{ color: sign === "+" ? colors.success : colors.danger }}
+          >
+            {sign}
+          </Text>
+        ) : null}
+        <Text className="text-sm font-bold" style={{ color: colors.text }} numberOfLines={2} adjustsFontSizeToFit>
+          {value}
+        </Text>
+      </View>
     </View>
   );
 }
