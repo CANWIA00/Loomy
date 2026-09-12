@@ -73,7 +73,7 @@ export default function TeamsSection() {
                   style={{ height: 88 }}
                   nestedScrollEnabled
                   bounces={false}
-                  showsVerticalScrollIndicator={false}
+                  showsVerticalScrollIndicator={true}
                 >
                   {team.members.length === 0 ? (
                     <View style={{ height: 88 }} className="items-center justify-center">

@@ -38,7 +38,6 @@ export default function TeamDetailModal() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
-  const [needsSync, setNeedsSync] = useState(false);
 
   useEffect(() => {
     if (teamDetailVisible && team) {
@@ -53,15 +52,6 @@ export default function TeamDetailModal() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamDetailVisible, teamDetailId]);
-
-  useEffect(() => {
-    if (needsSync && teamDetailVisible && team) {
-      setNameDraft(team.name);
-      setLeaderDraft(team.leader);
-      setMembersDraft(team.members);
-      setNeedsSync(false);
-    }
-  }, [needsSync, teamDetailVisible, team]);
 
   const emails = useMemo(() => {
     const map: Record<string, string> = {};
@@ -114,10 +104,7 @@ export default function TeamDetailModal() {
       members: membersDraft,
     });
     setSaving(false);
-    if (ok) {
-      setConfirmSave(false);
-      setNeedsSync(true);
-    }
+    if (ok) closeTeamDetail();
   };
 
   const handleDelete = async () => {
@@ -138,7 +125,7 @@ export default function TeamDetailModal() {
 
       <ScrollView
         className="max-h-[45vh]"
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-row items-center gap-3 mb-3">
