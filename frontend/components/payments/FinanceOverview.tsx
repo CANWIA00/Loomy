@@ -249,12 +249,12 @@ function Row({
         {sign ? (
           <Text
             className="text-sm font-bold mr-1"
-            style={{ color: sign === "+" ? colors.success : colors.danger }}
+            style={{ color }}
           >
             {sign}
           </Text>
         ) : null}
-        <Text className="text-sm font-bold" style={{ color: colors.text }} numberOfLines={2} adjustsFontSizeToFit>
+        <Text className="text-sm font-bold" style={{ color }} numberOfLines={2} adjustsFontSizeToFit>
           {value}
         </Text>
       </View>
