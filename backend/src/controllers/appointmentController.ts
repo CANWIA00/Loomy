@@ -21,6 +21,9 @@ export async function getAppointments(req: AuthRequest, res: Response): Promise<
   try {
     const companyId = req.user!.companyId!;
     const { date, teamId, from, to } = req.query;
+    const page = parseInt(String(req.query.page || "0")) || 0;
+    const size = parseInt(String(req.query.size || "0")) || 0;
+    const paged = size > 0;
 
     const where: any = { companyId };
     if (date) where.date = String(date);
@@ -31,9 +34,31 @@ export async function getAppointments(req: AuthRequest, res: Response): Promise<
       if (to) where.date.lte = String(to);
     }
 
+    const orderBy = [{ date: "asc" }, { startTime: "asc" }] as const;
+
+    if (paged) {
+      const [rows, totalElements] = await Promise.all([
+        prisma.appointment.findMany({
+          where,
+          orderBy: orderBy as any,
+          skip: page * size,
+          take: size,
+        }),
+        prisma.appointment.count({ where }),
+      ]);
+      res.json({
+        content: rows.map(mapAppointment),
+        totalElements,
+        totalPages: Math.ceil(totalElements / size),
+        number: page,
+        size,
+      });
+      return;
+    }
+
     const appointments = await prisma.appointment.findMany({
       where,
-      orderBy: [{ date: "asc" }, { startTime: "asc" }],
+      orderBy: orderBy as any,
     });
 
     res.json(appointments.map(mapAppointment));

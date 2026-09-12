@@ -9,57 +9,54 @@ export async function getFinanceOverview(
   try {
     const companyId = req.user!.companyId!;
 
-    const [stockItems, invoices, serviceRecords] = await Promise.all([
-      prisma.stockItem.findMany({
-        where: { companyId },
-        select: { quantity: true, unitPrice: true, currency: true },
-      }),
-      prisma.invoice.findMany({
-        where: { companyId },
-        select: { totalAmount: true, currency: true },
-      }),
-      prisma.serviceRecord.findMany({
-        where: { companyId },
-        select: { fee: true, paid: true },
-      }),
+    const [stockRaw, expenseRaw, paymentRaw] = await Promise.all([
+      prisma.$queryRaw<Array<{ currency: string; total: number }>>`
+        SELECT "currency", COALESCE(SUM("quantity" * "unitPrice"), 0)::float8 AS total
+        FROM "StockItem"
+        WHERE "companyId" = ${companyId} AND "unitPrice" IS NOT NULL
+        GROUP BY "currency"
+      `,
+      prisma.$queryRaw<Array<{ currency: string; total: number }>>`
+        SELECT "currency", COALESCE(SUM("totalAmount"), 0)::float8 AS total
+        FROM "Invoice"
+        WHERE "companyId" = ${companyId} AND "totalAmount" IS NOT NULL
+        GROUP BY "currency"
+      `,
+      prisma.$queryRaw<Array<{
+        paidTotal: number;
+        pendingTotal: number;
+        paidCount: number;
+        pendingCount: number;
+      }>>`
+        SELECT
+          COALESCE(SUM(CASE WHEN "paid" THEN CAST("fee" AS numeric) ELSE 0 END), 0)::float8 AS "paidTotal",
+          COALESCE(SUM(CASE WHEN NOT "paid" THEN CAST("fee" AS numeric) ELSE 0 END), 0)::float8 AS "pendingTotal",
+          COUNT(*) FILTER (WHERE "paid")::int AS "paidCount",
+          COUNT(*) FILTER (WHERE NOT "paid")::int AS "pendingCount"
+        FROM "ServiceRecord"
+        WHERE "companyId" = ${companyId}
+      `,
     ]);
 
     const stockByCurrency: Record<string, number> = {};
-    stockItems.forEach((i) => {
-      if (i.unitPrice == null) return;
-      const cur = i.currency || "TRY";
-      stockByCurrency[cur] = (stockByCurrency[cur] || 0) + i.quantity * i.unitPrice;
+    stockRaw.forEach((r) => {
+      stockByCurrency[r.currency] = Number(r.total) || 0;
     });
 
     const expenseByCurrency: Record<string, number> = {};
-    invoices.forEach((inv) => {
-      if (inv.totalAmount == null) return;
-      const cur = inv.currency || "TRY";
-      expenseByCurrency[cur] = (expenseByCurrency[cur] || 0) + inv.totalAmount;
+    expenseRaw.forEach((r) => {
+      expenseByCurrency[r.currency] = Number(r.total) || 0;
     });
 
-    let paidTotal = 0;
-    let pendingTotal = 0;
-    let paidCount = 0;
-    let pendingCount = 0;
-    serviceRecords.forEach((r) => {
-      const fee = parseFloat(r.fee) || 0;
-      if (r.paid) {
-        paidTotal += fee;
-        paidCount += 1;
-      } else {
-        pendingTotal += fee;
-        pendingCount += 1;
-      }
-    });
+    const pr = paymentRaw[0] || { paidTotal: 0, pendingTotal: 0, paidCount: 0, pendingCount: 0 };
 
     res.json({
       stockByCurrency,
       expenseByCurrency,
-      paidTotal,
-      pendingTotal,
-      paidCount,
-      pendingCount,
+      paidTotal: Number(pr.paidTotal) || 0,
+      pendingTotal: Number(pr.pendingTotal) || 0,
+      paidCount: pr.paidCount || 0,
+      pendingCount: pr.pendingCount || 0,
     });
   } catch (error: any) {
     console.error("GetFinanceOverview error:", error);

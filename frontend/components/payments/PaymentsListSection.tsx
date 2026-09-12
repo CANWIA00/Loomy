@@ -24,6 +24,8 @@ export default function PaymentsListSection() {
     setListPage,
     listTotalPages,
     pagedServices,
+    hasMore,
+    loadMore,
     fetchData,
     formatAmount,
     setToggleAlert,
@@ -153,6 +155,16 @@ export default function PaymentsListSection() {
             <Text className="text-sm" style={{ color: "white" }}>{t("pay.next")}</Text>
           </TouchableOpacity>
         </View>
+      )}
+
+      {hasMore && (
+        <TouchableOpacity
+          className="h-10 rounded-lg items-center justify-center mt-1"
+          style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}
+          onPress={loadMore}
+        >
+          <Text style={{ color: colors.primary }} className="font-semibold text-sm">{t("pay.loadMore")}</Text>
+        </TouchableOpacity>
       )}
 
       <StatusDropdownModal />

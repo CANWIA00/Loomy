@@ -14,7 +14,7 @@ export interface Appointment {
 }
 
 export const appointmentApi = {
-  getAll: (opts?: { date?: string; teamId?: number; from?: string; to?: string }) =>
+  getAll: (opts?: { date?: string; teamId?: number; from?: string; to?: string; page?: number; size?: number }) =>
     apiClient.get<Appointment[]>("/appointments", { params: opts }),
 
   create: (data: {

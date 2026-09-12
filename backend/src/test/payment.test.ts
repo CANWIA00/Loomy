@@ -16,6 +16,7 @@ jest.mock("../prisma", () => ({
       count: jest.fn(),
       update: jest.fn(),
     },
+    $queryRaw: jest.fn(),
   },
 }));
 
@@ -79,11 +80,8 @@ describe("payment controller", () => {
 
   describe("getPaymentSummary", () => {
     it("computes paid/pending totals", async () => {
-      (prisma.serviceRecord.findMany as jest.Mock).mockResolvedValue([
-        { fee: "100.00", paid: true },
-        { fee: "50.00", paid: true },
-        { fee: "200.00", paid: false },
-        { fee: "0.00", paid: false },
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue([
+        { paidTotal: 150, pendingTotal: 200, paidCount: 2, pendingCount: 2, totalCount: 4 },
       ]);
 
       const res = mockRes();
@@ -100,9 +98,8 @@ describe("payment controller", () => {
     });
 
     it("handles missing/invalid fees", async () => {
-      (prisma.serviceRecord.findMany as jest.Mock).mockResolvedValue([
-        { fee: "abc", paid: true },
-        { fee: null, paid: false },
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue([
+        { paidTotal: 0, pendingTotal: 0, paidCount: 0, pendingCount: 2, totalCount: 2 },
       ]);
 
       const res = mockRes();

@@ -4,6 +4,7 @@ import { teamApi, type Team, type CompanyUser } from "../../apiclient/teams";
 import { appointmentApi, type Appointment } from "../../apiclient/appointments";
 import { customerApi } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import { durationToMs, parseSaat, dateToStr, strToDate } from "../../utils/date";
 import { TEAM_COLORS, type CustomerOption, type PlanFilter, type ScheduleEvent } from "./types";
 
@@ -204,12 +205,19 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     t("sch.serviceTypes.wiring"), t("sch.serviceTypes.commissioning"), t("sch.serviceTypes.maintenance"), t("sch.serviceTypes.repair"),
   ];
 
-  const loadData = useCallback(async () => {
+  const getWindow = (d: Date) => {
+    const from = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    const to = new Date(d.getFullYear(), d.getMonth() + 2, 0);
+    return { from: dateToStr(from), to: dateToStr(to) };
+  };
+
+  const loadData = useCallback(async (seed?: Date, silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      const win = getWindow(seed || new Date());
       const [teamsRes, appointmentsRes, customersRes, usersRes] = await Promise.all([
         teamApi.getAll(),
-        appointmentApi.getAll(),
+        appointmentApi.getAll({ from: win.from, to: win.to }),
         customerApi.getAllSimple(),
         teamApi.getCompanyUsers(),
       ]);
@@ -219,15 +227,19 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       setCompanyUsers(usersRes.data);
     } catch (error: any) {
       console.error("Veri yükleme hatası:", error);
-      showAlert("error", t("common.error"), t("sch.errorLoad"));
+      if (!silent) showAlert("error", t("common.error"), t("sch.errorLoad"));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [showAlert, t]);
 
+  const calendarMonth = calendarDate.getFullYear() * 12 + calendarDate.getMonth();
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadData(calendarDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calendarMonth, loadData]);
+
+  useFocusedPolling(() => loadData(calendarDate, true));
 
   const filteredAppointments = selectedTeamFilter === t("sch.allTeams")
     ? appointments

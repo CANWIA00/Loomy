@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import ScreenHeader from "../ScreenHeader";
 import CustomAlert from "../CustomAlert";
 import { stockApi, type StockItem, type StockItemDetail, type InvoiceRecord, type StockItemInput } from "../../apiclient/stock";
@@ -62,8 +63,8 @@ export default function StockScreen() {
   const PAGE_SIZE = 20;
 
   const loadItems = useCallback(
-    async (pageNum = 0, q = search) => {
-      setLoading(true);
+    async (pageNum = 0, q = search, silent = false) => {
+      if (!silent) setLoading(true);
       try {
         const res = await stockApi.list(q || undefined, pageNum, PAGE_SIZE, itemFilter === "low");
         setItems(res.data.content);
@@ -73,9 +74,9 @@ export default function StockScreen() {
         setLowStockCount(res.data.lowStockCount);
         setTotalByCurrency(res.data.totalByCurrency);
       } catch {
-        setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
+        if (!silent) setAlert({ visible: true, type: "error", title: t("stock.title"), message: t("stock.loading") });
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,8 +93,8 @@ export default function StockScreen() {
   }, [search, mode, loadItems]);
 
   const loadInvoices = useCallback(
-    async (page = 0, append = false) => {
-      setInvoicesLoading(true);
+    async (page = 0, append = false, silent = false) => {
+      if (!silent) setInvoicesLoading(true);
       try {
         const res = await stockApi.listInvoices(page, 20);
         if (append) {
@@ -103,15 +104,25 @@ export default function StockScreen() {
         }
         setInvoiceTotal(res.data.totalElements);
         setInvoicesEnd(page * 20 + res.data.content.length >= res.data.totalElements);
+        if (append) setInvoicePage(page);
       } catch {
-        setAlert({ visible: true, type: "error", title: t("stock.invoices"), message: t("stock.loading") });
+        if (!silent) setAlert({ visible: true, type: "error", title: t("stock.invoices"), message: t("stock.loading") });
       } finally {
-        setInvoicesLoading(false);
+        if (!silent) setInvoicesLoading(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
+
+  const pollRef = useRef({ mode, page, search, itemFilter });
+  pollRef.current = { mode, page, search, itemFilter };
+
+  useFocusedPolling(() => {
+    const s = pollRef.current;
+    if (s.mode === "items") return loadItems(s.page, s.search, true);
+    return loadInvoices(0, false, true);
+  });
 
   useEffect(() => {
     if (mode === "invoices") loadInvoices(0, false);

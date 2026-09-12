@@ -17,6 +17,7 @@ jest.mock("../prisma", () => ({
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
     },
     team: {
       findFirst: jest.fn(),
@@ -88,6 +89,30 @@ describe("appointment controller", () => {
       const whereArg = (prisma.appointment.findMany as jest.Mock).mock.calls[0][0].where;
       expect(whereArg.date).toBe("2026-09-10");
       expect(whereArg.teamId).toBe(3);
+    });
+
+    it("page + size ile sayfalanmış yanıt döner", async () => {
+      (prisma.appointment.count as jest.Mock).mockResolvedValue(3);
+      (prisma.appointment.findMany as jest.Mock).mockResolvedValue([
+        { id: 2, customerName: "M", teamName: "E", teamId: 5, date: "2026-09-11", startTime: "10:00", duration: 60, serviceType: "Bakim", notes: "" },
+      ]);
+
+      const req = mockReq({ query: { page: "1", size: "2" } });
+      const res = mockRes();
+      await getAppointments(req, res);
+
+      const findManyArg = (prisma.appointment.findMany as jest.Mock).mock.calls[0][0];
+      expect(findManyArg.skip).toBe(2);
+      expect(findManyArg.take).toBe(2);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.any(Array),
+          totalElements: 3,
+          totalPages: 2,
+          number: 1,
+          size: 2,
+        })
+      );
     });
   });
 

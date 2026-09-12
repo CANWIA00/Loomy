@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
 import { customerApi, type Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import { PAGE_SIZE } from "./types";
 
 interface CustomersContextValue {
@@ -99,8 +100,8 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     setAlertVisible(true);
   }
 
-  const fetchCustomers = useCallback(async (pageNum: number = 0, searchQuery?: string) => {
-    setLoading(true);
+  const fetchCustomers = useCallback(async (pageNum: number = 0, searchQuery?: string, silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const response = searchQuery
         ? await customerApi.search(searchQuery, pageNum, size)
@@ -110,15 +111,21 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
       setTotalPages(response.data.totalPages);
       setPage(response.data.number);
     } catch (error: any) {
-      showAlert("error", t("common.error"), t("cst.errorLoad"));
+      if (!silent) showAlert("error", t("common.error"), t("cst.errorLoad"));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [size, t]);
 
   useEffect(() => {
     fetchCustomers(0);
   }, [fetchCustomers]);
+
+  const pollRef = useRef({ page: 0, search: "" });
+  pollRef.current = { page, search };
+  useFocusedPolling(() =>
+    fetchCustomers(pollRef.current.page, pollRef.current.search.trim() || undefined, true)
+  );
 
   useEffect(() => {
     const timeout = setTimeout(() => {

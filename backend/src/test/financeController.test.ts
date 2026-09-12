@@ -1,19 +1,21 @@
 import { getFinanceOverview } from "../controllers/financeController";
 import prisma from "../prisma";
 
-jest.mock("../prisma", () => {
-  const model = () => ({
-    findMany: jest.fn(),
-  });
-  return {
-    __esModule: true,
-    default: {
-      stockItem: model(),
-      invoice: model(),
-      serviceRecord: model(),
+jest.mock("../prisma", () => ({
+  __esModule: true,
+  default: {
+    stockItem: {
+      findMany: jest.fn(),
     },
-  };
-});
+    invoice: {
+      findMany: jest.fn(),
+    },
+    serviceRecord: {
+      findMany: jest.fn(),
+    },
+    $queryRaw: jest.fn(),
+  },
+}));
 
 function mockRes() {
   const res: any = {};
@@ -35,21 +37,22 @@ beforeEach(() => {
 
 describe("getFinanceOverview", () => {
   it("stok, gider (fatura) ve servis ödemelerini kur bazında özetler", async () => {
-    (prisma.stockItem.findMany as jest.Mock).mockResolvedValue([
-      { quantity: 10, unitPrice: 100, currency: "TRY" }, // 1000 TRY
-      { quantity: 5, unitPrice: 20, currency: "USD" },   // 100 USD
-      { quantity: 3, unitPrice: null, currency: "TRY" }, // fiyatsız → yok sayılır
-    ]);
-    (prisma.invoice.findMany as jest.Mock).mockResolvedValue([
-      { totalAmount: 250, currency: "TRY" },
-      { totalAmount: 50, currency: "USD" },
-      { totalAmount: null, currency: "TRY" },
-    ]);
-    (prisma.serviceRecord.findMany as jest.Mock).mockResolvedValue([
-      { fee: "1000.00", paid: true },
-      { fee: "500.00", paid: false },
-      { fee: "0.00", paid: false },
-    ]);
+    (prisma.$queryRaw as jest.Mock).mockImplementation((strings: TemplateStringsArray) => {
+      const sql = Array.isArray(strings) ? strings.join("") : String(strings);
+      if (sql.includes('"Invoice"')) {
+        return Promise.resolve([
+          { currency: "TRY", total: 250 },
+          { currency: "USD", total: 50 },
+        ]);
+      }
+      if (sql.includes('"ServiceRecord"')) {
+        return Promise.resolve([{ paidTotal: 1000, pendingTotal: 500, paidCount: 1, pendingCount: 2 }]);
+      }
+      return Promise.resolve([
+        { currency: "TRY", total: 1000 },
+        { currency: "USD", total: 100 },
+      ]);
+    });
 
     const res = mockRes();
     await getFinanceOverview(mockReq(), res);
@@ -65,9 +68,7 @@ describe("getFinanceOverview", () => {
   });
 
   it("boş veriyle sıfır toplamlar döner", async () => {
-    (prisma.stockItem.findMany as jest.Mock).mockResolvedValue([]);
-    (prisma.invoice.findMany as jest.Mock).mockResolvedValue([]);
-    (prisma.serviceRecord.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.$queryRaw as jest.Mock).mockResolvedValue([]);
 
     const res = mockRes();
     await getFinanceOverview(mockReq(), res);
@@ -80,7 +81,7 @@ describe("getFinanceOverview", () => {
   });
 
   it("hata durumunda 500 döner", async () => {
-    (prisma.stockItem.findMany as jest.Mock).mockRejectedValue(new Error("db down"));
+    (prisma.$queryRaw as jest.Mock).mockRejectedValue(new Error("db down"));
 
     const res = mockRes();
     await getFinanceOverview(mockReq(), res);

@@ -20,37 +20,67 @@ export async function listStockItems(
     const size = parseInt(String(_req.query.size || "0")) || 0;
     const paged = size > 0;
 
-    const items = await prisma.stockItem.findMany({
-      where: {
-        companyId,
-        ...(q
-          ? {
-              name: { contains: q, mode: "insensitive" as const },
-            }
-          : {}),
-        ...(low ? { lowStockAlert: true } : {}),
-      },
-      orderBy: { name: "asc" },
-    });
+    const where: any = {
+      companyId,
+      ...(q
+        ? {
+            name: { contains: q, mode: "insensitive" as const },
+          }
+        : {}),
+      ...(low ? { lowStockAlert: true } : {}),
+    };
 
-    const lowFiltered = low ? items.filter((i) => i.quantity <= i.minQuantity) : items;
-    const totalElements = lowFiltered.length;
+    let content: any[] = [];
+    let totalElements = 0;
 
-    const content = (paged ? lowFiltered.slice(page * size, page * size + size) : lowFiltered).map(
-      (item) => ({
+    if (low) {
+      // Düşük stokta quantity <= minQuantity karşılaştırması sütunlar arasıdır;
+      // Prisma where ile yapılamaz, bu nedenle (doğal olarak küçük olan) aday kümesi
+      // çekilip filtrelenir. Asıl liste sorgusu aşağıda ayrılmıştır.
+      const all = await prisma.stockItem.findMany({ where, orderBy: { name: "asc" } });
+      const lowFiltered = all.filter((i) => i.quantity <= i.minQuantity);
+      totalElements = lowFiltered.length;
+      content = (paged ? lowFiltered.slice(page * size, page * size + size) : lowFiltered).map(
+        (item) => ({ ...item, lowStock: true })
+      );
+    } else {
+      const [rows, count] = await Promise.all([
+        prisma.stockItem.findMany({
+          where,
+          orderBy: { name: "asc" },
+          ...(paged ? { skip: page * size, take: size } : {}),
+        }),
+        prisma.stockItem.count({ where }),
+      ]);
+      totalElements = count;
+      content = rows.map((item) => ({
         ...item,
         lowStock: item.quantity <= item.minQuantity,
-      })
-    );
+      }));
+    }
 
-    const totalProducts = items.length;
-    const lowStockCount = items.filter((i) => i.lowStockAlert && i.quantity <= i.minQuantity).length;
-    const totalByCurrency = items.reduce<Record<string, number>>((acc, i) => {
-      if (i.unitPrice == null) return acc;
-      const cur = i.currency || "TRY";
-      acc[cur] = (acc[cur] || 0) + i.quantity * i.unitPrice;
-      return acc;
-    }, {});
+    // İstatistikler SQL tarafında, tam tablo çekilmeden hesaplanır.
+    const [totalProducts, lowStockAgg, totalsRaw] = await Promise.all([
+      prisma.stockItem.count({ where: { companyId } }),
+      prisma.$queryRaw<Array<{ count: number }>>`
+        SELECT COUNT(*)::int AS count FROM "StockItem"
+        WHERE "companyId" = ${companyId}
+          AND "lowStockAlert" = true
+          AND "quantity" <= "minQuantity"
+      `,
+      prisma.$queryRaw<Array<{ currency: string; total: number }>>`
+        SELECT "currency", COALESCE(SUM("quantity" * "unitPrice"), 0)::float8 AS total
+        FROM "StockItem"
+        WHERE "companyId" = ${companyId} AND "unitPrice" IS NOT NULL
+        GROUP BY "currency"
+      `,
+    ]);
+
+    const lowStockCount = lowStockAgg[0]?.count ?? 0;
+    const totalByCurrency: Record<string, number> = {};
+    totalsRaw.forEach((r) => {
+      totalByCurrency[r.currency] = Number(r.total) || 0;
+    });
 
     res.json({
       content,

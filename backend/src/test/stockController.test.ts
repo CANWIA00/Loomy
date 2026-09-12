@@ -39,6 +39,7 @@ jest.mock("../prisma", () => {
       stockItem,
       stockTransaction,
       company: model(),
+      $queryRaw: jest.fn(),
       $transaction: jest.fn((fn: (tx: any) => Promise<unknown>) =>
         fn({ invoice, invoiceLine, stockItem, stockTransaction })
       ),
@@ -425,8 +426,19 @@ describe("listStockItems", () => {
     })
   );
 
+  beforeEach(() => {
+    (prisma.stockItem.count as jest.Mock).mockResolvedValue(items.length);
+    (prisma.$queryRaw as jest.Mock).mockImplementation((strings: TemplateStringsArray) => {
+      const sql = Array.isArray(strings) ? strings.join("") : String(strings);
+      if (sql.includes("lowStockAlert")) return Promise.resolve([{ count: 10 }]);
+      return Promise.resolve([{ currency: "TRY", total: 10 * 1 * 100 + 35 * 20 * 100 }]);
+    });
+  });
+
   it("page + size ile sayfalar:", async () => {
-    (prisma.stockItem.findMany as jest.Mock).mockResolvedValue(items);
+    (prisma.stockItem.findMany as jest.Mock).mockImplementation(({ skip, take }: any) =>
+      Promise.resolve(items.slice(skip || 0, take != null ? skip + take : items.length))
+    );
 
     const res = mockRes();
     await listStockItems(mockReq({ query: { page: "1", size: "20" } }), res);

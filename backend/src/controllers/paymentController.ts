@@ -60,30 +60,31 @@ export async function getPaymentSummary(
   try {
     const companyId = req.user!.companyId!;
 
-    const records = await prisma.serviceRecord.findMany({
-      where: { companyId },
-      select: { fee: true, paid: true },
-    });
+    const [row] = await prisma.$queryRaw<Array<{
+      paidTotal: number;
+      pendingTotal: number;
+      paidCount: number;
+      pendingCount: number;
+      totalCount: number;
+    }>>`
+      SELECT
+        COALESCE(SUM(CASE WHEN "paid" THEN CAST("fee" AS numeric) ELSE 0 END), 0)::float8 AS "paidTotal",
+        COALESCE(SUM(CASE WHEN NOT "paid" THEN CAST("fee" AS numeric) ELSE 0 END), 0)::float8 AS "pendingTotal",
+        COUNT(*) FILTER (WHERE "paid")::int AS "paidCount",
+        COUNT(*) FILTER (WHERE NOT "paid")::int AS "pendingCount",
+        COUNT(*)::int AS "totalCount"
+      FROM "ServiceRecord"
+      WHERE "companyId" = ${companyId}
+    `;
 
-    let paidTotal = 0;
-    let pendingTotal = 0;
-
-    records.forEach((r) => {
-      const fee = parseFloat(r.fee) || 0;
-      if (r.paid) {
-        paidTotal += fee;
-      } else {
-        pendingTotal += fee;
-      }
-    });
-
+    const r = row || { paidTotal: 0, pendingTotal: 0, paidCount: 0, pendingCount: 0, totalCount: 0 };
     res.json({
-      paidTotal,
-      pendingTotal,
-      total: paidTotal + pendingTotal,
-      paidCount: records.filter((r) => r.paid).length,
-      pendingCount: records.filter((r) => !r.paid).length,
-      totalCount: records.length,
+      paidTotal: Number(r.paidTotal) || 0,
+      pendingTotal: Number(r.pendingTotal) || 0,
+      total: (Number(r.paidTotal) || 0) + (Number(r.pendingTotal) || 0),
+      paidCount: r.paidCount || 0,
+      pendingCount: r.pendingCount || 0,
+      totalCount: r.totalCount || 0,
     });
   } catch (error: any) {
     console.error("GetPaymentSummary error:", error);

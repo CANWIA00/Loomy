@@ -11,6 +11,7 @@ import { serviceApi, ServiceRecord } from "../../apiclient/services";
 import { customerApi, Customer } from "../../apiclient/customers";
 import { templateApi, ServiceTemplate } from "../../apiclient/templates";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField } from "./types";
 
 interface DeleteAlertState {
@@ -60,6 +61,9 @@ interface ServicesContextValue {
   mapSelectorVisible: boolean;
   setMapSelectorVisible: (v: boolean) => void;
   filteredRecords: ServiceRecord[];
+  totalElements: number;
+  hasMoreRecords: boolean;
+  loadMoreRecords: () => void;
   filter: RecordFilter;
   setFilter: React.Dispatch<React.SetStateAction<RecordFilter>>;
   filterDate: string;
@@ -132,6 +136,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [totalElements, setTotalElements] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const recordsPageRef = useRef(0);
   const currentUserName = useRef("");
   const currentUserPhone = useRef("");
   const originalFormRef = useRef<ServiceFormData | null>(null);
@@ -160,10 +167,28 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     try {
       const res = await serviceApi.getAll(0, 100);
       setRecords(res.data.content);
+      setTotalElements(res.data.totalElements);
+      recordsPageRef.current = 0;
     } catch (e: any) {
       console.warn("fetchRecords failed:", e?.message || e);
     }
   }, []);
+
+  const loadMoreRecords = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = recordsPageRef.current + 1;
+      const res = await serviceApi.getAll(nextPage, 100);
+      setRecords((prev) => [...prev, ...res.data.content]);
+      setTotalElements(res.data.totalElements);
+      recordsPageRef.current = nextPage;
+    } catch (e: any) {
+      console.warn("loadMoreRecords failed:", e?.message || e);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore]);
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -274,6 +299,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       }).catch(() => {});
     }, [fetchRecords, fetchCustomers, fetchTemplates])
   );
+
+  const pollRefetch = useCallback(async () => {
+    await Promise.all([fetchRecords(), fetchCustomers(), fetchTemplates()]);
+  }, [fetchRecords, fetchCustomers, fetchTemplates]);
+  useFocusedPolling(pollRefetch);
 
   const requireSignature = (): boolean => {
     if (!hasSignature) {
@@ -748,6 +778,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     mapSelectorVisible,
     setMapSelectorVisible,
     filteredRecords,
+    totalElements,
+    hasMoreRecords: records.length < totalElements,
+    loadMoreRecords,
     filter,
     setFilter,
     filterDate,

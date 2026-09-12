@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert } from "react-native";
 import { paymentApi, type PaymentRecord, type PaymentSummary } from "../../apiclient/payments";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import { LIST_SIZE, parseDate, type StatusOption, type StatusFilter, type TimeFilter, type ToggleAlertState } from "./types";
 
 interface PaymentsContextValue {
@@ -21,6 +22,9 @@ interface PaymentsContextValue {
   setListPage: (p: number) => void;
   listTotalPages: number;
   pagedServices: PaymentRecord[];
+  totalElements: number;
+  hasMore: boolean;
+  loadMore: () => void;
   fetchData: () => void;
   formatAmount: (amount: number) => string;
   handleTogglePaid: (record: PaymentRecord) => void;
@@ -42,6 +46,9 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<PaymentRecord[]>([]);
   const [summary, setSummary] = useState<PaymentSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [totalElements, setTotalElements] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const recordsPageRef = useRef(0);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -55,25 +62,45 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     { label: t("pay.pending"), value: "bekliyor" },
   ];
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const [paymentsRes, summaryRes] = await Promise.all([
-        paymentApi.getAll(0, 200),
+        paymentApi.getAll(0, 100),
         paymentApi.getSummary(),
       ]);
       setRecords(paymentsRes.data.content);
+      setTotalElements(paymentsRes.data.totalElements);
+      recordsPageRef.current = 0;
       setSummary(summaryRes.data);
+    } catch {
+      if (!silent) Alert.alert(t("common.error"), t("pay.errorLoad"));
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [t]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = recordsPageRef.current + 1;
+      const res = await paymentApi.getAll(nextPage, 100);
+      setRecords((prev) => [...prev, ...res.data.content]);
+      setTotalElements(res.data.totalElements);
+      recordsPageRef.current = nextPage;
     } catch {
       Alert.alert(t("common.error"), t("pay.errorLoad"));
     } finally {
-      setLoading(false);
+      setLoadingMore(false);
     }
-  }, []);
+  }, [loadingMore, t]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useFocusedPolling(() => fetchData(true));
 
   useEffect(() => {
     setListPage(0);
@@ -143,6 +170,9 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     setListPage,
     listTotalPages,
     pagedServices,
+    totalElements,
+    hasMore: records.length < totalElements,
+    loadMore,
     fetchData,
     formatAmount,
     handleTogglePaid,

@@ -15,6 +15,8 @@ export default function RecordsSection() {
   const [page, setPage] = useState(0);
   const {
     filteredRecords,
+    hasMoreRecords,
+    loadMoreRecords,
     filter,
     setFilter,
     filterDate,
@@ -271,6 +273,16 @@ export default function RecordsSection() {
           </TouchableOpacity>
         </View>
       ) : null}
+
+      {hasMoreRecords && (
+        <TouchableOpacity
+          className="h-10 rounded-lg items-center justify-center mt-3"
+          style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, borderWidth: 1 }}
+          onPress={loadMoreRecords}
+        >
+          <Text style={{ color: colors.primary }} className="font-semibold text-sm">{t("svc.loadMore")}</Text>
+        </TouchableOpacity>
+      )}
     </>
   );
 }
