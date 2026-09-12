@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -11,6 +12,11 @@ export default function TeamsSection() {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
   const { teams, appointments, openTeamModal, openTeamDetail } = useSchedule();
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+
+  const toggle = (teamId: number) => {
+    setExpanded((prev) => ({ ...prev, [teamId]: !prev[teamId] }));
+  };
 
   return (
     <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
@@ -47,62 +53,97 @@ export default function TeamsSection() {
         </View>
       ) : (
         <View className="flex-row flex-wrap gap-4">
-          {teams.map((team) => (
-            <View
-              key={team.id}
-              className="w-full md:w-[48%] lg:w-[32%] rounded-2xl p-3 mb-4"
-              style={{ backgroundColor: colors.bgCard }}
-            >
-              <TouchableOpacity onPress={() => openTeamDetail(team.id)} activeOpacity={0.7}>
-                <View className="flex-row items-center gap-2 mb-2">
+          {teams.map((team) => {
+            const isExpanded = !!expanded[team.id];
+            const assignmentCount = appointments.filter((a) => a.ekipId === team.id).length;
+            return (
+              <View
+                key={team.id}
+                className="w-full md:w-[48%] lg:w-[32%] rounded-2xl overflow-hidden mb-4"
+                style={{ backgroundColor: colors.bgCard, borderColor: colors.borderAlt, borderWidth: 1 }}
+              >
+                <TouchableOpacity
+                  onPress={() => toggle(team.id)}
+                  activeOpacity={0.7}
+                  className="p-3 flex-row items-center gap-3"
+                >
                   <View
-                    className="w-8 h-8 rounded-xl items-center justify-center"
+                    className="w-10 h-10 rounded-xl items-center justify-center"
                     style={{ backgroundColor: `${team.color}20` }}
                   >
-                    <Ionicons name="people" size={16} color={team.color} />
+                    <Ionicons name="people" size={18} color={team.color} />
                   </View>
                   <View className="flex-1">
-                    <Text className="font-semibold text-sm" style={{ color: colors.text }}>{team.name}</Text>
-                    <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.leader")} {team.leader}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-                </View>
-              </TouchableOpacity>
-              <View className="border rounded-lg overflow-hidden mb-2" style={{ borderColor: colors.border }}>
-                <ScrollView
-                  style={{ height: 88 }}
-                  nestedScrollEnabled
-                  bounces={false}
-                  showsVerticalScrollIndicator={true}
-                >
-                  {team.members.length === 0 ? (
-                    <View style={{ height: 88 }} className="items-center justify-center">
-                      <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
+                    <Text className="font-semibold text-sm" style={{ color: colors.text }} numberOfLines={1}>
+                      {team.name}
+                    </Text>
+                    <View className="flex-row items-center mt-0.5">
+                      <Ionicons name="shield-checkmark-outline" size={13} color={colors.warning} />
+                      <Text className="text-xs ml-1" style={{ color: colors.textMuted }} numberOfLines={1}>
+                        {team.leader}
+                      </Text>
                     </View>
-                  ) : (
-                    team.members.map((memberName) => (
-                      <View key={memberName} className="flex-row items-center px-3 py-1.5" style={{ backgroundColor: colors.bg }}>
-                        <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
-                          <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{memberName.charAt(0)}</Text>
-                        </View>
-                        <Text className="text-xs flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                          {memberName}
-                        </Text>
-                      </View>
-                    ))
-                  )}
-                </ScrollView>
+                  </View>
+                  <Ionicons
+                    name={isExpanded ? "chevron-up" : "chevron-down"}
+                    size={18}
+                    color={colors.textMuted}
+                  />
+                </TouchableOpacity>
+
+                {isExpanded && (
+                  <View className="px-3 pb-1.5">
+                    <View className="border rounded-xl overflow-hidden" style={{ borderColor: colors.border }}>
+                      <ScrollView
+                        style={{ maxHeight: 132 }}
+                        nestedScrollEnabled
+                        bounces={false}
+                        showsVerticalScrollIndicator={true}
+                      >
+                        {team.members.length === 0 ? (
+                          <View style={{ height: 48 }} className="items-center justify-center">
+                            <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
+                          </View>
+                        ) : (
+                          team.members.map((memberName) => (
+                            <View key={memberName} className="flex-row items-center px-3 py-1.5" style={{ backgroundColor: colors.bg }}>
+                              <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
+                                <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{memberName.charAt(0)}</Text>
+                              </View>
+                              <Text className="text-xs flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                                {memberName}
+                              </Text>
+                            </View>
+                          ))
+                        )}
+                      </ScrollView>
+                    </View>
+
+                    <View className="flex-row items-center justify-between py-2">
+                      <Text className="text-xs" style={{ color: colors.textSecondary }}>
+                        {assignmentCount} {t("sch.assignments")}
+                      </Text>
+                      <Text className="text-xs font-medium" style={{ color: colors.textMuted }}>
+                        {t("sch.personnelCount")} ({team.members.length + 1})
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  onPress={() => openTeamDetail(team.id)}
+                  activeOpacity={0.7}
+                  className="flex-row items-center justify-center py-2.5 border-t mt-1"
+                  style={{ borderTopColor: colors.border, backgroundColor: colors.bg }}
+                >
+                  <Ionicons name="create-outline" size={14} color={colors.primary} />
+                  <Text className="text-xs font-medium ml-1.5" style={{ color: colors.primary }}>
+                    {t("sch.teamDetail")}
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
-                <Text className="text-xs" style={{ color: colors.textSecondary }}>
-                  {appointments.filter((a) => a.ekipId === team.id).length} {t("sch.assignments")}
-                </Text>
-                <Text className="text-xs font-medium" style={{ color: colors.textMuted }}>
-                  {t("sch.personnelCount")} ({team.members.length + 1})
-                </Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
       )}
     </View>
