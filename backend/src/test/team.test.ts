@@ -77,6 +77,25 @@ describe("team controller", () => {
         { id: 1, name: "Ekip", leader: "L", color: "#fff", members: ["u1", "u2"] },
       ]);
     });
+
+    it("resolves UUID member ids to user names", async () => {
+      (prisma.team.findMany as jest.Mock).mockResolvedValue([
+        { id: 1, name: "Ekip", leader: "L", color: "#fff", members: '["f86c-1234","u2"]' },
+      ]);
+      (prisma.user.findMany as jest.Mock).mockResolvedValue([
+        { id: "f86c-1234", name: "Ali Veli" },
+      ]);
+
+      const res = mockRes();
+      await getTeams(mockReq(), res);
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ id: expect.objectContaining({ in: ["f86c-1234"] }) }) })
+      );
+      expect(res.json).toHaveBeenCalledWith([
+        { id: 1, name: "Ekip", leader: "L", color: "#fff", members: ["Ali Veli", "u2"] },
+      ]);
+    });
   });
 
   describe("createTeam", () => {
@@ -187,6 +206,24 @@ describe("team controller", () => {
       expect(JSON.parse(data.members)).toEqual(["u1", "EskiL"]);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({ leader: "YeniL", members: ["u1", "EskiL"] })
+      );
+    });
+
+    it("replaces members list when members array is provided and excludes leader", async () => {
+      (prisma.team.findFirst as jest.Mock).mockResolvedValue({
+        id: 1, name: "Ekip", leader: "L", color: "#fff", members: '["u1","u2"]',
+      });
+      (prisma.team.update as jest.Mock).mockResolvedValue({
+        id: 1, name: "Ekip", leader: "L", color: "#fff", members: '["u3"]',
+      });
+
+      const res = mockRes();
+      await updateTeam(mockReq({ params: { id: "1" }, body: { members: ["u3", "L"] } }), res);
+
+      const data = (prisma.team.update as jest.Mock).mock.calls[0][0].data;
+      expect(JSON.parse(data.members)).toEqual(["u3"]);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ members: ["u3"] })
       );
     });
   });

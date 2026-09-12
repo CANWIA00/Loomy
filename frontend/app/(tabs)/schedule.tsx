@@ -17,8 +17,6 @@ import TeamFilterModal from "../../components/schedule/modals/TeamFilterModal";
 import AppointmentModal from "../../components/schedule/modals/AppointmentModal";
 import CustomerSelectModal from "../../components/schedule/modals/CustomerSelectModal";
 import ServiceSelectModal from "../../components/schedule/modals/ServiceSelectModal";
-import AddMemberModal from "../../components/schedule/modals/AddMemberModal";
-import RemoveMembersModal from "../../components/schedule/modals/RemoveMembersModal";
 import TeamDetailModal from "../../components/schedule/modals/TeamDetailModal";
 import DayListModal from "../../components/schedule/modals/DayListModal";
 import AppointmentDetailModal from "../../components/schedule/modals/AppointmentDetailModal";
@@ -139,8 +137,6 @@ function ScheduleScreenInner() {
         <AppointmentModal />
         <CustomerSelectModal />
         <ServiceSelectModal />
-        <AddMemberModal />
-        <RemoveMembersModal />
         <TeamDetailModal />
         <DayListModal />
         <AppointmentDetailModal />

@@ -19,10 +19,7 @@ export default function TeamDetailModal() {
     teams,
     companyUsers,
     closeTeamDetail,
-    addMember,
-    removeMembers,
-    changeLeader,
-    updateTeamName,
+    saveTeam,
     deleteTeamById,
   } = useSchedule();
 
@@ -32,22 +29,25 @@ export default function TeamDetailModal() {
   );
 
   const [nameDraft, setNameDraft] = useState("");
+  const [leaderDraft, setLeaderDraft] = useState("");
+  const [membersDraft, setMembersDraft] = useState<string[]>([]);
   const [leaderOpen, setLeaderOpen] = useState(false);
   const [memberOpen, setMemberOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [confirmSave, setConfirmSave] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [nameBusy, setNameBusy] = useState(false);
-  const [leaderBusy, setLeaderBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   useEffect(() => {
-    if (teamDetailVisible) {
-      setNameDraft(team?.name || "");
+    if (teamDetailVisible && team) {
+      setNameDraft(team.name);
+      setLeaderDraft(team.leader);
+      setMembersDraft(team.members);
       setLeaderOpen(false);
       setMemberOpen(false);
       setSearch("");
-      setConfirmRemove(null);
+      setConfirmSave(false);
       setConfirmDelete(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,52 +61,50 @@ export default function TeamDetailModal() {
     return map;
   }, [companyUsers]);
 
-  const leaderCandidates = useMemo(
-    () => companyUsers.filter((u) => u.name !== team?.leader),
-    [companyUsers, team]
-  );
-
-  const addCandidates = useMemo(
-    () =>
-      companyUsers.filter(
-        (u) =>
-          u.name !== team?.leader &&
-          !team?.members.includes(u.name) &&
-          (u.name.toLowerCase().includes(search.toLowerCase()) ||
-            u.email.toLowerCase().includes(search.toLowerCase()))
-      ),
-    [companyUsers, team, search]
-  );
-
   if (!team) return null;
 
-  const handleSaveName = async () => {
-    const clean = nameDraft.trim();
-    if (!clean || clean === team.name) return;
-    setNameBusy(true);
-    const ok = await updateTeamName(team.id, clean);
-    setNameBusy(false);
-    if (ok) setNameDraft(clean);
-  };
+  const isDirty =
+    nameDraft.trim() !== team.name ||
+    leaderDraft !== team.leader ||
+    JSON.stringify(membersDraft) !== JSON.stringify(team.members);
 
-  const handleChangeLeader = async (u: CompanyUser) => {
-    if (leaderBusy) return;
-    setLeaderBusy(true);
-    const ok = await changeLeader(team.id, u.name);
-    setLeaderBusy(false);
-    if (ok) setLeaderOpen(false);
-  };
+  const leaderCandidates = companyUsers.filter((u) => u.name !== leaderDraft);
 
-  const handleAddMember = async (userName: string) => {
-    await addMember(team.id, userName);
+  const addCandidates = companyUsers.filter(
+    (u) =>
+      u.name !== leaderDraft &&
+      !membersDraft.includes(u.name) &&
+      (u.name.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const handleChangeLeader = (u: CompanyUser) => {
+    if (u.name === leaderDraft) return;
+    setLeaderDraft(u.name);
+    setMembersDraft((prev) => prev.filter((m) => m !== u.name));
+    setLeaderOpen(false);
     setSearch("");
   };
 
-  const handleRemove = async () => {
-    if (!confirmRemove) return;
-    const name = confirmRemove;
-    setConfirmRemove(null);
-    await removeMembers(team.id, [name]);
+  const handleAddMember = (userName: string) => {
+    setMembersDraft((prev) => (prev.includes(userName) ? prev : [...prev, userName]));
+    setSearch("");
+  };
+
+  const handleRemoveMember = (userName: string) => {
+    setMembersDraft((prev) => prev.filter((m) => m !== userName));
+  };
+
+  const handleSave = async () => {
+    if (!isDirty || saving || !nameDraft.trim()) return;
+    setSaving(true);
+    const ok = await saveTeam(team.id, {
+      name: nameDraft.trim(),
+      leader: leaderDraft,
+      members: membersDraft,
+    });
+    setSaving(false);
+    if (ok) setConfirmSave(false);
   };
 
   const handleDelete = async () => {
@@ -115,8 +113,6 @@ export default function TeamDetailModal() {
     setDeleteBusy(false);
     closeTeamDetail();
   };
-
-  const isNameDirty = nameDraft.trim() !== team.name;
 
   return (
     <ModalShell visible={teamDetailVisible} onRequestClose={closeTeamDetail} maxWidth="max-w-md">
@@ -127,7 +123,7 @@ export default function TeamDetailModal() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="max-h-[75vh]" showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="flex-row items-center gap-3 mb-3">
           <View
             className="w-12 h-12 rounded-2xl items-center justify-center"
@@ -136,28 +132,15 @@ export default function TeamDetailModal() {
             <Ionicons name="people" size={22} color={team.color} />
           </View>
           {isAdmin ? (
-            <View className="flex-1 flex-row items-center">
+            <View className="flex-1">
               <TextInput
-                className="flex-1 h-10 border rounded-lg px-3 text-sm"
+                className="w-full h-10 border rounded-lg px-3 text-sm"
                 style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
                 value={nameDraft}
                 onChangeText={setNameDraft}
                 placeholder={t("sch.teamName")}
                 placeholderTextColor={colors.textMuted}
               />
-              <TouchableOpacity
-                className="ml-2 w-10 h-10 rounded-lg items-center justify-center"
-                style={{ backgroundColor: isNameDirty ? colors.primary : colors.bgInput }}
-                onPress={handleSaveName}
-                disabled={!isNameDirty || nameBusy}
-                activeOpacity={0.7}
-              >
-                {nameBusy ? (
-                  <ActivityIndicator size="small" color={isNameDirty ? "white" : colors.textMuted} />
-                ) : (
-                  <Ionicons name="save-outline" size={18} color={isNameDirty ? "white" : colors.textMuted} />
-                )}
-              </TouchableOpacity>
             </View>
           ) : (
             <View className="flex-1">
@@ -170,12 +153,12 @@ export default function TeamDetailModal() {
         <View className="border rounded-xl px-3 py-2.5 mb-2 flex-row items-center"
           style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
           <View className="w-8 h-8 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.purple }}>
-            <Text className="text-white text-xs font-bold">{team.leader.charAt(0)}</Text>
+            <Text className="text-white text-xs font-bold">{leaderDraft.charAt(0)}</Text>
           </View>
           <View className="flex-1">
-            <Text className="text-sm" style={{ color: colors.text }}>{team.leader}</Text>
-            {emails[team.leader] ? (
-              <Text className="text-xs" style={{ color: colors.textMuted }}>{emails[team.leader]}</Text>
+            <Text className="text-sm" style={{ color: colors.text }}>{leaderDraft}</Text>
+            {emails[leaderDraft] ? (
+              <Text className="text-xs" style={{ color: colors.textMuted }}>{emails[leaderDraft]}</Text>
             ) : null}
           </View>
           <View className="rounded-md px-2 py-0.5" style={{ backgroundColor: colors.purple + '22' }}>
@@ -199,7 +182,7 @@ export default function TeamDetailModal() {
             </TouchableOpacity>
             {leaderOpen && (
               <View className="border rounded-lg mb-2 max-h-36 overflow-hidden" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
-                <ScrollView nestedScrollEnabled bounces={false}>
+                <ScrollView nestedScrollEnabled bounces={false} keyboardShouldPersistTaps="handled">
                   {leaderCandidates.length === 0 ? (
                     <Text className="text-sm text-center py-4" style={{ color: colors.textMuted }}>{t("sch.noPersonnelLeft")}</Text>
                   ) : (
@@ -209,7 +192,6 @@ export default function TeamDetailModal() {
                         className="px-3 py-2.5 border-b flex-row items-center"
                         style={{ borderColor: colors.border }}
                         onPress={() => handleChangeLeader(u)}
-                        disabled={leaderBusy}
                         activeOpacity={0.7}
                       >
                         <View className="w-7 h-7 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
@@ -231,7 +213,7 @@ export default function TeamDetailModal() {
 
         <View className="flex-row items-center justify-between mt-3 mb-1">
           <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>
-            {t("sch.personnel")} ({team.members.length})
+            {t("sch.personnel")} ({membersDraft.length})
           </Text>
           {isAdmin && (
             <TouchableOpacity
@@ -287,11 +269,11 @@ export default function TeamDetailModal() {
         )}
 
         <View className="mt-1">
-          {team.members.length === 0 ? (
+          {membersDraft.length === 0 ? (
             <Text className="text-sm text-center py-4" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
-          ) : team.members.map((memberName) => (
+          ) : membersDraft.map((memberName) => (
             <View key={memberName} className="border rounded-xl px-3 py-2.5 mb-1 flex-row items-center"
-              style={{ backgroundColor: colors.bg, borderColor: confirmRemove === memberName ? colors.danger + '4D' : colors.border }}>
+              style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
               <View className="w-8 h-8 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.bgInput }}>
                 <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{memberName.charAt(0)}</Text>
               </View>
@@ -301,37 +283,66 @@ export default function TeamDetailModal() {
                   <Text className="text-xs" style={{ color: colors.textMuted }}>{emails[memberName]}</Text>
                 ) : null}
               </View>
-              {confirmRemove === memberName ? (
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-xs font-medium" style={{ color: colors.danger }}>{t("sch.removeAsk")}</Text>
-                  <TouchableOpacity
-                    onPress={handleRemove}
-                    className="rounded-md px-2.5 py-1.5"
-                    style={{ backgroundColor: colors.danger }}
-                  >
-                    <Text className="text-xs font-semibold" style={{ color: "white" }}>{t("sch.yesDelete")}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setConfirmRemove(null)}
-                    className="rounded-md px-2.5 py-1.5"
-                    style={{ backgroundColor: colors.bgInput }}
-                  >
-                    <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{t("sch.cancel")}</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                isAdmin && (
-                  <TouchableOpacity onPress={() => setConfirmRemove(memberName)} activeOpacity={0.7}>
-                    <Ionicons name="remove-circle-outline" size={20} color={colors.danger} />
-                  </TouchableOpacity>
-                )
+              {isAdmin && (
+                <TouchableOpacity onPress={() => handleRemoveMember(memberName)} activeOpacity={0.7}>
+                  <Ionicons name="remove-circle-outline" size={20} color={colors.danger} />
+                </TouchableOpacity>
               )}
             </View>
           ))}
         </View>
 
-        {isAdmin && (
+        {isAdmin && isDirty && (
           <View className="mt-4">
+            {!confirmSave ? (
+              <>
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="information-circle-outline" size={14} color={colors.warning} />
+                  <Text className="text-xs ml-1" style={{ color: colors.warning }}>{t("sch.unsaved")}</Text>
+                </View>
+                <TouchableOpacity
+                  className="flex-row items-center justify-center h-11 rounded-xl"
+                  style={{ backgroundColor: nameDraft.trim() ? colors.primary : colors.primary + '40' }}
+                  onPress={() => setConfirmSave(true)}
+                  disabled={!nameDraft.trim()}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="save-outline" size={18} color="white" />
+                  <Text className="text-sm font-semibold ml-2" style={{ color: "white" }}>{t("sch.saveChanges")}</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <View className="border rounded-xl p-3" style={{ borderColor: colors.primary + '66', backgroundColor: colors.primary + '0D' }}>
+                <Text className="text-sm mb-3" style={{ color: colors.text }}>{t("sch.confirmSaveMsg")}</Text>
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    className="flex-1 h-10 rounded-lg items-center justify-center"
+                    style={{ backgroundColor: colors.bgInput }}
+                    onPress={() => setConfirmSave(false)}
+                    disabled={saving}
+                  >
+                    <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("sch.cancel")}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 h-10 rounded-lg items-center justify-center"
+                    style={{ backgroundColor: saving ? colors.primary + '80' : colors.primary }}
+                    onPress={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Text className="font-medium" style={{ color: "white" }}>{t("sch.yesSave")}</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isAdmin && (
+          <View className="mt-4 pb-2">
             {!confirmDelete ? (
               <TouchableOpacity
                 className="flex-row items-center justify-center h-10 rounded-lg"

@@ -15,6 +15,12 @@ interface AlertState {
   type: "success" | "error" | "confirm";
 }
 
+export interface SaveTeamData {
+  name?: string;
+  leader?: string;
+  members?: string[];
+}
+
 interface ScheduleContextValue {
   loading: boolean;
   teams: Team[];
@@ -110,8 +116,7 @@ interface ScheduleContextValue {
   teamDetailId: number | null;
   openTeamDetail: (teamId: number) => void;
   closeTeamDetail: () => void;
-  updateTeamName: (teamId: number, name: string) => Promise<boolean>;
-  changeLeader: (teamId: number, newLeader: string) => Promise<boolean>;
+  saveTeam: (teamId: number, data: SaveTeamData) => Promise<boolean>;
   deleteTeamById: (teamId: number) => Promise<void>;
 
   requestDeleteTeam: (teamId: number) => void;
@@ -540,22 +545,9 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setDeleteTeamId(null);
   };
 
-  const updateTeamName = async (teamId: number, name: string): Promise<boolean> => {
-    if (!name.trim()) return false;
+  const saveTeam = async (teamId: number, data: SaveTeamData): Promise<boolean> => {
     try {
-      const res = await teamApi.update(teamId, { name: name.trim() });
-      setTeams((prev) => prev.map((t) => t.id === teamId ? res.data : t));
-      return true;
-    } catch (error: any) {
-      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorTeamAdd"));
-      return false;
-    }
-  };
-
-  const changeLeader = async (teamId: number, newLeader: string): Promise<boolean> => {
-    if (!newLeader.trim()) return false;
-    try {
-      const res = await teamApi.update(teamId, { leader: newLeader.trim() });
+      const res = await teamApi.update(teamId, data);
       setTeams((prev) => prev.map((t) => t.id === teamId ? res.data : t));
       return true;
     } catch (error: any) {
@@ -672,8 +664,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       setTeamDetailVisible(false);
       setTeamDetailId(null);
     },
-    updateTeamName,
-    changeLeader,
+    saveTeam,
     deleteTeamById,
     requestDeleteTeam,
     deleteTeamConfirmVisible,

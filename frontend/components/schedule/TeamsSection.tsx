@@ -10,7 +10,7 @@ export default function TeamsSection() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
-  const { teams, appointments, openTeamModal, requestDeleteTeam, openAddMember, openRemoveMembers, openTeamDetail } = useSchedule();
+  const { teams, appointments, openTeamModal, openTeamDetail } = useSchedule();
 
   return (
     <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
@@ -67,42 +67,35 @@ export default function TeamsSection() {
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                 </View>
-                <View className="mt-2 flex-col gap-1">
-                  <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
-                </View>
+                <Text className="text-xs mb-1" style={{ color: colors.textMuted }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
               </TouchableOpacity>
+              <View className="border rounded-lg overflow-hidden mb-2" style={{ borderColor: colors.border }}>
+                {team.members.length === 0 ? (
+                  <Text className="text-xs px-3 py-2.5" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
+                ) : (
+                  team.members.slice(0, 4).map((memberName) => (
+                    <View key={memberName} className="flex-row items-center px-3 py-1.5" style={{ backgroundColor: colors.bg }}>
+                      <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
+                        <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{memberName.charAt(0)}</Text>
+                      </View>
+                      <Text className="text-xs flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                        {memberName}
+                      </Text>
+                    </View>
+                  ))
+                )}
+                {team.members.length > 4 && (
+                  <View className="px-3 py-1.5" style={{ backgroundColor: colors.bg }}>
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>
+                      +{team.members.length - 4} {t("sch.more")}
+                    </Text>
+                  </View>
+                )}
+              </View>
               <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
                 <Text className="text-xs" style={{ color: colors.textSecondary }}>
                   {appointments.filter((a) => a.ekipId === team.id).length} {t("sch.assignments")}
                 </Text>
-                {isAdmin && (
-                  <View className="flex-row gap-1">
-                    <TouchableOpacity
-                      className="p-1.5 rounded-lg"
-                      style={{ backgroundColor: colors.danger + '15' }}
-                      onPress={() => requestDeleteTeam(team.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="trash-outline" size={16} color={colors.danger} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="p-1.5 rounded-lg"
-                      style={{ backgroundColor: colors.warning + '15' }}
-                      onPress={() => openRemoveMembers(team.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="person-remove-outline" size={16} color={colors.warning} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="p-1.5 rounded-lg"
-                      style={{ backgroundColor: colors.primary + '15' }}
-                      onPress={() => openAddMember(team.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="person-add-outline" size={16} color={colors.primary} />
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
             </View>
           ))}
