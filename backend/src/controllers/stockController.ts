@@ -3,6 +3,12 @@ import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
 import { parseEInvoiceXml } from "../utils/parseEInvoiceXml";
 import { mergeStockEntry } from "../utils/stockPricing";
+import {
+  periodKey,
+  periodFromDate,
+  scheduleRecomputeMonth,
+  scheduleRecomputePeriods,
+} from "../services/monthlySummaries";
 
 const REASON_INITIAL = "INITIAL";
 const REASON_MANUAL = "MANUAL";
@@ -352,6 +358,8 @@ export async function addStockTransaction(
       return item;
     });
 
+    await scheduleRecomputeMonth(companyId, periodKey(new Date()));
+
     res.json(updated);
   } catch (error: any) {
     console.error("AddStockTransaction error:", error);
@@ -557,6 +565,11 @@ export async function importInvoiceXml(
       };
     });
 
+    await scheduleRecomputePeriods(companyId, [
+      periodFromDate(parsed.date as string, new Date()),
+      periodKey(new Date()),
+    ]);
+
     res.status(201).json({ message: "Fatura başarıyla içe aktarıldı.", ...result });
   } catch (error: any) {
     console.error("ImportInvoiceXml error:", error);
@@ -596,6 +609,10 @@ export async function deleteInvoice(
       }
       await tx.invoice.delete({ where: { id } });
     });
+
+    await scheduleRecomputePeriods(companyId, [
+      periodFromDate(invoice.date as string, new Date()),
+    ]);
 
     res.json({
       message: revertStock

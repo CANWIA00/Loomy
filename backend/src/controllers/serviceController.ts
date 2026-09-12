@@ -1,6 +1,7 @@
 import { Response } from "express";
 import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
+import { scheduleRecomputeForRecord } from "../services/monthlySummaries";
 
 export async function getServiceRecords(
   req: AuthRequest,
@@ -82,6 +83,8 @@ export async function createServiceRecord(
       },
     });
 
+    await scheduleRecomputeForRecord(companyId, record.documentDate, record.createdAt);
+
     res.status(201).json(record);
   } catch (error: any) {
     console.error("CreateServiceRecord error:", error);
@@ -141,6 +144,9 @@ export async function updateServiceRecord(
         templateConfig: templateConfig ? JSON.stringify(templateConfig) : existing.templateConfig,
       },
     });
+
+    await scheduleRecomputeForRecord(companyId, existing.documentDate, existing.createdAt as any);
+    await scheduleRecomputeForRecord(companyId, record.documentDate, record.createdAt);
 
     res.json(record);
   } catch (error: any) {
@@ -213,6 +219,7 @@ export async function deleteServiceRecord(
     }
 
     await prisma.serviceRecord.delete({ where: { id } });
+    await scheduleRecomputeForRecord(companyId, existing.documentDate, existing.createdAt as any);
     res.json({ message: "Servis kaydı silindi." });
   } catch (error: any) {
     console.error("DeleteServiceRecord error:", error);

@@ -16,6 +16,13 @@ jest.mock("../prisma", () => ({
       count: jest.fn(),
       update: jest.fn(),
     },
+    monthlyFinanceSummary: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      count: jest.fn(),
+      upsert: jest.fn(),
+      createMany: jest.fn(),
+    },
     $queryRaw: jest.fn(),
   },
 }));
@@ -40,6 +47,7 @@ function mockReq(overrides: Partial<AuthRequest> = {}): AuthRequest {
 describe("payment controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (prisma.$queryRaw as jest.Mock).mockResolvedValue([]);
   });
 
   describe("getPayments", () => {
@@ -79,27 +87,38 @@ describe("payment controller", () => {
   });
 
   describe("getPaymentSummary", () => {
+    function mockSummary(rows: any[]) {
+      (prisma.monthlyFinanceSummary.count as jest.Mock).mockResolvedValue(1);
+      (prisma.monthlyFinanceSummary.findMany as jest.Mock).mockImplementation((args: any) => {
+        if (args?.select?.period) {
+          return Promise.resolve([{ period: "2026-09", updatedAt: new Date() }]);
+        }
+        return Promise.resolve(rows);
+      });
+    }
+
     it("computes paid/pending totals", async () => {
-      (prisma.$queryRaw as jest.Mock).mockResolvedValue([
-        { paidTotal: 150, pendingTotal: 200, paidCount: 2, pendingCount: 2, totalCount: 4 },
+      mockSummary([
+        { receivedTotal: 150, pendingTotal: 200, receivedCount: 2, pendingCount: 2 },
+        { receivedTotal: 40, pendingTotal: 60, receivedCount: 1, pendingCount: 1 },
       ]);
 
       const res = mockRes();
       await getPaymentSummary(mockReq(), res);
 
       expect(res.json).toHaveBeenCalledWith({
-        paidTotal: 150,
-        pendingTotal: 200,
-        total: 350,
-        paidCount: 2,
-        pendingCount: 2,
-        totalCount: 4,
+        paidTotal: 190,
+        pendingTotal: 260,
+        total: 450,
+        paidCount: 3,
+        pendingCount: 3,
+        totalCount: 6,
       });
     });
 
     it("handles missing/invalid fees", async () => {
-      (prisma.$queryRaw as jest.Mock).mockResolvedValue([
-        { paidTotal: 0, pendingTotal: 0, paidCount: 0, pendingCount: 2, totalCount: 2 },
+      mockSummary([
+        { receivedTotal: 0, pendingTotal: 0, receivedCount: 0, pendingCount: 2 },
       ]);
 
       const res = mockRes();

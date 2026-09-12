@@ -67,6 +67,7 @@ model Company {
   invoices       Invoice[]
   invoiceLines   InvoiceLine[]
   stockTransactions StockTransaction[]
+  financeSummaries MonthlyFinanceSummary[]
 }
 
 model ServiceRecord {
@@ -103,6 +104,25 @@ model ServiceRecord {
 
   @@index([companyId])
   @@index([customerId])
+  @@index([companyId, createdAt])
+}
+
+model MonthlyFinanceSummary {
+  id                   String   @id @default(uuid())
+  companyId            String
+  period               String
+  stockDeltaByCurrency String   @default("{}")
+  expenseByCurrency    String   @default("{}")
+  receivedTotal        Float    @default(0)
+  pendingTotal         Float    @default(0)
+  receivedCount        Int      @default(0)
+  pendingCount         Int      @default(0)
+  updatedAt            DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, period])
+  @@index([companyId])
 }
 
 model ServiceFormTemplate {
@@ -252,6 +272,7 @@ model StockTransaction {
 
   @@index([stockItemId])
   @@index([companyId])
+  @@index([companyId, createdAt])
 }
 
 model Invoice {
@@ -275,6 +296,7 @@ model Invoice {
 
   @@index([companyId])
   @@unique([companyId, invoiceNo])
+  @@index([companyId, createdAt])
 }
 
 model InvoiceLine {

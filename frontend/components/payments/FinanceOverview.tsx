@@ -4,9 +4,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
-import { financeApi, type FinanceOverview as FinanceOverviewData } from "../../apiclient/finance";
+import { financeApi, type FinanceOverview as FinanceOverviewData, type FinanceTimeline } from "../../apiclient/finance";
 import { formatMoney } from "../stock/format";
-import FinanceChart, { type FinanceChartPoint } from "./FinanceChart";
+import FinanceChart, { type FinanceChartSeries } from "./FinanceChart";
 
 function sumToTry(map: Record<string, number>, convert: (a: number, c: string) => number | null): number | null {
   let missing = false;
@@ -28,20 +28,46 @@ function breakdown(map: Record<string, number>): string {
   return parts.length ? parts.join(" + ") : "";
 }
 
+function seriesToTry(
+  map: Record<string, number[]>,
+  convert: (a: number, c: string) => number | null,
+  length: number
+): number[] | null {
+  let missing = false;
+  const arr: number[] = new Array(length).fill(0);
+  for (const [cur, vals] of Object.entries(map)) {
+    for (let i = 0; i < length; i++) {
+      const conv = convert(vals[i] || 0, cur);
+      if (conv == null) {
+        missing = true;
+        break;
+      }
+      arr[i] += conv;
+    }
+  }
+  return missing ? null : arr;
+}
+
 export default function FinanceOverview() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { convert, loading: ratesLoading } = useCurrency();
 
   const [data, setData] = useState<FinanceOverviewData | null>(null);
+  const [timeline, setTimeline] = useState<FinanceTimeline | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const res = await financeApi.getOverview();
-      setData(res.data);
+      const [overviewRes, timelineRes] = await Promise.all([
+        financeApi.getOverview(),
+        financeApi.getTimeline(12),
+      ]);
+      setData(overviewRes.data);
+      setTimeline(timelineRes.data);
     } catch {
       setData(null);
+      setTimeline(null);
     } finally {
       setLoading(false);
     }
@@ -62,6 +88,19 @@ export default function FinanceOverview() {
   const net =
     stockTry != null && expenseTry != null ? stockTry + paid + pending - expenseTry : null;
   const netStr = net != null ? formatMoney(net, "TRY") : "-";
+
+  const periods = timeline?.periods || [];
+  const stockSeries = timeline ? seriesToTry(timeline.stockByCurrency, convert, periods.length) : null;
+  const expenseSeries = timeline ? seriesToTry(timeline.expenseByCurrency, convert, periods.length) : null;
+  const chartSeries: FinanceChartSeries[] | null =
+    !ratesLoading && timeline && stockSeries && expenseSeries
+      ? [
+          { name: t("pay.financeStock"), color: colors.teal, values: stockSeries },
+          { name: t("pay.financeExpense"), color: colors.danger, values: expenseSeries },
+          { name: t("pay.financePending"), color: colors.warning, values: timeline.pending },
+          { name: t("pay.financePaid"), color: colors.success, values: timeline.received },
+        ]
+      : null;
 
   if (loading) {
     return (
@@ -155,15 +194,8 @@ export default function FinanceOverview() {
         </View>
       </View>
 
-      {stockTry != null && expenseTry != null ? (
-        <FinanceChart
-          points={[
-            { label: t("pay.chartStock"), value: stockTry, color: colors.teal },
-            { label: t("pay.chartExpense"), value: expenseTry, color: colors.danger },
-            { label: t("pay.chartPending"), value: pending, color: colors.warning },
-            { label: t("pay.chartPaid"), value: paid, color: colors.success },
-          ] as FinanceChartPoint[]}
-        />
+      {chartSeries ? (
+        <FinanceChart periods={periods} series={chartSeries} />
       ) : null}
 
       <View className="flex-row flex-wrap gap-3 mt-3">

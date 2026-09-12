@@ -1,6 +1,12 @@
 import { Response } from "express";
 import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
+import {
+  periodKey,
+  ensureBackfill,
+  ensureFresh,
+  scheduleRecomputeForRecord,
+} from "../services/monthlySummaries";
 
 export async function getPayments(
   req: AuthRequest,
@@ -60,31 +66,41 @@ export async function getPaymentSummary(
   try {
     const companyId = req.user!.companyId!;
 
-    const [row] = await prisma.$queryRaw<Array<{
-      paidTotal: number;
-      pendingTotal: number;
-      paidCount: number;
-      pendingCount: number;
-      totalCount: number;
-    }>>`
-      SELECT
-        COALESCE(SUM(CASE WHEN "paid" THEN CAST("fee" AS numeric) ELSE 0 END), 0)::float8 AS "paidTotal",
-        COALESCE(SUM(CASE WHEN NOT "paid" THEN CAST("fee" AS numeric) ELSE 0 END), 0)::float8 AS "pendingTotal",
-        COUNT(*) FILTER (WHERE "paid")::int AS "paidCount",
-        COUNT(*) FILTER (WHERE NOT "paid")::int AS "pendingCount",
-        COUNT(*)::int AS "totalCount"
-      FROM "ServiceRecord"
-      WHERE "companyId" = ${companyId}
-    `;
+    await ensureBackfill(companyId);
+    const now = new Date();
+    await ensureFresh(companyId, [
+      periodKey(now),
+      periodKey(new Date(now.getFullYear(), now.getMonth() - 1, 1)),
+    ]);
 
-    const r = row || { paidTotal: 0, pendingTotal: 0, paidCount: 0, pendingCount: 0, totalCount: 0 };
+    const rows = await prisma.monthlyFinanceSummary.findMany({
+      where: { companyId },
+      select: {
+        receivedTotal: true,
+        pendingTotal: true,
+        receivedCount: true,
+        pendingCount: true,
+      },
+    });
+
+    let paidTotal = 0;
+    let pendingTotal = 0;
+    let paidCount = 0;
+    let pendingCount = 0;
+    rows.forEach((r) => {
+      paidTotal += r.receivedTotal || 0;
+      pendingTotal += r.pendingTotal || 0;
+      paidCount += r.receivedCount || 0;
+      pendingCount += r.pendingCount || 0;
+    });
+
     res.json({
-      paidTotal: Number(r.paidTotal) || 0,
-      pendingTotal: Number(r.pendingTotal) || 0,
-      total: (Number(r.paidTotal) || 0) + (Number(r.pendingTotal) || 0),
-      paidCount: r.paidCount || 0,
-      pendingCount: r.pendingCount || 0,
-      totalCount: r.totalCount || 0,
+      paidTotal: Number(paidTotal) || 0,
+      pendingTotal: Number(pendingTotal) || 0,
+      total: (Number(paidTotal) || 0) + (Number(pendingTotal) || 0),
+      paidCount: paidCount || 0,
+      pendingCount: pendingCount || 0,
+      totalCount: (paidCount || 0) + (pendingCount || 0),
     });
   } catch (error: any) {
     console.error("GetPaymentSummary error:", error);
@@ -123,6 +139,8 @@ export async function updatePaymentStatus(
         paid: true,
       },
     });
+
+    await scheduleRecomputeForRecord(companyId, existing.documentDate, existing.createdAt as any);
 
     res.json({
       id: record.id,

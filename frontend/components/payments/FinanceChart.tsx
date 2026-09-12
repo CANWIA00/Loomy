@@ -3,9 +3,13 @@ import Svg, { Line, Polyline, Circle, Text as SvgText } from "react-native-svg";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-export type FinanceChartPoint = { label: string; value: number; color: string };
+export interface FinanceChartSeries {
+  name: string;
+  color: string;
+  values: number[];
+}
 
-const PLOT_H = 120;
+const PLOT_H = 140;
 const pad = { top: 8, right: 6, bottom: 4, left: 6 };
 
 function compact(v: number): string {
@@ -15,7 +19,12 @@ function compact(v: number): string {
   return "₺" + String(Math.round(abs));
 }
 
-export default function FinanceChart({ points }: { points: FinanceChartPoint[] }) {
+function shortLabel(period: string): string {
+  const [y, m] = period.split("-");
+  return m + "/" + (y ? y.slice(2) : "");
+}
+
+export default function FinanceChart({ periods, series }: { periods: string[]; series: FinanceChartSeries[] }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
@@ -24,14 +33,10 @@ export default function FinanceChart({ points }: { points: FinanceChartPoint[] }
   const innerW = chartW - pad.left - pad.right;
   const innerH = PLOT_H - pad.top - pad.bottom;
 
-  const maxV = Math.max(1, ...points.map((p) => p.value));
-  const slots = Math.max(1, points.length - 1);
+  const count = periods.length;
+  const maxV = Math.max(1, ...series.flatMap((s) => s.values));
+  const slots = Math.max(1, count - 1);
   const stepX = innerW / slots;
-
-  const coords = points.map((p, i) => ({
-    x: pad.left + i * stepX,
-    y: pad.top + innerH - (p.value / maxV) * innerH,
-  }));
 
   const grid = [1, 0.5, 0];
   const gridLines = grid.map((g) => ({
@@ -39,11 +44,13 @@ export default function FinanceChart({ points }: { points: FinanceChartPoint[] }
     label: compact(maxV * g),
     dashed: g !== 0 && g !== 1,
   }));
+  const labelEvery = count > 8 ? 2 : 1;
 
   return (
     <View className="mt-3 overflow-hidden" style={{ backgroundColor: colors.bgCard2, borderRadius: 12 }}>
       <View className="px-3 pt-3 pb-1">
         <Text className="text-[10px] font-medium" style={{ color: colors.textMuted }}>{t("pay.financeChart")}</Text>
+        <Text className="text-[8px]" style={{ color: colors.textMuted }}>{t("pay.financeChartNote")}</Text>
       </View>
 
       <Svg width={chartW} height={PLOT_H}>
@@ -71,28 +78,54 @@ export default function FinanceChart({ points }: { points: FinanceChartPoint[] }
             {l.label}
           </SvgText>
         ))}
-        {points.length > 1 && (
+
+        {series.map((s) => (
           <Polyline
-            points={coords.map((c) => `${c.x},${c.y}`).join(" ")}
+            key={s.name}
+            points={s.values
+              .map((v, i) => {
+                const x = pad.left + i * stepX;
+                const y = pad.top + innerH - (v / maxV) * innerH;
+                return `${x},${y}`;
+              })
+              .join(" ")}
             fill="none"
-            stroke={colors.primary}
+            stroke={s.color}
             strokeWidth={2}
           />
-        )}
-        {coords.map((c, i) => (
-          <Circle key={i} cx={c.x} cy={c.y} r={4} fill={points[i].color} stroke={colors.bgCard2} strokeWidth={1.5} />
         ))}
+        {series.map((s) =>
+          s.values.map((v, i) => (
+            <Circle
+              key={s.name + i}
+              cx={pad.left + i * stepX}
+              cy={pad.top + innerH - (v / maxV) * innerH}
+              r={2.5}
+              fill={s.color}
+              stroke={colors.bgCard2}
+              strokeWidth={1}
+            />
+          ))
+        )}
       </Svg>
 
-      <View className="flex-row px-3 pb-3">
-        {points.map((p, i) => (
-          <View key={i} className="flex-1 items-center">
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.color, marginBottom: 2 }} />
-            <Text className="text-[9px]" style={{ color: colors.textSecondary, textAlign: "center" }} numberOfLines={1}>
-              {p.label}
-            </Text>
+      <View className="flex-row px-3 pb-2 flex-wrap">
+        {series.map((s) => (
+          <View key={s.name} className="flex-row items-center mr-3 mb-1">
+            <View style={{ width: 8, height: 3, borderRadius: 1.5, backgroundColor: s.color, marginRight: 4 }} />
+            <Text className="text-[9px]" style={{ color: colors.textSecondary }} numberOfLines={1}>{s.name}</Text>
           </View>
         ))}
+      </View>
+
+      <View className="flex-row px-3 pb-3">
+        {periods.map((p, i) =>
+          i % labelEvery === 0 ? (
+            <View key={p} className="flex-1 items-center">
+              <Text className="text-[8px]" style={{ color: colors.textMuted }}>{shortLabel(p)}</Text>
+            </View>
+          ) : null
+        )}
       </View>
     </View>
   );
