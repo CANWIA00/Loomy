@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -67,34 +67,38 @@ export default function TeamsSection() {
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                 </View>
-                <Text className="text-xs mb-1" style={{ color: colors.textMuted }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
               </TouchableOpacity>
               <View className="border rounded-lg overflow-hidden mb-2" style={{ borderColor: colors.border }}>
-                {team.members.length === 0 ? (
-                  <Text className="text-xs px-3 py-2.5" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
-                ) : (
-                  team.members.slice(0, 4).map((memberName) => (
-                    <View key={memberName} className="flex-row items-center px-3 py-1.5" style={{ backgroundColor: colors.bg }}>
-                      <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
-                        <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{memberName.charAt(0)}</Text>
-                      </View>
-                      <Text className="text-xs flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                        {memberName}
-                      </Text>
+                <ScrollView
+                  style={{ height: 88 }}
+                  nestedScrollEnabled
+                  bounces={false}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {team.members.length === 0 ? (
+                    <View style={{ height: 88 }} className="items-center justify-center">
+                      <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
                     </View>
-                  ))
-                )}
-                {team.members.length > 4 && (
-                  <View className="px-3 py-1.5" style={{ backgroundColor: colors.bg }}>
-                    <Text className="text-xs" style={{ color: colors.textMuted }}>
-                      +{team.members.length - 4} {t("sch.more")}
-                    </Text>
-                  </View>
-                )}
+                  ) : (
+                    team.members.map((memberName) => (
+                      <View key={memberName} className="flex-row items-center px-3 py-1.5" style={{ backgroundColor: colors.bg }}>
+                        <View className="w-6 h-6 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
+                          <Text className="text-[10px] font-medium" style={{ color: colors.textSecondary }}>{memberName.charAt(0)}</Text>
+                        </View>
+                        <Text className="text-xs flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                          {memberName}
+                        </Text>
+                      </View>
+                    ))
+                  )}
+                </ScrollView>
               </View>
               <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
                 <Text className="text-xs" style={{ color: colors.textSecondary }}>
                   {appointments.filter((a) => a.ekipId === team.id).length} {t("sch.assignments")}
+                </Text>
+                <Text className="text-xs font-medium" style={{ color: colors.textMuted }}>
+                  {t("sch.personnelCount")} ({team.members.length + 1})
                 </Text>
               </View>
             </View>

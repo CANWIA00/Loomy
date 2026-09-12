@@ -38,6 +38,7 @@ export default function TeamDetailModal() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [needsSync, setNeedsSync] = useState(false);
 
   useEffect(() => {
     if (teamDetailVisible && team) {
@@ -52,6 +53,15 @@ export default function TeamDetailModal() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamDetailVisible, teamDetailId]);
+
+  useEffect(() => {
+    if (needsSync && teamDetailVisible && team) {
+      setNameDraft(team.name);
+      setLeaderDraft(team.leader);
+      setMembersDraft(team.members);
+      setNeedsSync(false);
+    }
+  }, [needsSync, teamDetailVisible, team]);
 
   const emails = useMemo(() => {
     const map: Record<string, string> = {};
@@ -104,7 +114,10 @@ export default function TeamDetailModal() {
       members: membersDraft,
     });
     setSaving(false);
-    if (ok) setConfirmSave(false);
+    if (ok) {
+      setConfirmSave(false);
+      setNeedsSync(true);
+    }
   };
 
   const handleDelete = async () => {
@@ -123,7 +136,11 @@ export default function TeamDetailModal() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        className="max-h-[45vh]"
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="flex-row items-center gap-3 mb-3">
           <View
             className="w-12 h-12 rounded-2xl items-center justify-center"
@@ -181,15 +198,15 @@ export default function TeamDetailModal() {
               <Ionicons name={leaderOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.primary} />
             </TouchableOpacity>
             {leaderOpen && (
-              <View className="border rounded-lg mb-2 max-h-36 overflow-hidden" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
+              <View className="border rounded-lg mb-2 max-h-32 overflow-hidden" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
                 <ScrollView nestedScrollEnabled bounces={false} keyboardShouldPersistTaps="handled">
                   {leaderCandidates.length === 0 ? (
-                    <Text className="text-sm text-center py-4" style={{ color: colors.textMuted }}>{t("sch.noPersonnelLeft")}</Text>
+                    <Text className="text-sm text-center py-3" style={{ color: colors.textMuted }}>{t("sch.noPersonnelLeft")}</Text>
                   ) : (
                     leaderCandidates.map((u) => (
                       <TouchableOpacity
                         key={u.id}
-                        className="px-3 py-2.5 border-b flex-row items-center"
+                        className="px-3 py-2 border-b flex-row items-center"
                         style={{ borderColor: colors.border }}
                         onPress={() => handleChangeLeader(u)}
                         activeOpacity={0.7}
@@ -239,16 +256,16 @@ export default function TeamDetailModal() {
               onChangeText={setSearch}
               autoFocus
             />
-            <ScrollView className="max-h-32" nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            <ScrollView className="max-h-28" nestedScrollEnabled keyboardShouldPersistTaps="handled">
               {addCandidates.length === 0 ? (
-                <Text className="text-sm text-center py-4" style={{ color: colors.textMuted }}>
+                <Text className="text-sm text-center py-3" style={{ color: colors.textMuted }}>
                   {search ? t("sch.noResults") : t("sch.noPersonnelLeft")}
                 </Text>
               ) : (
                 addCandidates.map((u) => (
                   <TouchableOpacity
                     key={u.id}
-                    className="px-3 py-2 border-b flex-row items-center"
+                    className="px-3 py-1.5 border-b flex-row items-center"
                     style={{ borderColor: colors.border }}
                     onPress={() => handleAddMember(u.name)}
                     activeOpacity={0.7}
@@ -268,7 +285,7 @@ export default function TeamDetailModal() {
           </View>
         )}
 
-        <View className="mt-1">
+        <View className="mt-1 mb-2">
           {membersDraft.length === 0 ? (
             <Text className="text-sm text-center py-4" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
           ) : membersDraft.map((memberName) => (
@@ -291,29 +308,28 @@ export default function TeamDetailModal() {
             </View>
           ))}
         </View>
+      </ScrollView>
 
-        {isAdmin && isDirty && (
-          <View className="mt-4">
-            {!confirmSave ? (
-              <>
-                <View className="flex-row items-center mb-2">
-                  <Ionicons name="information-circle-outline" size={14} color={colors.warning} />
-                  <Text className="text-xs ml-1" style={{ color: colors.warning }}>{t("sch.unsaved")}</Text>
-                </View>
-                <TouchableOpacity
-                  className="flex-row items-center justify-center h-11 rounded-xl"
-                  style={{ backgroundColor: nameDraft.trim() ? colors.primary : colors.primary + '40' }}
-                  onPress={() => setConfirmSave(true)}
-                  disabled={!nameDraft.trim()}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="save-outline" size={18} color="white" />
-                  <Text className="text-sm font-semibold ml-2" style={{ color: "white" }}>{t("sch.saveChanges")}</Text>
-                </TouchableOpacity>
-              </>
+      {isAdmin && (
+        <View className="mt-4 pt-3 border-t" style={{ borderColor: colors.border }}>
+          {isDirty ? (
+            !confirmSave ? (
+              <TouchableOpacity
+                className="flex-row items-center justify-center h-11 rounded-xl"
+                style={{ backgroundColor: nameDraft.trim() ? colors.primary : colors.primary + '40' }}
+                onPress={() => setConfirmSave(true)}
+                disabled={!nameDraft.trim()}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="save-outline" size={18} color="white" />
+                <Text className="text-sm font-semibold ml-2" style={{ color: "white" }}>{t("sch.saveChanges")}</Text>
+              </TouchableOpacity>
             ) : (
-              <View className="border rounded-xl p-3" style={{ borderColor: colors.primary + '66', backgroundColor: colors.primary + '0D' }}>
-                <Text className="text-sm mb-3" style={{ color: colors.text }}>{t("sch.confirmSaveMsg")}</Text>
+              <View className="rounded-xl p-3" style={{ borderColor: colors.primary + '66', backgroundColor: colors.primary + '0D' }}>
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
+                  <Text className="text-sm ml-2" style={{ color: colors.text }}>{t("sch.confirmSaveMsg")}</Text>
+                </View>
                 <View className="flex-row gap-3">
                   <TouchableOpacity
                     className="flex-1 h-10 rounded-lg items-center justify-center"
@@ -337,13 +353,9 @@ export default function TeamDetailModal() {
                   </TouchableOpacity>
                 </View>
               </View>
-            )}
-          </View>
-        )}
-
-        {isAdmin && (
-          <View className="mt-4 pb-2">
-            {!confirmDelete ? (
+            )
+          ) : (
+            !confirmDelete ? (
               <TouchableOpacity
                 className="flex-row items-center justify-center h-10 rounded-lg"
                 style={{ backgroundColor: colors.danger + '15' }}
@@ -354,7 +366,7 @@ export default function TeamDetailModal() {
                 <Text className="text-sm font-medium ml-2" style={{ color: colors.danger }}>{t("sch.teamDelete")}</Text>
               </TouchableOpacity>
             ) : (
-              <View className="border rounded-xl p-3" style={{ borderColor: colors.danger + '4D', backgroundColor: colors.danger + '0D' }}>
+              <View className="rounded-xl p-3" style={{ borderColor: colors.danger + '4D', backgroundColor: colors.danger + '0D' }}>
                 <Text className="text-sm mb-3" style={{ color: colors.text }}>{t("sch.teamDeleteMsg")}</Text>
                 <View className="flex-row gap-3">
                   <TouchableOpacity
@@ -379,10 +391,10 @@ export default function TeamDetailModal() {
                   </TouchableOpacity>
                 </View>
               </View>
-            )}
-          </View>
-        )}
-      </ScrollView>
+            )
+          )}
+        </View>
+      )}
     </ModalShell>
   );
 }
