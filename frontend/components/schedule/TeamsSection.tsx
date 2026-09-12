@@ -72,7 +72,6 @@ export default function TeamsSection() {
               </View>
               <View className="mt-2 flex-col gap-1">
                 <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
-                <Text className="text-xs" style={{ color: colors.textMuted }}>{team.members.length} {t("sch.members")}</Text>
               </View>
               <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
                 <Text className="text-xs" style={{ color: colors.textSecondary }}>
