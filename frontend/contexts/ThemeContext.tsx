@@ -19,6 +19,7 @@ export interface ThemeColors {
   purple: string;
   teal: string;
   pink: string;
+  blue: string;
   indicatorBg: string;
 }
 
@@ -40,6 +41,7 @@ const darkColors: ThemeColors = {
   purple: "#8060FF",
   teal: "#10B981",
   pink: "#EC4899",
+  blue: "#3B82F6",
   indicatorBg: "white",
 };
 
@@ -61,6 +63,7 @@ const lightColors: ThemeColors = {
   purple: "#7A6CFD",
   teal: "#10B981",
   pink: "#EC4899",
+  blue: "#3B82F6",
   indicatorBg: "#232C42",
 };
 

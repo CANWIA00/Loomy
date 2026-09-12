@@ -98,7 +98,7 @@ export default function FinanceOverview() {
           { name: t("pay.financeStock"), color: colors.teal, values: stockSeries },
           { name: t("pay.financeExpense"), color: colors.danger, values: expenseSeries },
           { name: t("pay.financePending"), color: colors.warning, values: timeline.pending },
-          { name: t("pay.financePaid"), color: colors.success, values: timeline.received },
+          { name: t("pay.financePaid"), color: colors.blue, values: timeline.received },
         ]
       : null;
 
@@ -149,7 +149,11 @@ export default function FinanceOverview() {
       )}
       <Text className="text-[10px] mb-3" style={{ color: colors.textMuted }}>{t("pay.financeSignNote")}</Text>
 
-      <View style={{ borderColor: colors.border }} className="border rounded-xl overflow-hidden">
+      {chartSeries ? (
+        <FinanceChart periods={periods} series={chartSeries} />
+      ) : null}
+
+      <View style={{ borderColor: colors.border }} className="border rounded-xl overflow-hidden mt-3">
         <Row
           label={t("pay.financeStock")}
           value={stockStr}
@@ -178,7 +182,7 @@ export default function FinanceOverview() {
           label={t("pay.financePaid")}
           value={formatMoney(paid, "TRY")}
           icon="cash-outline"
-          color={colors.success}
+          color={colors.blue}
           sub={t("pay.financePaidSub", { count: String(data.paidCount || 0) })}
           sign="+"
         />
@@ -193,10 +197,6 @@ export default function FinanceOverview() {
           </Text>
         </View>
       </View>
-
-      {chartSeries ? (
-        <FinanceChart periods={periods} series={chartSeries} />
-      ) : null}
 
       <View className="flex-row flex-wrap gap-3 mt-3">
         <View className="flex-1 min-w-[140px]">
