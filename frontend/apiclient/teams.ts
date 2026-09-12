@@ -25,6 +25,9 @@ export const teamApi = {
   create: (data: Omit<Team, "id">) =>
     apiClient.post<Team>("/teams", data),
 
+  update: (id: number, data: Partial<Pick<Team, "name" | "leader" | "color">>) =>
+    apiClient.patch<Team>(`/teams/${id}`, data),
+
   delete: (id: number) =>
     apiClient.delete(`/teams/${id}`),
 

@@ -106,6 +106,14 @@ interface ScheduleContextValue {
   closeRemoveMembers: () => void;
   removeMembers: (teamId: number, members: string[]) => Promise<boolean>;
 
+  teamDetailVisible: boolean;
+  teamDetailId: number | null;
+  openTeamDetail: (teamId: number) => void;
+  closeTeamDetail: () => void;
+  updateTeamName: (teamId: number, name: string) => Promise<boolean>;
+  changeLeader: (teamId: number, newLeader: string) => Promise<boolean>;
+  deleteTeamById: (teamId: number) => Promise<void>;
+
   requestDeleteTeam: (teamId: number) => void;
   deleteTeamConfirmVisible: boolean;
   closeDeleteTeamConfirm: () => void;
@@ -189,6 +197,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
 
   const [deleteTeamConfirmVisible, setDeleteTeamConfirmVisible] = useState(false);
   const [deleteTeamId, setDeleteTeamId] = useState<number | null>(null);
+  const [teamDetailVisible, setTeamDetailVisible] = useState(false);
+  const [teamDetailId, setTeamDetailId] = useState<number | null>(null);
   const [appointmentDeleteConfirmVisible, setAppointmentDeleteConfirmVisible] = useState(false);
   const [appointmentDeleteId, setAppointmentDeleteId] = useState<number | null>(null);
 
@@ -510,19 +520,47 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setDeleteTeamConfirmVisible(true);
   };
 
-  const confirmDeleteTeam = async () => {
-    if (deleteTeamId === null) return;
+  const deleteTeamById = async (teamId: number): Promise<void> => {
     try {
       setDeleteLoading(true);
-      await teamApi.delete(deleteTeamId);
-      setTeams((prev) => prev.filter((t) => t.id !== deleteTeamId));
-      setAppointments((prev) => prev.filter((a) => a.ekipId !== deleteTeamId));
-      setDeleteTeamConfirmVisible(false);
-      setDeleteTeamId(null);
+      await teamApi.delete(teamId);
+      setTeams((prev) => prev.filter((t) => t.id !== teamId));
+      setAppointments((prev) => prev.filter((a) => a.ekipId !== teamId));
     } catch (error: any) {
       showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorTeamDelete"));
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const confirmDeleteTeam = async () => {
+    if (deleteTeamId === null) return;
+    await deleteTeamById(deleteTeamId);
+    setDeleteTeamConfirmVisible(false);
+    setDeleteTeamId(null);
+  };
+
+  const updateTeamName = async (teamId: number, name: string): Promise<boolean> => {
+    if (!name.trim()) return false;
+    try {
+      const res = await teamApi.update(teamId, { name: name.trim() });
+      setTeams((prev) => prev.map((t) => t.id === teamId ? res.data : t));
+      return true;
+    } catch (error: any) {
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorTeamAdd"));
+      return false;
+    }
+  };
+
+  const changeLeader = async (teamId: number, newLeader: string): Promise<boolean> => {
+    if (!newLeader.trim()) return false;
+    try {
+      const res = await teamApi.update(teamId, { leader: newLeader.trim() });
+      setTeams((prev) => prev.map((t) => t.id === teamId ? res.data : t));
+      return true;
+    } catch (error: any) {
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorTeamAdd"));
+      return false;
     }
   };
 
@@ -624,6 +662,19 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       setRemoveTeamId(null);
     },
     removeMembers,
+    teamDetailVisible,
+    teamDetailId,
+    openTeamDetail: (teamId) => {
+      setTeamDetailId(teamId);
+      setTeamDetailVisible(true);
+    },
+    closeTeamDetail: () => {
+      setTeamDetailVisible(false);
+      setTeamDetailId(null);
+    },
+    updateTeamName,
+    changeLeader,
+    deleteTeamById,
     requestDeleteTeam,
     deleteTeamConfirmVisible,
     closeDeleteTeamConfirm: () => {

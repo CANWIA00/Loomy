@@ -10,7 +10,7 @@ export default function TeamsSection() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
-  const { teams, appointments, openTeamModal, requestDeleteTeam, openAddMember, openRemoveMembers } = useSchedule();
+  const { teams, appointments, openTeamModal, requestDeleteTeam, openAddMember, openRemoveMembers, openTeamDetail } = useSchedule();
 
   return (
     <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
@@ -53,32 +53,38 @@ export default function TeamsSection() {
               className="w-full md:w-[48%] lg:w-[32%] rounded-2xl p-3 mb-4"
               style={{ backgroundColor: colors.bgCard }}
             >
-              <View className="flex-row items-center gap-2 mb-2">
-                <View
-                  className="w-8 h-8 rounded-xl items-center justify-center"
-                  style={{ backgroundColor: `${team.color}20` }}
-                >
-                  <Ionicons name="people" size={16} color={team.color} />
+              <TouchableOpacity onPress={() => openTeamDetail(team.id)} activeOpacity={0.7}>
+                <View className="flex-row items-center gap-2 mb-2">
+                  <View
+                    className="w-8 h-8 rounded-xl items-center justify-center"
+                    style={{ backgroundColor: `${team.color}20` }}
+                  >
+                    <Ionicons name="people" size={16} color={team.color} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-semibold text-sm" style={{ color: colors.text }}>{team.name}</Text>
+                    <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.leader")} {team.leader}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                 </View>
-                <View className="flex-1">
-                  <Text className="font-semibold text-sm" style={{ color: colors.text }}>{team.name}</Text>
-                  <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.leader")} {team.leader}</Text>
+                <View className="mt-2 flex-col gap-1">
+                  <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
                 </View>
-                {isAdmin && (
-                  <TouchableOpacity onPress={() => requestDeleteTeam(team.id)} activeOpacity={0.7}>
-                    <Ionicons name="trash-outline" size={14} color={colors.danger} />
-                  </TouchableOpacity>
-                )}
-              </View>
-              <View className="mt-2 flex-col gap-1">
-                <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.personnelCount")} ({team.members.length + 1})</Text>
-              </View>
+              </TouchableOpacity>
               <View className="flex-row items-center justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
                 <Text className="text-xs" style={{ color: colors.textSecondary }}>
                   {appointments.filter((a) => a.ekipId === team.id).length} {t("sch.assignments")}
                 </Text>
                 {isAdmin && (
                   <View className="flex-row gap-1">
+                    <TouchableOpacity
+                      className="p-1.5 rounded-lg"
+                      style={{ backgroundColor: colors.danger + '15' }}
+                      onPress={() => requestDeleteTeam(team.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                    </TouchableOpacity>
                     <TouchableOpacity
                       className="p-1.5 rounded-lg"
                       style={{ backgroundColor: colors.warning + '15' }}
