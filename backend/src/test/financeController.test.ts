@@ -534,6 +534,8 @@ describe("getFinanceTimeline", () => {
     expect(body.stockByCurrency.TRY[0]).toBe(730);
     expect(body.stockByCurrency.TRY[5]).toBe(930);
     expect(body.stockByCurrency.TRY[11]).toBe(980);
+    expect(body.stockByCurrency.TRY[2]).toBe(730);
+    expect(body.stockByCurrency.TRY[7]).toBe(930);
     expect(body.expenseByCurrency.TRY[0]).toBe(100);
     expect(body.expenseByCurrency.TRY[11]).toBe(300);
     expect(body.received[11]).toBe(400);

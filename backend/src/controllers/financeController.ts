@@ -354,21 +354,31 @@ async function yearlyTimeline(companyId: string, year: string) {
     ])
   );
 
-  const sortedPeriods = summaries
-    .map((r: any) => r.period)
-    .filter((p: string) => PERIOD_RE.test(p))
-    .sort((a: string, b: string) => (a < b ? 1 : -1));
+  const firstStock = await firstStockActivityPeriod(companyId);
+  const hasStock = !firstStock || `${year}-12` >= firstStock;
 
-  const suffix: Record<string, number> = {};
+  const running: Record<string, number> = {};
+  Object.entries(stockBase).forEach(([cur, val]) => {
+    running[cur] = val;
+  });
+  summaries.forEach((row: any) => {
+    if (row.period <= `${year}-12`) return;
+    Object.entries(deltaByPeriod[row.period] || {}).forEach(([cur, val]) => {
+      running[cur] = (running[cur] || 0) - val;
+    });
+  });
+
   const stockEnd: Record<string, Record<string, number>> = {};
-  for (const p of sortedPeriods) {
+  const lastToFirst = [...periods].sort((a, b) => (a < b ? 1 : -1));
+  for (const p of lastToFirst) {
     const map: Record<string, number> = {};
     currencies.forEach((cur) => {
-      map[cur] = (stockBase[cur] || 0) - (suffix[cur] || 0);
+      map[cur] = hasStock ? running[cur] || 0 : 0;
     });
     stockEnd[p] = map;
+    if (!hasStock) continue;
     Object.entries(deltaByPeriod[p] || {}).forEach(([cur, val]) => {
-      suffix[cur] = (suffix[cur] || 0) + val;
+      running[cur] = (running[cur] || 0) - val;
     });
   }
 
