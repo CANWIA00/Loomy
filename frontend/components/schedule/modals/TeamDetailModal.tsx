@@ -68,7 +68,10 @@ export default function TeamDetailModal() {
     leaderDraft !== team.leader ||
     JSON.stringify(membersDraft) !== JSON.stringify(team.members);
 
-  const leaderCandidates = companyUsers.filter((u) => u.name !== leaderDraft);
+  const leaderCandidates = membersDraft.map((name) => ({
+    name,
+    email: emails[name] || null,
+  }));
 
   const addCandidates = companyUsers.filter(
     (u) =>
@@ -78,10 +81,10 @@ export default function TeamDetailModal() {
         u.email.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const handleChangeLeader = (u: CompanyUser) => {
-    if (u.name === leaderDraft) return;
-    setLeaderDraft(u.name);
-    setMembersDraft((prev) => prev.filter((m) => m !== u.name));
+  const handleChangeLeader = (userName: string) => {
+    if (userName === leaderDraft) return;
+    setLeaderDraft(userName);
+    setMembersDraft((prev) => prev.filter((m) => m !== userName));
     setLeaderOpen(false);
     setSearch("");
   };
@@ -244,14 +247,14 @@ export default function TeamDetailModal() {
               </View>
               <ScrollView nestedScrollEnabled bounces={false} keyboardShouldPersistTaps="handled">
                 {leaderCandidates.length === 0 ? (
-                  <Text className="text-sm text-center py-3" style={{ color: colors.textMuted }}>{t("sch.noPersonnelLeft")}</Text>
+                  <Text className="text-sm text-center py-3" style={{ color: colors.textMuted }}>{t("sch.noMembers")}</Text>
                 ) : (
                   leaderCandidates.map((u) => (
                     <TouchableOpacity
-                      key={u.id}
+                      key={u.name}
                       className="px-3 py-2 border-b flex-row items-center"
                       style={{ borderColor: colors.border }}
-                      onPress={() => handleChangeLeader(u)}
+                      onPress={() => handleChangeLeader(u.name)}
                       activeOpacity={0.7}
                     >
                       <View className="w-7 h-7 rounded-full items-center justify-center mr-2" style={{ backgroundColor: colors.bgInput }}>
@@ -259,7 +262,9 @@ export default function TeamDetailModal() {
                       </View>
                       <View className="flex-1">
                         <Text className="text-sm" style={{ color: colors.text }}>{u.name}</Text>
-                        <Text className="text-xs" style={{ color: colors.textMuted }}>{u.email}</Text>
+                        {u.email ? (
+                          <Text className="text-xs" style={{ color: colors.textMuted }}>{u.email}</Text>
+                        ) : null}
                       </View>
                       <Ionicons name="shield-checkmark-outline" size={15} color={colors.purple} />
                     </TouchableOpacity>
