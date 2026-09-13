@@ -139,15 +139,26 @@ async function performRecompute(
   });
 }
 
-export async function scheduleRecomputeMonth(
+export async function enqueueRecompute(
   companyId: string,
   period: string
 ): Promise<void> {
   try {
-    await recomputeMonth(companyId, period);
+    await (prisma as any).financeRecomputeJob.upsert({
+      where: { companyId_period: { companyId, period } },
+      create: { companyId, period },
+      update: {},
+    });
   } catch (error: any) {
-    console.error("ScheduleRecomputeMonth error:", error.message);
+    console.error("EnqueueRecompute error:", companyId, period, error?.message);
   }
+}
+
+export async function scheduleRecomputeMonth(
+  companyId: string,
+  period: string
+): Promise<void> {
+  await enqueueRecompute(companyId, period);
 }
 
 export async function scheduleRecomputeForRecord(

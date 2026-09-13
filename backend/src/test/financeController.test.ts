@@ -11,6 +11,11 @@ jest.mock("../prisma", () => ({
       upsert: jest.fn(),
       createMany: jest.fn(),
     },
+    financeRecomputeJob: {
+      upsert: jest.fn(),
+      updateMany: jest.fn(),
+      delete: jest.fn(),
+    },
     $queryRaw: jest.fn(),
   },
 }));

@@ -31,6 +31,11 @@ jest.mock("../prisma", () => {
   const invoiceLine = model();
   const stockItem = model();
   const stockTransaction = model();
+  const financeRecomputeJob = {
+    upsert: jest.fn(),
+    updateMany: jest.fn(),
+    delete: jest.fn(),
+  };
   return {
     __esModule: true,
     default: {
@@ -38,6 +43,7 @@ jest.mock("../prisma", () => {
       invoiceLine,
       stockItem,
       stockTransaction,
+      financeRecomputeJob,
       company: model(),
       $queryRaw: jest.fn(),
       $transaction: jest.fn((fn: (tx: any) => Promise<unknown>) =>

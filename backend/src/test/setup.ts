@@ -82,6 +82,12 @@ jest.mock("../prisma", () => {
         delete: jest.fn(),
         count: jest.fn(),
       },
+      financeRecomputeJob: {
+        upsert: jest.fn(),
+        update: jest.fn(),
+        updateMany: jest.fn(),
+        delete: jest.fn(),
+      },
     },
   };
 });

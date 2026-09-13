@@ -29,6 +29,7 @@ jest.mock("../prisma", () => {
       quoteRecord: model(),
       team: model(),
       appointment: model(),
+      financeRecomputeJob: model(),
       $transaction: jest.fn(),
     },
   };
