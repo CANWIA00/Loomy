@@ -301,11 +301,12 @@ const translations: Record<Lang, Record<string, string>> = {
     "pay.financeNet": "Genel Finansal Durum",
     "pay.financeSignNote": "+ eklenen (varlık/gelir), - çıkarılan (gider)",
     "pay.financeChart": "Finans Akışı",
-    "pay.financeChartNote": "Son 12 ay için çizilen aylık değerler",
+    "pay.financeChartNote": "Seçilen döneme göre çizilen değerler",
     "pay.financePerCurrency": "Para Birimlerine Göre Dağılım",
     "pay.financeCurSrc": "Kaynak",
     "pay.financeRatesNote": "TCMB kurları kullanılarak hesaplanmıştır",
     "pay.financeError": "Finans verileri yüklenemedi.",
+    "pay.financeNoDataMonth": "Bu ayla ilgili veri bulunmamaktadır.",
 
     // Services
     "svc.title": "Servis Yönetimi",
@@ -1377,11 +1378,12 @@ const translations: Record<Lang, Record<string, string>> = {
     "pay.financeNet": "Overall Financial Position",
     "pay.financeSignNote": "+ added (asset/income), - deducted (expense)",
     "pay.financeChart": "Financial Flow",
-    "pay.financeChartNote": "Monthly values drawn for the last 12 months",
+    "pay.financeChartNote": "Values drawn for the selected period",
     "pay.financePerCurrency": "Breakdown by Currency",
     "pay.financeCurSrc": "Source",
     "pay.financeRatesNote": "Calculated using TCMB rates",
     "pay.financeError": "Could not load finance data.",
+    "pay.financeNoDataMonth": "No data available for this month.",
 
     // Services
     "svc.title": "Service Management",

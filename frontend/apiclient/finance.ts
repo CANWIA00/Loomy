@@ -12,7 +12,8 @@ export interface FinanceOverview {
 }
 
 export interface FinanceTimeline {
-  months: number;
+  kind?: "daily" | "monthly";
+  months?: number;
   periods: string[];
   stockByCurrency: Record<string, number[]>;
   expenseByCurrency: Record<string, number[]>;
@@ -21,8 +22,8 @@ export interface FinanceTimeline {
 }
 
 export const financeApi = {
-  getOverview: (month?: string) =>
-    apiClient.get<FinanceOverview>("/finance/overview", { params: month ? { month } : undefined }),
-  getTimeline: (months?: number) =>
-    apiClient.get<FinanceTimeline>("/finance/timeline", { params: months ? { months } : undefined }),
+  getOverview: (period?: string) =>
+    apiClient.get<FinanceOverview>("/finance/overview", { params: period ? { month: period } : undefined }),
+  getTimeline: (params?: { month?: string; year?: string; months?: number }) =>
+    apiClient.get<FinanceTimeline>("/finance/timeline", { params }),
 };

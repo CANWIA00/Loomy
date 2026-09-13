@@ -342,6 +342,111 @@ describe("getFinanceTimeline", () => {
     expect(body.periods).toHaveLength(24);
   });
 
+  it("month parametresi ile seçilen ayın günlük serilerini döndürür", async () => {
+    (prisma.monthlyFinanceSummary.count as jest.Mock).mockResolvedValue(1);
+    (prisma.monthlyFinanceSummary.findMany as jest.Mock).mockImplementation((args: any) => {
+      if (args?.select?.period) {
+        return Promise.resolve(freshRows(["2026-06", "2026-07"]));
+      }
+      return Promise.resolve([
+        {
+          period: "2026-06",
+          stockDeltaByCurrency: JSON.stringify({ TRY: 300 }),
+          expenseByCurrency: "{}",
+          receivedTotal: 0,
+          pendingTotal: 0,
+          receivedCount: 0,
+          pendingCount: 0,
+        },
+        {
+          period: "2026-07",
+          stockDeltaByCurrency: JSON.stringify({ TRY: 100 }),
+          expenseByCurrency: "{}",
+          receivedTotal: 0,
+          pendingTotal: 0,
+          receivedCount: 0,
+          pendingCount: 0,
+        },
+      ]);
+    });
+    (prisma.$queryRaw as jest.Mock).mockImplementation((strings: TemplateStringsArray) => {
+      const sql = Array.isArray(strings) ? strings.join("") : String(strings);
+      if (sql.includes('"StockItem"')) {
+        return Promise.resolve([{ currency: "TRY", total: 1200 }]);
+      }
+      if (sql.includes('"Invoice"')) {
+        return Promise.resolve([
+          { day: "2026-06-05", currency: "TRY", total: 100 },
+          { day: "2026-06-10", currency: "TRY", total: 50 },
+        ]);
+      }
+      if (sql.includes('"StockTransaction"')) {
+        return Promise.resolve([
+          { day: "2026-06-02", currency: "TRY", total: 200 },
+          { day: "2026-06-10", currency: "TRY", total: 100 },
+        ]);
+      }
+      if (sql.includes('"ServiceRecord"')) {
+        return Promise.resolve([{ day: "2026-06-05", received: 150, pending: 30 }]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const res = mockRes();
+    await getFinanceTimeline(mockReq({ query: { month: "2026-06" } }), res);
+
+    const body = (res.json as jest.Mock).mock.calls[0][0];
+    expect(body.kind).toBe("daily");
+    expect(body.periods).toHaveLength(30);
+    expect(body.periods[0]).toBe("2026-06-01");
+    expect(body.periods[body.periods.length - 1]).toBe("2026-06-30");
+    expect(body.stockByCurrency.TRY[0]).toBe(800);
+    expect(body.stockByCurrency.TRY[1]).toBe(1000);
+    expect(body.stockByCurrency.TRY[9]).toBe(1100);
+    expect(body.expenseByCurrency.TRY[4]).toBe(100);
+    expect(body.expenseByCurrency.TRY[9]).toBe(50);
+    expect(body.received[4]).toBe(150);
+    expect(body.pending[4]).toBe(30);
+  });
+
+  it("year parametresi ile seçilen yılın aylık serilerini döndürür", async () => {
+    (prisma.monthlyFinanceSummary.count as jest.Mock).mockResolvedValue(1);
+    (prisma.monthlyFinanceSummary.findMany as jest.Mock).mockImplementation((args: any) => {
+      if (args?.select?.period) {
+        return Promise.resolve(freshRows(["2024-12", "2025-01"]));
+      }
+      return Promise.resolve([
+        { period: "2024-01", stockDeltaByCurrency: "{}", expenseByCurrency: JSON.stringify({ TRY: 100 }), receivedTotal: 100, pendingTotal: 0, receivedCount: 1, pendingCount: 0 },
+        { period: "2024-06", stockDeltaByCurrency: JSON.stringify({ TRY: 200 }), expenseByCurrency: "{}", receivedTotal: 0, pendingTotal: 0, receivedCount: 0, pendingCount: 0 },
+        { period: "2024-12", stockDeltaByCurrency: JSON.stringify({ TRY: 50 }), expenseByCurrency: JSON.stringify({ TRY: 300 }), receivedTotal: 400, pendingTotal: 100, receivedCount: 1, pendingCount: 1 },
+        { period: "2025-01", stockDeltaByCurrency: JSON.stringify({ TRY: 20 }), expenseByCurrency: "{}", receivedTotal: 0, pendingTotal: 0, receivedCount: 0, pendingCount: 0 },
+      ]);
+    });
+    (prisma.$queryRaw as jest.Mock).mockImplementation((strings: TemplateStringsArray) => {
+      const sql = Array.isArray(strings) ? strings.join("") : String(strings);
+      if (sql.includes('"StockItem"')) {
+        return Promise.resolve([{ currency: "TRY", total: 1000 }]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const res = mockRes();
+    await getFinanceTimeline(mockReq({ query: { year: "2024" } }), res);
+
+    const body = (res.json as jest.Mock).mock.calls[0][0];
+    expect(body.kind).toBe("monthly");
+    expect(body.periods).toHaveLength(12);
+    expect(body.periods[0]).toBe("2024-01");
+    expect(body.periods[body.periods.length - 1]).toBe("2024-12");
+    expect(body.stockByCurrency.TRY[0]).toBe(730);
+    expect(body.stockByCurrency.TRY[5]).toBe(930);
+    expect(body.stockByCurrency.TRY[11]).toBe(980);
+    expect(body.expenseByCurrency.TRY[0]).toBe(100);
+    expect(body.expenseByCurrency.TRY[11]).toBe(300);
+    expect(body.received[11]).toBe(400);
+    expect(body.pending[11]).toBe(100);
+  });
+
   it("hata durumunda 500 döner", async () => {
     mockBasics(Array.from({ length: 12 }, (_, i) => monthsAgo(i)), []);
     (prisma.$queryRaw as jest.Mock).mockRejectedValue(new Error("db down"));

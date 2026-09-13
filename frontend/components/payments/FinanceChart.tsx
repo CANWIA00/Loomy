@@ -19,12 +19,23 @@ function compact(v: number): string {
   return "₺" + String(Math.round(abs));
 }
 
-function shortLabel(period: string): string {
+function shortLabel(period: string, kind: "daily" | "monthly"): string {
+  if (kind === "daily") {
+    return String(Number(period.slice(8, 10)));
+  }
   const [y, m] = period.split("-");
   return m + "/" + (y ? y.slice(2) : "");
 }
 
-export default function FinanceChart({ periods, series }: { periods: string[]; series: FinanceChartSeries[] }) {
+export default function FinanceChart({
+  periods,
+  series,
+  kind = "monthly",
+}: {
+  periods: string[];
+  series: FinanceChartSeries[];
+  kind?: "daily" | "monthly";
+}) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
@@ -44,7 +55,7 @@ export default function FinanceChart({ periods, series }: { periods: string[]; s
     label: compact(maxV * g),
     dashed: g !== 0 && g !== 1,
   }));
-  const labelEvery = count > 8 ? 2 : 1;
+  const labelEvery = count > 14 ? Math.ceil(count / 8) : count > 8 ? 2 : 1;
 
   return (
     <View className="mt-3 overflow-hidden" style={{ backgroundColor: colors.bgCard2, borderRadius: 12 }}>
@@ -122,7 +133,7 @@ export default function FinanceChart({ periods, series }: { periods: string[]; s
         {periods.map((p, i) =>
           i % labelEvery === 0 ? (
             <View key={p} className="flex-1 items-center">
-              <Text className="text-[8px]" style={{ color: colors.textMuted }}>{shortLabel(p)}</Text>
+              <Text className="text-[8px]" style={{ color: colors.textMuted }}>{shortLabel(p, kind)}</Text>
             </View>
           ) : null
         )}
