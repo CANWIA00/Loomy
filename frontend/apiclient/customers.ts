@@ -13,6 +13,12 @@ export interface Customer {
   contactPhone: string;
 }
 
+export interface CustomerRelatedCounts {
+  services: number;
+  quotes: number;
+  appointments: number;
+}
+
 export type CustomerInput = Omit<Customer, "id">;
 
 export interface CustomerPageResponse {
@@ -36,12 +42,15 @@ export const customerApi = {
   getById: (id: string) =>
     apiClient.get<Customer>(`/customers/${id}`),
 
+  getRelatedCounts: (id: string) =>
+    apiClient.get<CustomerRelatedCounts>(`/customers/${id}/related-counts`),
+
   create: (data: CustomerInput) =>
     apiClient.post<Customer>("/customers", data),
 
   update: (id: string, data: Partial<Customer>) =>
     apiClient.put<Customer>(`/customers/${id}`, data),
 
-  delete: (id: string) =>
-    apiClient.delete(`/customers/${id}`),
+  delete: (id: string, mode?: "keep" | "cascade") =>
+    apiClient.delete(`/customers/${id}`, { params: mode ? { mode } : {} }),
 };

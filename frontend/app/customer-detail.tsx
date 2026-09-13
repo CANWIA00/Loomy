@@ -13,7 +13,7 @@ import { convertToTry } from "../utils/currencyRates";
 import { useAuth } from "../contexts/AuthContext";
 import ScreenHeader from "../components/ScreenHeader";
 import CustomAlert from "../components/CustomAlert";
-import { customerApi, type Customer } from "../apiclient/customers";
+import { customerApi, type Customer, type CustomerRelatedCounts } from "../apiclient/customers";
 import { serviceApi, type ServiceRecord } from "../apiclient/services";
 import { quoteApi, type QuoteRecord } from "../apiclient/quotes";
 import { paymentApi, type PaymentRecord } from "../apiclient/payments";
@@ -239,6 +239,94 @@ function RecordDetailModal({
   );
 }
 
+function DeleteCustomerModal({
+  visible,
+  counts,
+  deleting,
+  onCancel,
+  onCascade,
+  onKeep,
+}: {
+  visible: boolean;
+  counts: CustomerRelatedCounts | null;
+  deleting: boolean;
+  onCancel: () => void;
+  onCascade: () => void;
+  onKeep: () => void;
+}) {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+        <View className="rounded-2xl w-11/12 max-w-md p-5" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-lg font-bold" style={{ color: colors.text }}>
+              {t("cst.deleteTitle")}
+            </Text>
+            <TouchableOpacity onPress={onCancel} disabled={deleting} accessibilityLabel={t("cst.close")}>
+              <Ionicons name="close" size={24} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+
+          <Text className="text-sm leading-5" style={{ color: colors.text }}>
+            {t("cst.deleteRelatedCount", {
+              services: String(counts?.services ?? 0),
+              quotes: String(counts?.quotes ?? 0),
+              appointments: String(counts?.appointments ?? 0),
+            })}
+          </Text>
+
+          <View className="mt-5 gap-3">
+            {deleting ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <>
+                <TouchableOpacity
+                  onPress={onCascade}
+                  activeOpacity={0.7}
+                  className="rounded-xl p-4"
+                  style={{ backgroundColor: colors.danger + "15", borderColor: colors.danger + "55", borderWidth: 1 }}
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                    <Text className="flex-1 text-sm font-semibold ml-2" style={{ color: colors.danger }}>{t("cst.deleteCascade")}</Text>
+                    <Ionicons name="chevron-forward" size={18} color={colors.danger} />
+                  </View>
+                  <Text className="text-xs mt-1 ml-8" style={{ color: colors.textMuted }}>{t("cst.deleteCascadeDesc")}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={onKeep}
+                  activeOpacity={0.7}
+                  className="rounded-xl p-4"
+                  style={{ backgroundColor: colors.bgInput, borderColor: colors.border, borderWidth: 1 }}
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons name="archive-outline" size={18} color={colors.textSecondary} />
+                    <Text className="flex-1 text-sm font-semibold ml-2" style={{ color: colors.text }}>{t("cst.deleteKeep")}</Text>
+                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                  </View>
+                  <Text className="text-xs mt-1 ml-8" style={{ color: colors.textMuted }}>{t("cst.deleteKeepDesc")}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={onCancel}
+                  className="h-11 rounded-xl items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
+                >
+                  <Text className="text-sm font-medium" style={{ color: colors.textSecondary }}>{t("common.cancel")}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function PreviewPdfModal({
   visible,
   html,
@@ -389,6 +477,9 @@ export default function CustomerDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [detail, setDetail] = useState<DetailPayload | null>(null);
+  const [deleteVisible, setDeleteVisible] = useState(false);
+  const [deleteCounts, setDeleteCounts] = useState<CustomerRelatedCounts | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
@@ -484,24 +575,42 @@ export default function CustomerDetailScreen() {
     router.push({ pathname: "/customers", params: { edit: customer.id } } as any);
   };
 
-  const handleDeleteCustomer = () => {
+  const runDelete = async (mode: "keep" | "cascade") => {
+    if (!customer?.id || deleting) return;
+    setDeleting(true);
+    try {
+      await customerApi.delete(customer.id, mode);
+      setDeleteVisible(false);
+      Alert.alert(
+        t("common.success"),
+        mode === "cascade" ? t("cst.deletedCascade") : t("cst.successDelete")
+      );
+      router.back();
+    } catch {
+      setDeleteVisible(false);
+      Alert.alert(t("common.warning"), t("cst.errorDelete"));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
     if (!customer?.id) return;
-    Alert.alert(t("cst.delete"), t("cst.confirmDelete"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("cst.delete"),
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await customerApi.delete(customer.id);
-            Alert.alert(t("common.success"), t("cst.successDelete"));
-            router.back();
-          } catch {
-            Alert.alert(t("common.warning"), t("cst.errorDelete"));
-          }
-        },
-      },
-    ]);
+    try {
+      const counts = (await customerApi.getRelatedCounts(customer.id)).data;
+      const total = counts.services + counts.quotes + counts.appointments;
+      if (total === 0) {
+        Alert.alert(t("cst.deleteTitle"), t("cst.deleteNoRelated"), [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("cst.delete"), style: "destructive", onPress: () => runDelete("keep") },
+        ]);
+      } else {
+        setDeleteCounts(counts);
+        setDeleteVisible(true);
+      }
+    } catch {
+      Alert.alert(t("common.warning"), t("cst.errorDelete"));
+    }
   };
 
   const handleEditRecord = (p: DetailPayload) => {
@@ -963,6 +1072,14 @@ export default function CustomerDetailScreen() {
         onClose={() => setDetail(null)}
         onEdit={handleEditRecord}
         onDelete={handleDeleteRecord}
+      />
+      <DeleteCustomerModal
+        visible={deleteVisible}
+        counts={deleteCounts}
+        deleting={deleting}
+        onCancel={() => setDeleteVisible(false)}
+        onCascade={() => runDelete("cascade")}
+        onKeep={() => runDelete("keep")}
       />
       <PreviewPdfModal
         visible={!!preview}

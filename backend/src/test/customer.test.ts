@@ -3,6 +3,7 @@ import {
   searchCustomers,
   getAllCustomersSimple,
   getCustomerById,
+  getCustomerRelatedCounts,
   createCustomer,
   updateCustomer,
   deleteCustomer,
@@ -22,6 +23,19 @@ jest.mock("../prisma", () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
+    serviceRecord: {
+      count: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    quoteRecord: {
+      count: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    appointment: {
+      count: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -192,6 +206,36 @@ describe("customer controller", () => {
     });
   });
 
+  describe("getCustomerRelatedCounts", () => {
+    it("returns 404 when not found", async () => {
+      (prisma.customer.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const res = mockRes();
+      await getCustomerRelatedCounts(mockReq({ params: { id: "x" } }), res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    it("returns counts of related records", async () => {
+      (prisma.customer.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
+      (prisma.serviceRecord.count as jest.Mock).mockResolvedValue(3);
+      (prisma.quoteRecord.count as jest.Mock).mockResolvedValue(2);
+      (prisma.appointment.count as jest.Mock).mockResolvedValue(1);
+
+      const res = mockRes();
+      await getCustomerRelatedCounts(mockReq({ params: { id: "c1" } }), res);
+
+      expect(prisma.serviceRecord.count).toHaveBeenCalledWith({
+        where: { customerId: "c1", companyId: "c1" },
+      });
+      expect(res.json).toHaveBeenCalledWith({
+        services: 3,
+        quotes: 2,
+        appointments: 1,
+      });
+    });
+  });
+
   describe("deleteCustomer", () => {
     it("returns 404 when not found", async () => {
       (prisma.customer.findFirst as jest.Mock).mockResolvedValue(null);
@@ -202,14 +246,37 @@ describe("customer controller", () => {
       expect(res.status).toHaveBeenCalledWith(404);
     });
 
-    it("deletes on success", async () => {
+    it("deletes only customer by default (keep mode)", async () => {
       (prisma.customer.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
 
       const res = mockRes();
       await deleteCustomer(mockReq({ params: { id: "c1" } }), res);
 
       expect(prisma.customer.delete).toHaveBeenCalledWith({ where: { id: "c1" } });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: "Müşteri silindi." });
+    });
+
+    it("cascades related records when mode=cascade", async () => {
+      (prisma.customer.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
+      (prisma.$transaction as jest.Mock).mockResolvedValue([]);
+
+      const res = mockRes();
+      await deleteCustomer(mockReq({ params: { id: "c1" }, query: { mode: "cascade" } }), res);
+
+      expect(prisma.serviceRecord.deleteMany).toHaveBeenCalledWith({
+        where: { customerId: "c1", companyId: "c1" },
+      });
+      expect(prisma.quoteRecord.deleteMany).toHaveBeenCalledWith({
+        where: { customerId: "c1", companyId: "c1" },
+      });
+      expect(prisma.appointment.deleteMany).toHaveBeenCalledWith({
+        where: { customerId: "c1", companyId: "c1" },
+      });
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect((prisma.$transaction as jest.Mock).mock.calls[0][0]).toHaveLength(3);
+      expect(prisma.customer.delete).toHaveBeenCalledWith({ where: { id: "c1" } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Müşteri ve bağlı kayıtlar silindi." });
     });
   });
 });

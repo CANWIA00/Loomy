@@ -217,7 +217,7 @@ export async function updateCustomer(
   }
 }
 
-export async function deleteCustomer(
+export async function getCustomerRelatedCounts(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
@@ -234,8 +234,47 @@ export async function deleteCustomer(
       return;
     }
 
+    const [services, quotes, appointments] = await Promise.all([
+      prisma.serviceRecord.count({ where: { customerId: id, companyId } }),
+      prisma.quoteRecord.count({ where: { customerId: id, companyId } }),
+      prisma.appointment.count({ where: { customerId: id, companyId } }),
+    ]);
+
+    res.json({ services, quotes, appointments });
+  } catch (error: any) {
+    console.error("GetCustomerRelatedCounts error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function deleteCustomer(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const id = String(req.params.id);
+    const companyId = req.user!.companyId!;
+    const mode = req.query.mode === "cascade" ? "cascade" : "keep";
+
+    const existing = await prisma.customer.findFirst({
+      where: { id, companyId },
+    });
+
+    if (!existing) {
+      res.status(404).json({ message: "Müşteri bulunamadı." });
+      return;
+    }
+
+    if (mode === "cascade") {
+      await prisma.$transaction([
+        prisma.serviceRecord.deleteMany({ where: { customerId: id, companyId } }),
+        prisma.quoteRecord.deleteMany({ where: { customerId: id, companyId } }),
+        prisma.appointment.deleteMany({ where: { customerId: id, companyId } }),
+      ]);
+    }
+
     await prisma.customer.delete({ where: { id } });
-    res.json({ message: "Müşteri silindi." });
+    res.json({ message: mode === "cascade" ? "Müşteri ve bağlı kayıtlar silindi." : "Müşteri silindi." });
   } catch (error: any) {
     console.error("DeleteCustomer error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });

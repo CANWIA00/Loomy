@@ -4,6 +4,7 @@ import {
   searchCustomers,
   getAllCustomersSimple,
   getCustomerById,
+  getCustomerRelatedCounts,
   createCustomer,
   updateCustomer,
   deleteCustomer,
@@ -15,6 +16,7 @@ const router = Router();
 router.get("/all", authenticate, getAllCustomersSimple);
 router.get("/search", authenticate, searchCustomers);
 router.get("/", authenticate, getCustomers);
+router.get("/:id/related-counts", authenticate, getCustomerRelatedCounts);
 router.get("/:id", authenticate, getCustomerById);
 router.post("/", authenticate, isAdmin, createCustomer);
 router.put("/:id", authenticate, isAdmin, updateCustomer);
