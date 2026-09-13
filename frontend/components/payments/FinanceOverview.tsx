@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -60,6 +60,7 @@ export default function FinanceOverview() {
   const now = new Date();
   const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [selectedMonth, setSelectedMonth] = useState<string | null>(currentPeriod);
+  const [pickerYear, setPickerYear] = useState<number>(now.getFullYear());
 
   const load = useCallback(async (month?: string | null) => {
     try {
@@ -107,11 +108,19 @@ export default function FinanceOverview() {
         ]
       : null;
 
-  const chipPeriods = (() => {
-    const base = data?.availablePeriods || [];
-    if (selectedMonth && !base.includes(selectedMonth)) return [selectedMonth, ...base];
-    return base;
-  })();
+  const years = useMemo(() => {
+    const yearsSet = new Set<number>();
+    (data?.availablePeriods || []).forEach((p) => {
+      const y = Number(p.slice(0, 4));
+      if (Number.isFinite(y)) yearsSet.add(y);
+    });
+    if (selectedMonth) {
+      const y = Number(selectedMonth.slice(0, 4));
+      if (Number.isFinite(y)) yearsSet.add(y);
+    }
+    yearsSet.add(now.getFullYear());
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  }, [data?.availablePeriods, selectedMonth]);
 
   if (loading) {
     return (
@@ -153,30 +162,66 @@ export default function FinanceOverview() {
         </TouchableOpacity>
       </View>
 
-      {chipPeriods.length > 0 ? (
-        <View className="mb-3">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            <MonthChip
-              label={t("common.all")}
-              active={selectedMonth === null}
-              onPress={() => setSelectedMonth(null)}
-            />
-            {chipPeriods.map((p) => (
-              <MonthChip
-                key={p}
-                label={monthLabel(p, locale)}
-                active={selectedMonth === p}
-                onPress={() => setSelectedMonth(p)}
-              />
-            ))}
-          </ScrollView>
-          {selectedMonth ? (
-            <Text className="text-[10px] mt-1" style={{ color: colors.textMuted }}>
-              {t("pay.financeMonthNote")}: {monthLabel(selectedMonth, locale)}
-            </Text>
-          ) : null}
+      <View className="mb-4">
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className="text-sm font-semibold" style={{ color: colors.text }}>
+            {selectedMonth ? fullMonthLabel(selectedMonth, locale) : t("pay.financeAllTime")}
+          </Text>
+          <MonthChip
+            label={t("common.all")}
+            active={selectedMonth === null}
+            onPress={() => setSelectedMonth(null)}
+          />
         </View>
-      ) : null}
+
+        <View className="rounded-xl p-3" style={{ backgroundColor: colors.bgCard2 }}>
+          <View className="flex-row items-center justify-between mb-2">
+            <TouchableOpacity
+              onPress={() => setPickerYear((y) => Math.max(years[years.length - 1], y - 1))}
+              disabled={pickerYear <= years[years.length - 1]}
+              className="p-1"
+              accessibilityLabel={t("pay.financePrevYear")}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={18}
+                color={pickerYear <= years[years.length - 1] ? colors.border : colors.textSecondary}
+              />
+            </TouchableOpacity>
+            <Text className="text-sm font-bold" style={{ color: colors.text }}>{pickerYear}</Text>
+            <TouchableOpacity
+              onPress={() => setPickerYear((y) => Math.min(years[0], y + 1))}
+              disabled={pickerYear >= years[0]}
+              className="p-1"
+              accessibilityLabel={t("pay.financeNextYear")}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={pickerYear >= years[0] ? colors.border : colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {[0, 1, 2, 3].map((row) => (
+            <View key={row} className="flex-row gap-2 mb-2">
+              {[0, 1, 2].map((col) => {
+                const monthNum = row * 3 + col;
+                const period = `${pickerYear}-${String(monthNum + 1).padStart(2, "0")}`;
+                return (
+                  <MonthGridCell
+                    key={period}
+                    label={monthName(monthNum, locale)}
+                    active={selectedMonth === period}
+                    hasData={(data?.availablePeriods || []).includes(period)}
+                    onPress={() => setSelectedMonth(period)}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      </View>
 
       {ratesLoading || stockTry == null || expenseTry == null ? (
         <Text className="text-[11px] mb-3" style={{ color: colors.textMuted }}>{t("pay.financeNoRates")}</Text>
@@ -298,14 +343,49 @@ function Row({
   );
 }
 
-function monthLabel(period: string, locale: string): string {
+function monthName(monthIndex: number, locale: string): string {
+  return new Date(2026, monthIndex, 1).toLocaleDateString(locale === "tr" ? "tr-TR" : locale, {
+    month: "long",
+  });
+}
+
+function fullMonthLabel(period: string, locale: string): string {
   const [y, m] = period.split("-");
   const d = new Date(Number(y), Number(m) - 1, 1);
   return d.toLocaleDateString(locale === "tr" ? "tr-TR" : locale, {
-    day: undefined,
-    month: "short",
-    year: "2-digit",
+    month: "long",
+    year: "numeric",
   });
+}
+
+function MonthGridCell({
+  label,
+  active,
+  hasData,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  hasData: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className="flex-1 rounded-xl py-2 items-center"
+      style={{
+        backgroundColor: active ? colors.primary + "1A" : colors.bgInput,
+        borderWidth: 1,
+        borderColor: active ? colors.primary + "66" : hasData ? colors.border : colors.borderAlt,
+        opacity: hasData ? 1 : 0.45,
+      }}
+    >
+      <Text className="text-[11px] font-semibold" style={{ color: active ? colors.primary : colors.textSecondary }}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
 }
 
 function MonthChip({
