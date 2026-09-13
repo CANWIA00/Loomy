@@ -173,6 +173,69 @@ describe("getFinanceOverview", () => {
     expect(body.pendingCount).toBe(1);
   });
 
+  it("year parametresi ile seçilen yılın özetini döndürür", async () => {
+    (prisma.$queryRaw as jest.Mock).mockResolvedValue([
+      { currency: "TRY", total: 500 },
+    ]);
+
+    (prisma.monthlyFinanceSummary.count as jest.Mock).mockResolvedValue(1);
+    (prisma.monthlyFinanceSummary.findMany as jest.Mock).mockImplementation((args: any) => {
+      if (args?.select?.period) {
+        return Promise.resolve(freshRows(["2024-12", "2025-06"]));
+      }
+      return Promise.resolve([
+        {
+          period: "2024-01",
+          stockDeltaByCurrency: JSON.stringify({ TRY: 100 }),
+          expenseByCurrency: JSON.stringify({ TRY: 100 }),
+          receivedTotal: 100,
+          pendingTotal: 50,
+          receivedCount: 1,
+          pendingCount: 1,
+        },
+        {
+          period: "2024-12",
+          stockDeltaByCurrency: JSON.stringify({ TRY: 50 }),
+          expenseByCurrency: JSON.stringify({ TRY: 200 }),
+          receivedTotal: 300,
+          pendingTotal: 100,
+          receivedCount: 2,
+          pendingCount: 1,
+        },
+        {
+          period: "2025-01",
+          stockDeltaByCurrency: JSON.stringify({ TRY: 70 }),
+          expenseByCurrency: "{}",
+          receivedTotal: 0,
+          pendingTotal: 0,
+          receivedCount: 0,
+          pendingCount: 0,
+        },
+        {
+          period: "2025-06",
+          stockDeltaByCurrency: JSON.stringify({ TRY: 30 }),
+          expenseByCurrency: "{}",
+          receivedTotal: 0,
+          pendingTotal: 0,
+          receivedCount: 0,
+          pendingCount: 0,
+        },
+      ]);
+    });
+
+    const res = mockRes();
+    await getFinanceOverview(mockReq({ query: { month: "2024" } }), res);
+
+    const body = (res.json as jest.Mock).mock.calls[0][0];
+    expect(body.period).toBe("2024");
+    expect(body.stockByCurrency.TRY).toBe(400);
+    expect(body.expenseByCurrency).toEqual({ TRY: 300 });
+    expect(body.paidTotal).toBe(400);
+    expect(body.pendingTotal).toBe(150);
+    expect(body.paidCount).toBe(3);
+    expect(body.pendingCount).toBe(2);
+  });
+
   it("month olmadan tüm zamanların toplamını döner", async () => {
     (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ currency: "TRY", total: 1000 }]);
     mockBasics([monthsAgo(0), monthsAgo(1)], [

@@ -122,6 +122,18 @@ export default function FinanceOverview() {
     return list;
   }, [data?.availablePeriods, currentPeriod]);
 
+  const yearOptions = useMemo(() => {
+    const yearsSet = new Set<number>();
+    (data?.availablePeriods || []).forEach((p) => {
+      const y = Number(p.slice(0, 4));
+      if (Number.isFinite(y)) yearsSet.add(y);
+    });
+    yearsSet.add(now.getFullYear());
+    return Array.from(yearsSet)
+      .sort((a, b) => b - a)
+      .map(String);
+  }, [data?.availablePeriods]);
+
   if (loading) {
     return (
       <View style={{ backgroundColor: colors.bgCard }} className="rounded-2xl p-4 mb-4">
@@ -168,12 +180,15 @@ export default function FinanceOverview() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8, alignItems: "center" }}
         >
-          <FilterChip
-            label={t("common.all")}
-            active={selectedMonth === null}
-            hasData
-            onPress={() => setSelectedMonth(null)}
-          />
+          {yearOptions.map((year) => (
+            <FilterChip
+              key={year}
+              label={year}
+              active={selectedMonth === year}
+              hasData
+              onPress={() => setSelectedMonth(year)}
+            />
+          ))}
           {monthOptions.map((period) => (
             <FilterChip
               key={period}

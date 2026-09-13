@@ -8,6 +8,7 @@ import {
 } from "../services/monthlySummaries";
 
 const PERIOD_RE = /^\d{4}-\d{2}$/;
+const YEAR_RE = /^\d{4}$/;
 
 function parseCurrencyMap(json: string | null): Record<string, number> {
   try {
@@ -33,8 +34,12 @@ export async function getFinanceOverview(
     const prevPeriod = periodKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
 
     const monthParam = req.query.month;
-    const month: string | null =
-      typeof monthParam === "string" && PERIOD_RE.test(monthParam) ? monthParam : null;
+    const raw = typeof monthParam === "string" ? monthParam : null;
+    const isMonth = !!raw && PERIOD_RE.test(raw);
+    const isYear = !!raw && YEAR_RE.test(raw);
+    const month = isMonth ? raw : null;
+    const year = isYear ? raw : null;
+    const fetchFrom = month || (year ? `${year}-01` : null);
 
     await ensureBackfill(companyId);
     await ensureFresh(companyId, [currentPeriod, prevPeriod]);
@@ -47,7 +52,7 @@ export async function getFinanceOverview(
         GROUP BY "currency"
       `,
       prisma.monthlyFinanceSummary.findMany({
-        where: month ? { companyId, period: { gte: month } } : { companyId },
+        where: fetchFrom ? { companyId, period: { gte: fetchFrom } } : { companyId },
       }),
       prisma.monthlyFinanceSummary.findMany({
         where: { companyId },
@@ -59,15 +64,16 @@ export async function getFinanceOverview(
 
     const availablePeriods: string[] = availRaw.map((r: any) => r.period);
 
-    if (month) {
+    if (fetchFrom) {
       const stockBase: Record<string, number> = {};
       stockRaw.forEach((r) => {
         stockBase[r.currency] = Number(r.total) || 0;
       });
 
+      const suffixThreshold = month || (year ? `${year}-12` : null);
       const suffix: Record<string, number> = {};
       summaries.forEach((row: any) => {
-        if (row.period <= month) return;
+        if (suffixThreshold && row.period <= suffixThreshold) return;
         const delta = parseCurrencyMap(row.stockDeltaByCurrency);
         Object.entries(delta).forEach(([cur, val]) => {
           suffix[cur] = (suffix[cur] || 0) + val;
@@ -79,18 +85,43 @@ export async function getFinanceOverview(
         stockByCurrency[cur] = base - (suffix[cur] || 0);
       });
 
-      const row = summaries.find((r: any) => r.period === month) as any;
-      const expenseByCurrency = parseCurrencyMap(row?.expenseByCurrency ?? null);
+      let expenseByCurrency: Record<string, number> = {};
+      let paidTotal = 0;
+      let pendingTotal = 0;
+      let paidCount = 0;
+      let pendingCount = 0;
+
+      if (month) {
+        const row = summaries.find((r: any) => r.period === month) as any;
+        expenseByCurrency = parseCurrencyMap(row?.expenseByCurrency ?? null);
+        paidTotal = Number(row?.receivedTotal) || 0;
+        pendingTotal = Number(row?.pendingTotal) || 0;
+        paidCount = row?.receivedCount || 0;
+        pendingCount = row?.pendingCount || 0;
+      } else if (year) {
+        const nextYearStart = `${String(Number(year) + 1)}-01`;
+        summaries.forEach((row: any) => {
+          if (row.period < fetchFrom || row.period >= nextYearStart) return;
+          const exp = parseCurrencyMap(row.expenseByCurrency);
+          Object.entries(exp).forEach(([cur, val]) => {
+            expenseByCurrency[cur] = (expenseByCurrency[cur] || 0) + val;
+          });
+          paidTotal += row.receivedTotal || 0;
+          pendingTotal += row.pendingTotal || 0;
+          paidCount += row.receivedCount || 0;
+          pendingCount += row.pendingCount || 0;
+        });
+      }
 
       res.json({
-        period: month,
+        period: month || year,
         availablePeriods,
         stockByCurrency,
         expenseByCurrency,
-        paidTotal: Number(row?.receivedTotal) || 0,
-        pendingTotal: Number(row?.pendingTotal) || 0,
-        paidCount: row?.receivedCount || 0,
-        pendingCount: row?.pendingCount || 0,
+        paidTotal,
+        pendingTotal,
+        paidCount,
+        pendingCount,
       });
       return;
     }
