@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { customerApi, type Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFocusedPolling } from "../../hooks/useFocusedPolling";
@@ -137,6 +138,15 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     }, 500);
     return () => clearTimeout(timeout);
   }, [search, fetchCustomers]);
+
+  const handledEditIdRef = useRef<string>("");
+  const searchParams = useLocalSearchParams<{ edit?: string }>();
+  const editParamId = typeof searchParams.edit === "string" ? searchParams.edit : "";
+  useEffect(() => {
+    if (!editParamId || handledEditIdRef.current === editParamId) return;
+    handledEditIdRef.current = editParamId;
+    handleEdit(editParamId);
+  }, [editParamId, handleEdit]);
 
   function resetForm() {
     setNewCompany("");

@@ -479,6 +479,31 @@ export default function CustomerDetailScreen() {
 
   const money = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const handleEditCustomer = () => {
+    if (!customer?.id) return;
+    router.push({ pathname: "/customers", params: { edit: customer.id } } as any);
+  };
+
+  const handleDeleteCustomer = () => {
+    if (!customer?.id) return;
+    Alert.alert(t("cst.delete"), t("cst.confirmDelete"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("cst.delete"),
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await customerApi.delete(customer.id);
+            Alert.alert(t("common.success"), t("cst.successDelete"));
+            router.back();
+          } catch {
+            Alert.alert(t("common.warning"), t("cst.errorDelete"));
+          }
+        },
+      },
+    ]);
+  };
+
   const handleEditRecord = (p: DetailPayload) => {
     setDetail(null);
     if (p.kind === "service") {
@@ -733,6 +758,26 @@ export default function CustomerDetailScreen() {
                               <Text className="text-sm ml-1" style={{ color: colors.textSecondary }} numberOfLines={1}>{customer.contactPerson}</Text>
                             </View>
                           ) : null}
+                        </View>
+                        <View className="flex-row gap-2">
+                          <TouchableOpacity
+                            onPress={handleEditCustomer}
+                            activeOpacity={0.7}
+                            className="w-10 h-10 rounded-xl items-center justify-center"
+                            style={{ backgroundColor: colors.primary + "18" }}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          >
+                            <Ionicons name="create-outline" size={18} color={colors.primary} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={handleDeleteCustomer}
+                            activeOpacity={0.7}
+                            className="w-10 h-10 rounded-xl items-center justify-center"
+                            style={{ backgroundColor: colors.danger + "18" }}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          >
+                            <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                          </TouchableOpacity>
                         </View>
                       </View>
                       <Text className="text-xs font-semibold mb-2" style={{ color: colors.textMuted }}>{t("cst.customerInfo")}</Text>

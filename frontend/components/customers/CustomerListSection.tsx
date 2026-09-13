@@ -29,8 +29,6 @@ export default function CustomerListSection() {
     totalElements,
     totalPages,
     fetchCustomers,
-    handleEdit,
-    handleDelete,
   } = useCustomers();
 
   return (
@@ -108,24 +106,6 @@ export default function CustomerListSection() {
                           {c.phone || "-"}
                         </Text>
                       </View>
-                    </View>
-                    <View className="items-center gap-2">
-                      <TouchableOpacity
-                        onPress={() => handleEdit(c.id)}
-                        className="w-9 h-9 rounded-xl items-center justify-center"
-                        style={{ backgroundColor: colors.primary + "18" }}
-                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                      >
-                        <Ionicons name="create-outline" size={17} color={colors.primary} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleDelete(c.id)}
-                        className="w-9 h-9 rounded-xl items-center justify-center"
-                        style={{ backgroundColor: colors.danger + "18" }}
-                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                      >
-                        <Ionicons name="trash-outline" size={17} color={colors.danger} />
-                      </TouchableOpacity>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={colors.textMuted} style={{ marginLeft: 8, alignSelf: "center" }} />
                   </View>
