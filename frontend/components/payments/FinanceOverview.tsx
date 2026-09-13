@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -50,17 +50,22 @@ function seriesToTry(
 
 export default function FinanceOverview() {
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { convert, loading: ratesLoading } = useCurrency();
 
   const [data, setData] = useState<FinanceOverviewData | null>(null);
   const [timeline, setTimeline] = useState<FinanceTimeline | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  const now = new Date();
+  const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(currentPeriod);
+
+  const load = useCallback(async (month?: string | null) => {
     try {
+      setLoading(true);
       const [overviewRes, timelineRes] = await Promise.all([
-        financeApi.getOverview(),
+        financeApi.getOverview(month ?? undefined),
         financeApi.getTimeline(12),
       ]);
       setData(overviewRes.data);
@@ -74,8 +79,8 @@ export default function FinanceOverview() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    load(selectedMonth);
+  }, [load, selectedMonth]);
 
   const stockTry = data ? sumToTry(data.stockByCurrency, convert) : null;
   const expenseTry = data ? sumToTry(data.expenseByCurrency, convert) : null;
@@ -101,6 +106,12 @@ export default function FinanceOverview() {
           { name: t("pay.financePaid"), color: colors.blue, values: timeline.received },
         ]
       : null;
+
+  const chipPeriods = (() => {
+    const base = data?.availablePeriods || [];
+    if (selectedMonth && !base.includes(selectedMonth)) return [selectedMonth, ...base];
+    return base;
+  })();
 
   if (loading) {
     return (
@@ -137,10 +148,35 @@ export default function FinanceOverview() {
           <Ionicons name="analytics" size={20} color={colors.teal} />
         </View>
         <Text style={{ color: colors.text }} className="text-lg font-bold ml-3">{t("pay.financeTitle")}</Text>
-        <TouchableOpacity onPress={load} className="ml-auto p-1">
+        <TouchableOpacity onPress={() => load(selectedMonth)} className="ml-auto p-1">
           <Ionicons name="refresh" size={18} color={colors.textMuted} />
         </TouchableOpacity>
       </View>
+
+      {chipPeriods.length > 0 ? (
+        <View className="mb-3">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <MonthChip
+              label={t("common.all")}
+              active={selectedMonth === null}
+              onPress={() => setSelectedMonth(null)}
+            />
+            {chipPeriods.map((p) => (
+              <MonthChip
+                key={p}
+                label={monthLabel(p, locale)}
+                active={selectedMonth === p}
+                onPress={() => setSelectedMonth(p)}
+              />
+            ))}
+          </ScrollView>
+          {selectedMonth ? (
+            <Text className="text-[10px] mt-1" style={{ color: colors.textMuted }}>
+              {t("pay.financeMonthNote")}: {monthLabel(selectedMonth, locale)}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
 
       {ratesLoading || stockTry == null || expenseTry == null ? (
         <Text className="text-[11px] mb-3" style={{ color: colors.textMuted }}>{t("pay.financeNoRates")}</Text>
@@ -259,5 +295,42 @@ function Row({
         </Text>
       </View>
     </View>
+  );
+}
+
+function monthLabel(period: string, locale: string): string {
+  const [y, m] = period.split("-");
+  const d = new Date(Number(y), Number(m) - 1, 1);
+  return d.toLocaleDateString(locale === "tr" ? "tr-TR" : locale, {
+    day: undefined,
+    month: "short",
+    year: "2-digit",
+  });
+}
+
+function MonthChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className="rounded-full px-3 py-1.5"
+      style={{
+        backgroundColor: active ? colors.primary + "1A" : colors.bgInput,
+        borderWidth: 1,
+        borderColor: active ? colors.primary + "66" : colors.border,
+      }}
+    >
+      <Text className="text-xs font-semibold" style={{ color: active ? colors.primary : colors.textSecondary }}>
+        {label}
+      </Text>
+    </TouchableOpacity>
   );
 }

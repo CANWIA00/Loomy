@@ -40,7 +40,24 @@ function msModel(): any {
   return (prisma as any).monthlyFinanceSummary;
 }
 
+const recomputeLocks = new Map<string, Promise<void>>();
+
 export async function recomputeMonth(
+  companyId: string,
+  period: string
+): Promise<void> {
+  const key = `${companyId}:${period}`;
+  const inFlight = recomputeLocks.get(key);
+  if (inFlight) return inFlight;
+
+  const run = performRecompute(companyId, period).finally(() => {
+    recomputeLocks.delete(key);
+  });
+  recomputeLocks.set(key, run);
+  return run;
+}
+
+async function performRecompute(
   companyId: string,
   period: string
 ): Promise<void> {
@@ -269,22 +286,26 @@ export async function ensureFresh(
   const ms = msModel();
   if (!ms) return;
   try {
+    const dedup = Array.from(new Set(periods));
+    const newest = dedup.slice().sort().pop();
+    if (!newest) return;
+
     const rows = await ms.findMany({
-      where: { companyId, period: { in: periods } },
+      where: { companyId, period: { in: dedup } },
       select: { period: true, updatedAt: true },
     });
     const byPeriod: Record<string, number> = {};
     rows.forEach((r: any) => {
       byPeriod[r.period] = new Date(r.updatedAt).getTime();
     });
-    for (const period of periods) {
-      const age = byPeriod[period] == null ? Infinity : Date.now() - byPeriod[period];
-      if (age <= maxAgeMs) continue;
-      try {
-        await recomputeMonth(companyId, period);
-      } catch (error: any) {
-        console.error("EnsureFresh recompute error:", period, error.message);
-      }
+
+    const age = byPeriod[newest] == null ? Infinity : Date.now() - byPeriod[newest];
+    if (age <= maxAgeMs) return;
+
+    try {
+      await recomputeMonth(companyId, newest);
+    } catch (error: any) {
+      console.error("EnsureFresh recompute error:", newest, error.message);
     }
   } catch (error: any) {
     console.error("EnsureFresh error:", error.message);

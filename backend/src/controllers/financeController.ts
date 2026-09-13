@@ -7,18 +7,39 @@ import {
   ensureFresh,
 } from "../services/monthlySummaries";
 
+const PERIOD_RE = /^\d{4}-\d{2}$/;
+
+function parseCurrencyMap(json: string | null): Record<string, number> {
+  try {
+    const parsed = JSON.parse(json || "{}");
+    const out: Record<string, number> = {};
+    Object.entries(parsed).forEach(([cur, val]) => {
+      out[cur] = Number(val) || 0;
+    });
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 export async function getFinanceOverview(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
   try {
     const companyId = req.user!.companyId!;
+    const now = new Date();
+    const currentPeriod = periodKey(now);
+    const prevPeriod = periodKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
+    const monthParam = req.query.month;
+    const month: string | null =
+      typeof monthParam === "string" && PERIOD_RE.test(monthParam) ? monthParam : null;
 
     await ensureBackfill(companyId);
-    const now = new Date();
-    await ensureFresh(companyId, [periodKey(now), periodKey(new Date(now.getFullYear(), now.getMonth() - 1, 1))]);
+    await ensureFresh(companyId, [currentPeriod, prevPeriod]);
 
-    const [stockRaw, summaries] = await Promise.all([
+    const [stockRaw, summaries, availRaw] = await Promise.all([
       prisma.$queryRaw<Array<{ currency: string; total: number }>>`
         SELECT "currency", COALESCE(SUM("quantity" * "unitPrice"), 0)::float8 AS total
         FROM "StockItem"
@@ -26,16 +47,53 @@ export async function getFinanceOverview(
         GROUP BY "currency"
       `,
       prisma.monthlyFinanceSummary.findMany({
+        where: month ? { companyId, period: { gte: month } } : { companyId },
+      }),
+      prisma.monthlyFinanceSummary.findMany({
         where: { companyId },
-        select: {
-          expenseByCurrency: true,
-          receivedTotal: true,
-          pendingTotal: true,
-          receivedCount: true,
-          pendingCount: true,
-        },
+        select: { period: true },
+        distinct: ["period"],
+        orderBy: { period: "desc" as const },
       }),
     ]);
+
+    const availablePeriods: string[] = availRaw.map((r: any) => r.period);
+
+    if (month) {
+      const stockBase: Record<string, number> = {};
+      stockRaw.forEach((r) => {
+        stockBase[r.currency] = Number(r.total) || 0;
+      });
+
+      const suffix: Record<string, number> = {};
+      summaries.forEach((row: any) => {
+        if (row.period <= month) return;
+        const delta = parseCurrencyMap(row.stockDeltaByCurrency);
+        Object.entries(delta).forEach(([cur, val]) => {
+          suffix[cur] = (suffix[cur] || 0) + val;
+        });
+      });
+
+      const stockByCurrency: Record<string, number> = {};
+      Object.entries(stockBase).forEach(([cur, base]) => {
+        stockByCurrency[cur] = base - (suffix[cur] || 0);
+      });
+
+      const row = summaries.find((r: any) => r.period === month) as any;
+      const expenseByCurrency = parseCurrencyMap(row?.expenseByCurrency ?? null);
+
+      res.json({
+        period: month,
+        availablePeriods,
+        stockByCurrency,
+        expenseByCurrency,
+        paidTotal: Number(row?.receivedTotal) || 0,
+        pendingTotal: Number(row?.pendingTotal) || 0,
+        paidCount: row?.receivedCount || 0,
+        pendingCount: row?.pendingCount || 0,
+      });
+      return;
+    }
 
     const stockByCurrency: Record<string, number> = {};
     stockRaw.forEach((r) => {
@@ -47,15 +105,11 @@ export async function getFinanceOverview(
     let pendingTotal = 0;
     let paidCount = 0;
     let pendingCount = 0;
-    summaries.forEach((r) => {
-      try {
-        const exp = JSON.parse(r.expenseByCurrency || "{}");
-        Object.entries(exp).forEach(([cur, val]) => {
-          expenseByCurrency[cur] = (expenseByCurrency[cur] || 0) + Number(val);
-        });
-      } catch {
-        // ignore malformed row
-      }
+    summaries.forEach((r: any) => {
+      const exp = parseCurrencyMap(r.expenseByCurrency);
+      Object.entries(exp).forEach(([cur, val]) => {
+        expenseByCurrency[cur] = (expenseByCurrency[cur] || 0) + val;
+      });
       paidTotal += r.receivedTotal || 0;
       pendingTotal += r.pendingTotal || 0;
       paidCount += r.receivedCount || 0;
@@ -63,6 +117,8 @@ export async function getFinanceOverview(
     });
 
     res.json({
+      period: null,
+      availablePeriods,
       stockByCurrency,
       expenseByCurrency,
       paidTotal: Number(paidTotal) || 0,

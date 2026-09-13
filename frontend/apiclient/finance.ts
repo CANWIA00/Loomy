@@ -1,6 +1,8 @@
 import apiClient from "./client";
 
 export interface FinanceOverview {
+  period?: string | null;
+  availablePeriods?: string[];
   stockByCurrency: Record<string, number>;
   expenseByCurrency: Record<string, number>;
   paidTotal: number;
@@ -19,7 +21,8 @@ export interface FinanceTimeline {
 }
 
 export const financeApi = {
-  getOverview: () => apiClient.get<FinanceOverview>("/finance/overview"),
+  getOverview: (month?: string) =>
+    apiClient.get<FinanceOverview>("/finance/overview", { params: month ? { month } : undefined }),
   getTimeline: (months?: number) =>
     apiClient.get<FinanceTimeline>("/finance/timeline", { params: months ? { months } : undefined }),
 };
