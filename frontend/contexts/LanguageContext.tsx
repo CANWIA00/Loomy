@@ -307,6 +307,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "pay.financeRatesNote": "TCMB kurları kullanılarak hesaplanmıştır",
     "pay.financeError": "Finans verileri yüklenemedi.",
     "pay.financeNoDataMonth": "Bu ayla ilgili veri bulunmamaktadır.",
+    "pay.financeFilter": "Finans Filtresi",
 
     // Services
     "svc.title": "Servis Yönetimi",
@@ -1384,6 +1385,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "pay.financeRatesNote": "Calculated using TCMB rates",
     "pay.financeError": "Could not load finance data.",
     "pay.financeNoDataMonth": "No data available for this month.",
+    "pay.financeFilter": "Finance Filter",
 
     // Services
     "svc.title": "Service Management",
