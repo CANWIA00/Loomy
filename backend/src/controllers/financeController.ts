@@ -80,10 +80,16 @@ export async function getFinanceOverview(
         });
       });
 
+      const firstStock = await firstStockActivityPeriod(companyId);
+      const hasStock =
+        !firstStock || !suffixThreshold || suffixThreshold >= firstStock;
+
       const stockByCurrency: Record<string, number> = {};
-      Object.entries(stockBase).forEach(([cur, base]) => {
-        stockByCurrency[cur] = base - (suffix[cur] || 0);
-      });
+      if (hasStock) {
+        Object.entries(stockBase).forEach(([cur, base]) => {
+          stockByCurrency[cur] = base - (suffix[cur] || 0);
+        });
+      }
 
       let expenseByCurrency: Record<string, number> = {};
       let paidTotal = 0;
@@ -161,6 +167,20 @@ export async function getFinanceOverview(
     console.error("GetFinanceOverview error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });
   }
+}
+
+async function firstStockActivityPeriod(
+  companyId: string
+): Promise<string | null> {
+  const rows = await prisma.$queryRaw<Array<{ p: string | null }>>`
+    SELECT MIN("period") AS p
+    FROM "MonthlyFinanceSummary"
+    WHERE "companyId" = ${companyId}
+      AND "stockDeltaByCurrency" IS NOT NULL
+      AND "stockDeltaByCurrency" <> '{}'
+      AND "stockDeltaByCurrency" <> ''
+  `;
+  return rows[0]?.p ?? null;
 }
 
 async function baseStockByCurrency(
@@ -246,6 +266,9 @@ async function dailyTimeline(companyId: string, month: string) {
   const monthRow = summaries.find((r: any) => r.period === month) as any;
   const monthDelta = parseCurrencyMap(monthRow?.stockDeltaByCurrency ?? null);
 
+  const firstStock = await firstStockActivityPeriod(companyId);
+  const hasStock = !firstStock || month >= firstStock;
+
   const currencies = new Set<string>([
     ...Object.keys(stockBase),
     ...dailyStockDelta.map((r) => r.currency),
@@ -275,13 +298,14 @@ async function dailyTimeline(companyId: string, month: string) {
   const stockByCurrency: Record<string, number[]> = {};
   const expenseByCurrency: Record<string, number[]> = {};
   currencies.forEach((cur) => {
-    const startStock =
-      (stockBase[cur] || 0) - (suffix[cur] || 0) - (monthDelta[cur] || 0);
+    const startStock = hasStock
+      ? (stockBase[cur] || 0) - (suffix[cur] || 0) - (monthDelta[cur] || 0)
+      : 0;
     const stockVals = new Array<number>(periods.length).fill(0);
     const expVals = new Array<number>(periods.length).fill(0);
     let cum = startStock;
     periods.forEach((p, idx) => {
-      cum += dailyStockMap[p]?.[cur] || 0;
+      cum += (hasStock ? dailyStockMap[p]?.[cur] || 0 : 0);
       stockVals[idx] = cum;
       expVals[idx] = dailyExpenseMap[p]?.[cur] || 0;
     });
