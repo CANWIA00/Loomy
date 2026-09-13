@@ -61,7 +61,7 @@ export default function FinanceOverview() {
   const currentYear = String(now.getFullYear());
   const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [selectedYear, setSelectedYear] = useState<string>(currentYear);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(currentPeriod);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
   const periodParam = selectedMonth ?? selectedYear;
 
