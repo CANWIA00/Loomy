@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -60,7 +60,6 @@ export default function FinanceOverview() {
   const now = new Date();
   const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [selectedMonth, setSelectedMonth] = useState<string | null>(currentPeriod);
-  const [pickerYear, setPickerYear] = useState<number>(now.getFullYear());
 
   const load = useCallback(async (month?: string | null) => {
     try {
@@ -108,19 +107,20 @@ export default function FinanceOverview() {
         ]
       : null;
 
-  const years = useMemo(() => {
-    const yearsSet = new Set<number>();
-    (data?.availablePeriods || []).forEach((p) => {
-      const y = Number(p.slice(0, 4));
-      if (Number.isFinite(y)) yearsSet.add(y);
-    });
-    if (selectedMonth) {
-      const y = Number(selectedMonth.slice(0, 4));
-      if (Number.isFinite(y)) yearsSet.add(y);
-    }
-    yearsSet.add(now.getFullYear());
-    return Array.from(yearsSet).sort((a, b) => b - a);
-  }, [data?.availablePeriods, selectedMonth]);
+  const monthOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const list: string[] = [];
+    const add = (p: string) => {
+      if (!seen.has(p)) {
+        seen.add(p);
+        list.push(p);
+      }
+    };
+    add(currentPeriod);
+    (data?.availablePeriods || []).forEach(add);
+    list.sort((a, b) => (a < b ? 1 : -1));
+    return list;
+  }, [data?.availablePeriods, currentPeriod]);
 
   if (loading) {
     return (
@@ -163,64 +163,27 @@ export default function FinanceOverview() {
       </View>
 
       <View className="mb-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-sm font-semibold" style={{ color: colors.text }}>
-            {selectedMonth ? fullMonthLabel(selectedMonth, locale) : t("pay.financeAllTime")}
-          </Text>
-          <MonthChip
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, alignItems: "center" }}
+        >
+          <FilterChip
             label={t("common.all")}
             active={selectedMonth === null}
+            hasData
             onPress={() => setSelectedMonth(null)}
           />
-        </View>
-
-        <View className="rounded-xl p-3" style={{ backgroundColor: colors.bgCard2 }}>
-          <View className="flex-row items-center justify-between mb-2">
-            <TouchableOpacity
-              onPress={() => setPickerYear((y) => Math.max(years[years.length - 1], y - 1))}
-              disabled={pickerYear <= years[years.length - 1]}
-              className="p-1"
-              accessibilityLabel={t("pay.financePrevYear")}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={18}
-                color={pickerYear <= years[years.length - 1] ? colors.border : colors.textSecondary}
-              />
-            </TouchableOpacity>
-            <Text className="text-sm font-bold" style={{ color: colors.text }}>{pickerYear}</Text>
-            <TouchableOpacity
-              onPress={() => setPickerYear((y) => Math.min(years[0], y + 1))}
-              disabled={pickerYear >= years[0]}
-              className="p-1"
-              accessibilityLabel={t("pay.financeNextYear")}
-            >
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={pickerYear >= years[0] ? colors.border : colors.textSecondary}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {[0, 1, 2, 3].map((row) => (
-            <View key={row} className="flex-row gap-2 mb-2">
-              {[0, 1, 2].map((col) => {
-                const monthNum = row * 3 + col;
-                const period = `${pickerYear}-${String(monthNum + 1).padStart(2, "0")}`;
-                return (
-                  <MonthGridCell
-                    key={period}
-                    label={monthName(monthNum, locale)}
-                    active={selectedMonth === period}
-                    hasData={(data?.availablePeriods || []).includes(period)}
-                    onPress={() => setSelectedMonth(period)}
-                  />
-                );
-              })}
-            </View>
+          {monthOptions.map((period) => (
+            <FilterChip
+              key={period}
+              label={chipLabel(period, locale)}
+              active={selectedMonth === period}
+              hasData={(data?.availablePeriods || []).includes(period)}
+              onPress={() => setSelectedMonth(period)}
+            />
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       {ratesLoading || stockTry == null || expenseTry == null ? (
@@ -343,22 +306,16 @@ function Row({
   );
 }
 
-function monthName(monthIndex: number, locale: string): string {
-  return new Date(2026, monthIndex, 1).toLocaleDateString(locale === "tr" ? "tr-TR" : locale, {
-    month: "long",
+function chipLabel(period: string, locale: string): string {
+  const [y, m] = period.split("-").map(Number);
+  const d = new Date(y, m - 1, 1);
+  const month = d.toLocaleDateString(locale === "tr" ? "tr-TR" : locale, {
+    month: "short",
   });
+  return `${month} ${String(y % 100).padStart(2, "0")}`;
 }
 
-function fullMonthLabel(period: string, locale: string): string {
-  const [y, m] = period.split("-");
-  const d = new Date(Number(y), Number(m) - 1, 1);
-  return d.toLocaleDateString(locale === "tr" ? "tr-TR" : locale, {
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function MonthGridCell({
+function FilterChip({
   label,
   active,
   hasData,
@@ -373,42 +330,18 @@ function MonthGridCell({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="flex-1 rounded-xl py-2 items-center"
+      className="rounded-full px-3.5 py-1.5"
       style={{
-        backgroundColor: active ? colors.primary + "1A" : colors.bgInput,
+        backgroundColor: active ? colors.primary : colors.bgInput,
         borderWidth: 1,
-        borderColor: active ? colors.primary + "66" : hasData ? colors.border : colors.borderAlt,
-        opacity: hasData ? 1 : 0.45,
+        borderColor: active ? colors.primary : hasData ? colors.border : colors.borderAlt,
+        opacity: active || hasData ? 1 : 0.45,
       }}
     >
-      <Text className="text-[11px] font-semibold" style={{ color: active ? colors.primary : colors.textSecondary }}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-function MonthChip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="rounded-full px-3 py-1.5"
-      style={{
-        backgroundColor: active ? colors.primary + "1A" : colors.bgInput,
-        borderWidth: 1,
-        borderColor: active ? colors.primary + "66" : colors.border,
-      }}
-    >
-      <Text className="text-xs font-semibold" style={{ color: active ? colors.primary : colors.textSecondary }}>
+      <Text
+        className="text-xs font-semibold"
+        style={{ color: active ? "#fff" : colors.textSecondary }}
+      >
         {label}
       </Text>
     </TouchableOpacity>
