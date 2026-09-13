@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Modal, Pressable, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -60,20 +60,17 @@ export default function FinanceOverview() {
   const now = new Date();
   const currentYear = String(now.getFullYear());
   const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const [selectedYear, setSelectedYear] = useState<string | null>(currentYear);
+  const [selectedYear, setSelectedYear] = useState<string>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
-  const activeYear = selectedYear ?? currentYear;
-  const periodParam = selectedMonth ?? selectedYear ?? undefined;
+  const periodParam = selectedMonth ?? selectedYear;
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       const [overviewRes, timelineRes] = await Promise.all([
         financeApi.getOverview(periodParam),
-        financeApi.getTimeline(
-          selectedMonth ? { month: selectedMonth } : selectedYear ? { year: selectedYear } : undefined
-        ),
+        financeApi.getTimeline(selectedMonth ? { month: selectedMonth } : { year: selectedYear }),
       ]);
       setData(overviewRes.data);
       setTimeline(timelineRes.data);
@@ -91,19 +88,10 @@ export default function FinanceOverview() {
 
   const handleYearChange = (y: string) => {
     setSelectedYear(y);
-    setSelectedMonth(null);
+    setSelectedMonth((m) => (m ? `${y}-${m.slice(5)}` : m));
   };
   const handleMonthChange = (key: string) => {
-    if (key === "all") {
-      setSelectedMonth(null);
-    } else {
-      setSelectedYear(key.slice(0, 4));
-      setSelectedMonth(key);
-    }
-  };
-  const handleClearFilter = () => {
-    setSelectedYear(null);
-    setSelectedMonth(null);
+    setSelectedMonth(key === "all" ? null : key);
   };
 
   const isFutureMonth = selectedMonth != null && selectedMonth > currentPeriod;
@@ -125,10 +113,10 @@ export default function FinanceOverview() {
     const list: { key: string; label: string }[] = [{ key: "all", label: t("common.all") }];
     for (let m = 0; m < 12; m++) {
       const mm = String(m + 1).padStart(2, "0");
-      list.push({ key: `${activeYear}-${mm}`, label: monthName(m, locale) });
+      list.push({ key: `${selectedYear}-${mm}`, label: monthName(m, locale) });
     }
     return list;
-  }, [activeYear, locale, t]);
+  }, [selectedYear, locale, t]);
 
   const stockTry = data ? sumToTry(data.stockByCurrency, convert) : null;
   const expenseTry = data ? sumToTry(data.expenseByCurrency, convert) : null;
@@ -168,15 +156,18 @@ export default function FinanceOverview() {
         </TouchableOpacity>
       </View>
 
-      <View className="mb-4 flex-row items-center">
-        <PeriodFilter
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          yearOptions={yearOptions}
-          monthOptions={monthOptions}
-          onYearChange={handleYearChange}
-          onMonthChange={handleMonthChange}
-          onClear={handleClearFilter}
+      <View className="mb-4 flex-row gap-2 z-20">
+        <Dropdown
+          title={t("common.year")}
+          selectedKey={selectedYear}
+          options={yearOptions.map((y) => ({ key: y, label: y }))}
+          onSelect={handleYearChange}
+        />
+        <Dropdown
+          title={t("common.month")}
+          selectedKey={selectedMonth ?? "all"}
+          options={monthOptions}
+          onSelect={handleMonthChange}
         />
       </View>
 
@@ -318,144 +309,74 @@ function monthName(monthIndex: number, locale: string): string {
   });
 }
 
-function PeriodFilter({
-  selectedYear,
-  selectedMonth,
-  yearOptions,
-  monthOptions,
-  onYearChange,
-  onMonthChange,
-  onClear,
+function Dropdown({
+  title,
+  selectedKey,
+  options,
+  onSelect,
 }: {
-  selectedYear: string | null;
-  selectedMonth: string | null;
-  yearOptions: string[];
-  monthOptions: { key: string; label: string }[];
-  onYearChange: (y: string) => void;
-  onMonthChange: (key: string) => void;
-  onClear: () => void;
+  title: string;
+  selectedKey: string;
+  options: { key: string; label: string }[];
+  onSelect: (key: string) => void;
 }) {
   const { colors } = useTheme();
-  const { t, locale } = useLanguage();
   const [open, setOpen] = useState(false);
-  const hasFilter = selectedYear != null || selectedMonth != null;
-
-  const label =
-    !hasFilter
-      ? t("pay.financeAllTime")
-      : selectedMonth
-        ? `${monthName(Number(selectedMonth.slice(5)) - 1, locale)} ${selectedMonth.slice(0, 4)}`
-        : selectedYear!;
+  const selectedLabel = options.find((o) => o.key === selectedKey)?.label ?? selectedKey;
 
   return (
-    <View className="flex-row items-center">
+    <View className="flex-1">
       <TouchableOpacity
-        onPress={() => setOpen(true)}
-        className="flex-row items-center rounded-xl px-3 py-2"
-        style={{ backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border }}
+        onPress={() => setOpen((o) => !o)}
+        className="flex-row items-center justify-between rounded-xl px-3 py-2"
+        style={{ backgroundColor: colors.bgInput, borderWidth: 1, borderColor: open ? colors.primary : colors.border }}
       >
-        <Ionicons name="funnel-outline" size={14} color={colors.textSecondary} style={{ marginRight: 6 }} />
         <Text className="text-xs font-semibold" style={{ color: colors.text }} numberOfLines={1}>
-          {label}
+          {title}: <Text style={{ color: colors.textSecondary }}>{selectedLabel}</Text>
         </Text>
-        <Ionicons name="chevron-down" size={14} color={colors.textSecondary} style={{ marginLeft: 6 }} />
+        <Ionicons name={open ? "chevron-up" : "chevron-down"} size={14} color={colors.textSecondary} />
       </TouchableOpacity>
-      {hasFilter ? (
-        <TouchableOpacity onPress={onClear} className="p-1 ml-1">
-          <Ionicons name="close-circle" size={20} color={colors.textMuted} />
-        </TouchableOpacity>
-      ) : null}
 
-      <Modal transparent visible={open} animationType="fade" onRequestClose={() => setOpen(false)}>
-        <View style={{ flex: 1, justifyContent: "center", padding: 24 }}>
-          <Pressable
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.45)" }}
-            onPress={() => setOpen(false)}
-          />
-          <View
-            style={{ backgroundColor: colors.bgCard, borderRadius: 16, borderWidth: 1, borderColor: colors.border, maxHeight: "75%", paddingVertical: 6 }}
-          >
-            <Text className="text-sm font-bold px-4 py-2" style={{ color: colors.text }}>{t("pay.financeFilter")}</Text>
-            <ScrollView>
-              <TouchableOpacity
-                onPress={() => {
-                  onClear();
-                  setOpen(false);
-                }}
-                className="flex-row items-center justify-between px-4 py-3"
-                style={{ backgroundColor: !hasFilter ? colors.primary + "1A" : "transparent" }}
-              >
-                <Text className="text-sm" style={{ color: !hasFilter ? colors.primary : colors.text }}>
-                  {t("pay.financeAllTime")}
-                </Text>
-                {!hasFilter ? <Ionicons name="checkmark" size={16} color={colors.primary} /> : null}
-              </TouchableOpacity>
-
-              <Text className="text-[10px] font-medium px-4 pt-3 pb-1" style={{ color: colors.textMuted }}>
-                {t("common.year")}
-              </Text>
-              <View className="flex-row flex-wrap px-3 pb-2">
-                {yearOptions.map((y) => (
-                  <Chip
-                    key={y}
-                    label={y}
-                    active={selectedMonth == null && selectedYear === y}
-                    onPress={() => onYearChange(y)}
-                  />
-                ))}
-              </View>
-
-              <Text className="text-[10px] font-medium px-4 pt-1 pb-1" style={{ color: colors.textMuted }}>
-                {t("common.month")}
-              </Text>
-              <View className="flex-row flex-wrap px-3 pb-3">
-                {monthOptions.map((o) => {
-                  const active =
-                    selectedMonth === o.key || (o.key === "all" && selectedMonth == null && selectedYear != null);
-                  return (
-                    <Chip
-                      key={o.key}
-                      label={o.label}
-                      active={active}
-                      onPress={() => {
-                        onMonthChange(o.key);
-                        setOpen(false);
-                      }}
-                    />
-                  );
-                })}
-              </View>
-            </ScrollView>
-          </View>
+      {open ? (
+        <View
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: 4,
+            backgroundColor: colors.bgCard,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.border,
+            maxHeight: 220,
+            overflow: "hidden",
+            zIndex: 30,
+            elevation: 8,
+          }}
+        >
+          <ScrollView>
+            {options.map((opt) => {
+              const active = opt.key === selectedKey;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  onPress={() => {
+                    onSelect(opt.key);
+                    setOpen(false);
+                  }}
+                  className="px-3 py-2.5"
+                  style={{ backgroundColor: active ? colors.primary + "1A" : "transparent" }}
+                >
+                  <Text className="text-sm" style={{ color: active ? colors.primary : colors.text }}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
-      </Modal>
+      ) : null}
     </View>
-  );
-}
-
-function Chip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="rounded-full px-3 py-1.5 m-1"
-      style={{
-        backgroundColor: active ? colors.primary + "1A" : colors.bgInput,
-        borderWidth: 1,
-        borderColor: active ? colors.primary : colors.border,
-      }}
-    >
-      <Text className="text-xs" style={{ color: active ? colors.primary : colors.text }}>
-        {label}
-      </Text>
-    </TouchableOpacity>
   );
 }
