@@ -1106,6 +1106,13 @@ const translations: Record<Lang, Record<string, string>> = {
     "cmp.level.none": "Kapalı",
     "cmp.level.view": "Görebilir",
     "cmp.level.manage": "Yönetebilir",
+    "cmp.inviteCode": "Davet Kodu",
+    "cmp.copy": "Kopyala",
+    "cmp.copied": "Kopyalandı",
+    "cmp.accessSummary": "Panel Erişimleri",
+    "cmp.noAccessSet": "Erişim tanımlanmamış",
+    "cmp.saveBar": "Değişiklikleri kaydet ({count})",
+    "cmp.legend": "Her panel için erişim seviyesini seçin. Görebilir: bilgileri görüntüler. Yönetebilir: ekleyip düzenleyebilir. Admin tüm panelleri yönetebilir.",
   },
 
   en: {
@@ -2210,6 +2217,13 @@ const translations: Record<Lang, Record<string, string>> = {
     "cmp.level.none": "Off",
     "cmp.level.view": "View",
     "cmp.level.manage": "Manage",
+    "cmp.inviteCode": "Invite Code",
+    "cmp.copy": "Copy",
+    "cmp.copied": "Copied",
+    "cmp.accessSummary": "Panel Access",
+    "cmp.noAccessSet": "No access set",
+    "cmp.saveBar": "Save changes ({count})",
+    "cmp.legend": "Pick an access level for each panel. View: can see the data. Manage: can add and edit. Admin manages all panels.",
   },
 };
 
