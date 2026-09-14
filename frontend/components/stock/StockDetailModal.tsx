@@ -101,12 +101,12 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
                   value={qty}
                   onChangeText={(v) => setQty(v.replace(/[^0-9.,]/g, ""))}
                   keyboardType="numeric"
-                  className="rounded-lg px-3 py-2 flex-1"
+                  className="rounded-lg px-3 py-2 flex-1 min-w-0"
                   style={{ backgroundColor: colors.bgInput, color: colors.text }}
                 />
                 <TouchableOpacity
                   disabled={adjusting}
-                  className="px-4 rounded-lg items-center justify-center"
+                  className="flex-1 px-2 rounded-lg items-center justify-center"
                   style={{ backgroundColor: colors.success, opacity: adjusting ? 0.5 : 1 }}
                   onPress={() => {
                     const n = parseNumericInput(qty);
@@ -117,7 +117,7 @@ export default function StockDetailModal({ visible, item, adjusting, onClose, on
                 </TouchableOpacity>
                 <TouchableOpacity
                   disabled={adjusting}
-                  className="px-4 rounded-lg items-center justify-center"
+                  className="flex-1 px-2 rounded-lg items-center justify-center"
                   style={{ backgroundColor: colors.danger, opacity: adjusting ? 0.5 : 1 }}
                   onPress={() => {
                     const n = parseNumericInput(qty);
