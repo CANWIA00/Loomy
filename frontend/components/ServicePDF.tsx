@@ -386,6 +386,31 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       line-height: 1.35;
       margin-top: 1px;
     }
+    .used-products-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9px;
+      margin-top: 4px;
+    }
+    .used-products-table th,
+    .used-products-table td {
+      border: 1px solid #222238;
+      padding: 3px 6px;
+      text-align: left;
+    }
+    .used-products-table th {
+      background: #f2f2f2;
+      font-weight: bold;
+      font-size: 8px;
+      text-transform: uppercase;
+    }
+    .used-products-table .num {
+      text-align: right;
+    }
+    .used-products-table .not-in-stock {
+      color: #B45309;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -422,6 +447,45 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
   ${renderChipSections()}
 
   ${renderCustomFields()}
+
+  ${Array.isArray(data.usedProducts) && data.usedProducts.length > 0 ? `
+  <div class="section">
+    <div class="section-title">${t("pdf.usedProducts")}</div>
+    <table class="used-products-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>${t("pdf.usedProduct")}</th>
+          <th class="num">${t("pdf.usedQty")}</th>
+          <th>${t("pdf.usedUnit")}</th>
+          <th class="num">${t("pdf.usedUnitPrice")}</th>
+          <th class="num">${t("pdf.usedAmount")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.usedProducts.map((p: any, i: number) => {
+          const qty = Number(p.quantity) || 0;
+          const price = Number(p.unitPrice) || 0;
+          const amount = qty * price;
+          const inStock = p.inStock !== false;
+          return `<tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(p.name)}${!inStock ? ` <span class="not-in-stock">(${t("pdf.usedNotInStock")})</span>` : ''}</td>
+            <td class="num">${qty}</td>
+            <td>${escapeHtml(p.unit || "")}</td>
+            <td class="num">${price ? price.toFixed(2) : '-'}</td>
+            <td class="num">${amount ? amount.toFixed(2) : '-'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+      <tfoot>
+        <tr style="font-weight:bold">
+          <td colspan="5" style="text-align:right">${t("pdf.usedTotal")}</td>
+          <td class="num">${data.usedProducts.reduce((sum: number, p: any) => sum + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0)), 0).toFixed(2)}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>` : ''}
 
   ${fieldActive("details") ? `
   <div class="section">

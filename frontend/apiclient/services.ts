@@ -1,5 +1,17 @@
 import apiClient from "./client";
 
+export interface UsedProductItem {
+  name: string;
+  quantity: string | number;
+  unit?: string;
+  unitPrice?: string | number | null;
+  currency?: string;
+  stockItemId?: number | null;
+  inStock?: boolean;
+  deducted?: boolean;
+  transactionId?: number | null;
+}
+
 export interface ServiceRecord {
   id: number;
   tarih: string;
@@ -20,6 +32,7 @@ export interface ServiceRecord {
   teknik: string[];
   customChips?: Record<string, string[]>;
   customValues?: Record<string, string>;
+  usedProducts?: UsedProductItem[];
   imzali?: boolean;
   odendi?: boolean;
   signature?: string[];
@@ -52,6 +65,7 @@ interface ServiceRecordBackend {
   paid: boolean;
   signature?: string;
   technicianSignature?: string;
+  usedProducts: string;
   templateName?: string;
   templateConfig?: string;
 }
@@ -84,6 +98,13 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
   if (b.templateConfig) {
     try { templateConfigParsed = JSON.parse(b.templateConfig); } catch {}
   }
+  let usedProductsParsed: UsedProductItem[] | undefined = undefined;
+  if (b.usedProducts) {
+    try {
+      const p = JSON.parse(b.usedProducts);
+      usedProductsParsed = Array.isArray(p) ? p : [];
+    } catch {}
+  }
   return {
     id: b.id,
     tarih: b.documentDate,
@@ -110,6 +131,7 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
     technicianSignature: techSigParsed,
     templateName: b.templateName || undefined,
     templateConfig: templateConfigParsed,
+    usedProducts: usedProductsParsed,
   };
 }
 
@@ -139,6 +161,15 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.technicianSignature !== undefined) data.technicianSignature = JSON.stringify(f.technicianSignature);
   if (f.templateName !== undefined) data.templateName = f.templateName;
   if (f.templateConfig !== undefined) data.templateConfig = f.templateConfig;
+  if (f.usedProducts !== undefined) {
+    data.usedProducts = f.usedProducts.map((p) => ({
+      name: p.name,
+      quantity: Number(p.quantity) || 0,
+      unit: p.unit || undefined,
+      unitPrice: p.unitPrice != null && p.unitPrice !== "" ? Number(p.unitPrice) : null,
+      currency: p.currency || undefined,
+    }));
+  }
   return data;
 }
 

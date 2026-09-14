@@ -10,25 +10,18 @@ import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
 import { Response } from "express";
 
-jest.mock("../prisma", () => ({
-  __esModule: true,
-  default: {
-    serviceRecord: {
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      count: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-      delete: jest.fn(),
-    },
-    financeRecomputeJob: {
-      upsert: jest.fn(),
-      updateMany: jest.fn(),
-      delete: jest.fn(),
-    },
-  },
-}));
+jest.mock("../prisma", () => {
+  const serviceRecord = {
+    findMany: jest.fn(), findFirst: jest.fn(), count: jest.fn(),
+    create: jest.fn(), update: jest.fn(), updateMany: jest.fn(), delete: jest.fn(),
+  };
+  const stockItem = { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() };
+  const stockTransaction = { create: jest.fn(), delete: jest.fn(), deleteMany: jest.fn() };
+  const financeRecomputeJob = { upsert: jest.fn(), updateMany: jest.fn(), delete: jest.fn() };
+  const prismaMock: any = { serviceRecord, stockItem, stockTransaction, financeRecomputeJob };
+  prismaMock.$transaction = jest.fn(async (fn: any) => fn(prismaMock));
+  return { __esModule: true, default: prismaMock };
+});
 
 function mockRes() {
   const res = {} as Response;

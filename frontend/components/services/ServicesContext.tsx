@@ -12,7 +12,7 @@ import { customerApi, Customer } from "../../apiclient/customers";
 import { templateApi, ServiceTemplate } from "../../apiclient/templates";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFocusedPolling } from "../../hooks/useFocusedPolling";
-import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField } from "./types";
+import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField, type UsedProductFormItem } from "./types";
 
 interface DeleteAlertState {
   visible: boolean;
@@ -35,6 +35,9 @@ interface ServicesContextValue {
   updateCustomField: (key: string, value: string) => void;
   toggleChip: (groupKey: string, item: string) => void;
   setGroupValue: (groupKey: string, labels: string[]) => void;
+  addUsedProduct: () => void;
+  updateUsedProduct: (index: number, patch: Partial<UsedProductFormItem>) => void;
+  removeUsedProduct: (index: number) => void;
   isEditing: boolean;
   handleCancelEditing: () => void;
   handleClear: () => void;
@@ -359,6 +362,24 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       return { ...prev, customChips: { ...prev.customChips, [groupKey]: labels } };
     });
 
+  const addUsedProduct = () =>
+    setForm((prev) => ({
+      ...prev,
+      usedProducts: [...prev.usedProducts, { name: "", quantity: "", unitPrice: "", currency: "TRY", unit: "AD" }],
+    }));
+
+  const updateUsedProduct = (index: number, patch: Partial<UsedProductFormItem>) =>
+    setForm((prev) => ({
+      ...prev,
+      usedProducts: prev.usedProducts.map((p, i) => (i === index ? { ...p, ...patch } : p)),
+    }));
+
+  const removeUsedProduct = (index: number) =>
+    setForm((prev) => ({
+      ...prev,
+      usedProducts: prev.usedProducts.filter((_, i) => i !== index),
+    }));
+
   const fieldValueByKey = useCallback((key: string): string => {
     switch (key) {
       case "customerName": return form.customerName;
@@ -412,6 +433,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           teknik: form.technical,
           customChips: form.customChips,
           customValues: form.customValues,
+          usedProducts: form.usedProducts,
           service: form.services.join(", ") || "-",
           templateName: activeTemplate?.name || undefined,
           templateConfig: templateSnapshot(templateConfig),
@@ -467,6 +489,17 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       technical: record.teknik || [],
       customChips: record.customChips || {},
       customValues: { ...(record.customValues || {}) },
+      usedProducts: (record.usedProducts || []).map((p) => ({
+        name: p.name || "",
+        quantity: p.quantity != null ? String(p.quantity) : "",
+        unit: p.unit || "AD",
+        unitPrice: p.unitPrice != null ? String(p.unitPrice) : "",
+        currency: p.currency || "TRY",
+        stockItemId: p.stockItemId ?? null,
+        inStock: p.inStock,
+        deducted: p.deducted,
+        transactionId: p.transactionId ?? null,
+      })),
     };
     if (record.dahiliIp && !editForm.customValues.custom_internalIp) editForm.customValues.custom_internalIp = record.dahiliIp;
     if (record.hariciIp && !editForm.customValues.custom_externalIp) editForm.customValues.custom_externalIp = record.hariciIp;
@@ -513,6 +546,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         teknik: form.technical,
         customChips: form.customChips,
         customValues: form.customValues,
+        usedProducts: form.usedProducts,
         imzali: paths.length > 0,
         signature: paths,
         technicianSignature: technicianSignatureRef.current || null,
@@ -565,6 +599,17 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     externalIp: record.hariciIp,
     customChips: record.customChips || {},
     customValues: record.customValues || {},
+    usedProducts: (record.usedProducts || []).map((p) => ({
+      name: p.name,
+      quantity: p.quantity != null ? String(p.quantity) : "",
+      unit: p.unit,
+      unitPrice: p.unitPrice != null ? String(p.unitPrice) : "",
+      currency: p.currency,
+      stockItemId: p.stockItemId,
+      inStock: p.inStock,
+      deducted: p.deducted,
+      transactionId: p.transactionId,
+    })),
     signature: record.signature || null,
     technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
     companyLogo: companyLogoRef.current,
@@ -752,6 +797,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     updateCustomField,
     toggleChip,
     setGroupValue,
+    addUsedProduct,
+    updateUsedProduct,
+    removeUsedProduct,
     isEditing,
     handleCancelEditing,
     handleClear,

@@ -95,6 +95,7 @@ model ServiceRecord {
   paid         Boolean  @default(false)
   signature    String?
   technicianSignature String?
+  usedProducts String   @default("[]")
   templateName String?
   templateConfig String?
   companyId    String

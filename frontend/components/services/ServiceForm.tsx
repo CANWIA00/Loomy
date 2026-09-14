@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useServices } from "./ServicesContext";
 import { type TemplateField, type TemplateChipGroup, effectiveFields } from "./types";import SvgAwareImage from "../SvgAwareImage";
 import { getCurrentAddress } from "../../utils/location";
+import { stockApi, type StockItem } from "../../apiclient/stock";
 
 const formatDateInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 8);
@@ -626,6 +627,158 @@ function SingleField({ field }: { field: TemplateField }) {
   );
 }
 
+function UsedProductsSection() {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+  const { form, addUsedProduct, updateUsedProduct, removeUsedProduct } = useServices();
+  const [suggestions, setSuggestions] = useState<StockItem[]>([]);
+  const [activeRow, setActiveRow] = useState<number | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const runSearch = useCallback(async (q: string, index: number) => {
+    setActiveRow(index);
+    if (!q.trim()) { setSuggestions([]); return; }
+    try {
+      const res = await stockApi.list(q.trim(), 0, 5);
+      setSuggestions(res.data.content);
+    } catch { setSuggestions([]); }
+  }, []);
+
+  const onNameChange = useCallback((index: number, value: string) => {
+    updateUsedProduct(index, { name: value, stockItemId: null });
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => runSearch(value, index), 400);
+  }, [runSearch, updateUsedProduct]);
+
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  const pick = (index: number, item: StockItem) => {
+    updateUsedProduct(index, {
+      name: item.name,
+      unit: item.unit,
+      unitPrice: item.unitPrice != null ? String(item.unitPrice) : "",
+      currency: item.currency || "TRY",
+      stockItemId: item.id,
+      inStock: true,
+    });
+    setSuggestions([]);
+    setActiveRow(null);
+  };
+
+  const items = form.usedProducts || [];
+  const notInStockCount = items.filter((p) => p.stockItemId == null && p.name.trim()).length;
+
+  return (
+    <View className="mb-3">
+      <View className="flex-row items-center gap-2 mb-2">
+        <Ionicons name="cube-outline" size={16} color={colors.primary} />
+        <Text className="text-sm font-medium" style={{ color: colors.text }}>{t("svc.usedProducts")}</Text>
+        {items.length > 0 && (
+          <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.primary + "1A" }}>
+            <Text className="text-[10px] font-semibold" style={{ color: colors.primary }}>
+              {t("svc.usedProductsCount").replace("{count}", String(items.length))}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {items.map((p, i) => (
+        <View key={i} className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1 }}>
+          <View className="flex-row items-center justify-between mb-1">
+            <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{t("svc.productName")}</Text>
+            <TouchableOpacity onPress={() => removeUsedProduct(i)} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color={colors.danger} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ position: "relative", zIndex: activeRow === i ? 50 : undefined }}>
+            <TextInput
+              className="w-full h-9 border rounded-lg px-3 text-sm"
+              style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+              placeholder={t("svc.productNamePlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              value={p.name}
+              onChangeText={(v) => onNameChange(i, v)}
+              onFocus={() => { setActiveRow(i); if (p.name.trim()) runSearch(p.name, i); }}
+              onBlur={() => setTimeout(() => setSuggestions([]), 150)}
+            />
+            {activeRow === i && suggestions.length > 0 && (
+              <View className="absolute left-0 right-0 mt-1 rounded-lg overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, zIndex: 999 }}>
+                {suggestions.slice(0, 4).map((s, si, arr) => (
+                  <TouchableOpacity key={s.id} className="px-3 py-2" style={si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined} onPress={() => pick(i, s)}>
+                    <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
+                    <Text className="text-[11px]" style={{ color: colors.textMuted }}>{s.unit} · {s.quantity}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <View className="flex-row gap-2 mt-2">
+            <View className="flex-1">
+              <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.qty")}</Text>
+              <TextInput
+                className="w-full h-9 border rounded-lg px-3 text-sm"
+                style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                placeholder="0"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="decimal-pad"
+                value={p.quantity}
+                onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.]/g, "") })}
+              />
+            </View>
+            <View style={{ width: 60 }}>
+              <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.unit")}</Text>
+              <TextInput
+                className="w-full h-9 border rounded-lg px-3 text-sm"
+                style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                placeholder="AD"
+                placeholderTextColor={colors.textMuted}
+                value={p.unit}
+                onChangeText={(v) => updateUsedProduct(i, { unit: v })}
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.price")}</Text>
+              <TextInput
+                className="w-full h-9 border rounded-lg px-3 text-sm"
+                style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                placeholder="0.00"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="decimal-pad"
+                value={p.unitPrice}
+                onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.]/g, "") })}
+              />
+            </View>
+          </View>
+
+          {p.stockItemId != null && p.inStock !== false && (
+            <View className="flex-row items-center gap-1 mt-2">
+              <View className="h-2 w-2 rounded-full" style={{ backgroundColor: "#10B981" }} />
+              <Text className="text-[10px]" style={{ color: "#10B981" }}>{t("svc.inStock")}</Text>
+            </View>
+          )}
+        </View>
+      ))}
+
+      {notInStockCount > 0 && (
+        <Text className="text-xs mb-2" style={{ color: colors.warning }}>
+          {t("svc.notInStockCount").replace("{count}", String(notInStockCount))}
+        </Text>
+      )}
+
+      <TouchableOpacity
+        className="h-9 rounded-lg items-center justify-center flex-row gap-1.5 border"
+        style={{ borderColor: colors.border, backgroundColor: colors.bg }}
+        onPress={addUsedProduct}
+      >
+        <Ionicons name="add" size={16} color={colors.primary} />
+        <Text className="text-xs font-medium" style={{ color: colors.primary }}>{t("svc.addProduct")}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function ServiceForm() {
   const { colors } = useTheme();
   const { t } = useLanguage();
@@ -982,6 +1135,8 @@ export default function ServiceForm() {
         <FieldPairRow fields={[feeField, technicianField].filter((f): f is TemplateField => !!f)} />
 
         {documentDateField && <DocumentDateField field={documentDateField} />}
+
+        <UsedProductsSection />
 
         <View className="flex-row gap-2 mt-1">
           <TouchableOpacity

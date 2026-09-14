@@ -215,9 +215,21 @@ export default function RecordsSection() {
               <Text className="flex-1 text-sm" style={{ color: colors.textSecondary }} numberOfLines={1}>
                 {k.customer}
               </Text>
-              <Text className="flex-1 text-xs" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                {k.service}
-              </Text>
+              <View className="flex-1">
+                <Text className="text-xs" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                  {k.service}
+                </Text>
+                {k.usedProducts && k.usedProducts.length > 0 && (
+                  <Text className="text-[10px] mt-0.5" numberOfLines={1} style={{ color: colors.teal }}>
+                    {k.usedProducts.map((p) => `${p.name} x${p.quantity}`).join(", ")}
+                  </Text>
+                )}
+                {k.usedProducts && k.usedProducts.some((p) => p.inStock === false) && (
+                  <Text className="text-[9px] mt-0.5" style={{ color: colors.warning }}>
+                    {t("svc.notInStockCount").replace("{count}", String(k.usedProducts.filter((p) => p.inStock === false).length))}
+                  </Text>
+                )}
+              </View>
               <View className="w-32 pr-2">
                 <View
                   className="self-start px-1.5 py-0.5 rounded-md"

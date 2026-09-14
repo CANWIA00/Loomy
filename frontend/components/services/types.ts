@@ -1,3 +1,15 @@
+export interface UsedProductFormItem {
+  name: string;
+  quantity: string;
+  unit?: string;
+  unitPrice?: string;
+  currency?: string;
+  stockItemId?: number | null;
+  inStock?: boolean;
+  deducted?: boolean;
+  transactionId?: number | null;
+}
+
 export interface ServiceFormData {
   customerName: string;
   serviceAddress: string;
@@ -15,6 +27,7 @@ export interface ServiceFormData {
   technical: string[];
   customChips: Record<string, string[]>;
   customValues: Record<string, string>;
+  usedProducts: UsedProductFormItem[];
 }
 
 export const initialForm: ServiceFormData = {
@@ -34,6 +47,7 @@ export const initialForm: ServiceFormData = {
   technical: [],
   customChips: {},
   customValues: {},
+  usedProducts: [],
 };
 
 export interface NewCustomerFormData {
@@ -73,6 +87,7 @@ export interface PdfData {
   externalIp?: string;
   customChips?: Record<string, string[]>;
   customValues?: Record<string, string>;
+  usedProducts?: UsedProductFormItem[];
   signature: any;
   technicianSignature: any;
   companyLogo: string | null;

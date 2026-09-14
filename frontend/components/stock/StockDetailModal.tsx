@@ -20,6 +20,7 @@ interface Props {
 function reasonLabel(reason: string, t: (key: string, params?: any) => string): string {
   if (reason === "INITIAL") return t("stock.reasonInitial");
   if (reason === "INVOICE") return t("stock.reasonInvoice");
+  if (reason === "SERVICE") return t("stock.reasonService");
   return t("stock.reasonManual");
 }
 
