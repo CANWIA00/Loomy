@@ -34,6 +34,9 @@ export default function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
           <TouchableOpacity onPress={() => router.push("/profil")}>
             <Ionicons name="person-circle-outline" size={28} color={colors.primary} />
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/settings")}>
+            <Ionicons name="settings-outline" size={22} color={colors.primary} />
+          </TouchableOpacity>
         </View>
       </View>
       {subtitle ? (
