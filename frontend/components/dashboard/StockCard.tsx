@@ -236,22 +236,6 @@ export default function StockCard() {
                   {formatQty(item.quantity)} {item.unit}
                 </Text>
               </View>
-              <View className="flex-row gap-1.5">
-                <TouchableOpacity
-                  className="w-8 h-8 rounded-lg items-center justify-center"
-                  style={{ backgroundColor: colors.success + "22" }}
-                  onPress={() => openDetail(item)}
-                >
-                  <Ionicons name="add" size={16} color={colors.success} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="w-8 h-8 rounded-lg items-center justify-center"
-                  style={{ backgroundColor: colors.danger + "22" }}
-                  onPress={() => openDetail(item)}
-                >
-                  <Ionicons name="remove" size={16} color={colors.danger} />
-                </TouchableOpacity>
-              </View>
             </TouchableOpacity>
           ))}
         </View>
