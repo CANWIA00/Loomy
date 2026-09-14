@@ -5,13 +5,13 @@ import {
   updateQuoteRecord,
   deleteQuoteRecord,
 } from "../controllers/quoteController";
-import { authenticate, isAdmin } from "../middleware/auth";
+import { authenticate, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, isAdmin, getQuoteRecords);
-router.post("/", authenticate, isAdmin, createQuoteRecord);
-router.put("/:id", authenticate, isAdmin, updateQuoteRecord);
-router.delete("/:id", authenticate, isAdmin, deleteQuoteRecord);
+router.get("/", authenticate, requirePanelAccess("quotes"), getQuoteRecords);
+router.post("/", authenticate, requirePanelAccess("quotes"), createQuoteRecord);
+router.put("/:id", authenticate, requirePanelAccess("quotes"), updateQuoteRecord);
+router.delete("/:id", authenticate, requirePanelAccess("quotes"), deleteQuoteRecord);
 
 export default router;

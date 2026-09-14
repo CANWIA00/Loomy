@@ -1,32 +1,44 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
 
-const allTabs: Record<string, { titleKey: string; icon: string; adminOnly?: boolean }> = {
+const DEFAULT_USER_PANELS = ["services", "customers", "schedule"];
+
+const allTabs: Record<string, { titleKey: string; icon: string; panel?: string }> = {
   dashboard: { titleKey: "tab.home", icon: "home" },
-  stock: { titleKey: "tab.stock", icon: "cube", adminOnly: true },
-  services: { titleKey: "tab.services", icon: "construct" },
-  quotes: { titleKey: "tab.quotes", icon: "document-text", adminOnly: true },
-  customers: { titleKey: "tab.customers", icon: "people" },
-  schedule: { titleKey: "tab.schedule", icon: "calendar" },
-  finans: { titleKey: "tab.finans", icon: "stats-chart", adminOnly: true },
+  stock: { titleKey: "tab.stock", icon: "cube", panel: "stock" },
+  services: { titleKey: "tab.services", icon: "construct", panel: "services" },
+  quotes: { titleKey: "tab.quotes", icon: "document-text", panel: "quotes" },
+  customers: { titleKey: "tab.customers", icon: "people", panel: "customers" },
+  schedule: { titleKey: "tab.schedule", icon: "calendar", panel: "schedule" },
+  finans: { titleKey: "tab.finans", icon: "stats-chart", panel: "finans" },
   settings: { titleKey: "tab.settings", icon: "settings" },
 };
+
+function canAccessTab(
+  user: { role?: string; panelAccess?: string[] | null } | null,
+  name: string
+): boolean {
+  const tab = allTabs[name];
+  if (!tab) return true;
+  if (!tab.panel) return true;
+  if (user?.role === "ADMIN") return true;
+  const access = user?.panelAccess;
+  if (Array.isArray(access)) return access.includes(tab.panel);
+  return DEFAULT_USER_PANELS.includes(tab.panel);
+}
 
 function CustomTabBar({ state, navigation }: any) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
 
   const visibleRoutes = state.routes.filter((r: any) => {
     if (["profil", "settings", "_sitemap", "+not-found"].includes(r.name)) return false;
-    const tab = allTabs[r.name];
-    if (tab?.adminOnly && !isAdmin) return false;
-    return true;
+    return canAccessTab(user, r.name);
   });
 
   return (
@@ -62,7 +74,6 @@ function CustomTabBar({ state, navigation }: any) {
 
 export default function TabLayout() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
 
   return (
     <Tabs
@@ -75,7 +86,7 @@ export default function TabLayout() {
           name={name}
           options={{
             title: tab.titleKey,
-            href: tab.adminOnly && !isAdmin ? null : undefined,
+            href: canAccessTab(user, name) ? undefined : null,
           }}
         />
       ))}

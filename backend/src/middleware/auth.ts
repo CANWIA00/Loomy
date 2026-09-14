@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../services/jwt";
 import prisma from "../prisma";
+import { parsePanelAccess } from "../utils/panelAccess";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -8,6 +9,7 @@ export interface AuthRequest extends Request {
     email: string;
     role: string;
     companyId?: string;
+    panelAccess?: string[];
   };
 }
 
@@ -35,6 +37,7 @@ export async function authenticate(
         role: true,
         isActive: true,
         companyId: true,
+        panelAccess: true,
         company: { select: { isFrozen: true } },
       },
     });
@@ -58,7 +61,13 @@ export async function authenticate(
       return;
     }
 
-    req.user = { id: user.id, email: user.email, role: user.role, companyId: user.companyId || undefined };
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      companyId: user.companyId || undefined,
+      panelAccess: parsePanelAccess(user.panelAccess),
+    };
     next();
   } catch (error) {
     res.status(401).json({ message: "Geçersiz veya süresi dolmuş token." });
@@ -75,4 +84,22 @@ export function isAdmin(
     return;
   }
   next();
+}
+
+export function requirePanelAccess(panel: string) {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ message: "Yetkilendirme hatası. Token bulunamadı." });
+      return;
+    }
+    if (req.user.role === "ADMIN") {
+      next();
+      return;
+    }
+    if (req.user.panelAccess?.includes(panel)) {
+      next();
+      return;
+    }
+    res.status(403).json({ message: "Bu sayfaya erişim yetkiniz yok." });
+  };
 }

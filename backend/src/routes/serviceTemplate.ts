@@ -6,11 +6,11 @@ import {
   setDefaultServiceTemplate,
   deleteServiceTemplate,
 } from "../controllers/serviceTemplateController";
-import { authenticate, isAdmin } from "../middleware/auth";
+import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, listServiceTemplates);
+router.get("/", authenticate, requirePanelAccess("services"), listServiceTemplates);
 router.post("/", authenticate, isAdmin, createServiceTemplate);
 router.post("/:id/set-default", authenticate, isAdmin, setDefaultServiceTemplate);
 router.put("/:id", authenticate, isAdmin, updateServiceTemplate);

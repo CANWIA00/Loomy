@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { getPayments, getPaymentSummary, updatePaymentStatus } from "../controllers/paymentController";
-import { authenticate } from "../middleware/auth";
+import { authenticate, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, getPayments);
-router.get("/summary", authenticate, getPaymentSummary);
-router.put("/:id/status", authenticate, updatePaymentStatus);
+router.use(authenticate, requirePanelAccess("finans"));
+
+router.get("/", getPayments);
+router.get("/summary", getPaymentSummary);
+router.put("/:id/status", updatePaymentStatus);
 
 export default router;

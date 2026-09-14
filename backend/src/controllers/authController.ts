@@ -5,6 +5,7 @@ import { generateToken } from "../services/jwt";
 import { AuthRequest } from "../middleware/auth";
 import { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from "../services/email";
 import { attemptKey, isBlocked, recordFailure, clearAttempts } from "../utils/rateLimit";
+import { parsePanelAccess } from "../utils/panelAccess";
 
 export const PRIVACY_POLICY_VERSION = "1.0";
 
@@ -201,6 +202,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
         token,
         role: user.role,
         profileCompleted: user.company?.profileCompleted ?? false,
+        panelAccess: parsePanelAccess(user.panelAccess),
       });
       return;
     }
@@ -240,6 +242,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       token,
       role: user.role,
       profileCompleted: user.company?.profileCompleted ?? false,
+      panelAccess: parsePanelAccess(user.panelAccess),
     });
   } catch (error: any) {
     console.error("Verify email error:", error);
@@ -363,6 +366,7 @@ export async function login(req: Request, res: Response): Promise<void> {
       token,
       role: user.role,
       profileCompleted: user.company?.profileCompleted ?? false,
+      panelAccess: parsePanelAccess(user.panelAccess),
     });
   } catch (error: any) {
     console.error("Login error:", error);
@@ -385,6 +389,7 @@ export async function validate(req: AuthRequest, res: Response): Promise<void> {
         phone: true,
         role: true,
         companyId: true,
+        panelAccess: true,
       },
     });
 
@@ -393,7 +398,7 @@ export async function validate(req: AuthRequest, res: Response): Promise<void> {
       return;
     }
 
-    res.json(user);
+    res.json({ ...user, panelAccess: parsePanelAccess(user.panelAccess) });
   } catch (error: any) {
     console.error("Validate error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });

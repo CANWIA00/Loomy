@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { getFinanceOverview, getFinanceTimeline } from "../controllers/financeController";
-import { authenticate, isAdmin } from "../middleware/auth";
+import { authenticate, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.use(authenticate, isAdmin);
+router.use(authenticate, requirePanelAccess("finans"));
 
 router.get("/overview", getFinanceOverview);
 router.get("/timeline", getFinanceTimeline);

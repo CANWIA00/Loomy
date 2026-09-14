@@ -10,11 +10,11 @@ import {
   importInvoiceXml,
   deleteInvoice,
 } from "../controllers/stockController";
-import { authenticate, isAdmin } from "../middleware/auth";
+import { authenticate, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.use(authenticate, isAdmin);
+router.use(authenticate, requirePanelAccess("stock"));
 
 router.get("/invoices", listInvoices);
 router.post("/import-xml", importInvoiceXml);

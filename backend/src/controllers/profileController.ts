@@ -1,6 +1,7 @@
 import { Response } from "express";
 import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
+import { parsePanelAccess } from "../utils/panelAccess";
 import { Jimp } from "jimp";
 import ImageTracer from "imagetracerjs";
 
@@ -76,6 +77,7 @@ export async function getProfile(
         role: true,
         companyId: true,
         signature: true,
+        panelAccess: true,
         company: {
           select: {
             id: true,
@@ -110,7 +112,7 @@ export async function getProfile(
         }
       : null;
 
-    res.json({ user, company });
+    res.json({ user: { ...user, panelAccess: parsePanelAccess(user.panelAccess) }, company });
   } catch (error: any) {
     console.error("GetProfile error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });

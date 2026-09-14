@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: email,
       role: (data.role as "ADMIN" | "USER") || "USER",
       profileCompleted: data.profileCompleted ?? false,
+      panelAccess: data.panelAccess ?? null,
     };
 
     try {

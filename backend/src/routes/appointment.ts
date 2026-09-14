@@ -5,11 +5,11 @@ import {
   updateAppointment,
   deleteAppointment,
 } from "../controllers/appointmentController";
-import { authenticate, isAdmin } from "../middleware/auth";
+import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, getAppointments);
+router.get("/", authenticate, requirePanelAccess("schedule"), getAppointments);
 router.post("/", authenticate, isAdmin, createAppointment);
 router.put("/:id", authenticate, isAdmin, updateAppointment);
 router.delete("/:id", authenticate, isAdmin, deleteAppointment);

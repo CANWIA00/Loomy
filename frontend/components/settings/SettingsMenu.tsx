@@ -20,6 +20,9 @@ export default function SettingsMenu({ onPrivacyPress, onDataRightsPress, onData
 
   const items: { icon: any; label: string; right?: string }[] = [
     { icon: "person", label: t("set.profileInfo") },
+    ...(isAdmin
+      ? [{ icon: "business" as any, label: t("cmp.menuLabel") }]
+      : []),
     {
       icon: "globe",
       label: t("set.language"),
@@ -41,6 +44,7 @@ export default function SettingsMenu({ onPrivacyPress, onDataRightsPress, onData
 
   const handlePress = (label: string) => {
     if (label === t("set.profileInfo")) router.push("/(tabs)/profil");
+    if (label === t("cmp.menuLabel")) router.push("/company");
     if (label === t("set.language")) setLanguage(lang === "tr" ? "en" : "tr");
     if (label === t("tpl.menuLabel")) router.push("/templates");
     if (label === t("set.privacy")) onPrivacyPress();

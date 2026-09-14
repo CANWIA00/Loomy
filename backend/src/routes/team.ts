@@ -8,12 +8,12 @@ import {
   addTeamMember,
   removeTeamMembers,
 } from "../controllers/teamController";
-import { authenticate, isAdmin } from "../middleware/auth";
+import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/company-users", authenticate, getCompanyUsers);
-router.get("/", authenticate, getTeams);
+router.get("/company-users", authenticate, requirePanelAccess("schedule"), getCompanyUsers);
+router.get("/", authenticate, requirePanelAccess("schedule"), getTeams);
 router.post("/", authenticate, isAdmin, createTeam);
 router.patch("/:id", authenticate, isAdmin, updateTeam);
 router.post("/:id/members", authenticate, isAdmin, addTeamMember);

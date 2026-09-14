@@ -4,6 +4,7 @@ export interface LoginResponse {
   token: string;
   role: string;
   profileCompleted: boolean;
+  panelAccess?: string[] | null;
 }
 
 export interface RegisterResponse {
@@ -20,6 +21,7 @@ export interface User {
   phone?: string;
   profileCompleted?: boolean;
   signature?: string | null;
+  panelAccess?: string[] | null;
 }
 
 export interface RegisterData {
