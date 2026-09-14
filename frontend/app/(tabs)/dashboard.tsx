@@ -16,8 +16,8 @@ import PlanDetailModal from "../../components/dashboard/modals/PlanDetailModal";
 
 function DashboardScreenInner() {
   const router = useRouter();
-  const { colors, toggleTheme, isDark } = useTheme();
-  const { t, lang, setLanguage } = useLanguage();
+  const { colors } = useTheme();
+  const { t } = useLanguage();
   const { isAdmin, toggleAlert, setToggleAlert, togglePaid } = useDashboard();
 
   return (
@@ -29,12 +29,6 @@ function DashboardScreenInner() {
             {t("dash.welcome")}
           </Text>
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={() => setLanguage(lang === "tr" ? "en" : "tr")} style={{ backgroundColor: colors.bgCard2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
-              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{lang === "tr" ? "EN" : "TR"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleTheme}>
-              <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={22} color={colors.primary} />
-            </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("/profil" as any)}>
               <Ionicons name="person-circle-outline" size={28} color={colors.primary} />
             </TouchableOpacity>

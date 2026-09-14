@@ -2,7 +2,6 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../contexts/ThemeContext";
-import { useLanguage } from "../contexts/LanguageContext";
 
 interface ScreenHeaderProps {
   title: string;
@@ -10,8 +9,7 @@ interface ScreenHeaderProps {
 }
 
 export default function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
-  const { colors, isDark, toggleTheme } = useTheme();
-  const { lang, setLanguage } = useLanguage();
+  const { colors } = useTheme();
 
   return (
     <View className="mb-5">
@@ -25,13 +23,7 @@ export default function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
           </Text>
         </View>
         <View className="flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => setLanguage(lang === "tr" ? "en" : "tr")} style={{ backgroundColor: colors.bgCard2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
-            <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{lang === "tr" ? "EN" : "TR"}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={toggleTheme}>
-            <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={22} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/profil")}>
+          <TouchableOpacity onPress={() => router.push("/(tabs)/profil")}>
             <Ionicons name="person-circle-outline" size={28} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push("/settings")}>

@@ -15,6 +15,7 @@ export default function SettingsMenu({ onPrivacyPress, onDataRightsPress, onData
   const { colors } = useTheme();
   const { lang, t, setLanguage } = useLanguage();
   const { user } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   const isAdmin = user?.role === "ADMIN";
 
@@ -27,6 +28,11 @@ export default function SettingsMenu({ onPrivacyPress, onDataRightsPress, onData
       icon: "globe",
       label: t("set.language"),
       right: lang === "tr" ? t("set.turkish") : t("set.english"),
+    },
+    {
+      icon: isDark ? "moon" : "sunny",
+      label: t("set.theme"),
+      right: isDark ? t("set.dark") : t("set.light"),
     },
     ...(isAdmin
       ? [{ icon: "construct" as any, label: t("tpl.menuLabel"), right: t("tpl.menuRight") }]
@@ -46,6 +52,7 @@ export default function SettingsMenu({ onPrivacyPress, onDataRightsPress, onData
     if (label === t("set.profileInfo")) router.push("/(tabs)/profil");
     if (label === t("cmp.menuLabel")) router.push("/company");
     if (label === t("set.language")) setLanguage(lang === "tr" ? "en" : "tr");
+    if (label === t("set.theme")) toggleTheme();
     if (label === t("tpl.menuLabel")) router.push("/templates");
     if (label === t("set.privacy")) onPrivacyPress();
     if (label === t("set.dataRights")) onDataRightsPress();
