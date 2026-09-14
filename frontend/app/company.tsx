@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
-import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -8,6 +7,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { companyApi, type CompanyManagement, type PanelKey } from "../apiclient/company";
 import type { PanelAccessLevel, PanelAccessMap } from "../apiclient/auth";
 import ScreenHeader from "../components/ScreenHeader";
+import { ProfilProvider } from "../components/profil/ProfilContext";
+import CompanyCard from "../components/profil/CompanyCard";
 
 const PANEL_META: Record<PanelKey, { titleKey: string; icon: any; color: string }> = {
   services: { titleKey: "tab.services", icon: "construct", color: "#3B82F6" },
@@ -40,8 +41,7 @@ export default function CompanyScreen() {
   const [drafts, setDrafts] = useState<Record<string, PanelAccessMap>>({});
   const [bulkLevels, setBulkLevels] = useState<PanelAccessMap>({});
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -53,8 +53,6 @@ export default function CompanyScreen() {
         setData(res.data);
         setDrafts({});
         setError(null);
-        const firstUser = res.data.users.find((u) => u.role === "USER");
-        setExpandedId(firstUser?.id ?? null);
       } catch {
         if (cancelled) return;
         setError(t("cmp.errorLoad"));
@@ -108,13 +106,6 @@ export default function CompanyScreen() {
   );
 
   const bulkCount = Object.keys(bulkLevels).length;
-
-  const copyCode = async () => {
-    if (!data?.company.invitationCode) return;
-    await Clipboard.setStringAsync(data.company.invitationCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
 
   const applyToAll = async () => {
     if (saving || bulkCount === 0) return;
@@ -183,6 +174,7 @@ export default function CompanyScreen() {
   }
 
   const employees = data?.users ?? [];
+  const allExpanded = employees.length > 0 && employees.every((m) => expandedMap[m.id] === true);
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.bg }}>
@@ -227,7 +219,9 @@ export default function CompanyScreen() {
             </View>
           ) : (
             <>
-              <HeroCard company={data.company} copied={copied} onCopy={copyCode} />
+              <ProfilProvider>
+                <CompanyCard />
+              </ProfilProvider>
 
               <View
                 className="flex-row items-start gap-2.5 p-3 rounded-xl mb-4"
@@ -242,17 +236,38 @@ export default function CompanyScreen() {
               </View>
 
               <View className="flex-row items-center justify-between mb-3">
-                <Text style={{ color: colors.text }} className="text-lg font-bold">
-                  {t("cmp.employees")}
-                </Text>
-                <View
-                  style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt, borderWidth: 1 }}
-                  className="px-2.5 py-1 rounded-full"
-                >
-                  <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>
-                    {t("cmp.employeeCount", { count: String(employees.length) })}
+                <View className="flex-row items-center gap-2">
+                  <Text style={{ color: colors.text }} className="text-lg font-bold">
+                    {t("cmp.employees")}
                   </Text>
+                  <View
+                    style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt, borderWidth: 1 }}
+                    className="px-2.5 py-1 rounded-full"
+                  >
+                    <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>
+                      {t("cmp.employeeCount", { count: String(employees.length) })}
+                    </Text>
+                  </View>
                 </View>
+                {employees.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      setExpandedMap(
+                        allExpanded ? {} : Object.fromEntries(employees.map((m) => [m.id, true]))
+                      )
+                    }
+                    className="flex-row items-center gap-1"
+                  >
+                    <Ionicons
+                      name={allExpanded ? "contract-outline" : "expand-outline"}
+                      size={16}
+                      color={colors.primary}
+                    />
+                    <Text className="text-xs font-semibold" style={{ color: colors.primary }}>
+                      {allExpanded ? t("cmp.collapseAll") : t("cmp.expandAll")}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {employees.length === 0 && (
@@ -269,7 +284,7 @@ export default function CompanyScreen() {
                 const isEmployee = member.role === "USER";
                 const current = draftOf(member.id);
                 const changed = isEmployee && JSON.stringify(originalAccess[member.id] ?? {}) !== JSON.stringify(current);
-                const expanded = expandedId === member.id;
+                const expanded = expandedMap[member.id] === true;
                 const activePanels = ORDER.filter((p) => current[p]);
 
                 return (
@@ -283,7 +298,7 @@ export default function CompanyScreen() {
                     }}
                   >
                     <TouchableOpacity
-                      onPress={() => setExpandedId(expanded ? null : member.id)}
+                      onPress={() => setExpandedMap((prev) => ({ ...prev, [member.id]: !prev[member.id] }))}
                       activeOpacity={0.7}
                       className="flex-row items-center"
                     >
@@ -471,73 +486,6 @@ export default function CompanyScreen() {
           </TouchableOpacity>
         </View>
       )}
-    </View>
-  );
-}
-
-function HeroCard({
-  company,
-  copied,
-  onCopy,
-}: {
-  company: { name: string; invitationCode: string; userCount: number };
-  copied: boolean;
-  onCopy: () => void;
-}) {
-  const { colors } = useTheme();
-  const { t } = useLanguage();
-
-  return (
-    <View
-      className="p-5 rounded-2xl mb-3"
-      style={{
-        backgroundColor: colors.bgCard2,
-        borderColor: colors.borderAlt,
-        borderWidth: 1,
-      }}
-    >
-      <View className="flex-row items-center mb-4">
-        <View
-          className="w-12 h-12 rounded-2xl items-center justify-center"
-          style={{ backgroundColor: colors.primary + "22" }}
-        >
-          <Ionicons name="business" size={24} color={colors.primary} />
-        </View>
-        <View className="flex-1 ml-3">
-          <Text style={{ color: colors.text }} className="text-lg font-bold">
-            {company.name}
-          </Text>
-          <Text style={{ color: colors.textMuted }} className="text-sm">
-            {t("cmp.employeeCount", { count: String(company.userCount) })}
-          </Text>
-        </View>
-      </View>
-
-      <View
-        className="flex-row items-center gap-2 px-3 py-2.5 rounded-xl"
-        style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}
-      >
-        <View className="flex-1">
-          <Text className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: colors.textMuted }}>
-            {t("cmp.inviteCode")}
-          </Text>
-          <Text style={{ color: colors.text }} className="text-sm font-semibold tracking-widest mt-0.5">
-            {company.invitationCode}
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={onCopy}
-          className="h-9 px-3 rounded-lg flex-row items-center gap-1.5"
-          style={{
-            backgroundColor: copied ? colors.success : colors.primary,
-          }}
-        >
-          <Ionicons name={copied ? "checkmark" : "copy-outline"} size={15} color="white" />
-          <Text className="text-xs font-semibold text-white">
-            {copied ? t("cmp.copied") : t("cmp.copy")}
-          </Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }

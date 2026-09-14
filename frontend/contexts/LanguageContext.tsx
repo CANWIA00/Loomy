@@ -1113,6 +1113,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "cmp.noAccessSet": "Erişim tanımlanmamış",
     "cmp.saveBar": "Değişiklikleri kaydet ({count})",
     "cmp.legend": "Her panel için erişim seviyesini seçin. Görebilir: bilgileri görüntüler. Yönetebilir: ekleyip düzenleyebilir. Admin tüm panelleri yönetebilir.",
+    "cmp.expandAll": "Tümünü Aç",
+    "cmp.collapseAll": "Tümünü Kapat",
   },
 
   en: {
@@ -2224,6 +2226,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "cmp.noAccessSet": "No access set",
     "cmp.saveBar": "Save changes ({count})",
     "cmp.legend": "Pick an access level for each panel. View: can see the data. Manage: can add and edit. Admin manages all panels.",
+    "cmp.expandAll": "Expand All",
+    "cmp.collapseAll": "Collapse All",
   },
 };
 
