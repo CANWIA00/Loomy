@@ -4,8 +4,13 @@ import { View, Text, Pressable } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
+import type { PanelAccessMap } from "../../apiclient/auth";
 
-const DEFAULT_USER_PANELS = ["services", "customers", "schedule"];
+const DEFAULT_USER_PANELS: PanelAccessMap = {
+  services: "manage",
+  customers: "manage",
+  schedule: "manage",
+};
 
 const allTabs: Record<string, { titleKey: string; icon: string; panel?: string }> = {
   dashboard: { titleKey: "tab.home", icon: "home" },
@@ -19,7 +24,7 @@ const allTabs: Record<string, { titleKey: string; icon: string; panel?: string }
 };
 
 function canAccessTab(
-  user: { role?: string; panelAccess?: string[] | null } | null,
+  user: { role?: string; panelAccess?: PanelAccessMap | null } | null,
   name: string
 ): boolean {
   const tab = allTabs[name];
@@ -27,8 +32,8 @@ function canAccessTab(
   if (!tab.panel) return true;
   if (user?.role === "ADMIN") return true;
   const access = user?.panelAccess;
-  if (Array.isArray(access)) return access.includes(tab.panel);
-  return DEFAULT_USER_PANELS.includes(tab.panel);
+  if (access && typeof access === "object") return access[tab.panel as keyof PanelAccessMap] != null;
+  return DEFAULT_USER_PANELS[tab.panel as keyof PanelAccessMap] != null;
 }
 
 function CustomTabBar({ state, navigation }: any) {

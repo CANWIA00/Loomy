@@ -10,7 +10,7 @@ import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, requirePanelAccess("services"), listServiceTemplates);
+router.get("/", authenticate, requirePanelAccess("services", "view"), listServiceTemplates);
 router.post("/", authenticate, isAdmin, createServiceTemplate);
 router.post("/:id/set-default", authenticate, isAdmin, setDefaultServiceTemplate);
 router.put("/:id", authenticate, isAdmin, updateServiceTemplate);

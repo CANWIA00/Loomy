@@ -6,6 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { companyApi, type CompanyManagement, type PanelKey } from "../apiclient/company";
+import type { PanelAccessLevel, PanelAccessMap } from "../apiclient/auth";
 
 const PANELS: { key: PanelKey; titleKey: string }[] = [
   { key: "services", titleKey: "tab.services" },
@@ -15,6 +16,12 @@ const PANELS: { key: PanelKey; titleKey: string }[] = [
   { key: "quotes", titleKey: "tab.quotes" },
   { key: "finans", titleKey: "tab.finans" },
 ];
+
+const DEFAULT_USER_PANELS: PanelAccessMap = {
+  services: "manage",
+  customers: "manage",
+  schedule: "manage",
+};
 
 export default function CompanyScreen() {
   const { colors } = useTheme();
@@ -27,8 +34,8 @@ export default function CompanyScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [drafts, setDrafts] = useState<Record<string, string[]>>({});
-  const [bulkPanels, setBulkPanels] = useState<PanelKey[]>([]);
+  const [drafts, setDrafts] = useState<Record<string, PanelAccessMap>>({});
+  const [bulkLevels, setBulkLevels] = useState<PanelAccessMap>({});
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -54,21 +61,32 @@ export default function CompanyScreen() {
   }, [isAdmin]);
 
   const originalAccess = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    for (const u of data?.users ?? []) map[u.id] = u.panelAccess;
+    const map: Record<string, PanelAccessMap> = {};
+    for (const u of data?.users ?? []) map[u.id] = u.panelAccess ?? DEFAULT_USER_PANELS;
     return map;
   }, [data]);
 
-  const draftOf = (userId: string): string[] => {
+  const draftOf = (userId: string): PanelAccessMap => {
     if (drafts[userId] !== undefined) return drafts[userId];
-    return originalAccess[userId] ?? [];
+    return originalAccess[userId] ?? {};
   };
 
-  const togglePanel = (userId: string, panel: string) => {
+  const setLevel = (userId: string, panel: PanelKey, level: PanelAccessLevel | undefined) => {
     setDrafts((prev) => {
-      const current = prev[userId] !== undefined ? prev[userId] : originalAccess[userId] ?? [];
-      const next = current.includes(panel) ? current.filter((p) => p !== panel) : [...current, panel];
+      const base: PanelAccessMap = prev[userId] ?? originalAccess[userId] ?? {};
+      const next: PanelAccessMap = { ...base };
+      if (level) next[panel] = level;
+      else delete next[panel];
       return { ...prev, [userId]: next };
+    });
+  };
+
+  const setBulkLevel = (panel: PanelKey, level: PanelAccessLevel | undefined) => {
+    setBulkLevels((prev) => {
+      const next: PanelAccessMap = { ...prev };
+      if (level) next[panel] = level;
+      else delete next[panel];
+      return next;
     });
   };
 
@@ -77,12 +95,14 @@ export default function CompanyScreen() {
     setSaving(true);
     setNotice(null);
     try {
-      await companyApi.applyToAll(bulkPanels.map((p) => p as string));
+      await companyApi.applyToAll(bulkLevels);
       setData((prev) =>
         prev
           ? {
               ...prev,
-              users: prev.users.map((u) => (u.role === "USER" ? { ...u, panelAccess: [...bulkPanels] } : u)),
+              users: prev.users.map((u) =>
+                u.role === "USER" ? { ...u, panelAccess: { ...bulkLevels } } : u
+              ),
             }
           : prev
       );
@@ -100,11 +120,7 @@ export default function CompanyScreen() {
     setNotice(null);
     const changed = (data?.users ?? [])
       .filter((u) => u.role === "USER")
-      .filter((u) => {
-        const before = [...(originalAccess[u.id] ?? [])].sort();
-        const after = [...draftOf(u.id)].sort();
-        return before.join(",") !== after.join(",");
-      });
+      .filter((u) => JSON.stringify(originalAccess[u.id] ?? {}) !== JSON.stringify(draftOf(u.id)));
     if (changed.length === 0) {
       setNotice({ type: "success", text: t("cmp.noChanges") });
       setSaving(false);
@@ -237,8 +253,7 @@ export default function CompanyScreen() {
               const isSelf = member.id === user?.id;
               const isEmployee = member.role === "USER";
               const current = draftOf(member.id);
-              const changed =
-                isEmployee && [...(originalAccess[member.id] ?? [])].sort().join(",") !== [...current].sort().join(",");
+              const changed = JSON.stringify(originalAccess[member.id] ?? {}) !== JSON.stringify(current);
 
               return (
                 <View
@@ -288,31 +303,23 @@ export default function CompanyScreen() {
 
                   {isEmployee ? (
                     <>
-                      <View className="flex-row flex-wrap gap-2">
-                        {PANELS.map((panel) => {
-                          const active = current.includes(panel.key);
-                          return (
-                            <TouchableOpacity
-                              key={panel.key}
-                              className="flex-row items-center gap-1.5 px-3 h-9 rounded-lg border"
-                              style={{
-                                backgroundColor: active ? colors.primary : colors.bgCard,
-                                borderColor: active ? colors.primary : colors.border,
-                              }}
-                              onPress={() => togglePanel(member.id, panel.key)}
+                      <View className="gap-1">
+                        {PANELS.map((panel) => (
+                          <View
+                            key={panel.key}
+                            className="flex-col items-stretch py-1.5 border-b"
+                            style={{ borderColor: colors.border }}
+                          >
+                            <Text style={{ color: colors.text }} className="text-sm font-medium mb-1.5">
+                              {t(panel.titleKey)}
+                            </Text>
+                            <LevelChips
+                              value={current[panel.key]}
+                              onChange={(level) => setLevel(member.id, panel.key, level)}
                               disabled={saving}
-                            >
-                              <Ionicons
-                                name={active ? "checkbox" : "square-outline"}
-                                size={14}
-                                color={active ? "white" : colors.textMuted}
-                              />
-                              <Text className="text-sm font-medium" style={{ color: active ? "white" : colors.textSecondary }}>
-                                {t(panel.titleKey)}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
+                            />
+                          </View>
+                        ))}
                       </View>
                       {changed && (
                         <Text style={{ color: colors.warning }} className="text-xs mt-2">
@@ -351,35 +358,23 @@ export default function CompanyScreen() {
               <Text style={{ color: colors.textMuted }} className="text-sm mb-3">
                 {t("cmp.accessHint")}
               </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {PANELS.map((panel) => {
-                  const active = bulkPanels.includes(panel.key);
-                  return (
-                    <TouchableOpacity
-                      key={panel.key}
-                      className="flex-row items-center gap-1.5 px-3 h-9 rounded-lg border"
-                      style={{
-                        backgroundColor: active ? colors.primary : colors.bgCard,
-                        borderColor: active ? colors.primary : colors.border,
-                      }}
-                      onPress={() =>
-                        setBulkPanels((prev) =>
-                          active ? prev.filter((p) => p !== panel.key) : [...prev, panel.key]
-                        )
-                      }
+              <View className="gap-1">
+                {PANELS.map((panel) => (
+                  <View
+                    key={panel.key}
+                    className="flex-col items-stretch py-1.5 border-b"
+                    style={{ borderColor: colors.border }}
+                  >
+                    <Text style={{ color: colors.text }} className="text-sm font-medium mb-1.5">
+                      {t(panel.titleKey)}
+                    </Text>
+                    <LevelChips
+                      value={bulkLevels[panel.key]}
+                      onChange={(level) => setBulkLevel(panel.key, level)}
                       disabled={saving}
-                    >
-                      <Ionicons
-                        name={active ? "checkbox" : "square-outline"}
-                        size={14}
-                        color={active ? "white" : colors.textMuted}
-                      />
-                      <Text className="text-sm font-medium" style={{ color: active ? "white" : colors.textSecondary }}>
-                        {t(panel.titleKey)}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                    />
+                  </View>
+                ))}
               </View>
               <Text style={{ color: colors.textMuted }} className="text-xs mt-3">
                 {t("cmp.adminNote")}
@@ -402,5 +397,50 @@ export default function CompanyScreen() {
         )}
       </View>
     </ScrollView>
+  );
+}
+
+function LevelChips({
+  value,
+  onChange,
+  disabled,
+}: {
+  value?: PanelAccessLevel;
+  onChange: (level: PanelAccessLevel | undefined) => void;
+  disabled?: boolean;
+}) {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+
+  const options: { level: PanelAccessLevel | undefined; key: string }[] = [
+    { level: undefined, key: "cmp.level.none" },
+    { level: "view", key: "cmp.level.view" },
+    { level: "manage", key: "cmp.level.manage" },
+  ];
+
+  return (
+    <View className="flex-row gap-1.5">
+      {options.map((opt) => {
+        const active = value === opt.level;
+        const bg = active ? (opt.level === "manage" ? colors.primary : "#0ea5e9") : colors.bgCard;
+        const border = active ? bg : colors.border;
+        return (
+          <TouchableOpacity
+            key={opt.key}
+            onPress={() => onChange(active ? undefined : opt.level ?? undefined)}
+            disabled={disabled}
+            className="flex-1 h-9 rounded-lg items-center justify-center border"
+            style={{ backgroundColor: bg, borderColor: border, opacity: disabled ? 0.6 : 1 }}
+          >
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: active ? "white" : colors.textSecondary }}
+            >
+              {t(opt.key)}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
 }

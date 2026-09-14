@@ -9,9 +9,9 @@ import { authenticate, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, requirePanelAccess("quotes"), getQuoteRecords);
-router.post("/", authenticate, requirePanelAccess("quotes"), createQuoteRecord);
-router.put("/:id", authenticate, requirePanelAccess("quotes"), updateQuoteRecord);
-router.delete("/:id", authenticate, requirePanelAccess("quotes"), deleteQuoteRecord);
+router.get("/", authenticate, requirePanelAccess("quotes", "view"), getQuoteRecords);
+router.post("/", authenticate, requirePanelAccess("quotes", "manage"), createQuoteRecord);
+router.put("/:id", authenticate, requirePanelAccess("quotes", "manage"), updateQuoteRecord);
+router.delete("/:id", authenticate, requirePanelAccess("quotes", "manage"), deleteQuoteRecord);
 
 export default router;

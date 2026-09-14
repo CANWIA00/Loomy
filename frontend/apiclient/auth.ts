@@ -1,10 +1,14 @@
 import apiClient from "./client";
 
+export type PanelKey = "services" | "customers" | "schedule" | "stock" | "quotes" | "finans";
+export type PanelAccessLevel = "view" | "manage";
+export type PanelAccessMap = Partial<Record<PanelKey, PanelAccessLevel>>;
+
 export interface LoginResponse {
   token: string;
   role: string;
   profileCompleted: boolean;
-  panelAccess?: string[] | null;
+  panelAccess?: PanelAccessMap | null;
 }
 
 export interface RegisterResponse {
@@ -21,7 +25,7 @@ export interface User {
   phone?: string;
   profileCompleted?: boolean;
   signature?: string | null;
-  panelAccess?: string[] | null;
+  panelAccess?: PanelAccessMap | null;
 }
 
 export interface RegisterData {

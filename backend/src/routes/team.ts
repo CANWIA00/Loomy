@@ -12,8 +12,8 @@ import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/company-users", authenticate, requirePanelAccess("schedule"), getCompanyUsers);
-router.get("/", authenticate, requirePanelAccess("schedule"), getTeams);
+router.get("/company-users", authenticate, requirePanelAccess("schedule", "view"), getCompanyUsers);
+router.get("/", authenticate, requirePanelAccess("schedule", "view"), getTeams);
 router.post("/", authenticate, isAdmin, createTeam);
 router.patch("/:id", authenticate, isAdmin, updateTeam);
 router.post("/:id/members", authenticate, isAdmin, addTeamMember);

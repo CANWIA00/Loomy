@@ -14,17 +14,17 @@ import { authenticate, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.use(authenticate, requirePanelAccess("stock"));
+router.use(authenticate);
 
-router.get("/invoices", listInvoices);
-router.post("/import-xml", importInvoiceXml);
-router.delete("/invoices/:id", deleteInvoice);
+router.get("/invoices", requirePanelAccess("stock", "view"), listInvoices);
+router.post("/import-xml", requirePanelAccess("stock", "manage"), importInvoiceXml);
+router.delete("/invoices/:id", requirePanelAccess("stock", "manage"), deleteInvoice);
 
-router.get("/", listStockItems);
-router.post("/", createStockItem);
-router.get("/:id", getStockItem);
-router.put("/:id", updateStockItem);
-router.post("/:id/transactions", addStockTransaction);
-router.delete("/:id", deleteStockItem);
+router.get("/", requirePanelAccess("stock", "view"), listStockItems);
+router.post("/", requirePanelAccess("stock", "manage"), createStockItem);
+router.get("/:id", requirePanelAccess("stock", "view"), getStockItem);
+router.put("/:id", requirePanelAccess("stock", "manage"), updateStockItem);
+router.post("/:id/transactions", requirePanelAccess("stock", "manage"), addStockTransaction);
+router.delete("/:id", requirePanelAccess("stock", "manage"), deleteStockItem);
 
 export default router;

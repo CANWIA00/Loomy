@@ -1,6 +1,7 @@
 import apiClient from "./client";
+import type { PanelAccessMap } from "./auth";
 
-export type PanelKey = "services" | "customers" | "schedule" | "stock" | "quotes" | "finans";
+export type { PanelKey, PanelAccessLevel } from "./auth";
 
 export interface CompanyMember {
   id: string;
@@ -9,7 +10,7 @@ export interface CompanyMember {
   phone: string | null;
   role: "ADMIN" | "USER";
   isActive: boolean;
-  panelAccess: string[];
+  panelAccess: PanelAccessMap;
   createdAt: string;
 }
 
@@ -29,9 +30,9 @@ export const companyApi = {
   get: () =>
     apiClient.get<CompanyManagement>("/company/users"),
 
-  updateUserAccess: (id: string, panelAccess: string[]) =>
-    apiClient.patch<{ id: string; panelAccess: string[] }>(`/company/users/${id}/access`, { panelAccess }),
+  updateUserAccess: (id: string, panelAccess: PanelAccessMap) =>
+    apiClient.patch<{ id: string; panelAccess: PanelAccessMap }>(`/company/users/${id}/access`, { panelAccess }),
 
-  applyToAll: (panelAccess: string[]) =>
-    apiClient.patch<{ updated: number; panelAccess: string[] }>("/company/access", { panelAccess }),
+  applyToAll: (panelAccess: PanelAccessMap) =>
+    apiClient.patch<{ updated: number; panelAccess: PanelAccessMap }>("/company/access", { panelAccess }),
 };

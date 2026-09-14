@@ -11,11 +11,11 @@ import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.post("/count-by-template", authenticate, requirePanelAccess("services"), countServiceRecordsByTemplate);
+router.post("/count-by-template", authenticate, requirePanelAccess("services", "view"), countServiceRecordsByTemplate);
 router.put("/apply-template-config", authenticate, isAdmin, applyTemplateConfigToRecords);
-router.get("/", authenticate, requirePanelAccess("services"), getServiceRecords);
-router.post("/", authenticate, requirePanelAccess("services"), createServiceRecord);
-router.put("/:id", authenticate, requirePanelAccess("services"), updateServiceRecord);
+router.get("/", authenticate, requirePanelAccess("services", "view"), getServiceRecords);
+router.post("/", authenticate, requirePanelAccess("services", "manage"), createServiceRecord);
+router.put("/:id", authenticate, requirePanelAccess("services", "manage"), updateServiceRecord);
 router.delete("/:id", authenticate, isAdmin, deleteServiceRecord);
 
 export default router;

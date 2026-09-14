@@ -9,7 +9,7 @@ import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, requirePanelAccess("schedule"), getAppointments);
+router.get("/", authenticate, requirePanelAccess("schedule", "view"), getAppointments);
 router.post("/", authenticate, isAdmin, createAppointment);
 router.put("/:id", authenticate, isAdmin, updateAppointment);
 router.delete("/:id", authenticate, isAdmin, deleteAppointment);

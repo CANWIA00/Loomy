@@ -1087,7 +1087,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "cmp.subtitle": "Çalışanları ve panel erişimlerini yönetin",
     "cmp.employees": "Çalışanlar",
     "cmp.employeeCount": "{count} çalışan",
-    "cmp.accessHint": "Birden fazla panel seçip tüm çalışanlara uygulayabilirsiniz.",
+    "cmp.accessHint": "Panel başına erişim seviyesi belirleyip tüm çalışanlara uygulayabilirsiniz.",
     "cmp.adminNote": "Admin tüm panellere erişir.",
     "cmp.you": "Sen",
     "cmp.allUsers": "Tüm Çalışanlara Uygula",
@@ -1103,6 +1103,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "cmp.role.admin": "Admin",
     "cmp.role.user": "Çalışan",
     "cmp.empty": "Henüz çalışan eklenmemiş.",
+    "cmp.level.none": "Kapalı",
+    "cmp.level.view": "Görebilir",
+    "cmp.level.manage": "Yönetebilir",
   },
 
   en: {
@@ -2204,6 +2207,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "cmp.role.admin": "Admin",
     "cmp.role.user": "Employee",
     "cmp.empty": "No employees yet.",
+    "cmp.level.none": "Off",
+    "cmp.level.view": "View",
+    "cmp.level.manage": "Manage",
   },
 };
 

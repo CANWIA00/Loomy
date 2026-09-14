@@ -62,7 +62,7 @@ describe("company controller", () => {
       });
       (prisma.user.findMany as jest.Mock).mockResolvedValue([
         { id: "u1", name: "Ali", email: "ali@x.com", phone: "0555", role: "ADMIN", isActive: true, panelAccess: null, createdAt: new Date().toISOString() },
-        { id: "u2", name: "Veli", email: "veli@x.com", phone: "0556", role: "USER", isActive: true, panelAccess: JSON.stringify(["services", "customers"]), createdAt: new Date().toISOString() },
+        { id: "u2", name: "Veli", email: "veli@x.com", phone: "0556", role: "USER", isActive: true, panelAccess: JSON.stringify({ services: "manage", customers: "view" }), createdAt: new Date().toISOString() },
       ]);
 
       const res = mockRes();
@@ -75,8 +75,8 @@ describe("company controller", () => {
         expect.objectContaining({
           company: expect.objectContaining({ name: "Test Co", userCount: 2 }),
           users: expect.arrayContaining([
-            expect.objectContaining({ id: "u1", panelAccess: [] }),
-            expect.objectContaining({ id: "u2", panelAccess: ["services", "customers"] }),
+            expect.objectContaining({ id: "u1", panelAccess: {} }),
+            expect.objectContaining({ id: "u2", panelAccess: { services: "manage", customers: "view" } }),
           ]),
         })
       );
@@ -97,13 +97,13 @@ describe("company controller", () => {
       (prisma.user.findFirst as jest.Mock).mockResolvedValue({ id: "u2", role: "USER" });
       (prisma.user.update as jest.Mock).mockResolvedValue({
         id: "u2",
-        panelAccess: JSON.stringify(["services", "stock"]),
+        panelAccess: JSON.stringify({ services: "manage", stock: "view" }),
       });
 
       const req = mockReq({
         user: { id: "admin-1", email: "boss@loomy.com", role: "ADMIN", companyId: "company-1" },
         params: { id: "u2" },
-        body: { panelAccess: ["services", "stock", "unknown", "services"] },
+        body: { panelAccess: { services: "manage", stock: "view", unknown: "garbage" } },
       });
 
       const res = mockRes();
@@ -111,10 +111,10 @@ describe("company controller", () => {
 
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: "u2" },
-        data: { panelAccess: JSON.stringify(["services", "stock"]) },
+        data: { panelAccess: JSON.stringify({ services: "manage", stock: "view" }) },
         select: { id: true, panelAccess: true },
       });
-      expect(res.json).toHaveBeenCalledWith({ id: "u2", panelAccess: ["services", "stock"] });
+      expect(res.json).toHaveBeenCalledWith({ id: "u2", panelAccess: { services: "manage", stock: "view" } });
     });
 
     it("rejects editing an ADMIN", async () => {
@@ -123,7 +123,7 @@ describe("company controller", () => {
       const req = mockReq({
         user: { id: "admin-1", email: "boss@loomy.com", role: "ADMIN", companyId: "company-1" },
         params: { id: "admin-1" },
-        body: { panelAccess: [] },
+        body: { panelAccess: {} },
       });
 
       const res = mockRes();
@@ -139,7 +139,7 @@ describe("company controller", () => {
       const req = mockReq({
         user: { id: "admin-1", email: "boss@loomy.com", role: "ADMIN", companyId: "company-1" },
         params: { id: "u99" },
-        body: { panelAccess: ["services"] },
+        body: { panelAccess: { services: "view" } },
       });
 
       const res = mockRes();
@@ -155,7 +155,7 @@ describe("company controller", () => {
 
       const req = mockReq({
         user: { id: "admin-1", email: "boss@loomy.com", role: "ADMIN", companyId: "company-1" },
-        body: { panelAccess: ["quotes", "stock", "nonsense"] },
+        body: { panelAccess: { quotes: "view", stock: "manage", nonsense: "bad" } },
       });
 
       const res = mockRes();
@@ -163,9 +163,9 @@ describe("company controller", () => {
 
       expect(prisma.user.updateMany).toHaveBeenCalledWith({
         where: { companyId: "company-1", role: "USER" },
-        data: { panelAccess: JSON.stringify(["quotes", "stock"]) },
+        data: { panelAccess: JSON.stringify({ quotes: "view", stock: "manage" }) },
       });
-      expect(res.json).toHaveBeenCalledWith({ updated: 3, panelAccess: ["quotes", "stock"] });
+      expect(res.json).toHaveBeenCalledWith({ updated: 3, panelAccess: { quotes: "view", stock: "manage" } });
     });
   });
 });

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../services/jwt";
 import prisma from "../prisma";
-import { parsePanelAccess } from "../utils/panelAccess";
+import { parsePanelAccess, DEFAULT_USER_ACCESS, type PanelAccessMap, type PanelAccessLevel, hasAccess } from "../utils/panelAccess";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -9,7 +9,7 @@ export interface AuthRequest extends Request {
     email: string;
     role: string;
     companyId?: string;
-    panelAccess?: string[];
+    panelAccess?: PanelAccessMap;
   };
 }
 
@@ -86,7 +86,7 @@ export function isAdmin(
   next();
 }
 
-export function requirePanelAccess(panel: string) {
+export function requirePanelAccess(panel: string, minimumMode: PanelAccessLevel = "view") {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ message: "Yetkilendirme hatası. Token bulunamadı." });
@@ -96,7 +96,9 @@ export function requirePanelAccess(panel: string) {
       next();
       return;
     }
-    if (req.user.panelAccess?.includes(panel)) {
+    const access =
+      req.user.panelAccess === undefined ? DEFAULT_USER_ACCESS : req.user.panelAccess;
+    if (hasAccess(access, panel, minimumMode)) {
       next();
       return;
     }
