@@ -9,6 +9,7 @@ import { useServices } from "./ServicesContext";
 import { type TemplateField, type TemplateChipGroup, effectiveFields } from "./types";import SvgAwareImage from "../SvgAwareImage";
 import { getCurrentAddress } from "../../utils/location";
 import { stockApi, type StockItem } from "../../apiclient/stock";
+import { UNIT_OPTIONS } from "../quotes/types";
 
 const formatDateInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 8);
@@ -633,6 +634,7 @@ function UsedProductsSection() {
   const { form, addUsedProduct, updateUsedProduct, removeUsedProduct } = useServices();
   const [suggestions, setSuggestions] = useState<StockItem[]>([]);
   const [activeRow, setActiveRow] = useState<number | null>(null);
+  const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runSearch = useCallback(async (q: string, index: number) => {
@@ -727,16 +729,16 @@ function UsedProductsSection() {
                 onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.]/g, "") })}
               />
             </View>
-            <View style={{ width: 60 }}>
+            <View style={{ width: 84 }}>
               <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.unit")}</Text>
-              <TextInput
-                className="w-full h-9 border rounded-lg px-3 text-sm"
-                style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
-                placeholder="AD"
-                placeholderTextColor={colors.textMuted}
-                value={p.unit}
-                onChangeText={(v) => updateUsedProduct(i, { unit: v })}
-              />
+              <TouchableOpacity
+                className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center"
+                style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
+                onPress={() => setUnitModalIdx(i)}
+              >
+                <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.unit || "Adet"}</Text>
+                <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 3 }} />
+              </TouchableOpacity>
             </View>
             <View className="flex-1">
               <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.price")}</Text>
@@ -775,6 +777,35 @@ function UsedProductsSection() {
         <Ionicons name="add" size={16} color={colors.primary} />
         <Text className="text-xs font-medium" style={{ color: colors.primary }}>{t("svc.addProduct")}</Text>
       </TouchableOpacity>
+
+      <Modal visible={unitModalIdx !== null} transparent animationType="fade" onRequestClose={() => setUnitModalIdx(null)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-60 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("svc.unit")}</Text>
+              <TouchableOpacity onPress={() => setUnitModalIdx(null)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {UNIT_OPTIONS.map((u, ui, arr) => (
+              <TouchableOpacity
+                key={u}
+                className="flex-row items-center px-3 py-3"
+                style={ui < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  if (unitModalIdx !== null) updateUsedProduct(unitModalIdx, { unit: u });
+                  setUnitModalIdx(null);
+                }}
+              >
+                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{u}</Text>
+                {items[unitModalIdx ?? 0]?.unit === u && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

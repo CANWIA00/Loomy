@@ -365,7 +365,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const addUsedProduct = () =>
     setForm((prev) => ({
       ...prev,
-      usedProducts: [...prev.usedProducts, { name: "", quantity: "", unitPrice: "", currency: "TRY", unit: "AD" }],
+      usedProducts: [...prev.usedProducts, { name: "", quantity: "", unitPrice: "", currency: "TRY", unit: "Adet" }],
     }));
 
   const updateUsedProduct = (index: number, patch: Partial<UsedProductFormItem>) =>
