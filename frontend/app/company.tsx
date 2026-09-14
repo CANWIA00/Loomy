@@ -518,14 +518,32 @@ function PanelRow({
           {value ? t(value === "manage" ? "cmp.level.manage" : "cmp.level.view") : t("cmp.level.none")}
         </Text>
       </View>
-      <View style={{ width: 168 }}>
-        <SegmentedControl value={value} onChange={onChange} disabled={disabled} />
+      <View className="flex-row items-center">
+        <View style={{ width: 154 }}>
+          <LevelPicker value={value} onChange={onChange} disabled={disabled} />
+        </View>
+        {value !== undefined && (
+          <TouchableOpacity
+            onPress={() => onChange(undefined)}
+            disabled={disabled}
+            className="ml-1.5 items-center justify-center"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 999,
+              backgroundColor: colors.bgInput,
+              opacity: disabled ? 0.6 : 1,
+            }}
+          >
+            <Ionicons name="close" size={14} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 }
 
-function SegmentedControl({
+function LevelPicker({
   value,
   onChange,
   disabled,
@@ -537,30 +555,37 @@ function SegmentedControl({
   const { colors } = useTheme();
   const { t } = useLanguage();
 
-  const options: { level: PanelAccessLevel | undefined; key: string; icon: any }[] = [
-    { level: undefined, key: "cmp.level.none", icon: "close" },
+  const options: { level: PanelAccessLevel; key: string; icon: any }[] = [
     { level: "view", key: "cmp.level.view", icon: "eye-outline" },
     { level: "manage", key: "cmp.level.manage", icon: "create-outline" },
   ];
 
+  const noneActive = value === undefined;
+
   return (
-    <View
-      className="flex-row p-0.5"
-      style={{ backgroundColor: colors.bgInput, borderRadius: 10 }}
-    >
+    <View className="flex-row items-center" style={{ gap: 2 }}>
       {options.map((opt) => {
         const active = value === opt.level;
-        const bg = active ? (opt.level === "manage" ? colors.primary : "#0EA5E9") : "transparent";
+        const bg = active
+          ? opt.level === "manage"
+            ? colors.primary
+            : "#0EA5E9"
+          : colors.bgInput;
+        const border = active ? bg : colors.border;
         return (
           <TouchableOpacity
             key={opt.key}
-            onPress={() => onChange(active ? undefined : opt.level ?? undefined)}
+            onPress={() => onChange(active ? undefined : opt.level)}
             disabled={disabled}
-            className="flex-1 h-7 rounded-lg flex-row items-center justify-center gap-1"
-            style={{ backgroundColor: bg, opacity: disabled ? 0.6 : 1 }}
+            className="flex-1 h-8 rounded-full flex-row items-center justify-center"
+            style={{ backgroundColor: bg, borderColor: border, borderWidth: 1, opacity: disabled ? 0.6 : 1 }}
           >
-            <Ionicons name={opt.icon} size={12} color={active ? "white" : colors.textMuted} />
-            <Text className="text-[11px] font-semibold" style={{ color: active ? "white" : colors.textSecondary }}>
+            <Ionicons name={opt.icon} size={13} color={active ? "white" : noneActive ? colors.textMuted : colors.textSecondary} />
+            <Text
+              className="ml-1 text-[12px] font-semibold"
+              style={{ color: active ? "white" : noneActive ? colors.textMuted : colors.textSecondary }}
+              numberOfLines={1}
+            >
               {t(opt.key)}
             </Text>
           </TouchableOpacity>
