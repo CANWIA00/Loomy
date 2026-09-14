@@ -38,6 +38,9 @@ function DashboardScreenInner() {
             <TouchableOpacity onPress={() => router.push("/profil" as any)}>
               <Ionicons name="person-circle-outline" size={28} color={colors.primary} />
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/settings" as any)}>
+              <Ionicons name="settings-outline" size={22} color={colors.primary} />
+            </TouchableOpacity>
           </View>
         </View>
         <Text style={{ color: colors.textMuted }} className="text-sm mb-6">
