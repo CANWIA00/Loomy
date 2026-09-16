@@ -679,7 +679,7 @@ export default function TemplateEditor() {
               <TouchableOpacity
                 className="flex-1 rounded-xl p-3 border"
                 style={{ borderColor: copyTemplateId !== null ? colors.primary : colors.border, backgroundColor: copyTemplateId !== null ? colors.primary + "10" : colors.bg }}
-                onPress={() => setCopyTemplateId(templates.find((t) => t.id !== selectedId)?.id || null)}
+                onPress={() => setCopyTemplateId(selectedId)}
               >
                 <Ionicons name="copy-outline" size={20} color={copyTemplateId !== null ? colors.primary : colors.textMuted} style={{ marginBottom: 4 }} />
                 <Text className="text-xs font-semibold" style={{ color: copyTemplateId !== null ? colors.primary : colors.text }}>{t("tpl.createFromExisting")}</Text>
@@ -690,7 +690,7 @@ export default function TemplateEditor() {
               <View className="mb-3">
                 <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("tpl.copySource")}</Text>
                 <View className="flex-row flex-wrap gap-1.5">
-                  {templates.filter((t) => t.id !== selectedId).map((t) => {
+                  {templates.map((t) => {
                     const active = t.id === copyTemplateId;
                     return (
                       <TouchableOpacity
