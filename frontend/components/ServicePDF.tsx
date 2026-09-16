@@ -489,17 +489,64 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       </tbody>
       <tfoot>
         ${(() => {
+        const productsMode = data.productsMode === true;
+        const kdvRate = productsMode ? Math.max(0, Number(data.kdvRate) || 0) : 0;
+        const labor = productsMode ? (Number(data.labor) || 0) : 0;
+        const laborCur = data.laborCurrency || "TRY";
         const totals: Record<string, number> = {};
         (data.usedProducts || []).forEach((p: any) => {
           const cur = p.currency || "TRY";
           totals[cur] = (totals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
         });
-        return Object.entries(totals).map(([cur, amt]) =>
-          `<tr style="font-weight:bold">
-            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.usedTotal")} ${ccySym(cur)}</span></td>
+        if (!productsMode) {
+          return Object.entries(totals).map(([cur, amt]) =>
+            `<tr style="font-weight:bold">
+              <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.usedTotal")} ${ccySym(cur)}</span></td>
+              <td class="num">${amt.toFixed(2)}</td>
+            </tr>`
+          ).join('');
+        }
+        const rows: string[] = [];
+        Object.entries(totals).forEach(([cur, amt]) => {
+          if (amt <= 0) return;
+          rows.push(`<tr>
+            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.subtotal")} ${ccySym(cur)}</span></td>
             <td class="num">${amt.toFixed(2)}</td>
-          </tr>`
-        ).join('');
+          </tr>`);
+        });
+        if (labor > 0) {
+          rows.push(`<tr>
+            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.labor")} ${ccySym(laborCur)}</span></td>
+            <td class="num">${labor.toFixed(2)}</td>
+          </tr>`);
+        }
+        if (kdvRate > 0) {
+          Object.entries(totals).forEach(([cur, amt]) => {
+            if (amt <= 0) return;
+            rows.push(`<tr>
+              <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.productVat")} %${kdvRate} ${ccySym(cur)}</span></td>
+              <td class="num">${(amt * kdvRate / 100).toFixed(2)}</td>
+            </tr>`);
+          });
+          if (labor > 0) {
+            rows.push(`<tr>
+              <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.laborVat")} %${kdvRate} ${ccySym(laborCur)}</span></td>
+              <td class="num">${(labor * kdvRate / 100).toFixed(2)}</td>
+            </tr>`);
+          }
+        }
+        const curSet = Array.from(new Set([...Object.keys(totals), ...(labor > 0 ? [laborCur] : [])]));
+        curSet.forEach((cur) => {
+          const prod = totals[cur] || 0;
+          const lab = (labor > 0 && laborCur === cur) ? labor : 0;
+          const total = (prod + lab) * (1 + kdvRate / 100);
+          if (total <= 0) return;
+          rows.push(`<tr style="font-weight:bold">
+            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.grandTotal")} ${ccySym(cur)}</span></td>
+            <td class="num">${total.toFixed(2)}</td>
+          </tr>`);
+        });
+        return rows.join('');
       })()}
       </tfoot>
     </table>
@@ -515,44 +562,39 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
 
   ${(() => {
     const productsMode = data.productsMode === true;
-    const kdvRate = productsMode ? Math.max(0, Number(data.kdvRate) || 0) : 0;
-    const labor = productsMode ? (Number(data.labor) || 0) : 0;
-    const laborCur = data.laborCurrency || "TRY";
-    const fee = !productsMode ? (Number(data.fee) || 0) : 0;
-    const feeCur = data.feeCurrency || "TRY";
-    const productTotals: Record<string, number> = {};
-    (data.usedProducts || []).forEach((p: any) => {
-      const cur = p.currency || "TRY";
-      productTotals[cur] = (productTotals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
-    });
-    const groups: Record<string, { products: number; labor: number; fee: number }> = {};
-    Object.entries(productTotals).forEach(([cur, amt]) => {
-      if (amt > 0) groups[cur] = { products: amt, labor: 0, fee: 0 };
-    });
-    if (labor > 0) { const g = groups[laborCur] || { products: 0, labor: 0, fee: 0 }; g.labor = labor; groups[laborCur] = g; }
-    if (fee > 0) { const g = groups[feeCur] || { products: 0, labor: 0, fee: 0 }; g.fee = fee; groups[feeCur] = g; }
-    const activeCurs = Object.keys(groups).filter((cur) => (groups[cur].products + groups[cur].labor + groups[cur].fee) > 0);
-    if (!activeCurs.length) return '';
-    const lines: string[] = [];
-    Object.entries(groups).forEach(([cur, g]) => {
-      if (g.products > 0) lines.push(`<div class="fee-line"><span>${t("pdf.subtotal")} ${escapeHtml(ccySym(cur))}</span><span>${g.products.toFixed(2)}</span></div>`);
-      if (g.labor > 0) lines.push(`<div class="fee-line"><span>${t("pdf.labor")} ${escapeHtml(ccySym(cur))}</span><span>${g.labor.toFixed(2)}</span></div>`);
-      if (g.fee > 0) lines.push(`<div class="fee-line"><span>${t("pdf.serviceFee")} ${escapeHtml(ccySym(cur))}</span><span>${g.fee.toFixed(2)}</span></div>`);
-    });
-    const baseCur: Record<string, number> = {};
-    Object.entries(groups).forEach(([cur, g]) => { baseCur[cur] = g.products + g.labor + g.fee; });
-    if (kdvRate > 0) {
-      Object.entries(baseCur).forEach(([cur, base]) => {
-        lines.push(`<div class="fee-line"><span>KDV %${kdvRate} ${escapeHtml(ccySym(cur))}</span><span>${(base * kdvRate / 100).toFixed(2)}</span></div>`);
+    if (productsMode) {
+      const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
+      const labor = Number(data.labor) || 0;
+      const laborCur = data.laborCurrency || "TRY";
+      const productTotals: Record<string, number> = {};
+      (data.usedProducts || []).forEach((p: any) => {
+        const cur = p.currency || "TRY";
+        productTotals[cur] = (productTotals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
       });
+      const curSet = Array.from(new Set([...Object.keys(productTotals), ...(labor > 0 ? [laborCur] : [])]));
+      const lines: string[] = [];
+      curSet.forEach((cur) => {
+        const prod = productTotals[cur] || 0;
+        const lab = (labor > 0 && laborCur === cur) ? labor : 0;
+        const total = (prod + lab) * (1 + kdvRate / 100);
+        if (total <= 0) return;
+        lines.push(`<div class="fee-line fee-total"><span>${t("pdf.grandTotal")} ${ccySym(cur)}</span><span>${total.toFixed(2)}</span></div>`);
+      });
+      if (!lines.length) return '';
+      return `<div class="section section-push">
+        <div class="section-title">${t("pdf.serviceFee")}</div>
+        <div class="fee-content">
+          ${lines.join('')}
+        </div>
+      </div>`;
     }
-    Object.entries(baseCur).forEach(([cur, base]) => {
-      lines.push(`<div class="fee-line fee-total"><span>${t("pdf.grandTotal")} ${escapeHtml(ccySym(cur))}</span><span>${(base * (1 + kdvRate / 100)).toFixed(2)}</span></div>`);
-    });
+    const fee = Number(data.fee) || 0;
+    const feeCur = data.feeCurrency || "TRY";
+    if (fee <= 0) return '';
     return `<div class="section section-push">
       <div class="section-title">${t("pdf.serviceFee")}</div>
       <div class="fee-content">
-        ${lines.join('')}
+        <div class="fee-line fee-total"><span>${t("pdf.grandTotal")} ${ccySym(feeCur)}</span><span>${fee.toFixed(2)}</span></div>
       </div>
     </div>`;
   })()}

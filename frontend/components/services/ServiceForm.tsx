@@ -811,35 +811,46 @@ function UsedProductsSection() {
   const laborValue = parseNumericInput(form.labor || "");
   const laborCurrency = form.laborCurrency || "TRY";
   const kdvRateVal = parseNumericInput(form.kdvRate || "20") / 100;
-  let totalTry = 0;
-  let conversionOk = true;
+  let productTry = 0;
+  let laborTry = 0;
   Object.entries(perCurrency).forEach(([cur, amt]) => {
     if (!amt) return;
-    if (cur === "TRY") { totalTry += amt; return; }
+    if (cur === "TRY") { productTry += amt; return; }
     const conv = convert(amt, cur);
-    if (conv != null) totalTry += conv;
-    else conversionOk = false;
+    if (conv != null) productTry += conv;
   });
   if (form.productsMode) {
     if (laborValue > 0) {
-      if (laborCurrency === "TRY") totalTry += laborValue;
-      else { const conv = convert(laborValue, laborCurrency); if (conv != null) totalTry += conv; else conversionOk = false; }
+      if (laborCurrency === "TRY") laborTry += laborValue;
+      else { const conv = convert(laborValue, laborCurrency); if (conv != null) laborTry += conv; }
     }
   } else {
     if (feeValue > 0) {
-      if (feeCurrency === "TRY") totalTry += feeValue;
-      else { const conv = convert(feeValue, feeCurrency); if (conv != null) totalTry += conv; else conversionOk = false; }
+      if (feeCurrency === "TRY") productTry += feeValue;
+      else { const conv = convert(feeValue, feeCurrency); if (conv != null) productTry += conv; }
     }
   }
-  const baseTry = totalTry;
   const kdvRate = form.productsMode ? kdvRateVal : 0;
-  const kdvTry = baseTry * kdvRate;
-  totalTry = baseTry + kdvTry;
+  const productKdvTry = productTry * kdvRate;
+  const laborKdvTry = laborTry * kdvRate;
+  const grandTry = productTry + laborTry + productKdvTry + laborKdvTry;
 
   let grandTotal: number | null = null;
-  let kdvDisplay: number | null = null;
-  if (totalCurrency === "TRY") { grandTotal = totalTry; kdvDisplay = kdvTry; }
-  else { const rate = rates?.rates[totalCurrency]; if (rate) { grandTotal = totalTry / rate; kdvDisplay = kdvTry / rate; } }
+  let productKdvDisplay: number | null = null;
+  let laborKdvDisplay: number | null = null;
+  if (totalCurrency === "TRY") {
+    grandTotal = grandTry;
+    productKdvDisplay = productKdvTry;
+    laborKdvDisplay = laborKdvTry;
+  }
+  else {
+    const rate = rates?.rates[totalCurrency];
+    if (rate) {
+      grandTotal = grandTry / rate;
+      productKdvDisplay = productKdvTry / rate;
+      laborKdvDisplay = laborKdvTry / rate;
+    }
+  }
 
   const hasAmounts = form.productsMode
     ? Object.keys(perCurrency).length > 0 || laborValue > 0
@@ -985,14 +996,16 @@ function UsedProductsSection() {
                   <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(laborValue, laborCurrency)}</Text>
                 </View>
               )}
-              {kdvRate > 0 && (
+              {kdvRate > 0 && productKdvDisplay != null && (
                 <View className="flex-row items-center justify-between py-0.5">
-                  <Text className="text-xs" style={{ color: colors.textSecondary }}>KDV ({Math.round(kdvRate * 100)}%)</Text>
-                  {kdvDisplay != null ? (
-                    <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(kdvDisplay, totalCurrency)}</Text>
-                  ) : (
-                    <Text className="text-xs" style={{ color: colors.warning }}>{t("svc.ratesNote")}</Text>
-                  )}
+                  <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.productKdvLabel")} ({Math.round(kdvRate * 100)}%)</Text>
+                  <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(productKdvDisplay, totalCurrency)}</Text>
+                </View>
+              )}
+              {kdvRate > 0 && laborTry > 0 && laborKdvDisplay != null && (
+                <View className="flex-row items-center justify-between py-0.5">
+                  <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.laborKdvLabel")} ({Math.round(kdvRate * 100)}%)</Text>
+                  <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(laborKdvDisplay, totalCurrency)}</Text>
                 </View>
               )}
               <View className="flex-row items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: colors.borderAlt }}>

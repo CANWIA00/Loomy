@@ -411,6 +411,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.laborLabel": "İşçilik",
     "svc.kdvPlaceholder": "Örn: 20",
     "svc.grandTotal": "Genel Toplam",
+    "svc.productKdvLabel": "Ürün KDV",
+    "svc.laborKdvLabel": "İşçilik KDV",
     "svc.ratesNote": "Kur bilgisi alınamadı",
 
     // Customers
@@ -1077,6 +1079,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "pdf.subtotal": "Ara Toplam",
     "pdf.labor": "İşçilik",
     "pdf.grandTotal": "Genel Toplam",
+    "pdf.productVat": "Ürün KDV",
+    "pdf.laborVat": "İşçilik KDV",
     "pdf.freeService": "Ücretsiz Servis",
     "pdf.customerSignatureLabel": "Müşteri Adı & Soyadı / İmza",
     "pdf.technicianSignatureLabel": "Teknisyen Adı & Soyadı / İmza",
@@ -1568,6 +1572,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.laborLabel": "Labor",
     "svc.kdvPlaceholder": "Ex: 20",
     "svc.grandTotal": "Grand Total",
+    "svc.productKdvLabel": "Product VAT",
+    "svc.laborKdvLabel": "Labor VAT",
     "svc.ratesNote": "Exchange rate unavailable",
 
     // Customers
@@ -2234,6 +2240,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "pdf.subtotal": "Subtotal",
     "pdf.labor": "Labor",
     "pdf.grandTotal": "Grand Total",
+    "pdf.productVat": "Product VAT",
+    "pdf.laborVat": "Labor VAT",
     "pdf.freeService": "Free Service",
     "pdf.customerSignatureLabel": "Customer Name & Surname / Signature",
     "pdf.technicianSignatureLabel": "Technician Name & Surname / Signature",
