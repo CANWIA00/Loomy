@@ -281,6 +281,35 @@ function FieldCell({ field }: { field: TemplateField }) {
     );
   }
 
+  if (field.key === "labor") {
+    return (
+      <View className="flex-1 mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <FeeInput
+          value={form.labor}
+          currency={form.laborCurrency || "TRY"}
+          onChangeFee={(v) => updateForm("labor", v)}
+          onChangeCurrency={(c) => updateForm("laborCurrency", c)}
+        />
+      </View>
+    );
+  }
+
+  if (field.key === "kdv") {
+    return (
+      <View className="flex-1 mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <TextInput
+          {...inputProps}
+          placeholder={t("svc.kdvPlaceholder")}
+          keyboardType="decimal-pad"
+          value={form.kdvRate}
+          onChangeText={(v) => updateForm("kdvRate", v.replace(/[^0-9.,]/g, "").slice(0, 5))}
+        />
+      </View>
+    );
+  }
+
   if (field.key === "phone") {
     return (
       <View className="flex-1 mb-3">
@@ -531,6 +560,37 @@ function SingleField({ field }: { field: TemplateField }) {
     );
   }
 
+  if (field.key === "labor") {
+    return (
+      <View className="mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <FeeInput
+          value={form.labor}
+          currency={form.laborCurrency || "TRY"}
+          onChangeFee={(v) => updateForm("labor", v)}
+          onChangeCurrency={(c) => updateForm("laborCurrency", c)}
+        />
+      </View>
+    );
+  }
+
+  if (field.key === "kdv") {
+    return (
+      <View className="mb-3">
+        <FieldLabel>{label}</FieldLabel>
+        <TextInput
+          className="w-full h-10 border rounded-lg px-3 text-sm"
+          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          placeholder={t("svc.kdvPlaceholder")}
+          placeholderTextColor={colors.textMuted}
+          keyboardType="decimal-pad"
+          value={form.kdvRate}
+          onChangeText={(v) => updateForm("kdvRate", v.replace(/[^0-9.,]/g, "").slice(0, 5))}
+        />
+      </View>
+    );
+  }
+
   if (field.key === "documentDate") {
     return <DocumentDateField field={field} />;
   }
@@ -742,6 +802,9 @@ function UsedProductsSection() {
 
   const feeValue = parseNumericInput(form.fee || "");
   const feeCurrency = form.feeCurrency || "TRY";
+  const laborValue = parseNumericInput(form.labor || "");
+  const laborCurrency = form.laborCurrency || "TRY";
+  const kdvRate = parseNumericInput(form.kdvRate || "20") / 100;
   let totalTry = 0;
   let conversionOk = true;
   Object.entries(perCurrency).forEach(([cur, amt]) => {
@@ -759,15 +822,33 @@ function UsedProductsSection() {
       else conversionOk = false;
     }
   }
-
-  let grandTotal: number | null = null;
-  if (totalCurrency === "TRY") grandTotal = totalTry;
-  else {
-    const rate = rates?.rates[totalCurrency];
-    if (rate) grandTotal = totalTry / rate;
+  if (laborValue > 0) {
+    if (laborCurrency === "TRY") totalTry += laborValue;
+    else {
+      const conv = convert(laborValue, laborCurrency);
+      if (conv != null) totalTry += conv;
+      else conversionOk = false;
+    }
   }
 
-  const hasAmounts = Object.keys(perCurrency).length > 0 || feeValue > 0;
+  const baseTry = totalTry;
+  const kdvTry = baseTry * kdvRate;
+  totalTry = baseTry + kdvTry;
+
+  let grandTotal: number | null = null;
+  let kdvDisplay: number | null = null;
+  if (totalCurrency === "TRY") {
+    grandTotal = totalTry;
+    kdvDisplay = kdvTry;
+  } else {
+    const rate = rates?.rates[totalCurrency];
+    if (rate) {
+      grandTotal = totalTry / rate;
+      kdvDisplay = kdvTry / rate;
+    }
+  }
+
+  const hasAmounts = Object.keys(perCurrency).length > 0 || feeValue > 0 || laborValue > 0;
 
   return (
     <View className="mb-3">
@@ -784,7 +865,7 @@ function UsedProductsSection() {
       </View>
 
       {items.map((p, i) => (
-        <View key={i} className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1 }}>
+        <View key={i} className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, zIndex: activeRow === i ? 100 : 0 }}>
           <View className="flex-row items-center justify-between mb-1">
             <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{t("svc.productName")}</Text>
             <TouchableOpacity onPress={() => removeUsedProduct(i)} hitSlop={8}>
@@ -792,7 +873,7 @@ function UsedProductsSection() {
             </TouchableOpacity>
           </View>
 
-          <View style={{ position: "relative", zIndex: activeRow === i ? 50 : undefined }}>
+          <View style={{ position: "relative", zIndex: activeRow === i ? 1000 : undefined }}>
             <TextInput
               className="w-full h-9 border rounded-lg px-3 text-sm"
               style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
@@ -804,13 +885,15 @@ function UsedProductsSection() {
               onBlur={() => setTimeout(() => setSuggestions([]), 150)}
             />
             {activeRow === i && suggestions.length > 0 && (
-              <View className="absolute left-0 right-0 mt-1 rounded-lg overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, zIndex: 999 }}>
-                {suggestions.slice(0, 4).map((s, si, arr) => (
-                  <TouchableOpacity key={s.id} className="px-3 py-2" style={si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined} onPress={() => pick(i, s)}>
-                    <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
-                    <Text className="text-[11px]" style={{ color: colors.textMuted }}>{s.unit} · {s.quantity}</Text>
-                  </TouchableOpacity>
-                ))}
+              <View className="overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8, position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, zIndex: 1000, elevation: 10, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
+                <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" className="max-h-56">
+                  {suggestions.map((s, si, arr) => (
+                    <TouchableOpacity key={s.id} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, ...(si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}) }} onPress={() => pick(i, s)}>
+                      <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
+                      <Text className="text-[11px]" style={{ color: colors.textMuted }}>{s.unit} · {s.quantity}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             )}
           </View>
@@ -873,7 +956,7 @@ function UsedProductsSection() {
         </View>
       ))}
 
-      {notInStockCount > 0 && (
+            {notInStockCount > 0 && (
         <Text className="text-xs mb-2" style={{ color: colors.warning }}>
           {t("svc.notInStockCount").replace("{count}", String(notInStockCount))}
         </Text>
@@ -889,12 +972,32 @@ function UsedProductsSection() {
               <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(amt, cur)}</Text>
             </View>
           ))}
+          {laborValue > 0 && (
+            <View className="flex-row items-center justify-between py-0.5">
+              <Text className="text-xs" style={{ color: colors.textSecondary }}>
+                {t("svc.laborLabel")} {getCurrencySymbol(laborCurrency)}
+              </Text>
+              <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(laborValue, laborCurrency)}</Text>
+            </View>
+          )}
           {feeValue > 0 && (
             <View className="flex-row items-center justify-between py-0.5">
               <Text className="text-xs" style={{ color: colors.textSecondary }}>
                 {t("svc.serviceFeeLabel")} {getCurrencySymbol(feeCurrency)}
               </Text>
               <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(feeValue, feeCurrency)}</Text>
+            </View>
+          )}
+          {kdvRate > 0 && (
+            <View className="flex-row items-center justify-between py-0.5">
+              <Text className="text-xs" style={{ color: colors.textSecondary }}>
+                KDV ({Math.round(kdvRate * 100)}%)
+              </Text>
+              {kdvDisplay != null ? (
+                <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(kdvDisplay, totalCurrency)}</Text>
+              ) : (
+                <Text className="text-xs" style={{ color: colors.warning }}>{t("svc.ratesNote")}</Text>
+              )}
             </View>
           )}
           <View className="flex-row items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: colors.borderAlt }}>
@@ -1091,6 +1194,8 @@ export default function ServiceForm() {
   const documentDateField = fields.find((f) => f.key === "documentDate");
   const detailsField = fields.find((f) => f.key === "details");
   const feeField = fields.find((f) => f.key === "fee");
+  const laborField = fields.find((f) => f.key === "labor");
+  const kdvField = fields.find((f) => f.key === "kdv");
   const customFields = fields.filter((f) => f.key.startsWith("custom_"));
 
   const orderedGroups = [...groups].sort((a, b) => a.order - b.order);
@@ -1372,7 +1477,7 @@ export default function ServiceForm() {
 
         {detailsField && <SingleField field={detailsField} />}
 
-        <FieldPairRow fields={[feeField, technicianField].filter((f): f is TemplateField => !!f)} />
+        <FieldPairRow fields={[feeField, laborField, kdvField, technicianField].filter((f): f is TemplateField => !!f)} />
 
         {documentDateField && <DocumentDateField field={documentDateField} />}
 

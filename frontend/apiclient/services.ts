@@ -27,6 +27,9 @@ export interface ServiceRecord {
   detaylar: string;
   ucret: string;
   ucretCurrency?: string;
+  labor: string;
+  laborCurrency?: string;
+  kdvRate?: string;
   teknisyen: string;
   teknisyenTelefon?: string;
   hizmetler: string[];
@@ -57,6 +60,9 @@ interface ServiceRecordBackend {
   details?: string;
   fee: string;
   feeCurrency?: string;
+  labor: string;
+  laborCurrency?: string;
+  kdvRate?: string;
   technician?: string;
   technicianPhone?: string;
   services: string;
@@ -122,6 +128,9 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
     detaylar: b.details || "",
     ucret: b.fee,
     ucretCurrency: b.feeCurrency || "TRY",
+    labor: b.labor,
+    laborCurrency: b.laborCurrency || "TRY",
+    kdvRate: b.kdvRate || "20",
     teknisyen: b.technician || "",
     teknisyenTelefon: b.technicianPhone || "",
     hizmetler,
@@ -153,6 +162,9 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.detaylar !== undefined) data.details = f.detaylar;
   if (f.ucret !== undefined) data.fee = f.ucret;
   if (f.ucretCurrency !== undefined) data.feeCurrency = f.ucretCurrency;
+  if (f.labor !== undefined) data.labor = f.labor;
+  if (f.laborCurrency !== undefined) data.laborCurrency = f.laborCurrency;
+  if (f.kdvRate !== undefined) data.kdvRate = f.kdvRate;
   if (f.teknisyen !== undefined) data.technician = f.teknisyen;
   if (f.teknisyenTelefon !== undefined) data.technicianPhone = f.teknisyenTelefon;
   if (f.hizmetler !== undefined) data.services = f.hizmetler;

@@ -86,6 +86,9 @@ model ServiceRecord {
   details      String?
   fee          String   @default("0.00")
   feeCurrency  String   @default("TRY")
+  labor        String   @default("0.00")
+  laborCurrency String  @default("TRY")
+  kdvRate      String   @default("20")
   technician   String?
   technicianPhone String?
   services     String   @default("[]")

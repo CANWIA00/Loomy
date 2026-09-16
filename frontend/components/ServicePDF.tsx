@@ -317,6 +317,18 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       font-weight: bold;
       line-height: 1.5;
     }
+    .fee-line {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dotted #c7c7d4;
+      padding: 2px 0;
+      font-weight: normal;
+    }
+    .fee-line.fee-total {
+      font-weight: bold;
+      border-bottom: none;
+      padding-top: 6px;
+    }
     .signature-section {
       display: flex;
       gap: 36px;
@@ -409,10 +421,6 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .used-products-table .num {
       text-align: right;
     }
-    .used-products-table .not-in-stock {
-      color: #B45309;
-      font-style: italic;
-    }
   </style>
 </head>
 <body>
@@ -469,10 +477,9 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
           const qty = Number(p.quantity) || 0;
           const price = Number(p.unitPrice) || 0;
           const amount = qty * price;
-          const inStock = p.inStock !== false;
           return `<tr>
             <td>${i + 1}</td>
-            <td>${escapeHtml(p.name)}${!inStock ? ` <span class="not-in-stock">(${t("pdf.usedNotInStock")})</span>` : ''}</td>
+            <td>${escapeHtml(p.name)}</td>
             <td class="num">${qty}</td>
             <td>${escapeHtml(p.unit || "")}</td>
             <td class="num">${price ? `${price.toFixed(2)} ${ccySym(p.currency)}` : '-'}</td>
@@ -506,16 +513,47 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     </div>
   </div>` : ''}
 
-  ${fieldActive("fee") ? `
-  <div class="section section-push">
-    <div class="section-title">${t("pdf.serviceFee")}</div>
-    <div class="fee-content">
-      ${data.fee && data.fee !== "0" && data.fee !== "0.00" ?
-        t("pdf.serviceFeeLine", { amount: `${escapeHtml(data.fee)} ${escapeHtml(ccySym(data.feeCurrency))}` }) :
-        t("pdf.freeService")
-      }
-    </div>
-  </div>` : ''}
+  ${(() => {
+    const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
+    const labor = Number(data.labor) || 0;
+    const laborCur = data.laborCurrency || "TRY";
+    const fee = Number(data.fee) || 0;
+    const feeCur = data.feeCurrency || "TRY";
+    const productTotals: Record<string, number> = {};
+    (data.usedProducts || []).forEach((p: any) => {
+      const cur = p.currency || "TRY";
+      productTotals[cur] = (productTotals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
+    });
+    const groups: Record<string, { products: number; labor: number; fee: number }> = {};
+    Object.entries(productTotals).forEach(([cur, amt]) => {
+      if (amt > 0) groups[cur] = { products: amt, labor: 0, fee: 0 };
+    });
+    if (labor > 0) { const g = groups[laborCur] || { products: 0, labor: 0, fee: 0 }; g.labor = labor; groups[laborCur] = g; }
+    if (fee > 0) { const g = groups[feeCur] || { products: 0, labor: 0, fee: 0 }; g.fee = fee; groups[feeCur] = g; }
+    if (!Object.keys(groups).length) return '';
+    const lines: string[] = [];
+    Object.entries(groups).forEach(([cur, g]) => {
+      if (g.products > 0) lines.push(`<div class="fee-line"><span>${t("pdf.subtotal")} ${escapeHtml(ccySym(cur))}</span><span>${g.products.toFixed(2)}</span></div>`);
+      if (g.labor > 0) lines.push(`<div class="fee-line"><span>${t("pdf.labor")} ${escapeHtml(ccySym(cur))}</span><span>${g.labor.toFixed(2)}</span></div>`);
+      if (g.fee > 0) lines.push(`<div class="fee-line"><span>${t("pdf.serviceFee")} ${escapeHtml(ccySym(cur))}</span><span>${g.fee.toFixed(2)}</span></div>`);
+    });
+    const baseCur: Record<string, number> = {};
+    Object.entries(groups).forEach(([cur, g]) => { baseCur[cur] = g.products + g.labor + g.fee; });
+    if (kdvRate > 0) {
+      Object.entries(baseCur).forEach(([cur, base]) => {
+        lines.push(`<div class="fee-line"><span>KDV %${kdvRate} ${escapeHtml(ccySym(cur))}</span><span>${(base * kdvRate / 100).toFixed(2)}</span></div>`);
+      });
+    }
+    Object.entries(baseCur).forEach(([cur, base]) => {
+      lines.push(`<div class="fee-line fee-total"><span>${t("pdf.grandTotal")} ${escapeHtml(ccySym(cur))}</span><span>${(base * (1 + kdvRate / 100)).toFixed(2)}</span></div>`);
+    });
+    return `<div class="section section-push">
+      <div class="section-title">${t("pdf.serviceFee")}</div>
+      <div class="fee-content">
+        ${lines.join('')}
+      </div>
+    </div>`;
+  })()}
 
   <div class="signature-section">
     <div class="signature-box">

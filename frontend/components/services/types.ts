@@ -21,6 +21,9 @@ export interface ServiceFormData {
   details: string;
   fee: string;
   feeCurrency: string;
+  labor: string;
+  laborCurrency: string;
+  kdvRate: string;
   technician: string;
   technicianPhone: string;
   documentDate: string;
@@ -42,6 +45,9 @@ export const initialForm: ServiceFormData = {
   details: "",
   fee: "",
   feeCurrency: "TRY",
+  labor: "",
+  laborCurrency: "TRY",
+  kdvRate: "20",
   technician: "",
   technicianPhone: "",
   documentDate: "",
@@ -91,6 +97,9 @@ export interface PdfData {
   customValues?: Record<string, string>;
   usedProducts?: UsedProductFormItem[];
   feeCurrency?: string;
+  labor?: string;
+  laborCurrency?: string;
+  kdvRate?: string;
   signature: any;
   technicianSignature: any;
   companyLogo: string | null;
@@ -143,7 +152,7 @@ export interface ServiceTemplateConfig {
   chipGroups: TemplateChipGroup[];
 }
 
-export const GENERAL_FIELD_KEYS = ["technician", "documentDate", "details", "fee"] as const;
+export const GENERAL_FIELD_KEYS = ["technician", "documentDate", "details", "fee", "labor", "kdv"] as const;
 export const isGeneralField = (key: string) => (GENERAL_FIELD_KEYS as readonly string[]).includes(key);
 
 export const isCustomField = (key: string) => key.startsWith("custom_");
@@ -178,6 +187,8 @@ export function defaultTemplateConfig(): ServiceTemplateConfig {
       { key: "documentDate", labelTr: "Belge Tarihi", labelEn: "Document Date", enabled: true, order: 70, required: true },
       { key: "details", labelTr: "Detaylar", labelEn: "Details", enabled: true, order: 80, required: false },
       { key: "fee", labelTr: "Servis Ücreti", labelEn: "Service Fee", enabled: true, order: 90, required: false },
+      { key: "labor", labelTr: "İşçilik", labelEn: "Labor", enabled: true, order: 95, required: false },
+      { key: "kdv", labelTr: "KDV (%)", labelEn: "VAT (%)", enabled: true, order: 96, required: false },
       { key: "custom_internalIp", labelTr: "Dahili IP", labelEn: "Internal IP", enabled: true, order: 100, required: false },
       { key: "custom_externalIp", labelTr: "Harici IP", labelEn: "External IP", enabled: true, order: 110, required: false },
     ],

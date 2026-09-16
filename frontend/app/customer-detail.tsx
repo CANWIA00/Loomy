@@ -123,6 +123,12 @@ function RecordDetailModal({
                 <DetailRow icon="time-outline" label={t("cst.startTime")} value={payload.record.baslangic} />
                 <DetailRow icon="time-outline" label={t("cst.endTime")} value={payload.record.bitis} />
                 <DetailRow icon="cash-outline" label={t("cst.fee")} value={`${payload.record.ucret} ${getCurrencySymbol(payload.record.ucretCurrency || "TRY")}`} />
+                {Number(payload.record.labor) > 0 && (
+                  <DetailRow icon="hammer-outline" label={t("cst.labor")} value={`${payload.record.labor} ${getCurrencySymbol(payload.record.laborCurrency || "TRY")}`} />
+                )}
+                {Number(payload.record.kdvRate) > 0 && (
+                  <DetailRow icon="receipt-outline" label={t("cst.kdvRate")} value={`%${payload.record.kdvRate}`} />
+                )}
                 <DetailRow icon="person-outline" label={t("cst.technician")} value={payload.record.teknisyen} />
                 <ChipList title={t("cst.servicesPerformed")} items={payload.record.hizmetler} />
                 <ChipList title={t("cst.technicalInfo")} items={payload.record.teknik} />
@@ -659,6 +665,9 @@ export default function CustomerDetailScreen() {
       technical: s.teknik || [],
       fee: s.ucret,
       feeCurrency: s.ucretCurrency || "TRY",
+      labor: s.labor,
+      laborCurrency: s.laborCurrency || "TRY",
+      kdvRate: s.kdvRate || "20",
       technician: s.teknisyen,
       technicianPhone: s.teknisyenTelefon || "",
       startTime: s.baslangic,

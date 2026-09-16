@@ -391,6 +391,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       case "documentDate": return form.documentDate;
       case "details": return form.details;
       case "fee": return form.fee;
+      case "labor": return form.labor;
+      case "kdv": return form.kdvRate;
       default: return form.customValues[key] || "";
     }
   }, [form]);
@@ -427,6 +429,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
           detaylar: form.details,
 ucret: form.fee || "0.00",
           ucretCurrency: form.feeCurrency || "TRY",
+          labor: form.labor || "0.00",
+          laborCurrency: form.laborCurrency || "TRY",
+          kdvRate: form.kdvRate || "20",
           teknisyen: form.technician || "-",
           teknisyenTelefon: form.technicianPhone,
           tarih: form.documentDate || new Date().toLocaleDateString(locale),
@@ -484,6 +489,9 @@ ucret: form.fee || "0.00",
       details: record.detaylar || "",
       fee: record.ucret || "",
       feeCurrency: record.ucretCurrency || "TRY",
+      labor: record.labor || "",
+      laborCurrency: record.laborCurrency || "TRY",
+      kdvRate: record.kdvRate || "20",
       technician: record.teknisyen || currentUserName.current || "-",
       technicianPhone: record.teknisyenTelefon || currentUserPhone.current || "",
       documentDate: record.tarih || "",
@@ -543,6 +551,9 @@ ucret: form.fee || "0.00",
         detaylar: form.details,
 ucret: form.fee || "0.00",
         ucretCurrency: form.feeCurrency || "TRY",
+        labor: form.labor || "0.00",
+        laborCurrency: form.laborCurrency || "TRY",
+        kdvRate: form.kdvRate || "20",
         teknisyen: form.technician || "-",
         teknisyenTelefon: form.technicianPhone,
         hizmetler: form.services,
@@ -594,6 +605,9 @@ ucret: form.fee || "0.00",
     technical: record.teknik || [],
     fee: record.ucret,
     feeCurrency: record.ucretCurrency || "TRY",
+    labor: record.labor,
+    laborCurrency: record.laborCurrency || "TRY",
+    kdvRate: record.kdvRate || "20",
     technician: record.teknisyen,
     technicianPhone: record.teknisyenTelefon || "",
     startTime: record.baslangic,

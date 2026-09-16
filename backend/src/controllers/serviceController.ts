@@ -44,7 +44,7 @@ export async function createServiceRecord(
     const {
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
-      fee, feeCurrency, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
+      fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
       templateName, templateConfig, usedProducts,
     } = req.body;
     const companyId = req.user!.companyId!;
@@ -71,6 +71,9 @@ export async function createServiceRecord(
           details: details || null,
           fee: fee || "0.00",
           feeCurrency: feeCurrency || "TRY",
+          labor: labor || "0.00",
+          laborCurrency: laborCurrency || "TRY",
+          kdvRate: kdvRate || "20",
           technician: technician || null,
           technicianPhone: technicianPhone || null,
           services: JSON.stringify(services || []),
@@ -120,7 +123,7 @@ export async function updateServiceRecord(
     const {
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
-      fee, feeCurrency, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
+      fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
       templateName, templateConfig, usedProducts,
     } = req.body;
 
@@ -152,6 +155,9 @@ export async function updateServiceRecord(
           details: details ?? existing.details,
           fee: fee ?? existing.fee,
           feeCurrency: feeCurrency ?? existing.feeCurrency,
+          labor: labor ?? existing.labor,
+          laborCurrency: laborCurrency ?? existing.laborCurrency,
+          kdvRate: kdvRate ?? existing.kdvRate,
           technician: technician ?? existing.technician,
           technicianPhone: technicianPhone ?? existing.technicianPhone,
           services: services ? JSON.stringify(services) : existing.services,
