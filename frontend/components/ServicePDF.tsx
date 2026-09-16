@@ -403,27 +403,46 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .used-products-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 9px;
+      font-size: 8px;
       margin-top: 4px;
     }
     .used-products-table th,
     .used-products-table td {
       border: 1px solid #222238;
-      padding: 3px 6px;
+      padding: 2px 4px;
       text-align: left;
     }
     .used-products-table th {
       background: #f2f2f2;
       font-weight: bold;
-      font-size: 8px;
+      font-size: 7px;
       text-transform: uppercase;
     }
     .used-products-table .num {
       text-align: right;
     }
+    .pricing-summary {
+      font-size: 8px;
+      line-height: 1.5;
+      padding: 4px 0 2px 0;
+      border-top: 1px solid #222238;
+      margin-top: 2px;
+    }
+    .pricing-summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 1px 0;
+    }
+    .pricing-summary-row.summary-total {
+      font-weight: bold;
+      padding-top: 3px;
+      margin-top: 2px;
+      border-top: 1px solid #222238;
+    }
   </style>
 </head>
 <body>
+  <div id="scale-wrapper">
   <div class="content-wrapper">
     <div class="header">
       <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" onerror="this.style.display='none'" style="display:block;max-height:42px;max-width:150px;object-fit:contain;" />` : ''}</div>
@@ -489,67 +508,54 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       </tbody>
       <tfoot>
         ${(() => {
-        const productsMode = data.productsMode === true;
-        const kdvRate = productsMode ? Math.max(0, Number(data.kdvRate) || 0) : 0;
-        const labor = productsMode ? (Number(data.labor) || 0) : 0;
-        const laborCur = data.laborCurrency || "TRY";
         const totals: Record<string, number> = {};
         (data.usedProducts || []).forEach((p: any) => {
           const cur = p.currency || "TRY";
           totals[cur] = (totals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
         });
-        if (!productsMode) {
-          return Object.entries(totals).map(([cur, amt]) =>
-            `<tr style="font-weight:bold">
-              <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.usedTotal")} ${ccySym(cur)}</span></td>
-              <td class="num">${amt.toFixed(2)}</td>
-            </tr>`
-          ).join('');
-        }
-        const rows: string[] = [];
-        Object.entries(totals).forEach(([cur, amt]) => {
-          if (amt <= 0) return;
-          rows.push(`<tr>
-            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.subtotal")} ${ccySym(cur)}</span></td>
+        return Object.entries(totals).map(([cur, amt]) =>
+          `<tr style="font-weight:bold">
+            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.usedTotal")} ${ccySym(cur)}</span></td>
             <td class="num">${amt.toFixed(2)}</td>
-          </tr>`);
-        });
-        if (labor > 0) {
-          rows.push(`<tr>
-            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.labor")} ${ccySym(laborCur)}</span></td>
-            <td class="num">${labor.toFixed(2)}</td>
-          </tr>`);
-        }
-        if (kdvRate > 0) {
-          Object.entries(totals).forEach(([cur, amt]) => {
-            if (amt <= 0) return;
-            rows.push(`<tr>
-              <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.productVat")} %${kdvRate} ${ccySym(cur)}</span></td>
-              <td class="num">${(amt * kdvRate / 100).toFixed(2)}</td>
-            </tr>`);
-          });
-          if (labor > 0) {
-            rows.push(`<tr>
-              <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.laborVat")} %${kdvRate} ${ccySym(laborCur)}</span></td>
-              <td class="num">${(labor * kdvRate / 100).toFixed(2)}</td>
-            </tr>`);
-          }
-        }
-        const curSet = Array.from(new Set([...Object.keys(totals), ...(labor > 0 ? [laborCur] : [])]));
-        curSet.forEach((cur) => {
-          const prod = totals[cur] || 0;
-          const lab = (labor > 0 && laborCur === cur) ? labor : 0;
-          const total = (prod + lab) * (1 + kdvRate / 100);
-          if (total <= 0) return;
-          rows.push(`<tr style="font-weight:bold">
-            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.grandTotal")} ${ccySym(cur)}</span></td>
-            <td class="num">${total.toFixed(2)}</td>
-          </tr>`);
-        });
-        return rows.join('');
+          </tr>`
+        ).join('');
       })()}
       </tfoot>
     </table>
+    ${data.productsMode === true ? (() => {
+      const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
+      const labor = Number(data.labor) || 0;
+      const laborCur = data.laborCurrency || "TRY";
+      const productTotals: Record<string, number> = {};
+      (data.usedProducts || []).forEach((p: any) => {
+        const cur = p.currency || "TRY";
+        productTotals[cur] = (productTotals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
+      });
+      const curSet = Array.from(new Set([...Object.keys(productTotals), ...(labor > 0 ? [laborCur] : [])]));
+      const lines: string[] = [];
+      Object.entries(productTotals).forEach(([cur, amt]) => {
+        if (amt <= 0) return;
+        lines.push(`<div class="pricing-summary-row"><span>${t("pdf.productsTotal")} ${ccySym(cur)}</span><span>${amt.toFixed(2)}</span></div>`);
+      });
+      if (labor > 0) {
+        lines.push(`<div class="pricing-summary-row"><span>${t("pdf.labor")} ${ccySym(laborCur)}</span><span>${labor.toFixed(2)}</span></div>`);
+      }
+      curSet.forEach((cur) => {
+        const base = (productTotals[cur] || 0) + (labor > 0 && cur === laborCur ? labor : 0);
+        if (base <= 0) return;
+        lines.push(`<div class="pricing-summary-row"><span>${t("pdf.subtotal")} ${ccySym(cur)}</span><span>${base.toFixed(2)}</span></div>`);
+        if (kdvRate > 0) {
+          lines.push(`<div class="pricing-summary-row"><span>${t("pdf.vat")} %${kdvRate} ${ccySym(cur)}</span><span>${(base * kdvRate / 100).toFixed(2)}</span></div>`);
+        }
+      });
+      curSet.forEach((cur) => {
+        const base = (productTotals[cur] || 0) + (labor > 0 && cur === laborCur ? labor : 0);
+        if (base <= 0) return;
+        lines.push(`<div class="pricing-summary-row summary-total"><span>${t("pdf.grandTotal")} ${ccySym(cur)}</span><span>${(base * (1 + kdvRate / 100)).toFixed(2)}</span></div>`);
+      });
+      if (!lines.length) return '';
+      return `<div class="pricing-summary">${lines.join('')}</div>`;
+    })() : ''}
   </div>` : ''}
 
   ${fieldActive("details") ? `
@@ -626,6 +632,27 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     <div class="privacy-body">${t("pdf.privacyNoteBody")}</div>
   </div>
 
+</div>
+  </div>
+  <script>
+  (function() {
+    function tryScale() {
+      var el = document.getElementById('scale-wrapper');
+      if (!el) return;
+      var a4H = 273 * 3.78;
+      var h = el.getBoundingClientRect().height || el.scrollHeight || el.offsetHeight;
+      if (h > a4H) {
+        var ratio = (a4H / h).toFixed(6);
+        el.style.transform = 'scale(' + ratio + ')';
+        el.style.transformOrigin = 'top left';
+        el.style.height = (h * ratio).toFixed(2) + 'px';
+        el.style.width = (100 / ratio) + '%';
+      }
+    }
+    if (document.readyState === 'complete') setTimeout(tryScale, 150);
+    else window.addEventListener('load', function() { setTimeout(tryScale, 150); });
+  })();
+  </script>
 </body>
 </html>`;
 }
