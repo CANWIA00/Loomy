@@ -514,10 +514,11 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
   </div>` : ''}
 
   ${(() => {
-    const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
-    const labor = Number(data.labor) || 0;
+    const productsMode = data.productsMode === true;
+    const kdvRate = productsMode ? Math.max(0, Number(data.kdvRate) || 0) : 0;
+    const labor = productsMode ? (Number(data.labor) || 0) : 0;
     const laborCur = data.laborCurrency || "TRY";
-    const fee = Number(data.fee) || 0;
+    const fee = !productsMode ? (Number(data.fee) || 0) : 0;
     const feeCur = data.feeCurrency || "TRY";
     const productTotals: Record<string, number> = {};
     (data.usedProducts || []).forEach((p: any) => {
@@ -530,7 +531,8 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     });
     if (labor > 0) { const g = groups[laborCur] || { products: 0, labor: 0, fee: 0 }; g.labor = labor; groups[laborCur] = g; }
     if (fee > 0) { const g = groups[feeCur] || { products: 0, labor: 0, fee: 0 }; g.fee = fee; groups[feeCur] = g; }
-    if (!Object.keys(groups).length) return '';
+    const activeCurs = Object.keys(groups).filter((cur) => (groups[cur].products + groups[cur].labor + groups[cur].fee) > 0);
+    if (!activeCurs.length) return '';
     const lines: string[] = [];
     Object.entries(groups).forEach(([cur, g]) => {
       if (g.products > 0) lines.push(`<div class="fee-line"><span>${t("pdf.subtotal")} ${escapeHtml(ccySym(cur))}</span><span>${g.products.toFixed(2)}</span></div>`);

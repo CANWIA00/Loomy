@@ -45,7 +45,7 @@ export async function createServiceRecord(
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
       fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-      templateName, templateConfig, usedProducts,
+      templateName, templateConfig, usedProducts, productsMode,
     } = req.body;
     const companyId = req.user!.companyId!;
 
@@ -85,6 +85,7 @@ export async function createServiceRecord(
           signature: signature || null,
           technicianSignature: technicianSignature || null,
           usedProducts: "[]",
+          productsMode: !!productsMode,
           templateName: templateName || null,
           templateConfig: templateConfig ? JSON.stringify(templateConfig) : null,
           companyId,
@@ -124,7 +125,7 @@ export async function updateServiceRecord(
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
       fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-      templateName, templateConfig, usedProducts,
+      templateName, templateConfig, usedProducts, productsMode,
     } = req.body;
 
     const existing = await prisma.serviceRecord.findFirst({
@@ -170,6 +171,7 @@ export async function updateServiceRecord(
           technicianSignature: technicianSignature ?? existing.technicianSignature,
           templateName: templateName ?? existing.templateName,
           templateConfig: templateConfig ? JSON.stringify(templateConfig) : existing.templateConfig,
+          productsMode: productsMode !== undefined ? !!productsMode : existing.productsMode,
         },
       });
 

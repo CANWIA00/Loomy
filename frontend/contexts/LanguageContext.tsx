@@ -410,6 +410,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.serviceFeeLabel": "Servis Ücreti",
     "svc.laborLabel": "İşçilik",
     "svc.kdvPlaceholder": "Örn: 20",
+    "svc.productsModeLabel": "Ürün Listesi İle Hesapla",
     "svc.grandTotal": "Genel Toplam",
     "svc.ratesNote": "Kur bilgisi alınamadı",
 
@@ -1559,6 +1560,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.serviceFeeLabel": "Service Fee",
     "svc.laborLabel": "Labor",
     "svc.kdvPlaceholder": "Ex: 20",
+    "svc.productsModeLabel": "Calculate With Product List",
     "svc.grandTotal": "Grand Total",
     "svc.ratesNote": "Exchange rate unavailable",
 

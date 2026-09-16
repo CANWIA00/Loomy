@@ -39,6 +39,7 @@ export interface ServiceRecord {
   usedProducts?: UsedProductItem[];
   imzali?: boolean;
   odendi?: boolean;
+  productsMode?: boolean;
   signature?: string[];
   technicianSignature?: any;
   templateName?: string;
@@ -74,6 +75,7 @@ interface ServiceRecordBackend {
   signature?: string;
   technicianSignature?: string;
   usedProducts: string;
+  productsMode?: boolean;
   templateName?: string;
   templateConfig?: string;
 }
@@ -144,6 +146,7 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
     templateName: b.templateName || undefined,
     templateConfig: templateConfigParsed,
     usedProducts: usedProductsParsed,
+    productsMode: b.productsMode ?? ((usedProductsParsed && usedProductsParsed.length > 0) || false),
   };
 }
 
@@ -177,6 +180,7 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.technicianSignature !== undefined) data.technicianSignature = JSON.stringify(f.technicianSignature);
   if (f.templateName !== undefined) data.templateName = f.templateName;
   if (f.templateConfig !== undefined) data.templateConfig = f.templateConfig;
+  if (f.productsMode !== undefined) data.productsMode = f.productsMode;
   if (f.usedProducts !== undefined) {
     data.usedProducts = f.usedProducts.map((p) => ({
       name: p.name,

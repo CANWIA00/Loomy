@@ -1,0 +1,1 @@
+ALTER TABLE "ServiceRecord" ADD COLUMN "productsMode" BOOLEAN NOT NULL DEFAULT false;

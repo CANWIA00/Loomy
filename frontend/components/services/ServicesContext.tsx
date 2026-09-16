@@ -31,7 +31,7 @@ interface ServicesContextValue {
   refreshRecords: () => void;
   companyLogo: string | null;
   form: ServiceFormData;
-  updateForm: (key: keyof ServiceFormData, value: string) => void;
+  updateForm: (key: keyof ServiceFormData, value: string | boolean) => void;
   updateCustomField: (key: string, value: string) => void;
   toggleChip: (groupKey: string, item: string) => void;
   setGroupValue: (groupKey: string, labels: string[]) => void;
@@ -316,7 +316,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  const updateForm = (key: keyof ServiceFormData, value: string) =>
+  const updateForm = (key: keyof ServiceFormData, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const updateCustomField = (key: string, value: string) =>
@@ -400,7 +400,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const handleSave = () => {
     if (!requireSignature()) return;
     const required = effectiveFields(templateConfig).filter((f) => f.required === true);
-    const missing = required.filter((f) => !fieldValueByKey(f.key).trim());
+    const missing = required
+      .filter((f) => !((f.key === "fee") && form.productsMode))
+      .filter((f) => !((f.key === "labor" || f.key === "kdv") && !form.productsMode))
+      .filter((f) => !fieldValueByKey(f.key).trim());
     if (missing.length) {
       const names = missing.map((f: TemplateField) => (lang === "tr" ? f.labelTr : f.labelEn)).join(", ");
       Alert.alert(t("svc.warning"), t("svc.errorRequiredFields", { fields: names }));
@@ -440,6 +443,7 @@ ucret: form.fee || "0.00",
           customChips: form.customChips,
           customValues: form.customValues,
           usedProducts: form.usedProducts,
+          productsMode: form.productsMode,
           service: form.services.join(", ") || "-",
           templateName: activeTemplate?.name || undefined,
           templateConfig: templateSnapshot(templateConfig),
@@ -510,6 +514,7 @@ ucret: form.fee || "0.00",
         deducted: p.deducted,
         transactionId: p.transactionId ?? null,
       })),
+      productsMode: record.productsMode ?? ((record.usedProducts || []).length > 0),
     };
     if (record.dahiliIp && !editForm.customValues.custom_internalIp) editForm.customValues.custom_internalIp = record.dahiliIp;
     if (record.hariciIp && !editForm.customValues.custom_externalIp) editForm.customValues.custom_externalIp = record.hariciIp;
@@ -561,6 +566,7 @@ ucret: form.fee || "0.00",
         customChips: form.customChips,
         customValues: form.customValues,
         usedProducts: form.usedProducts,
+        productsMode: form.productsMode,
         imzali: paths.length > 0,
         signature: paths,
         technicianSignature: technicianSignatureRef.current || null,
@@ -628,6 +634,7 @@ ucret: form.fee || "0.00",
       deducted: p.deducted,
       transactionId: p.transactionId,
     })),
+    productsMode: record.productsMode ?? ((record.usedProducts || []).length > 0),
     signature: record.signature || null,
     technicianSignature: record.technicianSignature || technicianSignatureRef.current || null,
     companyLogo: companyLogoRef.current,

@@ -122,9 +122,11 @@ function RecordDetailModal({
                 <DetailRow icon="call-outline" label={t("cst.phone")} value={payload.record.telefon} />
                 <DetailRow icon="time-outline" label={t("cst.startTime")} value={payload.record.baslangic} />
                 <DetailRow icon="time-outline" label={t("cst.endTime")} value={payload.record.bitis} />
-                <DetailRow icon="cash-outline" label={t("cst.fee")} value={`${payload.record.ucret} ${getCurrencySymbol(payload.record.ucretCurrency || "TRY")}`} />
-                {Number(payload.record.labor) > 0 && (
-                  <DetailRow icon="hammer-outline" label={t("cst.labor")} value={`${payload.record.labor} ${getCurrencySymbol(payload.record.laborCurrency || "TRY")}`} />
+{!payload.record.productsMode && (
+                  <DetailRow icon="cash-outline" label={t("cst.fee")} value={`${payload.record.ucret} ${getCurrencySymbol(payload.record.ucretCurrency || "TRY")}`} />
+                )}
+                {!payload.record.productsMode && Number(payload.record.kdvRate) > 0 && (
+                  <DetailRow icon="receipt-outline" label={t("cst.kdvRate")} value={`%${payload.record.kdvRate}`} />
                 )}
                 {Number(payload.record.kdvRate) > 0 && (
                   <DetailRow icon="receipt-outline" label={t("cst.kdvRate")} value={`%${payload.record.kdvRate}`} />
@@ -668,6 +670,7 @@ export default function CustomerDetailScreen() {
       labor: s.labor,
       laborCurrency: s.laborCurrency || "TRY",
       kdvRate: s.kdvRate || "20",
+      productsMode: s.productsMode ?? ((s.usedProducts || []).length > 0),
       technician: s.teknisyen,
       technicianPhone: s.teknisyenTelefon || "",
       startTime: s.baslangic,

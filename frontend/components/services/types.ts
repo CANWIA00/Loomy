@@ -32,6 +32,7 @@ export interface ServiceFormData {
   customChips: Record<string, string[]>;
   customValues: Record<string, string>;
   usedProducts: UsedProductFormItem[];
+  productsMode: boolean;
 }
 
 export const initialForm: ServiceFormData = {
@@ -56,6 +57,7 @@ export const initialForm: ServiceFormData = {
   customChips: {},
   customValues: {},
   usedProducts: [],
+  productsMode: false,
 };
 
 export interface NewCustomerFormData {
@@ -100,6 +102,7 @@ export interface PdfData {
   labor?: string;
   laborCurrency?: string;
   kdvRate?: string;
+  productsMode?: boolean;
   signature: any;
   technicianSignature: any;
   companyLogo: string | null;
