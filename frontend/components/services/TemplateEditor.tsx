@@ -41,6 +41,7 @@ export default function TemplateEditor() {
   const [deleteAlert, setDeleteAlert] = useState(false);
   const [createModal, setCreateModal] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
+  const [copyTemplateId, setCopyTemplateId] = useState<string | null>(null);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [editNameModal, setEditNameModal] = useState<{ kind: "group" | "option" | "customField"; groupKey: string; optionKey?: string; value: string } | null>(null);
   const [translating, setTranslating] = useState(false);
@@ -92,15 +93,31 @@ export default function TemplateEditor() {
     if (!newTemplateName.trim()) return;
     setSaving(true);
     try {
+      let fields = normalizeFields([]);
+      let chipGroups: TemplateChipGroup[] = [];
+      let useProducts = false;
+      let deductStock = true;
+      if (copyTemplateId) {
+        const src = templates.find((t) => t.id === copyTemplateId);
+        if (src) {
+          fields = normalizeFields(JSON.parse(JSON.stringify(src.fields)) as TemplateField[]);
+          chipGroups = JSON.parse(JSON.stringify(src.chipGroups)) as TemplateChipGroup[];
+          useProducts = src.useProducts;
+          deductStock = src.deductStock;
+        }
+      }
       const created = await templateApi.create({
         name: newTemplateName.trim(),
-        fields: normalizeFields([]),
-        chipGroups: [],
+        fields,
+        chipGroups,
+        useProducts,
+        deductStock,
       });
       setTemplates((prev) => [...prev, created.data]);
       setSelectedId(created.data.id);
       setCreateModal(false);
       setNewTemplateName("");
+      setCopyTemplateId(null);
       AlertNew(t("tpl.created"), t("tpl.createdMsg"));
     } catch {
       AlertNew(t("common.error"), t("tpl.errorSave"));
@@ -640,15 +657,56 @@ export default function TemplateEditor() {
         </View>
       </ScrollView>
 
-      <Modal visible={createModal} transparent animationType="fade" onRequestClose={() => setCreateModal(false)}>
+      <Modal visible={createModal} transparent animationType="fade" onRequestClose={() => { setCreateModal(false); setCopyTemplateId(null); setNewTemplateName(""); }}>
         <View className="flex-1 justify-center items-center bg-black/60">
           <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("tpl.createTitle")}</Text>
-              <TouchableOpacity onPress={() => setCreateModal(false)}>
+              <TouchableOpacity onPress={() => { setCreateModal(false); setCopyTemplateId(null); setNewTemplateName(""); }}>
                 <Ionicons name="close" size={24} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
+
+            <View className="flex-row gap-2 mb-4">
+              <TouchableOpacity
+                className="flex-1 rounded-xl p-3 border"
+                style={{ borderColor: copyTemplateId === null ? colors.primary : colors.border, backgroundColor: copyTemplateId === null ? colors.primary + "10" : colors.bg }}
+                onPress={() => setCopyTemplateId(null)}
+              >
+                <Ionicons name="document-text-outline" size={20} color={copyTemplateId === null ? colors.primary : colors.textMuted} style={{ marginBottom: 4 }} />
+                <Text className="text-xs font-semibold" style={{ color: copyTemplateId === null ? colors.primary : colors.text }}>{t("tpl.createBlank")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 rounded-xl p-3 border"
+                style={{ borderColor: copyTemplateId !== null ? colors.primary : colors.border, backgroundColor: copyTemplateId !== null ? colors.primary + "10" : colors.bg }}
+                onPress={() => setCopyTemplateId(templates.find((t) => t.id !== selectedId)?.id || null)}
+              >
+                <Ionicons name="copy-outline" size={20} color={copyTemplateId !== null ? colors.primary : colors.textMuted} style={{ marginBottom: 4 }} />
+                <Text className="text-xs font-semibold" style={{ color: copyTemplateId !== null ? colors.primary : colors.text }}>{t("tpl.createFromExisting")}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {copyTemplateId !== null && (
+              <View className="mb-3">
+                <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("tpl.copySource")}</Text>
+                <View className="flex-row flex-wrap gap-1.5">
+                  {templates.filter((t) => t.id !== selectedId).map((t) => {
+                    const active = t.id === copyTemplateId;
+                    return (
+                      <TouchableOpacity
+                        key={t.id}
+                        className="px-2.5 h-8 rounded-lg border items-center justify-center"
+                        style={{ borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primary + "1A" : colors.bg }}
+                        onPress={() => setCopyTemplateId(t.id)}
+                      >
+                        <Text className="text-xs" style={{ color: active ? colors.primary : colors.textSecondary }}>{t.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
             <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("tpl.name")}</Text>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm mb-4"
@@ -663,7 +721,7 @@ export default function TemplateEditor() {
               <TouchableOpacity
                 className="flex-1 h-10 rounded-lg items-center justify-center"
                 style={{ backgroundColor: colors.bgInput }}
-                onPress={() => setCreateModal(false)}
+                onPress={() => { setCreateModal(false); setCopyTemplateId(null); setNewTemplateName(""); }}
               >
                 <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("svc.cancel")}</Text>
               </TouchableOpacity>
