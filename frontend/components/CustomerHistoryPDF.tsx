@@ -5,6 +5,7 @@ export interface HistoryService {
   service: string;
   teknisyen: string;
   fee: string;
+  feeCurrency?: string;
 }
 
 export interface HistoryQuote {
@@ -49,6 +50,8 @@ export function generateCustomerHistoryPDFHtml(
   t: (key: string, params?: Record<string, string>) => string,
   lang: "tr" | "en" = "tr"
 ): string {
+  const ccySym = (c?: string) => (c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "₺");
+
   const serviceRows = (data.services || [])
     .map(
       (s, i) => `
@@ -57,12 +60,16 @@ export function generateCustomerHistoryPDFHtml(
         <td>${escapeHtml(s.tarih)}</td>
         <td>${escapeHtml(s.service)}</td>
         <td>${escapeHtml(s.teknisyen)}</td>
-        <td class="num">${escapeHtml(s.fee)}</td>
+        <td class="num">${escapeHtml(s.fee)} ${escapeHtml(ccySym(s.feeCurrency))}</td>
       </tr>`
     )
     .join("");
 
-  const serviceTotal = (data.services || []).reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
+  const serviceTotalsByCurrency = (data.services || []).reduce<Record<string, number>>((acc, s) => {
+    const cur = s.feeCurrency || "TRY";
+    acc[cur] = (acc[cur] || 0) + (parseFloat(s.fee) || 0);
+    return acc;
+  }, {});
 
   const quoteRows = (data.quotes || [])
     .map(
@@ -211,7 +218,7 @@ export function generateCustomerHistoryPDFHtml(
         ${serviceRows || `<tr><td colspan="5"><span class="empty">${t("cst.noServiceReports")}</span></td></tr>`}
       </tbody>
     </table>
-    ${(data.services || []).length ? `<div class="total-line"><span>${t("cst.quoteTotal")}: </span>&nbsp;<span class="tot">₺ ${formatMoney(serviceTotal)}</span></div>` : ""}
+    ${(data.services || []).length ? `<div class="total-line"><span>${t("cst.quoteTotal")}: </span>&nbsp;<span class="tot">${Object.entries(serviceTotalsByCurrency).map(([cur, amt]) => `${formatMoney(amt)} ${escapeHtml(ccySym(cur))}`).join(" &nbsp;·&nbsp; ")}</span></div>` : ""}
   </div>
 
   <div class="section">

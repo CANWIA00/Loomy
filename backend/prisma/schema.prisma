@@ -85,6 +85,7 @@ model ServiceRecord {
   externalIp   String?
   details      String?
   fee          String   @default("0.00")
+  feeCurrency  String   @default("TRY")
   technician   String?
   technicianPhone String?
   services     String   @default("[]")

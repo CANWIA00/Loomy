@@ -26,6 +26,7 @@ export interface ServiceRecord {
   hariciIp: string;
   detaylar: string;
   ucret: string;
+  ucretCurrency?: string;
   teknisyen: string;
   teknisyenTelefon?: string;
   hizmetler: string[];
@@ -55,6 +56,7 @@ interface ServiceRecordBackend {
   externalIp?: string;
   details?: string;
   fee: string;
+  feeCurrency?: string;
   technician?: string;
   technicianPhone?: string;
   services: string;
@@ -119,6 +121,7 @@ function toFrontend(b: ServiceRecordBackend): ServiceRecord {
     hariciIp: b.externalIp || "",
     detaylar: b.details || "",
     ucret: b.fee,
+    ucretCurrency: b.feeCurrency || "TRY",
     teknisyen: b.technician || "",
     teknisyenTelefon: b.technicianPhone || "",
     hizmetler,
@@ -149,6 +152,7 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.hariciIp !== undefined) data.externalIp = f.hariciIp;
   if (f.detaylar !== undefined) data.details = f.detaylar;
   if (f.ucret !== undefined) data.fee = f.ucret;
+  if (f.ucretCurrency !== undefined) data.feeCurrency = f.ucretCurrency;
   if (f.teknisyen !== undefined) data.technician = f.teknisyen;
   if (f.teknisyenTelefon !== undefined) data.technicianPhone = f.teknisyenTelefon;
   if (f.hizmetler !== undefined) data.services = f.hizmetler;

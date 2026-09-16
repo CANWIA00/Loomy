@@ -20,6 +20,7 @@ export interface ServiceFormData {
   externalIp: string;
   details: string;
   fee: string;
+  feeCurrency: string;
   technician: string;
   technicianPhone: string;
   documentDate: string;
@@ -40,6 +41,7 @@ export const initialForm: ServiceFormData = {
   externalIp: "",
   details: "",
   fee: "",
+  feeCurrency: "TRY",
   technician: "",
   technicianPhone: "",
   documentDate: "",
@@ -88,6 +90,7 @@ export interface PdfData {
   customChips?: Record<string, string[]>;
   customValues?: Record<string, string>;
   usedProducts?: UsedProductFormItem[];
+  feeCurrency?: string;
   signature: any;
   technicianSignature: any;
   companyLogo: string | null;

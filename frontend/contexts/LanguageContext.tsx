@@ -405,6 +405,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.phoneMain": "Ana telefon",
     "svc.phoneContact": "İrtibat telefonu",
     "svc.phoneNotFound": "Bu kayıt için telefon numarası bulunamadı.",
+    "svc.currency": "Para Birimi",
+    "svc.subtotal": "Ara Toplam",
+    "svc.serviceFeeLabel": "Servis Ücreti",
+    "svc.grandTotal": "Genel Toplam",
+    "svc.ratesNote": "Kur bilgisi alınamadı",
 
     // Customers
     "cst.title": "Müşteri Yönetimi",
@@ -1542,6 +1547,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.phoneMain": "Main phone",
     "svc.phoneContact": "Contact phone",
     "svc.phoneNotFound": "No phone number found for this record.",
+    "svc.currency": "Currency",
+    "svc.subtotal": "Subtotal",
+    "svc.serviceFeeLabel": "Service Fee",
+    "svc.grandTotal": "Grand Total",
+    "svc.ratesNote": "Exchange rate unavailable",
 
     // Customers
     "cst.title": "Customer Management",

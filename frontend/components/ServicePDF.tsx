@@ -183,6 +183,8 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     return `<div class="section"><div class="section-title">${t("pdf.additionalInfo")}</div><div class="info-list">${items}</div></div>`;
   };
 
+  const ccySym = (c?: string) => (c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "₺");
+
   return `
 <!DOCTYPE html>
 <html>
@@ -473,16 +475,25 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
             <td>${escapeHtml(p.name)}${!inStock ? ` <span class="not-in-stock">(${t("pdf.usedNotInStock")})</span>` : ''}</td>
             <td class="num">${qty}</td>
             <td>${escapeHtml(p.unit || "")}</td>
-            <td class="num">${price ? price.toFixed(2) : '-'}</td>
-            <td class="num">${amount ? amount.toFixed(2) : '-'}</td>
+            <td class="num">${price ? `${price.toFixed(2)} ${ccySym(p.currency)}` : '-'}</td>
+            <td class="num">${amount ? `${amount.toFixed(2)} ${ccySym(p.currency)}` : '-'}</td>
           </tr>`;
         }).join('')}
       </tbody>
       <tfoot>
-        <tr style="font-weight:bold">
-          <td colspan="5" style="text-align:right">${t("pdf.usedTotal")}</td>
-          <td class="num">${data.usedProducts.reduce((sum: number, p: any) => sum + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0)), 0).toFixed(2)}</td>
-        </tr>
+        ${(() => {
+        const totals: Record<string, number> = {};
+        (data.usedProducts || []).forEach((p: any) => {
+          const cur = p.currency || "TRY";
+          totals[cur] = (totals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
+        });
+        return Object.entries(totals).map(([cur, amt]) =>
+          `<tr style="font-weight:bold">
+            <td colspan="5" style="text-align:right"><span class="currency-total">${t("pdf.usedTotal")} ${ccySym(cur)}</span></td>
+            <td class="num">${amt.toFixed(2)}</td>
+          </tr>`
+        ).join('');
+      })()}
       </tfoot>
     </table>
   </div>` : ''}
@@ -500,7 +511,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     <div class="section-title">${t("pdf.serviceFee")}</div>
     <div class="fee-content">
       ${data.fee && data.fee !== "0" && data.fee !== "0.00" ?
-        t("pdf.serviceFeeLine", { amount: `₺${escapeHtml(data.fee)}` }) :
+        t("pdf.serviceFeeLine", { amount: `${escapeHtml(data.fee)} ${escapeHtml(ccySym(data.feeCurrency))}` }) :
         t("pdf.freeService")
       }
     </div>

@@ -6,10 +6,12 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useServices } from "./ServicesContext";
-import { type TemplateField, type TemplateChipGroup, effectiveFields } from "./types";import SvgAwareImage from "../SvgAwareImage";
+import { type TemplateField, type TemplateChipGroup, effectiveFields, type UsedProductFormItem } from "./types";import SvgAwareImage from "../SvgAwareImage";
 import { getCurrentAddress } from "../../utils/location";
 import { stockApi, type StockItem } from "../../apiclient/stock";
 import { UNIT_OPTIONS } from "../quotes/types";
+import { useCurrency } from "../../contexts/CurrencyContext";
+import { formatMoney, getCurrencySymbol, parseNumericInput, CURRENCIES } from "../stock/format";
 
 const formatDateInput = (v: string) => {
   const digits = v.replace(/\D/g, "").slice(0, 8);
@@ -41,6 +43,67 @@ const labelOf = (field: TemplateField, lang: string) => (lang === "tr" ? field.l
 function FieldLabel({ children }: { children: ReactNode }) {
   const { colors } = useTheme();
   return <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{children}</Text>;
+}
+
+function FeeInput({ value, currency, onChangeFee, onChangeCurrency }: {
+  value: string;
+  currency: string;
+  onChangeFee: (v: string) => void;
+  onChangeCurrency: (c: string) => void;
+}) {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+  const [modalOpen, setModalOpen] = useState(false);
+  return (
+    <View>
+      <View className="flex-row gap-2">
+        <TextInput
+          className="flex-1 h-10 border rounded-lg px-3 text-sm"
+          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          placeholder="0.00"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="decimal-pad"
+          value={value}
+          onChangeText={(v) => onChangeFee(v.replace(/[^0-9.]/g, ""))}
+        />
+        <TouchableOpacity
+          className="h-10 px-3 border rounded-lg flex-row items-center"
+          style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
+          onPress={() => setModalOpen(true)}
+        >
+          <Text className="text-sm font-medium" style={{ color: colors.text }}>{currency || "TRY"}</Text>
+          <Ionicons name="chevron-down" size={14} color={colors.textMuted} style={{ marginLeft: 3 }} />
+        </TouchableOpacity>
+      </View>
+      <Modal visible={modalOpen} transparent animationType="fade" onRequestClose={() => setModalOpen(false)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-72 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("svc.currency")}</Text>
+              <TouchableOpacity onPress={() => setModalOpen(false)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {CURRENCIES.map((c, ci, arr) => (
+              <TouchableOpacity
+                key={c.code}
+                className="flex-row items-center px-3 py-3"
+                style={ci < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  onChangeCurrency(c.code);
+                  setModalOpen(false);
+                }}
+              >
+                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{c.code}</Text>
+                <Text className="text-xs mr-3" style={{ color: colors.textMuted }}>{c.symbol} · {c.label}</Text>
+                {currency === c.code && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
 
 function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
@@ -208,12 +271,11 @@ function FieldCell({ field }: { field: TemplateField }) {
     return (
       <View className="flex-1 mb-3">
         <FieldLabel>{label}</FieldLabel>
-        <TextInput
-          {...inputProps}
-          placeholder="0.00"
-          keyboardType="decimal-pad"
+        <FeeInput
           value={form.fee}
-          onChangeText={(v) => updateForm("fee", v.replace(/[^0-9.]/g, ""))}
+          currency={form.feeCurrency || "TRY"}
+          onChangeFee={(v) => updateForm("fee", v)}
+          onChangeCurrency={(c) => updateForm("feeCurrency", c)}
         />
       </View>
     );
@@ -459,14 +521,11 @@ function SingleField({ field }: { field: TemplateField }) {
     return (
       <View className="mb-3">
         <FieldLabel>{label}</FieldLabel>
-        <TextInput
-          className="w-full h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder="0.00"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="decimal-pad"
+        <FeeInput
           value={form.fee}
-          onChangeText={(v) => updateForm("fee", v.replace(/[^0-9.]/g, ""))}
+          currency={form.feeCurrency || "TRY"}
+          onChangeFee={(v) => updateForm("fee", v)}
+          onChangeCurrency={(c) => updateForm("feeCurrency", c)}
         />
       </View>
     );
@@ -632,9 +691,13 @@ function UsedProductsSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { form, addUsedProduct, updateUsedProduct, removeUsedProduct } = useServices();
+  const { rates, convert } = useCurrency();
   const [suggestions, setSuggestions] = useState<StockItem[]>([]);
   const [activeRow, setActiveRow] = useState<number | null>(null);
   const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
+  const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
+  const [totalCurrency, setTotalCurrency] = useState("TRY");
+  const [totalCurrencyModal, setTotalCurrencyModal] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runSearch = useCallback(async (q: string, index: number) => {
@@ -669,6 +732,42 @@ function UsedProductsSection() {
 
   const items = form.usedProducts || [];
   const notInStockCount = items.filter((p) => p.stockItemId == null && p.name.trim()).length;
+
+  const lineTotal = (p: UsedProductFormItem) => (Number(p.quantity) || 0) * (Number(p.unitPrice) || 0);
+  const perCurrency = items.reduce<Record<string, number>>((acc, p) => {
+    const cur = p.currency || "TRY";
+    acc[cur] = (acc[cur] || 0) + lineTotal(p);
+    return acc;
+  }, {});
+
+  const feeValue = parseNumericInput(form.fee || "");
+  const feeCurrency = form.feeCurrency || "TRY";
+  let totalTry = 0;
+  let conversionOk = true;
+  Object.entries(perCurrency).forEach(([cur, amt]) => {
+    if (!amt) return;
+    if (cur === "TRY") { totalTry += amt; return; }
+    const conv = convert(amt, cur);
+    if (conv != null) totalTry += conv;
+    else conversionOk = false;
+  });
+  if (feeValue > 0) {
+    if (feeCurrency === "TRY") totalTry += feeValue;
+    else {
+      const conv = convert(feeValue, feeCurrency);
+      if (conv != null) totalTry += conv;
+      else conversionOk = false;
+    }
+  }
+
+  let grandTotal: number | null = null;
+  if (totalCurrency === "TRY") grandTotal = totalTry;
+  else {
+    const rate = rates?.rates[totalCurrency];
+    if (rate) grandTotal = totalTry / rate;
+  }
+
+  const hasAmounts = Object.keys(perCurrency).length > 0 || feeValue > 0;
 
   return (
     <View className="mb-3">
@@ -752,6 +851,17 @@ function UsedProductsSection() {
                 onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.]/g, "") })}
               />
             </View>
+            <View style={{ width: 84 }}>
+              <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.currency")}</Text>
+              <TouchableOpacity
+                className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center"
+                style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
+                onPress={() => setCurrencyModalIdx(i)}
+              >
+                <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.currency || "TRY"}</Text>
+                <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {p.stockItemId != null && p.inStock !== false && (
@@ -767,6 +877,45 @@ function UsedProductsSection() {
         <Text className="text-xs mb-2" style={{ color: colors.warning }}>
           {t("svc.notInStockCount").replace("{count}", String(notInStockCount))}
         </Text>
+      )}
+
+      {hasAmounts && (
+        <View className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt, borderWidth: 1 }}>
+          {Object.entries(perCurrency).filter(([, amt]) => amt > 0).map(([cur, amt]) => (
+            <View key={cur} className="flex-row items-center justify-between py-0.5">
+              <Text className="text-xs" style={{ color: colors.textSecondary }}>
+                {t("svc.subtotal")} {getCurrencySymbol(cur)}
+              </Text>
+              <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(amt, cur)}</Text>
+            </View>
+          ))}
+          {feeValue > 0 && (
+            <View className="flex-row items-center justify-between py-0.5">
+              <Text className="text-xs" style={{ color: colors.textSecondary }}>
+                {t("svc.serviceFeeLabel")} {getCurrencySymbol(feeCurrency)}
+              </Text>
+              <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(feeValue, feeCurrency)}</Text>
+            </View>
+          )}
+          <View className="flex-row items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: colors.borderAlt }}>
+            <View className="flex-row items-center gap-2 flex-1">
+              <Text className="text-sm font-bold" style={{ color: colors.text }}>{t("svc.grandTotal")}</Text>
+              <TouchableOpacity
+                className="h-7 px-2 rounded-lg flex-row items-center"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1 }}
+                onPress={() => setTotalCurrencyModal(true)}
+              >
+                <Text className="text-xs font-medium" style={{ color: colors.text }}>{totalCurrency}</Text>
+                <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
+            </View>
+            {grandTotal != null ? (
+              <Text className="text-base font-bold" style={{ color: colors.primary }}>{formatMoney(grandTotal, totalCurrency)}</Text>
+            ) : (
+              <Text className="text-xs" style={{ color: colors.warning }}>{t("svc.ratesNote")}</Text>
+            )}
+          </View>
+        </View>
       )}
 
       <TouchableOpacity
@@ -799,6 +948,66 @@ function UsedProductsSection() {
               >
                 <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{u}</Text>
                 {items[unitModalIdx ?? 0]?.unit === u && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={currencyModalIdx !== null} transparent animationType="fade" onRequestClose={() => setCurrencyModalIdx(null)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-72 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("svc.currency")}</Text>
+              <TouchableOpacity onPress={() => setCurrencyModalIdx(null)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {CURRENCIES.map((c, ci, arr) => (
+              <TouchableOpacity
+                key={c.code}
+                className="flex-row items-center px-3 py-3"
+                style={ci < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  if (currencyModalIdx !== null) updateUsedProduct(currencyModalIdx, { currency: c.code });
+                  setCurrencyModalIdx(null);
+                }}
+              >
+                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{c.code}</Text>
+                <Text className="text-xs mr-3" style={{ color: colors.textMuted }}>{c.symbol} · {c.label}</Text>
+                {items[currencyModalIdx ?? 0]?.currency === c.code && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={totalCurrencyModal} transparent animationType="fade" onRequestClose={() => setTotalCurrencyModal(false)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-72 p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("svc.currency")}</Text>
+              <TouchableOpacity onPress={() => setTotalCurrencyModal(false)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {CURRENCIES.map((c, ci, arr) => (
+              <TouchableOpacity
+                key={c.code}
+                className="flex-row items-center px-3 py-3"
+                style={ci < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                onPress={() => {
+                  setTotalCurrency(c.code);
+                  setTotalCurrencyModal(false);
+                }}
+              >
+                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{c.code}</Text>
+                <Text className="text-xs mr-3" style={{ color: colors.textMuted }}>{c.symbol} · {c.label}</Text>
+                {totalCurrency === c.code && (
                   <Ionicons name="checkmark" size={18} color={colors.primary} />
                 )}
               </TouchableOpacity>

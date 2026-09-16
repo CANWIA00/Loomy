@@ -122,7 +122,7 @@ function RecordDetailModal({
                 <DetailRow icon="call-outline" label={t("cst.phone")} value={payload.record.telefon} />
                 <DetailRow icon="time-outline" label={t("cst.startTime")} value={payload.record.baslangic} />
                 <DetailRow icon="time-outline" label={t("cst.endTime")} value={payload.record.bitis} />
-                <DetailRow icon="cash-outline" label={t("cst.fee")} value={payload.record.ucret} />
+                <DetailRow icon="cash-outline" label={t("cst.fee")} value={`${payload.record.ucret} ${getCurrencySymbol(payload.record.ucretCurrency || "TRY")}`} />
                 <DetailRow icon="person-outline" label={t("cst.technician")} value={payload.record.teknisyen} />
                 <ChipList title={t("cst.servicesPerformed")} items={payload.record.hizmetler} />
                 <ChipList title={t("cst.technicalInfo")} items={payload.record.teknik} />
@@ -658,6 +658,7 @@ export default function CustomerDetailScreen() {
       services: s.hizmetler || [],
       technical: s.teknik || [],
       fee: s.ucret,
+      feeCurrency: s.ucretCurrency || "TRY",
       technician: s.teknisyen,
       technicianPhone: s.teknisyenTelefon || "",
       startTime: s.baslangic,
@@ -802,6 +803,7 @@ export default function CustomerDetailScreen() {
         service: s.service || s.customer,
         teknisyen: s.teknisyen,
         fee: s.ucret,
+        feeCurrency: s.ucretCurrency,
       })),
       quotes: quotes.map((q) => ({
         tarih: q.tarih,
