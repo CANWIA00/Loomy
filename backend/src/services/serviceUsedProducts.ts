@@ -62,7 +62,8 @@ export async function applyUsedProductsTx(
   companyId: string,
   recordId: number,
   oldJson: string | null | undefined,
-  newList: any
+  newList: any,
+  deductStock: boolean = true
 ): Promise<UsedProductRecord[]> {
   const old = parseUsedProducts(oldJson);
   const input = normalizeUsedProductInput(newList);
@@ -79,6 +80,19 @@ export async function applyUsedProductsTx(
       data: { quantity: Math.max(0, item.quantity + prev.quantity) },
     });
     await tx.stockTransaction.delete({ where: { id: prev.transactionId } });
+  }
+
+  if (!deductStock) {
+    for (const p of input) {
+      resolved.push({
+        ...p,
+        stockItemId: null,
+        inStock: true,
+        deducted: false,
+        transactionId: null,
+      });
+    }
+    return resolved;
   }
 
   for (const p of input) {

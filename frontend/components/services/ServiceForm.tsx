@@ -796,7 +796,8 @@ function UsedProductsSection() {
   };
 
   const items = form.usedProducts || [];
-  const notInStockCount = items.filter((p) => p.stockItemId == null && p.name.trim()).length;
+  const deductStock = templateConfig.deductStock ?? true;
+  const notInStockCount = deductStock ? items.filter((p) => p.stockItemId == null && p.name.trim()).length : 0;
 
   const lineTotal = (p: UsedProductFormItem) => (Number(p.quantity) || 0) * (Number(p.unitPrice) || 0);
   const perCurrency = items.reduce<Record<string, number>>((acc, p) => {
@@ -846,15 +847,6 @@ function UsedProductsSection() {
 
   return (
     <View className="mb-3">
-      <TouchableOpacity
-        className="flex-row items-center gap-2 py-2 px-3 rounded-lg mb-3"
-        style={{ backgroundColor: form.productsMode ? colors.primary + "15" : colors.bg, borderWidth: 1, borderColor: form.productsMode ? colors.primary : colors.border }}
-        onPress={() => updateForm("productsMode", !form.productsMode)}
-      >
-        <Ionicons name={form.productsMode ? "radio-button-on" : "radio-button-off"} size={20} color={form.productsMode ? colors.primary : colors.textMuted} />
-        <Text className="text-sm font-medium" style={{ color: form.productsMode ? colors.primary : colors.text }}>{t("svc.productsModeLabel")}</Text>
-      </TouchableOpacity>
-
       {!form.productsMode ? null : (
         <>
           <View className="flex-row items-center gap-2 mb-2">

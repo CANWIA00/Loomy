@@ -147,14 +147,16 @@ model FinanceRecomputeJob {
 }
 
 model ServiceFormTemplate {
-  id         String   @id @default(uuid())
-  companyId  String
-  name       String
-  fields     String   @default("[]")
-  chipGroups String   @default("[]")
-  isDefault  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default(uuid())
+  companyId    String
+  name         String
+  fields       String   @default("[]")
+  chipGroups   String   @default("[]")
+  useProducts  Boolean  @default(false)
+  deductStock  Boolean  @default(true)
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id])
 

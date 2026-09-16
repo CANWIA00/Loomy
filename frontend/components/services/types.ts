@@ -153,6 +153,8 @@ export interface TemplateChipGroup {
 export interface ServiceTemplateConfig {
   fields: TemplateField[];
   chipGroups: TemplateChipGroup[];
+  useProducts: boolean;
+  deductStock: boolean;
 }
 
 export const GENERAL_FIELD_KEYS = ["technician", "documentDate", "details", "fee", "labor", "kdv"] as const;
@@ -237,5 +239,7 @@ export function defaultTemplateConfig(): ServiceTemplateConfig {
         ],
       },
     ],
+    useProducts: false,
+    deductStock: true,
   };
 }

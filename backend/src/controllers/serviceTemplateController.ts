@@ -29,6 +29,8 @@ interface ChipGroupConfig {
 interface ServiceTemplateConfig {
   fields: FieldConfig[];
   chipGroups: ChipGroupConfig[];
+  useProducts: boolean;
+  deductStock: boolean;
 }
 
 export function defaultTemplateConfig(): ServiceTemplateConfig {
@@ -90,7 +92,7 @@ export function defaultTemplateConfig(): ServiceTemplateConfig {
     ],
   };
 
-  return { fields, chipGroups: [services, technical] };
+  return { fields, chipGroups: [services, technical], useProducts: false, deductStock: true };
 }
 
 export async function listServiceTemplates(
@@ -123,6 +125,8 @@ export async function listServiceTemplates(
         id: t.id,
         name: t.name,
         isDefault: t.isDefault,
+        useProducts: t.useProducts ?? false,
+        deductStock: t.deductStock ?? true,
         fields: JSON.parse(t.fields),
         chipGroups: JSON.parse(t.chipGroups),
       }))
@@ -139,7 +143,7 @@ export async function createServiceTemplate(
 ): Promise<void> {
   try {
     const companyId = req.user!.companyId!;
-    const { name, fields, chipGroups, isDefault } = req.body;
+    const { name, fields, chipGroups, isDefault, useProducts, deductStock } = req.body;
 
     if (!name?.trim()) {
       res.status(400).json({ message: "Şablon adı zorunludur." });
@@ -154,6 +158,8 @@ export async function createServiceTemplate(
         name: name.trim(),
         fields: JSON.stringify(fields || defaultTemplateConfig().fields),
         chipGroups: JSON.stringify(chipGroups || defaultTemplateConfig().chipGroups),
+        useProducts: useProducts !== undefined ? !!useProducts : false,
+        deductStock: deductStock !== undefined ? !!deductStock : true,
         isDefault: existing === 0 ? true : !!isDefault,
       },
     });
@@ -169,6 +175,8 @@ export async function createServiceTemplate(
       id: template.id,
       name: template.name,
       isDefault: template.isDefault,
+      useProducts: template.useProducts ?? false,
+      deductStock: template.deductStock ?? true,
       fields: JSON.parse(template.fields),
       chipGroups: JSON.parse(template.chipGroups),
     });
@@ -185,7 +193,7 @@ export async function updateServiceTemplate(
   try {
     const id = String(req.params.id);
     const companyId = req.user!.companyId!;
-    const { name, fields, chipGroups, isDefault } = req.body;
+    const { name, fields, chipGroups, isDefault, useProducts, deductStock } = req.body;
 
     const existing = await prisma.serviceFormTemplate.findFirst({
       where: { id, companyId },
@@ -202,6 +210,8 @@ export async function updateServiceTemplate(
         name: name?.trim() ?? existing.name,
         fields: fields ? JSON.stringify(fields) : existing.fields,
         chipGroups: chipGroups ? JSON.stringify(chipGroups) : existing.chipGroups,
+        useProducts: useProducts !== undefined ? !!useProducts : existing.useProducts,
+        deductStock: deductStock !== undefined ? !!deductStock : existing.deductStock,
         isDefault: isDefault !== undefined ? !!isDefault : existing.isDefault,
       },
     });
@@ -217,6 +227,8 @@ export async function updateServiceTemplate(
       id: template.id,
       name: template.name,
       isDefault: template.isDefault,
+      useProducts: template.useProducts ?? false,
+      deductStock: template.deductStock ?? true,
       fields: JSON.parse(template.fields),
       chipGroups: JSON.parse(template.chipGroups),
     });
@@ -257,6 +269,8 @@ export async function setDefaultServiceTemplate(
       id: template.id,
       name: template.name,
       isDefault: template.isDefault,
+      useProducts: template.useProducts ?? false,
+      deductStock: template.deductStock ?? true,
       fields: JSON.parse(template.fields),
       chipGroups: JSON.parse(template.chipGroups),
     });

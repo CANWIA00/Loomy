@@ -444,6 +444,7 @@ ucret: form.fee || "0.00",
           customValues: form.customValues,
           usedProducts: form.usedProducts,
           productsMode: form.productsMode,
+          deductStock: activeTemplate ? (activeTemplate.deductStock ?? true) : true,
           service: form.services.join(", ") || "-",
           templateName: activeTemplate?.name || undefined,
           templateConfig: templateSnapshot(templateConfig),
@@ -452,7 +453,7 @@ ucret: form.fee || "0.00",
         setIsEditing(false);
         setEditingId(null);
         originalFormRef.current = null;
-        setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
+        setForm(freshForm());
         fetchRecords();
       } catch {
         setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorUpdate") });
@@ -468,7 +469,7 @@ ucret: form.fee || "0.00",
     setIsEditing(false);
     setEditingId(null);
     originalFormRef.current = null;
-    setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
+    setForm(freshForm());
     setSelectedCustomerId(null);
   };
 
@@ -476,7 +477,7 @@ ucret: form.fee || "0.00",
     if (isEditing && originalFormRef.current) {
       setForm({ ...originalFormRef.current });
     } else {
-      setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
+      setForm(freshForm());
       setSelectedCustomerId(null);
     }
   };
@@ -567,6 +568,7 @@ ucret: form.fee || "0.00",
         customValues: form.customValues,
         usedProducts: form.usedProducts,
         productsMode: form.productsMode,
+        deductStock: activeTemplate ? (activeTemplate.deductStock ?? true) : true,
         imzali: paths.length > 0,
         signature: paths,
         technicianSignature: technicianSignatureRef.current || null,
@@ -580,7 +582,7 @@ ucret: form.fee || "0.00",
       setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorSave") });
     } finally {
       setLoading(false);
-      setForm({ ...initialForm, technician: currentUserName.current || "", technicianPhone: currentUserPhone.current || "" });
+      setForm(freshForm());
       setEditingId(null);
       setIsEditing(false);
       setSignatureModal(false);
@@ -802,13 +804,38 @@ ucret: form.fee || "0.00",
     null;
 
   const templateConfig: ServiceTemplateConfig = activeTemplate
-    ? { fields: activeTemplate.fields, chipGroups: activeTemplate.chipGroups }
+    ? {
+        fields: activeTemplate.fields,
+        chipGroups: activeTemplate.chipGroups,
+        useProducts: activeTemplate.useProducts ?? false,
+        deductStock: activeTemplate.deductStock ?? true,
+      }
     : defaultTemplateConfig();
 
   const selectTemplate = (id: string) => {
+    const tpl = templates.find((t) => t.id === id);
     setActiveTemplateId(id);
-    setForm((prev) => ({ ...prev, services: [], technical: [], customChips: {}, customValues: {} }));
+    setForm((prev) => ({
+      ...prev,
+      services: [],
+      technical: [],
+      customChips: {},
+      customValues: {},
+      productsMode: tpl ? !!tpl.useProducts : prev.productsMode,
+    }));
   };
+
+  useEffect(() => {
+    if (isEditing) return;
+    setForm((prev) => ({ ...prev, productsMode: activeTemplate ? !!activeTemplate.useProducts : prev.productsMode }));
+  }, [activeTemplateId, templates, isEditing]);
+
+  const freshForm = (): ServiceFormData => ({
+    ...initialForm,
+    technician: currentUserName.current || "",
+    technicianPhone: currentUserPhone.current || "",
+    productsMode: activeTemplate ? !!activeTemplate.useProducts : false,
+  });
 
   const templateSnapshot = (config: ServiceTemplateConfig) =>
     JSON.parse(JSON.stringify(config)) as ServiceTemplateConfig;

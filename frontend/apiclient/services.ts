@@ -40,6 +40,7 @@ export interface ServiceRecord {
   imzali?: boolean;
   odendi?: boolean;
   productsMode?: boolean;
+  deductStock?: boolean;
   signature?: string[];
   technicianSignature?: any;
   templateName?: string;
@@ -181,6 +182,7 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.templateName !== undefined) data.templateName = f.templateName;
   if (f.templateConfig !== undefined) data.templateConfig = f.templateConfig;
   if (f.productsMode !== undefined) data.productsMode = f.productsMode;
+  if (f.deductStock !== undefined) data.deductStock = f.deductStock;
   if (f.usedProducts !== undefined) {
     data.usedProducts = f.usedProducts.map((p) => ({
       name: p.name,

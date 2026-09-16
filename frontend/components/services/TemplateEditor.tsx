@@ -33,6 +33,8 @@ export default function TemplateEditor() {
   const [draftName, setDraftName] = useState("");
   const [draft, setDraft] = useState<TemplateChipGroup[] | null>(null);
   const [draftFields, setDraftFields] = useState<TemplateField[] | null>(null);
+  const [draftUseProducts, setDraftUseProducts] = useState(false);
+  const [draftDeductStock, setDraftDeductStock] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
@@ -46,7 +48,7 @@ export default function TemplateEditor() {
     oldName: string;
     newName: string;
     config: ServiceTemplateConfig;
-    oldState: { name: string; groups: TemplateChipGroup[]; fields: TemplateField[] } | null;
+    oldState: { name: string; groups: TemplateChipGroup[]; fields: TemplateField[]; useProducts: boolean; deductStock: boolean } | null;
     count: number;
   } | null>(null);
 
@@ -73,10 +75,14 @@ export default function TemplateEditor() {
       setDraftName(selected.name);
       setDraft(JSON.parse(JSON.stringify(selected.chipGroups)) as TemplateChipGroup[]);
       setDraftFields(normalizeFields(JSON.parse(JSON.stringify(selected.fields)) as TemplateField[]));
+      setDraftUseProducts(!!selected.useProducts);
+      setDraftDeductStock(selected.deductStock ?? true);
     } else {
       setDraftName("");
       setDraft(null);
       setDraftFields(null);
+      setDraftUseProducts(false);
+      setDraftDeductStock(true);
     }
   }, [selected]);
 
@@ -107,11 +113,11 @@ export default function TemplateEditor() {
     if (!draftName.trim() || !draft || !draftFields || !selectedId) return;
     const oldName = selected?.name || draftName.trim();
     const oldState = selected
-      ? { name: selected.name, groups: JSON.parse(JSON.stringify(selected.chipGroups)) as TemplateChipGroup[], fields: JSON.parse(JSON.stringify(selected.fields)) as TemplateField[] }
+      ? { name: selected.name, groups: JSON.parse(JSON.stringify(selected.chipGroups)) as TemplateChipGroup[], fields: JSON.parse(JSON.stringify(selected.fields)) as TemplateField[], useProducts: selected.useProducts, deductStock: selected.deductStock }
       : null;
     setSaving(true);
     try {
-      await templateApi.update(selectedId, { name: draftName.trim(), fields: draftFields, chipGroups: draft });
+      await templateApi.update(selectedId, { name: draftName.trim(), fields: draftFields, chipGroups: draft, useProducts: draftUseProducts, deductStock: draftDeductStock });
       await loadTemplates();
       let count = 0;
       try {
@@ -119,7 +125,7 @@ export default function TemplateEditor() {
         count = c.data.count || 0;
       } catch {}
       if (count > 0) {
-        setApplyAlert({ oldName, newName: draftName.trim(), config: { fields: draftFields, chipGroups: draft }, oldState, count });
+        setApplyAlert({ oldName, newName: draftName.trim(), config: { fields: draftFields, chipGroups: draft, useProducts: draftUseProducts, deductStock: draftDeductStock }, oldState, count });
       } else {
         AlertNew(t("common.success"), t("tpl.saved"));
       }
@@ -151,11 +157,13 @@ export default function TemplateEditor() {
     setApplyAlert(null);
     setSaving(true);
     try {
-      await templateApi.update(selectedId, { name: oldState.name, fields: oldState.fields, chipGroups: oldState.groups });
+      await templateApi.update(selectedId, { name: oldState.name, fields: oldState.fields, chipGroups: oldState.groups, useProducts: oldState.useProducts, deductStock: oldState.deductStock });
       await loadTemplates();
       setDraftName(oldState.name);
       setDraft(JSON.parse(JSON.stringify(oldState.groups)) as TemplateChipGroup[]);
       setDraftFields(normalizeFields(JSON.parse(JSON.stringify(oldState.fields)) as TemplateField[]));
+      setDraftUseProducts(!!oldState.useProducts);
+      setDraftDeductStock(!!oldState.deductStock);
       AlertNew(t("common.info"), t("tpl.operationCancelled"));
     } catch {
       AlertNew(t("common.error"), t("tpl.errorSave"));
@@ -477,6 +485,36 @@ export default function TemplateEditor() {
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.generalFieldsSection")}</Text>
                   <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.generalFieldsHint")}</Text>
                   {draftFields && draftFields.filter((f) => isGeneralField(f.key)).map((f) => renderFieldRow(f))}
+
+                  <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.productsSection")}</Text>
+                  <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.productsHint")}</Text>
+                  <View className="rounded-xl border p-3 mb-5" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-1 pr-3">
+                        <Text className="text-sm font-medium" style={{ color: colors.text }}>{t("tpl.useProducts")}</Text>
+                        <Text className="text-[11px] mt-0.5" style={{ color: colors.textMuted }}>{t("tpl.useProductsHint")}</Text>
+                      </View>
+                      <Switch
+                        value={draftUseProducts}
+                        onValueChange={(v) => { setDraftUseProducts(v); if (!v) setDraftDeductStock(false); }}
+                        trackColor={{ false: colors.border, true: colors.primary }}
+                        thumbColor="#fff"
+                      />
+                    </View>
+                    <View className="flex-row items-center justify-between mt-4">
+                      <View className="flex-1 pr-3">
+                        <Text className="text-sm font-medium" style={{ color: draftUseProducts ? colors.text : colors.textMuted }}>{t("tpl.deductStock")}</Text>
+                        <Text className="text-[11px] mt-0.5" style={{ color: colors.textMuted }}>{t("tpl.deductStockHint")}</Text>
+                      </View>
+                      <Switch
+                        value={draftUseProducts && draftDeductStock}
+                        disabled={!draftUseProducts}
+                        onValueChange={(v) => setDraftDeductStock(v)}
+                        trackColor={{ false: colors.border, true: colors.primary }}
+                        thumbColor="#fff"
+                      />
+                    </View>
+                  </View>
 
                   <Text className="text-sm font-bold mb-1" style={{ color: colors.text }}>{t("tpl.groupsSection")}</Text>
                   <Text className="text-xs mb-3" style={{ color: colors.textMuted }}>{t("tpl.groupsHint")}</Text>

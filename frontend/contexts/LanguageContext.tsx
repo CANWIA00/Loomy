@@ -410,7 +410,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.serviceFeeLabel": "Servis Ücreti",
     "svc.laborLabel": "İşçilik",
     "svc.kdvPlaceholder": "Örn: 20",
-    "svc.productsModeLabel": "Ürün Listesi İle Hesapla",
     "svc.grandTotal": "Genel Toplam",
     "svc.ratesNote": "Kur bilgisi alınamadı",
 
@@ -743,6 +742,12 @@ const translations: Record<Lang, Record<string, string>> = {
     "tpl.preset.commissioningDesc": "Sistemi devreye alma, eğitim ve test",
     "tpl.preset.blank": "Sıfırdan Başla",
     "tpl.preset.blankDesc": "Boş şablon ile başlayıp tümünü siz düzenleyin",
+    "tpl.productsSection": "Ürün Listesi ve Stok",
+    "tpl.productsHint": "Ürün listesi ve stok davranışını ayarlayın",
+    "tpl.useProducts": "Ürün Listesi",
+    "tpl.useProductsHint": "Formda kullanılan ürün listesi, işçilik bedeli ve KDV paket halinde gösterilir. Belgede toplam maliyet = ürün maliyeti + işçilik + KDV.",
+    "tpl.deductStock": "Stoktan Düşme",
+    "tpl.deductStockHint": "Kullanılan ürünler kayıt sırasında stoktan düşülür.",
 
     // Login
     "login.subtitle": "Servis Takip Platformu",
@@ -1560,7 +1565,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.serviceFeeLabel": "Service Fee",
     "svc.laborLabel": "Labor",
     "svc.kdvPlaceholder": "Ex: 20",
-    "svc.productsModeLabel": "Calculate With Product List",
     "svc.grandTotal": "Grand Total",
     "svc.ratesNote": "Exchange rate unavailable",
 
@@ -1893,6 +1897,12 @@ const translations: Record<Lang, Record<string, string>> = {
     "tpl.preset.commissioningDesc": "System commissioning, training and testing",
     "tpl.preset.blank": "Start from Scratch",
     "tpl.preset.blankDesc": "Start with a blank template and configure everything yourself",
+    "tpl.productsSection": "Product List & Stock",
+    "tpl.productsHint": "Configure product list and stock behavior",
+    "tpl.useProducts": "Product List",
+    "tpl.useProductsHint": "The used product list, labor cost and VAT are shown as a package in the form. Document total cost = product cost + labor + VAT.",
+    "tpl.deductStock": "Deduct From Stock",
+    "tpl.deductStockHint": "Used products are deducted from stock when saving.",
 
     // Login
     "login.subtitle": "Service Tracking Platform",

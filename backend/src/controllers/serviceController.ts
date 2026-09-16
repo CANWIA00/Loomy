@@ -45,7 +45,7 @@ export async function createServiceRecord(
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
       fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-      templateName, templateConfig, usedProducts, productsMode,
+      templateName, templateConfig, usedProducts, productsMode, deductStock,
     } = req.body;
     const companyId = req.user!.companyId!;
 
@@ -92,7 +92,7 @@ export async function createServiceRecord(
         },
       });
 
-      const resolved = await applyUsedProductsTx(tx, companyId, record.id, null, usedProducts);
+      const resolved = await applyUsedProductsTx(tx, companyId, record.id, null, usedProducts, deductStock !== undefined ? !!deductStock : true);
       if (resolved.length) {
         await tx.serviceRecord.update({
           where: { id: record.id },
@@ -125,7 +125,7 @@ export async function updateServiceRecord(
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
       fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-      templateName, templateConfig, usedProducts, productsMode,
+      templateName, templateConfig, usedProducts, productsMode, deductStock,
     } = req.body;
 
     const existing = await prisma.serviceRecord.findFirst({
@@ -181,7 +181,8 @@ export async function updateServiceRecord(
           companyId,
           id,
           existing.usedProducts,
-          usedProducts
+          usedProducts,
+          deductStock !== undefined ? !!deductStock : true
         );
         await tx.serviceRecord.update({
           where: { id },
@@ -240,6 +241,7 @@ export async function applyTemplateConfigToRecords(
       data: {
         templateName: newName,
         ...(templateConfig ? { templateConfig: JSON.stringify(templateConfig) } : {}),
+        ...(templateConfig && templateConfig.useProducts != null ? { productsMode: !!templateConfig.useProducts } : {}),
       },
     });
 

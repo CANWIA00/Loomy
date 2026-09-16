@@ -5,6 +5,8 @@ export interface ServiceTemplate {
   id: string;
   name: string;
   isDefault: boolean;
+  useProducts: boolean;
+  deductStock: boolean;
   fields: ServiceTemplateConfig["fields"];
   chipGroups: ServiceTemplateConfig["chipGroups"];
 }
@@ -14,6 +16,8 @@ export interface ServiceTemplateInput {
   fields: ServiceTemplateConfig["fields"];
   chipGroups: ServiceTemplateConfig["chipGroups"];
   isDefault?: boolean;
+  useProducts?: boolean;
+  deductStock?: boolean;
 }
 
 export const templateApi = {
