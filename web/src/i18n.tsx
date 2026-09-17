@@ -4,7 +4,6 @@ export type Lang = "tr" | "en";
 
 const tr = {
   nav: {
-    techService: "İş Takip",
     features: "Özellikler",
     howItWorks: "Nasıl Çalışır",
     pricing: "Paketler",
@@ -17,8 +16,8 @@ const tr = {
   },
   hero: {
     badge: "İşletme yönetimi yeniden tanımlanıyor",
-    title1: "İşletmenizi tek",
-    title2: "panelden yönetin",
+    title1: "İş Takip Programı ile",
+    title2: "tek panelden yönetin",
     description:
       "Loomy; müşterilerinizi, servislerinizi, tekliflerinizi, stoklarınızı, finansınızı, ödemelerinizi, randevularınızı ve ekibinizi tek bir yerden yönetmenizi sağlar. Kağıt, hesap tablosu ve kafa karışıklığı olmadan.",
     ctaPrimary: "Ücretsiz Başla",
@@ -335,6 +334,10 @@ const tr = {
     title: "Sıkça sorulan sorular",
     description: "Aklınıza takılan soruların yanıtlarını burada bulabilirsiniz.",
     items: [
+      {
+        q: "İş takip programı ne işe yarar?",
+        a: "İş takip programı; iş ve servis kayıtlarınızı, randevularınızı, ekip atamalarınızı, stok seviyenizi, tekliflerinizi ve finans durumunuzu tek panelde toplar. İş formları dijitalleşir, raporlar imzalı PDF olarak hazırlanır.",
+      },
       {
         q: "Loomy nedir?",
         a: "Loomy; müşteri, servis, teklif, ödeme, stok, finans, randevu ve ekip yönetimini tek panelde toplayan bir işletme yönetim uygulamasıdır.",
@@ -860,7 +863,6 @@ panel: {
 
 const en: Dictionary = {
   nav: {
-    techService: "Job Tracking",
     features: "Features",
     howItWorks: "How it works",
     pricing: "Pricing",
@@ -1191,6 +1193,10 @@ const en: Dictionary = {
     title: "Frequently asked questions",
     description: "Find answers to the questions you might have.",
     items: [
+      {
+        q: "What does a job tracking program do?",
+        a: "A job tracking program brings your job and service records, appointments, team assignments, stock levels, quotes and finances into a single panel. Job forms go digital and reports are prepared as signed PDFs.",
+      },
       {
         q: "What is Loomy?",
         a: "Loomy is a business management app that brings customer, service, quote, payment, stock, finance, appointment and team management into a single panel.",

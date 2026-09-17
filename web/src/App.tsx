@@ -12,7 +12,6 @@ import Cta from "./components/Cta";
 import Apply from "./components/Apply";
 import Footer from "./components/Footer";
 import PrivacyPage from "./components/PrivacyPage";
-import TechnicalLanding from "./components/TechnicalLanding";
 
 export const APP_URL = "https://app.loomy-app.com";
 export const CONTACT_EMAIL = "lommy.app.info@gmail.com";
@@ -75,7 +74,6 @@ export default function App() {
       <ScrollRestore />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/is-takip-programi" element={<TechnicalLanding />} />
         <Route path="/gizlilik-politikasi" element={<Privacy />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

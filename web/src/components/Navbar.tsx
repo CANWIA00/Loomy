@@ -10,7 +10,6 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   const links = [
-    { to: "/is-takip-programi", label: t.nav.techService },
     { to: "/#features", label: t.nav.features },
     { to: "/#how-it-works", label: t.nav.howItWorks },
     { to: "/#pricing", label: t.nav.pricing },

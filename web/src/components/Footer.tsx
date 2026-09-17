@@ -22,9 +22,6 @@ export default function Footer() {
             <h4>{t.footer.product}</h4>
             <ul>
               <li>
-                <Link to="/is-takip-programi">{t.nav.techService}</Link>
-              </li>
-              <li>
                 <Link to="/#features">{t.nav.features}</Link>
               </li>
               <li>
