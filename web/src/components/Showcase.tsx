@@ -3,17 +3,18 @@ import { useLanguage } from "../i18n";
 
 type ScreenKey =
   | "panel"
+  | "stock"
   | "quotes"
   | "services"
   | "customers"
   | "plan"
-  | "payments"
+  | "finans"
   | "profil"
   | "settings"
   | "customer"
   | "document";
 
-const screenKeys: ScreenKey[] = ["panel", "services", "quotes", "customers", "plan", "payments", "settings"];
+const screenKeys: ScreenKey[] = ["panel", "stock", "services", "quotes", "customers", "plan", "finans", "settings"];
 
 const labelColors: Record<string, string> = {
   primary: "amt-primary",
@@ -101,6 +102,40 @@ const FX_ROWS: [string, string][] = [
   ["1 USD", "33,1245 ₺"],
   ["1 EUR", "40,7731 ₺"],
   ["1 GBP", "44,2010 ₺"],
+];
+
+const MOCK_STOCK: [string, string, string, string, string, string, boolean][] = [
+  ["IP Dome Kamera CDVX-24B", "YG Kamera Sistemleri", "12", "AD", "₺12.500", "KDV %20", false],
+  ["NVR-16 Kayıt Cihazı (2 TB)", "YG Kamera Sistemleri", "5", "AD", "₺15.250", "KDV %20", false],
+  ["Klima Gazı R32 · 10 kg", "Tem Kompresör", "2", "AD", "₺64,25", "KDV %20", true],
+  ["Kombi Fanı E9", "Buderus", "8", "AD", "₺950,00", "KDV %20", false],
+  ["PoE Switch POES-16", "NetworkPlus", "2", "AD", "₺3.000", "KDV %20", true],
+];
+
+const MOCK_INVOICES: { no: string; total: string; kdv: string; supplier: string; date: string; lines: [string, string][] }[] = [
+  {
+    no: "FAT-2026-0481",
+    total: "₺126.400",
+    kdv: "₺21.066",
+    supplier: "YG Kamera Sistemleri",
+    date: "12.09.2026",
+    lines: [
+      ["IP Dome Kamera CDVX-24B", "8 AD"],
+      ["NVR-16 Kayıt Cihazı", "2 AD"],
+      ["PoE Switch POES-16", "4 AD"],
+    ],
+  },
+  {
+    no: "FAT-2026-0507",
+    total: "₺86.900",
+    kdv: "₺14.483",
+    supplier: "Tem Kompresör",
+    date: "11.09.2026",
+    lines: [
+      ["Klima Gazı R32 · 10 kg", "20 AD"],
+      ["Kombi Fanı E9", "10 AD"],
+    ],
+  },
 ];
 
 const SVC_GROUPS: { items: [string, boolean][] }[] = [
@@ -259,17 +294,28 @@ function Icon({ name, size = 20, color = "currentColor" }: { name: string; size?
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M12 5v14M5 12h14" /></svg>;
     case "close":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M6 6l12 12M18 6 6 18" /></svg>;
+    case "cube":
+      return (
+        <svg viewBox="0 0 24 24" {...p} style={s}>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+          <path d="m3.3 7 8.7 5 8.7-5M12 22V12" />
+        </svg>
+      );
+    case "stats-chart":
+      return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M3.5 21h17" /><path d="m5 17.5 4.5-5.5 3.5 3.5 5.5-7.5" /></svg>;
     default:
       return null;
   }
 }
 
-const tabBarIcons = ["home", "construct", "doc", "people", "calendar", "card", "settings"];
+const tabBarIcons = ["home", "cube", "construct", "doc", "people", "calendar", "stats-chart", "settings"];
 
 export default function Showcase() {
   const { t, lang, setLang } = useLanguage();
   const [screen, setScreen] = useState<ScreenKey>("panel");
   const [isDark, setIsDark] = useState(true);
+  const [stockOpen, setStockOpen] = useState(true);
+  const [stockMode, setStockMode] = useState<"items" | "invoices">("items");
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [custIdx, setCustIdx] = useState(0);
@@ -286,17 +332,19 @@ export default function Showcase() {
       ? -1
       : screen === "panel"
         ? 0
-        : screen === "quotes"
-          ? 2
+        : screen === "stock"
+          ? 1
           : screen === "services"
-            ? 1
-            : screen === "customers"
+            ? 2
+            : screen === "quotes"
               ? 3
-              : screen === "plan"
+              : screen === "customers"
                 ? 4
-                : screen === "payments"
+                : screen === "plan"
                   ? 5
-                  : 6;
+                  : screen === "finans"
+                    ? 6
+                    : 7;
 
 const PayBars = ({
   data,
@@ -553,6 +601,7 @@ const PayBars = ({
 
     if (screen === "panel") {
       const p = sc.panel;
+      const sk = sc.stock;
       return (
         <>
           <div className="an-top">
@@ -570,6 +619,58 @@ const PayBars = ({
           <p className="an-sub">{p.subtitle}</p>
 
           <div className="an-stack">
+            <div className="an-card">
+              <div className="an-card-head">
+                <span className="an-iconbox an-ib-teal">
+                  <Icon name="cube" size={20} />
+                </span>
+                <div className="an-card-title">
+                  <strong>{p.stockTitle}</strong>
+                  <span>{p.stockDesc}</span>
+                </div>
+                <button className="an-chip" style={{ padding: 0 }} onClick={() => setStockOpen((v) => !v)}>
+                  <Icon name={stockOpen ? "chevron-up" : "chevron-down"} size={20} color="var(--sc-primary)" />
+                </button>
+                <span className="an-btn" style={{ cursor: "pointer" }} onClick={() => setScreen("stock")}>
+                  {p.manage}
+                </span>
+              </div>
+              {stockOpen && (
+                <>
+                  <div className="an-stock-stats">
+                    <div className="an-stock-stat"><span>{sk.totalProducts}</span><strong>38</strong></div>
+                    <div className="an-stock-stat"><span>{sk.lowStockCount}</span><strong className="warn">2</strong></div>
+                    <div className="an-stock-stat"><span>{sk.totalValue}</span><strong>₺386.500</strong></div>
+                  </div>
+                  <div className="an-btn-row" style={{ marginBottom: 10 }}>
+                    <span className="an-btn">
+                      <Icon name="cloud" size={14} color="var(--sc-primary-on)" />
+                      {sk.importInvoice}
+                    </span>
+                    <span className="an-btn" style={{ background: "#10b981" }}>
+                      <Icon name="plus" size={14} color="#fff" />
+                      {sk.addItem}
+                    </span>
+                  </div>
+                  <div className="an-rec-list">
+                    {MOCK_STOCK.filter((it) => it[6]).map((it, i) => (
+                      <span className="an-rec" key={i}>
+                        <span className="an-rec-main">
+                          <strong>{it[0]}</strong>
+                          <span>{it[1]} · {it[5]}</span>
+                        </span>
+                        <span className="an-ht-pill pending">{sk.low}</span>
+                        <span className="an-rec-money">
+                          <strong>{it[2]} {it[3]}</strong>
+                          <span>{it[4]}</span>
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
             <div className="an-card an-row">
               <span className="an-iconbox an-ib-primary">
                 <Icon name="chatbubbles" size={20} />
@@ -724,6 +825,128 @@ const PayBars = ({
               </div>
             </div>
           </div>
+        </>
+      );
+    }
+
+    if (screen === "stock") {
+      const sk = sc.stock;
+      return (
+        <>
+          <ScreenHead title={sk.title} subtitle={sk.subtitle} />
+          <p className="an-sub" />
+
+          <div className="an-filters" style={{ gap: 8 }}>
+            <span
+              className={`an-fpill${stockMode === "items" ? " active" : ""}`}
+              role="button"
+              style={{ cursor: "pointer" }}
+              onClick={() => setStockMode("items")}
+            >
+              {sk.allItems}
+            </span>
+            <span
+              className={`an-fpill${stockMode === "invoices" ? " active" : ""}`}
+              role="button"
+              style={{ cursor: "pointer" }}
+              onClick={() => setStockMode("invoices")}
+            >
+              {sk.invoices}
+            </span>
+          </div>
+
+          {stockMode === "items" ? (
+            <>
+              <p className="an-sub" />
+              <div className="an-btn-row" style={{ marginBottom: 10 }}>
+                <span className="an-btn">
+                  <Icon name="cloud" size={14} color="var(--sc-primary-on)" />
+                  {sk.importInvoice}
+                </span>
+                <span className="an-btn" style={{ background: "#10b981" }}>
+                  <Icon name="plus" size={14} color="#fff" />
+                  {sk.addItem}
+                </span>
+              </div>
+
+              <div className="an-stock-stats">
+                <div className="an-stock-stat"><span>{sk.totalProducts}</span><strong>38</strong></div>
+                <div className="an-stock-stat"><span>{sk.lowStockCount}</span><strong className="warn">2</strong></div>
+                <div className="an-stock-stat"><span>{sk.totalValue}</span><strong>₺386.500</strong></div>
+              </div>
+
+              <div className="an-search">
+                <Icon name="search" size={14} color="var(--sc-muted)" />
+                <span>{sk.searchPlaceholder}</span>
+              </div>
+
+              <div className="an-filters">
+                <span className="an-fpill active">
+                  {sk.allItems} ({MOCK_STOCK.length})
+                </span>
+                <span className="an-fpill">
+                  {sk.lowStock} ({MOCK_STOCK.filter((it) => it[6]).length})
+                </span>
+              </div>
+
+              <div className="an-stack" style={{ gap: 8 }}>
+                {MOCK_STOCK.map((it, i) => (
+                  <div className="an-card an-row" key={i} style={{ cursor: "pointer" }}>
+                    <div className="an-rowmain" style={{ marginLeft: 0 }}>
+                      <strong>{it[0]}</strong>
+                      <span>{it[1]} · {it[5]}</span>
+                      {it[6] === true && <span className="an-ht-pill pending">{sk.low}</span>}
+                    </div>
+                    <span className="an-rec-money">
+                      <strong>{it[2]} {it[3]}</strong>
+                      <span>{it[4]}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="an-pag">
+                <span className="an-pag-btn muted">{sk.previous}</span>
+                <span className="an-pag-txt">{sk.page}</span>
+                <span className="an-pag-btn">{sk.next}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="an-sub" />
+              <div className="an-btn-row" style={{ marginBottom: 10 }}>
+                <span className="an-btn">
+                  <Icon name="cloud" size={14} color="var(--sc-primary-on)" />
+                  {sk.importInvoice}
+                </span>
+              </div>
+
+              <div className="an-stack" style={{ gap: 8 }}>
+                {MOCK_INVOICES.map((inv, i) => (
+                  <div className="an-card" key={i}>
+                    <div className="an-total-row">
+                      <span>{inv.no}</span>
+                      <strong className="amt-primary">
+                        {inv.total}
+                        <span className="an-inv-kdv">KDV {inv.kdv}</span>
+                      </strong>
+                    </div>
+                    <div className="an-rec-main" style={{ padding: "2px 0" }}>
+                      <span>{inv.supplier} · {inv.date}</span>
+                    </div>
+                    <div className="an-inv-lines">
+                      {inv.lines.map((line, li) => (
+                        <div className="an-inv-line" key={li}>
+                          <span>{line[0]}</span>
+                          <b>{line[1]}</b>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </>
       );
     }
@@ -1130,12 +1353,69 @@ const PayBars = ({
       );
     }
 
-    if (screen === "payments") {
+    if (screen === "finans") {
+      const ff = sc.finans;
       const py = sc.payments;
       return (
         <>
-          <ScreenHead title={py.title} />
-          <p className="an-sub">{py.subtitle}</p>
+          <ScreenHead title={ff.title} subtitle={ff.subtitle} />
+
+          <div className="an-card">
+            <div className="an-card-head">
+              <span className="an-iconbox an-ib-teal">
+                <Icon name="stats-chart" size={20} />
+              </span>
+              <div className="an-card-title">
+                <strong>{ff.overview}</strong>
+              </div>
+              <span className="an-chip" style={{ padding: 0 }}>
+                <Icon name="refresh" size={16} color="var(--sc-muted)" />
+              </span>
+            </div>
+            <div className="an-chiprow">
+              <span className="an-fpill an-fpill active">2026</span>
+              <span className="an-fpill an-fpill active">{lang === "tr" ? "Ağustos" : "August"}</span>
+              <span className="an-fpill">{ff.all}</span>
+            </div>
+            <p className="an-fin-note">{ff.tryNote}</p>
+            <div className="an-fin-chart">
+              <i className="a" style={{ height: "26%" }} />
+              <i className="d" style={{ height: "44%" }} />
+              <i className="a" style={{ height: "38%" }} />
+              <i className="c" style={{ height: "60%" }} />
+              <i className="b" style={{ height: "30%" }} />
+              <i className="c" style={{ height: "72%" }} />
+              <i className="a" style={{ height: "52%" }} />
+              <i className="d" style={{ height: "84%" }} />
+            </div>
+            <div className="an-fin-leg">
+              <span><i style={{ background: "#14b8a6" }} /> {ff.stock}</span>
+              <span><i style={{ background: "#ef4444" }} /> {ff.expense}</span>
+              <span><i style={{ background: "#f59e0b" }} /> {ff.pending}</span>
+              <span><i style={{ background: "#3b82f6" }} /> {ff.paid}</span>
+            </div>
+            <div className="an-total-row">
+              <span>{ff.stock} · {ff.stockSub}</span>
+              <strong className="amt-primary">+ ₺386.500</strong>
+            </div>
+            <div className="an-total-row">
+              <span>{ff.expense} · {ff.expenseSub}</span>
+              <strong className="amt-warn">- ₺87.400</strong>
+            </div>
+            <div className="an-total-row">
+              <span>{ff.pending}</span>
+              <strong className="amt-warn">+ ₺18.900 · {ff.pendingSub}</strong>
+            </div>
+            <div className="an-total-row">
+              <span>{ff.paid}</span>
+              <strong className="amt-primary">+ ₺42.300 · {ff.paidSub}</strong>
+            </div>
+            <div className="an-total-row pb">
+              <span>{ff.net}</span>
+              <strong className="amt-success">= {ff.netTotal}</strong>
+            </div>
+            <p className="an-fin-note">{ff.perCurrency}: ₺ / US$ · {ff.curSrc}: TCMB · {ff.ratesNote}</p>
+          </div>
 
           <div className="an-card">
             <div className="an-card-head">

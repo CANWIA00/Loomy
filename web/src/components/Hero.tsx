@@ -26,6 +26,20 @@ function HeroIcon({ name, size = 16, color = "currentColor" }: { name: string; s
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M13 2.5 4.5 13.5H11L10 21.5l8.5-11H13l0-8Z" /></svg>;
     case "arrow":
       return <svg viewBox="0 0 24 24" {...p} style={s}><path d="M4 12h15m0 0-5.5-5.5M19 12l-5.5 5.5" /></svg>;
+    case "cube":
+      return (
+        <svg viewBox="0 0 24 24" {...p} style={s}>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+          <path d="m3.3 7 8.7 5 8.7-5M12 22V12" />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg viewBox="0 0 24 24" {...p} style={s}>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -107,13 +121,24 @@ export default function Hero() {
                   <div className="an-top">
                     <h3 className="an-title">{p.greeting}</h3>
                     <div className="an-chips">
-                      <span className="an-chip"><HeroIcon name="chat" size={15} color="var(--sc-primary)" /></span>
+                      <span className="an-chip"><HeroIcon name="settings" size={15} color="var(--sc-primary)" /></span>
                       <span className="an-avatar hero-av">LM</span>
                     </div>
                   </div>
                   <p className="an-sub">{p.subtitle}</p>
 
                   <div className="an-stack">
+                    <div className="an-card an-row">
+                      <span className="an-iconbox an-ib-teal"><HeroIcon name="cube" size={18} color="#2dd4bf" /></span>
+                      <div className="an-card-title">
+                        <strong>{p.stockTitle}</strong>
+                        <span>{p.stockDesc}</span>
+                      </div>
+                      <div className="an-btn-row">
+                        <span className="an-btn">{p.manage}</span>
+                      </div>
+                    </div>
+
                     <div className="an-card an-row">
                       <span className="an-iconbox an-ib-primary"><HeroIcon name="construct" size={18} color="var(--sc-primary)" /></span>
                       <div className="an-card-title">

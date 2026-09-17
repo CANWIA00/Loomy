@@ -4506,3 +4506,40 @@
   border-radius: 2px;
   display: inline-block;
 }
+
+.an-fin-note {
+  color: var(--sc-muted);
+  font-size: 10.5px;
+  line-height: 1.5;
+  margin: 8px 0 2px;
+}
+
+.an-inv-kdv {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--sc-muted);
+  margin-top: 2px;
+}
+
+.an-inv-lines {
+  border-top: 1px solid var(--sc-border2);
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+.an-inv-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 11px;
+  color: var(--sc-secondary);
+}
+
+.an-inv-line b {
+  color: var(--sc-text);
+  font-weight: 600;
+  font-size: 10.5px;
+}
