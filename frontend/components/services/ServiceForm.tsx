@@ -759,6 +759,8 @@ function UsedProductsSection() {
   const [totalCurrency, setTotalCurrency] = useState("TRY");
   const [totalCurrencyModal, setTotalCurrencyModal] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchInSuggestions = useRef(false);
 
   const { templateConfig } = useServices();
   const fields = effectiveFields(templateConfig);
@@ -780,9 +782,14 @@ function UsedProductsSection() {
     searchTimer.current = setTimeout(() => runSearch(value, index), 400);
   }, [runSearch, updateUsedProduct]);
 
-  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+  useEffect(() => () => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (blurTimer.current) clearTimeout(blurTimer.current);
+  }, []);
 
   const pick = (index: number, item: StockItem) => {
+    touchInSuggestions.current = false;
+    if (blurTimer.current) clearTimeout(blurTimer.current);
     updateUsedProduct(index, {
       name: item.name,
       unit: item.unit,
@@ -892,14 +899,23 @@ function UsedProductsSection() {
                   style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                   placeholder={t("svc.productNamePlaceholder")}
                   placeholderTextColor={colors.textMuted}
-                  value={p.name}
+value={p.name}
                   onChangeText={(v) => onNameChange(i, v)}
                   onFocus={() => { setActiveRow(i); if (p.name.trim()) runSearch(p.name, i); }}
-                  onBlur={() => setTimeout(() => setSuggestions([]), 150)}
+                  onBlur={() => {
+                    if (blurTimer.current) clearTimeout(blurTimer.current);
+                    blurTimer.current = setTimeout(() => {
+                      if (!touchInSuggestions.current) setSuggestions([]);
+                    }, 250);
+                  }}
                 />
                 {activeRow === i && suggestions.length > 0 && (
-                  <View className="overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8, position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, zIndex: 1000, elevation: 10, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
-                    <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" className="max-h-56">
+                  <View className="overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8, position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, zIndex: 1000, elevation: 10, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
+                    onTouchStart={() => { touchInSuggestions.current = true; }}
+                    onTouchEnd={() => { touchInSuggestions.current = false; }}
+                    onTouchCancel={() => { touchInSuggestions.current = false; }}
+                  >
+                    <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="always" className="max-h-56">
                       {suggestions.map((s, si, arr) => (
                         <TouchableOpacity key={s.id} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, ...(si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}) }} onPress={() => pick(i, s)}>
                           <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
