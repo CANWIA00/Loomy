@@ -831,26 +831,31 @@ function UsedProductsSection() {
     }
   }
   const kdvRate = form.productsMode ? kdvRateVal : 0;
-  const productKdvTry = productTry * kdvRate;
-  const laborKdvTry = laborTry * kdvRate;
-  const grandTry = productTry + laborTry + productKdvTry + laborKdvTry;
+  const baseTry = productTry + laborTry;
+  const kdvTry = baseTry * kdvRate;
+  const grandTry = baseTry + kdvTry;
 
   let grandTotal: number | null = null;
-  let productKdvDisplay: number | null = null;
-  let laborKdvDisplay: number | null = null;
+  let kdvDisplay: number | null = null;
+  let productDisplay: number | null = null;
   if (totalCurrency === "TRY") {
     grandTotal = grandTry;
-    productKdvDisplay = productKdvTry;
-    laborKdvDisplay = laborKdvTry;
+    kdvDisplay = kdvTry;
+    productDisplay = productTry;
   }
   else {
     const rate = rates?.rates[totalCurrency];
     if (rate) {
       grandTotal = grandTry / rate;
-      productKdvDisplay = productKdvTry / rate;
-      laborKdvDisplay = laborKdvTry / rate;
+      kdvDisplay = kdvTry / rate;
+      productDisplay = productTry / rate;
     }
   }
+
+  const productAmounts = Object.entries(perCurrency).filter(([, amt]) => amt > 0);
+  const productParts = productAmounts
+    .map(([cur, amt]) => `${formatMoney(amt)} ${getCurrencySymbol(cur)}`)
+    .join(" + ");
 
   const hasAmounts = form.productsMode
     ? Object.keys(perCurrency).length > 0 || laborValue > 0
@@ -984,28 +989,29 @@ function UsedProductsSection() {
 
           {hasAmounts && (
             <View className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt, borderWidth: 1 }}>
-              {Object.entries(perCurrency).filter(([, amt]) => amt > 0).map(([cur, amt]) => (
-                <View key={cur} className="flex-row items-center justify-between py-0.5">
-                  <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.subtotal")} {getCurrencySymbol(cur)}</Text>
-                  <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(amt, cur)}</Text>
+              {productAmounts.length > 0 && (
+                <View className="py-0.5">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.subtotal")}</Text>
+                    <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(productDisplay ?? productTry)}</Text>
+                  </View>
+                  {productParts && (
+                    <View className="flex-row items-center justify-end">
+                      <Text className="text-[10px]" style={{ color: colors.textMuted }}>{productParts}</Text>
+                    </View>
+                  )}
                 </View>
-              ))}
+              )}
               {laborValue > 0 && (
                 <View className="flex-row items-center justify-between py-0.5">
                   <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.laborLabel")} {getCurrencySymbol(laborCurrency)}</Text>
                   <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(laborValue, laborCurrency)}</Text>
                 </View>
               )}
-              {kdvRate > 0 && productKdvDisplay != null && (
+              {kdvRate > 0 && kdvDisplay != null && (
                 <View className="flex-row items-center justify-between py-0.5">
-                  <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.productKdvLabel")} ({Math.round(kdvRate * 100)}%)</Text>
-                  <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(productKdvDisplay, totalCurrency)}</Text>
-                </View>
-              )}
-              {kdvRate > 0 && laborTry > 0 && laborKdvDisplay != null && (
-                <View className="flex-row items-center justify-between py-0.5">
-                  <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.laborKdvLabel")} ({Math.round(kdvRate * 100)}%)</Text>
-                  <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(laborKdvDisplay, totalCurrency)}</Text>
+                  <Text className="text-xs" style={{ color: colors.textSecondary }}>{t("svc.kdvLabel")} ({Math.round(kdvRate * 100)}%)</Text>
+                  <Text className="text-sm font-semibold" style={{ color: colors.text }}>{formatMoney(kdvDisplay, totalCurrency)}</Text>
                 </View>
               )}
               <View className="flex-row items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: colors.borderAlt }}>

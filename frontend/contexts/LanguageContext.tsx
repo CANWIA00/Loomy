@@ -413,6 +413,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.grandTotal": "Genel Toplam",
     "svc.productKdvLabel": "Ürün KDV",
     "svc.laborKdvLabel": "İşçilik KDV",
+    "svc.kdvLabel": "KDV",
     "svc.ratesNote": "Kur bilgisi alınamadı",
 
     // Customers
@@ -1574,6 +1575,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "svc.grandTotal": "Grand Total",
     "svc.productKdvLabel": "Product VAT",
     "svc.laborKdvLabel": "Labor VAT",
+    "svc.kdvLabel": "VAT",
     "svc.ratesNote": "Exchange rate unavailable",
 
     // Customers
