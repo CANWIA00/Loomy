@@ -1,3 +1,5 @@
+import type { TryRatesData } from "../../utils/currencyRates";
+
 export interface UsedProductFormItem {
   name: string;
   quantity: string;
@@ -117,6 +119,7 @@ export interface PdfData {
   companyTaxNumber?: string;
   templateName?: string | null;
   templateConfig?: any;
+  tryRates?: TryRatesData | null;
 }
 
 export type RecordFilter = "all" | "gun" | "ay" | "yil";

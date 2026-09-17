@@ -6,6 +6,7 @@ import * as Sharing from "expo-sharing";
 import { generateServicePDFHtml } from "../ServicePDF";
 import { shareWebPdf, downloadWebPdf } from "../../utils/webPdf";
 import { embedImage } from "../../utils/pdfAssets";
+import { getTryRates } from "../../utils/currencyRates";
 import { profileApi } from "../../apiclient/profile";
 import { serviceApi, ServiceRecord } from "../../apiclient/services";
 import { customerApi, Customer } from "../../apiclient/customers";
@@ -655,11 +656,12 @@ ucret: form.fee || "0.00",
 
   const resolvePdfData = async (record: ServiceRecord): Promise<PdfData> => {
     const base = buildPdfData(record);
-    const [companyLogo, companyStamp] = await Promise.all([
+    const [companyLogo, companyStamp, ratesResult] = await Promise.all([
       embedImage(base.companyLogo),
       embedImage(base.companyStamp),
+      getTryRates(false),
     ]);
-    return { ...base, companyLogo, companyStamp };
+    return { ...base, companyLogo, companyStamp, tryRates: ratesResult.data };
   };
 
   const openServicePDF = async (record: ServiceRecord) => {

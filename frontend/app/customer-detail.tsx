@@ -9,7 +9,7 @@ import { WebView } from "react-native-webview";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCurrency } from "../contexts/CurrencyContext";
-import { convertToTry } from "../utils/currencyRates";
+import { convertToTry, getTryRates } from "../utils/currencyRates";
 import { useAuth } from "../contexts/AuthContext";
 import ScreenHeader from "../components/ScreenHeader";
 import CustomAlert from "../components/CustomAlert";
@@ -671,6 +671,17 @@ export default function CustomerDetailScreen() {
       laborCurrency: s.laborCurrency || "TRY",
       kdvRate: s.kdvRate || "20",
       productsMode: s.productsMode ?? ((s.usedProducts || []).length > 0),
+      usedProducts: (s.usedProducts || []).map((p) => ({
+        name: p.name,
+        quantity: p.quantity != null ? String(p.quantity) : "",
+        unit: p.unit,
+        unitPrice: p.unitPrice != null ? String(p.unitPrice) : "",
+        currency: p.currency,
+        stockItemId: p.stockItemId,
+        inStock: p.inStock,
+        deducted: p.deducted,
+        transactionId: p.transactionId,
+      })),
       technician: s.teknisyen,
       technicianPhone: s.teknisyenTelefon || "",
       startTime: s.baslangic,
@@ -687,8 +698,8 @@ export default function CustomerDetailScreen() {
       templateName: s.templateName || null,
       templateConfig: s.templateConfig || null,
     };
-    const [logo, stamp] = await Promise.all([embedImage(base.companyLogo), embedImage(base.companyStamp)]);
-    return { ...base, companyLogo: logo, companyStamp: stamp };
+    const [logo, stamp, ratesResult] = await Promise.all([embedImage(base.companyLogo), embedImage(base.companyStamp), getTryRates(false)]);
+    return { ...base, companyLogo: logo, companyStamp: stamp, tryRates: ratesResult.data };
   };
 
   const resolveQuotePdf = async (q: QuoteRecord): Promise<QuotePdfData> => {
