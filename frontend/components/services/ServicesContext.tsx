@@ -7,6 +7,7 @@ import { generateServicePDFHtml } from "../ServicePDF";
 import { shareWebPdf, downloadWebPdf } from "../../utils/webPdf";
 import { embedImage } from "../../utils/pdfAssets";
 import { getTryRates } from "../../utils/currencyRates";
+import { parseNumericInput } from "../../components/stock/format";
 import { profileApi } from "../../apiclient/profile";
 import { serviceApi, ServiceRecord } from "../../apiclient/services";
 import { customerApi, Customer } from "../../apiclient/customers";
@@ -106,6 +107,13 @@ interface ServicesContextValue {
 }
 
 const ServicesContext = createContext<ServicesContextValue | undefined>(undefined);
+
+const normalizeUsedProducts = (items: UsedProductFormItem[]) =>
+  (items || []).map((p) => ({
+    ...p,
+    quantity: parseNumericInput(p.quantity),
+    unitPrice: p.unitPrice != null && String(p.unitPrice).trim() !== "" ? parseNumericInput(p.unitPrice) : null,
+  }));
 
 export function useServices() {
   const ctx = useContext(ServicesContext);
@@ -443,7 +451,7 @@ ucret: form.fee || "0.00",
           teknik: form.technical,
           customChips: form.customChips,
           customValues: form.customValues,
-          usedProducts: form.usedProducts,
+          usedProducts: normalizeUsedProducts(form.usedProducts),
           productsMode: form.productsMode,
           deductStock: activeTemplate ? (activeTemplate.deductStock ?? true) : true,
           service: form.services.join(", ") || "-",
@@ -567,7 +575,7 @@ ucret: form.fee || "0.00",
         teknik: form.technical,
         customChips: form.customChips,
         customValues: form.customValues,
-        usedProducts: form.usedProducts,
+        usedProducts: normalizeUsedProducts(form.usedProducts),
         productsMode: form.productsMode,
         deductStock: activeTemplate ? (activeTemplate.deductStock ?? true) : true,
         imzali: paths.length > 0,

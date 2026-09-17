@@ -180,7 +180,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       const lines = prev.lines.map((l, i) => {
         if (i !== index) return l;
         if (key === "quantity" || key === "unitPrice") {
-          return { ...l, [key]: parseNumericInput(value) };
+          return { ...l, [key]: value.replace(/[^0-9.,]/g, "") };
         }
         return { ...l, [key]: value };
       });
@@ -202,17 +202,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       Alert.alert(t("qot.warning"), t("qot.lineRequired"));
       return;
     }
-      const finalForm = {
-        ...form,
-        lines: validLines.map((l) => ({
-          name: l.name,
-          details: l.details,
-          quantity: Number(l.quantity) || 0,
-          unitPrice: Number(l.unitPrice) || 0,
-          currency: l.currency || "TRY",
-          unit: l.unit || "Adet",
-        })),
-      };
+    const finalForm = { ...form, lines: validLines };
     setForm(finalForm);
     persist(finalForm);
   };
@@ -234,7 +224,14 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         subscriberNo: dataToSave.subscriberNo,
         notlar: dataToSave.notes,
         validUntil: dataToSave.validUntil,
-        lines: dataToSave.lines,
+        lines: (dataToSave.lines || []).map((l) => ({
+          name: l.name,
+          details: l.details,
+          quantity: parseNumericInput(l.quantity),
+          unitPrice: parseNumericInput(l.unitPrice),
+          currency: l.currency || "TRY",
+          unit: l.unit || "Adet",
+        })),
       };
       if (isEditing && editingId !== null) {
         const existingRecord = records.find((r) => r.id === editingId);
@@ -282,7 +279,16 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       documentDate: record.tarih || "",
       validUntil: record.validUntil || "",
       notes: record.notlar || "",
-      lines: record.lines?.length ? record.lines : [emptyLine()],
+      lines: record.lines?.length
+        ? record.lines.map((l) => ({
+            name: l.name,
+            details: l.details,
+            quantity: l.quantity != null ? String(l.quantity) : "1",
+            unitPrice: l.unitPrice != null ? String(l.unitPrice) : "",
+            currency: l.currency || "TRY",
+            unit: l.unit || "Adet",
+          }))
+        : [emptyLine()],
     });
     setSelectedCustomerId(record.customerId || null);
     setEditingId(record.id);

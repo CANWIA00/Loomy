@@ -7,7 +7,7 @@ import { useCurrency } from "../../contexts/CurrencyContext";
 import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../apiclient/customers";
 import { stockApi, type StockItem } from "../../apiclient/stock";
-import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, formatNumericInput } from "./types";
+import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, formatNumericInput, parseNumericInput } from "./types";
 
 const formatRate = (rate: number) =>
   rate.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -174,7 +174,7 @@ export default function QuoteForm() {
   const currencyGroups: Record<string, { subTotal: number; kdv: number; grandTotal: number }> = {};
   validLines.forEach((l) => {
     const cur = l.currency || "TRY";
-    const lineTotal = (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
+    const lineTotal = parseNumericInput(l.quantity) * parseNumericInput(l.unitPrice);
     if (!currencyGroups[cur]) currencyGroups[cur] = { subTotal: 0, kdv: 0, grandTotal: 0 };
     currencyGroups[cur].subTotal += lineTotal;
   });
@@ -384,7 +384,7 @@ export default function QuoteForm() {
           <Text className="text-sm font-semibold mb-1.5" style={{ color: colors.text }}>{t("qot.items")}</Text>
 
           {form.lines.map((line, idx) => {
-            const lineTotal = round2((Number(line.quantity) || 0) * (Number(line.unitPrice) || 0));
+            const lineTotal = round2(parseNumericInput(line.quantity) * parseNumericInput(line.unitPrice));
             return (
               <View key={idx} className="rounded-xl border p-2.5 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.borderAlt }}>
                 <View className="flex-row items-center gap-2 mb-2">
@@ -490,9 +490,9 @@ export default function QuoteForm() {
                       value={formatNumericInput(line.unitPrice)}
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
                     />
-                    {line.currency !== "TRY" && convertTry(Number(line.unitPrice) || 0, line.currency) !== null && (
+                    {line.currency !== "TRY" && convertTry(parseNumericInput(line.unitPrice), line.currency) !== null && (
                       <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
-                        ≈ {formatMoney(convertTry(Number(line.unitPrice) || 0, line.currency)!)} ₺
+                        ≈ {formatMoney(convertTry(parseNumericInput(line.unitPrice), line.currency)!)} ₺
                       </Text>
                     )}
                   </View>

@@ -18,6 +18,15 @@ export function getCurrencySymbol(code: string): string {
   return CURRENCIES.find((c) => c.code === code)?.symbol || "₺";
 }
 
+export interface QuoteFormLine {
+  name: string;
+  details?: string;
+  quantity: string;
+  unitPrice: string;
+  currency: string;
+  unit: string;
+}
+
 export interface QuoteFormData {
   title: string;
   customerName: string;
@@ -31,14 +40,14 @@ export interface QuoteFormData {
   documentDate: string;
   validUntil: string;
   notes: string;
-  lines: QuoteLine[];
+  lines: QuoteFormLine[];
 }
 
 export const UNIT_OPTIONS = ["Adet", "Kutu", "Koli", "Kg", "Gram", "metre", "cm", "lt", "ml"] as const;
 
 export type UnitOption = (typeof UNIT_OPTIONS)[number];
 
-export const emptyLine = (): QuoteLine => ({ name: "", details: "", quantity: 1, unitPrice: 0, currency: "TRY", unit: "Adet" });
+export const emptyLine = (): QuoteFormLine => ({ name: "", details: "", quantity: "1", unitPrice: "", currency: "TRY", unit: "Adet" });
 
 export const initialQuoteForm: QuoteFormData = {
   title: "",
@@ -62,7 +71,7 @@ export function parseNumericInput(value: string): number {
   return isNaN(num) ? 0 : num;
 }
 
-export function formatNumericInput(value: number): string {
+export function formatNumericInput(value: number | string): string {
   return String(value || 0).replace(".", ",");
 }
 

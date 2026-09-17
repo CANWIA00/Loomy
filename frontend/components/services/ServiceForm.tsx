@@ -64,7 +64,7 @@ function FeeInput({ value, currency, onChangeFee, onChangeCurrency }: {
           placeholderTextColor={colors.textMuted}
           keyboardType="decimal-pad"
           value={value}
-          onChangeText={(v) => onChangeFee(v.replace(/[^0-9.]/g, ""))}
+          onChangeText={(v) => onChangeFee(v.replace(/[^0-9.,]/g, ""))}
         />
         <TouchableOpacity
           className="h-10 px-3 border rounded-lg flex-row items-center"
@@ -809,7 +809,7 @@ function UsedProductsSection() {
   const deductStock = templateConfig.deductStock ?? true;
   const notInStockCount = deductStock ? items.filter((p) => p.stockItemId == null && p.name.trim()).length : 0;
 
-  const lineTotal = (p: UsedProductFormItem) => (Number(p.quantity) || 0) * (Number(p.unitPrice) || 0);
+  const lineTotal = (p: UsedProductFormItem) => parseNumericInput(p.quantity) * parseNumericInput(p.unitPrice ?? "");
   const perCurrency = items.reduce<Record<string, number>>((acc, p) => {
     const cur = p.currency || "TRY";
     acc[cur] = (acc[cur] || 0) + lineTotal(p);
@@ -933,7 +933,7 @@ value={p.name}
               <View className="flex-row gap-2 mt-2">
                 <View className="flex-1">
                   <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.qty")}</Text>
-                  <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.quantity} onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.]/g, "") })} />
+                  <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.quantity} onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.,]/g, "") })} />
                 </View>
                 <View style={{ width: 84 }}>
                   <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.unit")}</Text>
@@ -944,7 +944,7 @@ value={p.name}
                 </View>
                 <View className="flex-1">
                   <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.price")}</Text>
-                  <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0.00" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.unitPrice} onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.]/g, "") })} />
+                  <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0.00" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.unitPrice} onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.,]/g, "") })} />
                 </View>
                 <View style={{ width: 84 }}>
                   <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.currency")}</Text>
