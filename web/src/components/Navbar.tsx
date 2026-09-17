@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useLanguage, type Lang } from "../i18n";
 import { APP_URL } from "../App";
 import { BurgerIcon, CloseIcon } from "../icons";
@@ -9,11 +10,12 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   const links = [
-    { href: "#features", label: t.nav.features },
-    { href: "#how-it-works", label: t.nav.howItWorks },
-    { href: "#pricing", label: t.nav.pricing },
-    { href: "#faq", label: t.nav.faq },
-    { href: "#contact", label: t.nav.contact },
+    { to: "/is-takip-programi", label: t.nav.techService },
+    { to: "/#features", label: t.nav.features },
+    { to: "/#how-it-works", label: t.nav.howItWorks },
+    { to: "/#pricing", label: t.nav.pricing },
+    { to: "/#faq", label: t.nav.faq },
+    { to: "/#contact", label: t.nav.contact },
   ];
 
   const handleLang = (next: Lang) => {
@@ -23,16 +25,16 @@ export default function Navbar() {
   return (
     <header className="navbar">
       <div className="container navbar-inner">
-        <a className="brand" href="#top">
+        <Link className="brand" to="/">
           <img src="/logo.png" alt="Loomy" />
           Loomy
-        </a>
+        </Link>
 
         <nav className={`nav-links ${open ? "open" : ""}`}>
           {links.map((link) => (
-            <a key={link.href} href={link.href} onClick={() => setOpen(false)}>
+            <Link key={link.to} to={link.to} onClick={() => setOpen(false)}>
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 

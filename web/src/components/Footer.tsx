@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useLanguage } from "../i18n";
 import { APP_URL, CONTACT_EMAIL } from "../App";
 
@@ -21,16 +22,19 @@ export default function Footer() {
             <h4>{t.footer.product}</h4>
             <ul>
               <li>
-                <a href="#features">{t.nav.features}</a>
+                <Link to="/is-takip-programi">{t.nav.techService}</Link>
               </li>
               <li>
-                <a href="#how-it-works">{t.nav.howItWorks}</a>
+                <Link to="/#features">{t.nav.features}</Link>
               </li>
               <li>
-                <a href="#pricing">{t.nav.pricing}</a>
+                <Link to="/#how-it-works">{t.nav.howItWorks}</Link>
               </li>
               <li>
-                <a href="#faq">{t.nav.faq}</a>
+                <Link to="/#pricing">{t.nav.pricing}</Link>
+              </li>
+              <li>
+                <Link to="/#faq">{t.nav.faq}</Link>
               </li>
             </ul>
           </div>
@@ -42,10 +46,10 @@ export default function Footer() {
               <a href={APP_URL}>{t.nav.openApp}</a>
             </p>
             <p style={{ marginTop: 8 }}>
-              <a href="#privacy">{t.footer.privacy}</a>
+              <Link to="/gizlilik-politikasi">{t.footer.privacy}</Link>
             </p>
             <p style={{ marginTop: 8 }}>
-              <a href="#privacy">{t.footer.kvkk}</a>
+              <Link to="/gizlilik-politikasi">{t.footer.kvkk}</Link>
             </p>
           </div>
         </div>

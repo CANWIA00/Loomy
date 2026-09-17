@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useLanguage } from "./i18n";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -11,42 +12,29 @@ import Cta from "./components/Cta";
 import Apply from "./components/Apply";
 import Footer from "./components/Footer";
 import PrivacyPage from "./components/PrivacyPage";
+import TechnicalLanding from "./components/TechnicalLanding";
 
 export const APP_URL = "https://app.loomy-app.com";
 export const CONTACT_EMAIL = "lommy.app.info@gmail.com";
 
-function useHash() {
-  const [hash, setHash] = useState(window.location.hash);
+function ScrollRestore() {
+  const { pathname, hash } = useLocation();
+
   useEffect(() => {
-    const onChange = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", onChange);
-    return () => window.removeEventListener("hashchange", onChange);
-  }, []);
-  return hash;
+    if (hash) {
+      const el = document.getElementById(hash.slice(1));
+      if (el) {
+        el.scrollIntoView();
+        return;
+      }
+    }
+    window.scrollTo(0, 0);
+  }, [pathname, hash]);
+
+  return null;
 }
 
-export default function App() {
-  const { lang } = useLanguage();
-  const hash = useHash();
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [hash]);
-
-  if (hash === "#privacy") {
-    return (
-      <>
-        <Navbar />
-        <PrivacyPage />
-        <Footer />
-      </>
-    );
-  }
-
+function Home() {
   return (
     <>
       <Navbar />
@@ -61,6 +49,36 @@ export default function App() {
         <Apply />
       </main>
       <Footer />
+    </>
+  );
+}
+
+function Privacy() {
+  return (
+    <>
+      <Navbar />
+      <PrivacyPage />
+      <Footer />
+    </>
+  );
+}
+
+export default function App() {
+  const { lang } = useLanguage();
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  return (
+    <>
+      <ScrollRestore />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/is-takip-programi" element={<TechnicalLanding />} />
+        <Route path="/gizlilik-politikasi" element={<Privacy />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   );
 }

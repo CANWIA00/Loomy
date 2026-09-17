@@ -4,6 +4,7 @@ export type Lang = "tr" | "en";
 
 const tr = {
   nav: {
+    techService: "İş Takip",
     features: "Özellikler",
     howItWorks: "Nasıl Çalışır",
     pricing: "Paketler",
@@ -859,6 +860,7 @@ panel: {
 
 const en: Dictionary = {
   nav: {
+    techService: "Job Tracking",
     features: "Features",
     howItWorks: "How it works",
     pricing: "Pricing",
