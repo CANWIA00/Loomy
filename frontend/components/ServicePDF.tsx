@@ -421,23 +421,33 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .used-products-table .num {
       text-align: right;
     }
-    .pricing-summary {
-      font-size: 8px;
-      line-height: 1.5;
-      padding: 4px 0 2px 0;
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5px;
       border-top: 1px solid #222238;
-      margin-top: 2px;
     }
-    .pricing-summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 1px 0;
+    .totals-table td {
+      padding: 2px 3px;
     }
-    .pricing-summary-row.summary-total {
+    .totals-table .tt-label {
+      text-align: left;
+      font-weight: normal;
+    }
+    .totals-table .tt-amount {
+      text-align: right;
+      white-space: nowrap;
+      min-width: 52px;
+    }
+    .totals-table .tt-head-row td {
       font-weight: bold;
-      padding-top: 3px;
-      margin-top: 2px;
+      border-bottom: 1px solid #222238;
+      font-size: 7px;
+      text-transform: uppercase;
+    }
+    .totals-table tr.tt-grand td {
       border-top: 1px solid #222238;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -522,41 +532,40 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       })()}
       </tfoot>
     </table>
-    ${data.productsMode === true ? (() => {
-      const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
-      const labor = Number(data.labor) || 0;
-      const laborCur = data.laborCurrency || "TRY";
-      const productTotals: Record<string, number> = {};
-      (data.usedProducts || []).forEach((p: any) => {
-        const cur = p.currency || "TRY";
-        productTotals[cur] = (productTotals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
-      });
-      const curSet = Array.from(new Set([...Object.keys(productTotals), ...(labor > 0 ? [laborCur] : [])]));
-      const lines: string[] = [];
-      Object.entries(productTotals).forEach(([cur, amt]) => {
-        if (amt <= 0) return;
-        lines.push(`<div class="pricing-summary-row"><span>${t("pdf.productsTotal")} ${ccySym(cur)}</span><span>${amt.toFixed(2)}</span></div>`);
-      });
-      if (labor > 0) {
-        lines.push(`<div class="pricing-summary-row"><span>${t("pdf.labor")} ${ccySym(laborCur)}</span><span>${labor.toFixed(2)}</span></div>`);
-      }
-      curSet.forEach((cur) => {
-        const base = (productTotals[cur] || 0) + (labor > 0 && cur === laborCur ? labor : 0);
-        if (base <= 0) return;
-        lines.push(`<div class="pricing-summary-row"><span>${t("pdf.subtotal")} ${ccySym(cur)}</span><span>${base.toFixed(2)}</span></div>`);
-        if (kdvRate > 0) {
-          lines.push(`<div class="pricing-summary-row"><span>${t("pdf.vat")} %${kdvRate} ${ccySym(cur)}</span><span>${(base * kdvRate / 100).toFixed(2)}</span></div>`);
-        }
-      });
-      curSet.forEach((cur) => {
-        const base = (productTotals[cur] || 0) + (labor > 0 && cur === laborCur ? labor : 0);
-        if (base <= 0) return;
-        lines.push(`<div class="pricing-summary-row summary-total"><span>${t("pdf.grandTotal")} ${ccySym(cur)}</span><span>${(base * (1 + kdvRate / 100)).toFixed(2)}</span></div>`);
-      });
-      if (!lines.length) return '';
-      return `<div class="pricing-summary">${lines.join('')}</div>`;
-    })() : ''}
   </div>` : ''}
+
+  ${data.productsMode === true ? (() => {
+    const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
+    const labor = Number(data.labor) || 0;
+    const laborCur = data.laborCurrency || "TRY";
+    const productTotals: Record<string, number> = {};
+    (data.usedProducts || []).forEach((p: any) => {
+      const cur = p.currency || "TRY";
+      productTotals[cur] = (productTotals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
+    });
+    const curSet = Array.from(new Set([...Object.keys(productTotals), ...(labor > 0 ? [laborCur] : [])]))
+      .filter((cur) => (productTotals[cur] || 0) + (labor > 0 && laborCur === cur ? labor : 0) > 0);
+    if (!curSet.length) return '';
+    const baseOf = (cur: string) => (productTotals[cur] || 0) + (labor > 0 && laborCur === cur ? labor : 0);
+    const cells = (fn: (cur: string) => number | null) =>
+      curSet.map((cur) => {
+        const v = fn(cur);
+        return `<td class="tt-amount">${v === null ? "&ndash;" : v.toFixed(2)}</td>`;
+      }).join('');
+    const head = `<tr class="tt-head-row"><td class="tt-label">&nbsp;</td>${curSet.map((cur) => `<td class="tt-amount">${ccySym(cur)}</td>`).join('')}</tr>`;
+    const laborRow = labor > 0
+      ? `<tr><td class="tt-label">${t("pdf.labor")}</td>${cells((cur) => (cur === laborCur ? labor : null))}</tr>`
+      : '';
+    const subRow = `<tr><td class="tt-label">${t("pdf.subtotal")}</td>${cells(baseOf)}</tr>`;
+    const kdvRow = kdvRate > 0
+      ? `<tr><td class="tt-label">${t("pdf.vat")} %${kdvRate}</td>${cells((cur) => baseOf(cur) * kdvRate / 100)}</tr>`
+      : '';
+    const grandRow = `<tr class="tt-grand"><td class="tt-label">${t("pdf.grandTotal")}</td>${cells((cur) => baseOf(cur) * (1 + kdvRate / 100))}</tr>`;
+    return `<div class="section">
+      <div class="section-title">${t("pdf.serviceFee")}</div>
+      <table class="totals-table"><tbody>${head}${laborRow}${subRow}${kdvRow}${grandRow}</tbody></table>
+    </div>`;
+  })() : ''}
 
   ${fieldActive("details") ? `
   <div class="section">
@@ -567,33 +576,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
   </div>` : ''}
 
   ${(() => {
-    const productsMode = data.productsMode === true;
-    if (productsMode) {
-      const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
-      const labor = Number(data.labor) || 0;
-      const laborCur = data.laborCurrency || "TRY";
-      const productTotals: Record<string, number> = {};
-      (data.usedProducts || []).forEach((p: any) => {
-        const cur = p.currency || "TRY";
-        productTotals[cur] = (productTotals[cur] || 0) + ((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0));
-      });
-      const curSet = Array.from(new Set([...Object.keys(productTotals), ...(labor > 0 ? [laborCur] : [])]));
-      const lines: string[] = [];
-      curSet.forEach((cur) => {
-        const prod = productTotals[cur] || 0;
-        const lab = (labor > 0 && laborCur === cur) ? labor : 0;
-        const total = (prod + lab) * (1 + kdvRate / 100);
-        if (total <= 0) return;
-        lines.push(`<div class="fee-line fee-total"><span>${t("pdf.grandTotal")} ${ccySym(cur)}</span><span>${total.toFixed(2)}</span></div>`);
-      });
-      if (!lines.length) return '';
-      return `<div class="section section-push">
-        <div class="section-title">${t("pdf.serviceFee")}</div>
-        <div class="fee-content">
-          ${lines.join('')}
-        </div>
-      </div>`;
-    }
+    if (data.productsMode === true) return '';
     const fee = Number(data.fee) || 0;
     const feeCur = data.feeCurrency || "TRY";
     if (fee <= 0) return '';
