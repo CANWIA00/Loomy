@@ -149,8 +149,11 @@ export default function QuoteForm() {
     }, 300);
   }, []);
 
-  const selectStockItem = (idx: number, name: string) => {
-    updateLine(idx, "name", name);
+  const selectStockItem = (idx: number, item: StockItem) => {
+    updateLine(idx, "name", item.name);
+    if (item.unitPrice != null) updateLine(idx, "unitPrice", String(item.unitPrice));
+    if (item.currency) updateLine(idx, "currency", item.currency);
+    if (item.unit) updateLine(idx, "unit", item.unit);
     setStockSuggestions([]);
     setStockSearchIdx(null);
   };
@@ -417,7 +420,7 @@ export default function QuoteForm() {
                         nestedScrollEnabled
                         className="rounded-lg border mt-1"
                         style={{ backgroundColor: colors.bgCard, borderColor: colors.border, maxHeight: 240 }}
-                        keyboardShouldPersistTaps="handled"
+                        keyboardShouldPersistTaps="always"
                         indicatorStyle={colors.indicatorBg as any}
                       >
                         {stockSuggestions.map((s) => (
@@ -425,7 +428,7 @@ export default function QuoteForm() {
                             key={s.id}
                             className="px-3 py-2"
                             style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
-                            onPress={() => selectStockItem(idx, s.name)}
+                            onPress={() => selectStockItem(idx, s)}
                           >
                             <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>{s.name}</Text>
                             <Text className="text-[10px]" style={{ color: colors.textMuted }}>

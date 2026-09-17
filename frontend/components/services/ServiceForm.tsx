@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -355,13 +355,16 @@ function FieldCell({ field }: { field: TemplateField }) {
 }
 
 function FieldPairRow({ fields }: { fields: TemplateField[] }) {
+  const { width } = useWindowDimensions();
   if (!fields.length) return null;
+  const twoColumns = width >= 768;
+  const cols = twoColumns ? 2 : 1;
   const rows: TemplateField[][] = [];
-  for (let i = 0; i < fields.length; i += 2) rows.push(fields.slice(i, i + 2));
+  for (let i = 0; i < fields.length; i += cols) rows.push(fields.slice(i, i + cols));
   return (
     <>
       {rows.map((row, ri) => (
-        <View key={ri} className="flex-row gap-3">
+        <View key={ri} className={twoColumns ? "flex-row gap-3" : ""}>
           {row.map((f) => <FieldCell key={f.key} field={f} />)}
         </View>
       ))}
