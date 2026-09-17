@@ -199,6 +199,32 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     return t != null && currency && currency !== "TRY" ? `${main} <span class="conv">(₺ ${fmtMoney(t)})</span>` : main;
   };
 
+  const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
+  const labor = Number(data.labor) || 0;
+  const laborCur = data.laborCurrency || "TRY";
+  let productTotalTry = 0;
+  (data.usedProducts || []).forEach((p: any) => {
+    const t = toTry((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0), p.currency || "TRY");
+    if (t != null) productTotalTry += t;
+  });
+  const laborTry = labor > 0 ? toTry(labor, laborCur) : 0;
+  const hasLabor = labor > 0 && laborTry != null;
+  const laborVal = hasLabor ? (laborTry as number) : 0;
+  const subTotal = productTotalTry + laborVal;
+  const kdvAmt = subTotal * kdvRate / 100;
+  const grandTotal = subTotal + kdvAmt;
+  const productsMode = data.productsMode === true;
+  const hasBreakdown = productsMode && (productTotalTry > 0 || hasLabor);
+  const totalRow = (label: string, value: string, grandRow = false) =>
+    `<div class="total-row${grandRow ? " row-grand" : ""}"><span class="total-label">${label}</span><span class="total-amount">${value}</span></div>`;
+  const breakdownRows = hasBreakdown ? [
+    ...(productTotalTry > 0 ? [totalRow(t("pdf.productsTotal"), `${fmtMoney(productTotalTry)} ${ccySym("TRY")}`)] : []),
+    ...(hasLabor ? [totalRow(t("pdf.labor"), `${fmtMoney(laborVal)} ${ccySym("TRY")}`)] : []),
+    totalRow(t("pdf.subtotal"), `${fmtMoney(subTotal)} ${ccySym("TRY")}`),
+    ...(kdvRate > 0 ? [totalRow(`${t("pdf.vat")} %${kdvRate}`, `${fmtMoney(kdvAmt)} ${ccySym("TRY")}`)] : []),
+    totalRow(t("pdf.grandTotal"), `${fmtMoney(grandTotal)} ${ccySym("TRY")}`, true),
+  ].join('') : '';
+
   return `
 <!DOCTYPE html>
 <html>
@@ -450,6 +476,9 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       padding-top: 4px;
       border-top: 1px solid #222238;
     }
+    .total-block.breakdown {
+      margin-bottom: 8px;
+    }
     .total-row {
       display: flex;
       align-items: baseline;
@@ -541,36 +570,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     </table>
   </div>` : ''}
 
-  ${data.productsMode === true ? (() => {
-    const kdvRate = Math.max(0, Number(data.kdvRate) || 0);
-    const labor = Number(data.labor) || 0;
-    const laborCur = data.laborCurrency || "TRY";
-    let productTotalTry = 0;
-    (data.usedProducts || []).forEach((p: any) => {
-      const t = toTry((Number(p.quantity) || 0) * (Number(p.unitPrice) || 0), p.currency || "TRY");
-      if (t != null) productTotalTry += t;
-    });
-    const laborTry = labor > 0 ? toTry(labor, laborCur) : 0;
-    const hasLabor = labor > 0 && laborTry != null;
-    if (productTotalTry <= 0 && !hasLabor) return '';
-    const laborVal = hasLabor ? (laborTry as number) : 0;
-    const subTotal = productTotalTry + laborVal;
-    const kdvAmt = subTotal * kdvRate / 100;
-    const grandTotal = subTotal + kdvAmt;
-    const row = (label: string, value: string, grandRow = false) =>
-      `<div class="total-row${grandRow ? " row-grand" : ""}"><span class="total-label">${label}</span><span class="total-amount">${value}</span></div>`;
-    const rows = [
-      ...(productTotalTry > 0 ? [row(t("pdf.productsTotal"), `${fmtMoney(productTotalTry)} ${ccySym("TRY")}`)] : []),
-      ...(hasLabor ? [row(t("pdf.labor"), `${fmtMoney(laborVal)} ${ccySym("TRY")}`)] : []),
-      row(t("pdf.subtotal"), `${fmtMoney(subTotal)} ${ccySym("TRY")}`),
-      ...(kdvRate > 0 ? [row(`${t("pdf.vat")} %${kdvRate}`, `${fmtMoney(kdvAmt)} ${ccySym("TRY")}`)] : []),
-      row(t("pdf.grandTotal"), `${fmtMoney(grandTotal)} ${ccySym("TRY")}`, true),
-    ];
-    return `<div class="section">
-      <div class="section-title">${t("pdf.serviceFee")}</div>
-      <div class="total-block">${rows.join('')}</div>
-    </div>`;
-  })() : ''}
+  ${hasBreakdown ? `<div class="total-block breakdown">${breakdownRows}</div>` : ''}
 
   ${fieldActive("details") ? `
   <div class="section">
@@ -581,7 +581,15 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
   </div>` : ''}
 
   ${(() => {
-    if (data.productsMode === true) return '';
+    if (productsMode) {
+      if (!hasBreakdown) return '';
+      return `<div class="section section-push">
+        <div class="section-title">${t("pdf.serviceFee")}</div>
+        <div class="fee-content">
+          <div class="fee-line fee-total"><span>${t("pdf.grandTotal")}</span><span>${fmtMoney(grandTotal)} ${ccySym("TRY")}</span></div>
+        </div>
+      </div>`;
+    }
     const fee = Number(data.fee) || 0;
     const feeCur = data.feeCurrency || "TRY";
     if (fee <= 0) return '';
