@@ -2340,6 +2340,68 @@
   }
 }
 
+@media (max-width: 480px) {
+  .browser {
+    width: min(720px, calc(100vw - 12px));
+  }
+
+  .browser-body {
+    padding: 12px 10px 8px;
+  }
+
+  .an-tabbar {
+    padding: 6px 2px;
+  }
+
+  .an-tab span:not(.an-tab-ic) {
+    font-size: 7.5px;
+    padding: 0 2px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .an-col2 {
+    flex-direction: column;
+  }
+
+  .an-pay {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .an-btn {
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .an-fpill {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .an-stock-stats {
+    gap: 6px;
+  }
+
+  .an-stock-stat {
+    padding: 8px;
+  }
+
+  .an-search {
+    padding: 11px 12px;
+    font-size: 12px;
+  }
+
+  .an-fl-chart {
+    padding: 8px 6px 6px;
+  }
+
+  .an-fl-leg {
+    gap: 6px 8px;
+  }
+}
+
 /* ---- customer detail ---- */
 .an-top-sub {
   display: block;
