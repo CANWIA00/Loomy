@@ -421,33 +421,34 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .used-products-table .num {
       text-align: right;
     }
-    .totals-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 8.5px;
+    .total-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      margin-top: 2px;
+      padding-top: 4px;
       border-top: 1px solid #222238;
     }
-    .totals-table td {
-      padding: 2px 3px;
+    .total-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 1px 4px 1px 10px;
+      font-size: 8.5px;
     }
-    .totals-table .tt-label {
-      text-align: left;
+    .total-row .total-label {
       font-weight: normal;
     }
-    .totals-table .tt-amount {
+    .total-row .total-amount {
+      font-weight: bold;
       text-align: right;
       white-space: nowrap;
-      min-width: 52px;
     }
-    .totals-table .tt-head-row td {
-      font-weight: bold;
-      border-bottom: 1px solid #222238;
-      font-size: 7px;
-      text-transform: uppercase;
-    }
-    .totals-table tr.tt-grand td {
+    .total-row.row-grand {
       border-top: 1px solid #222238;
-      font-weight: bold;
+      margin-top: 2px;
+      padding-top: 3px;
     }
   </style>
 </head>
@@ -546,24 +547,24 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     const curSet = Array.from(new Set([...Object.keys(productTotals), ...(labor > 0 ? [laborCur] : [])]))
       .filter((cur) => (productTotals[cur] || 0) + (labor > 0 && laborCur === cur ? labor : 0) > 0);
     if (!curSet.length) return '';
-    const baseOf = (cur: string) => (productTotals[cur] || 0) + (labor > 0 && laborCur === cur ? labor : 0);
-    const cells = (fn: (cur: string) => number | null) =>
-      curSet.map((cur) => {
-        const v = fn(cur);
-        return `<td class="tt-amount">${v === null ? "&ndash;" : v.toFixed(2)}</td>`;
-      }).join('');
-    const head = `<tr class="tt-head-row"><td class="tt-label">&nbsp;</td>${curSet.map((cur) => `<td class="tt-amount">${ccySym(cur)}</td>`).join('')}</tr>`;
-    const laborRow = labor > 0
-      ? `<tr><td class="tt-label">${t("pdf.labor")}</td>${cells((cur) => (cur === laborCur ? labor : null))}</tr>`
-      : '';
-    const subRow = `<tr><td class="tt-label">${t("pdf.subtotal")}</td>${cells(baseOf)}</tr>`;
-    const kdvRow = kdvRate > 0
-      ? `<tr><td class="tt-label">${t("pdf.vat")} %${kdvRate}</td>${cells((cur) => baseOf(cur) * kdvRate / 100)}</tr>`
-      : '';
-    const grandRow = `<tr class="tt-grand"><td class="tt-label">${t("pdf.grandTotal")}</td>${cells((cur) => baseOf(cur) * (1 + kdvRate / 100))}</tr>`;
+    const subTotals: Record<string, number> = {};
+    curSet.forEach((cur) => {
+      subTotals[cur] = (productTotals[cur] || 0) + (labor > 0 && laborCur === cur ? labor : 0);
+    });
+    const fmt = (n: number) => n.toFixed(2);
+    const parts = (vals: Array<[string, number]>) =>
+      vals.filter(([, v]) => v > 0).map(([cur, v]) => `${fmt(v)} ${ccySym(cur)}`).join(' + ');
+    const row = (label: string, value: string, grand = false) =>
+      `<div class="total-row${grand ? " row-grand" : ""}"><span class="total-label">${label}</span><span class="total-amount">${value}</span></div>`;
+    const rows = [
+      ...(labor > 0 ? [row(t("pdf.labor"), `${fmt(labor)} ${ccySym(laborCur)}`)] : []),
+      row(t("pdf.subtotal"), parts(curSet.map((cur) => [cur, subTotals[cur]]))),
+      ...(kdvRate > 0 ? [row(`${t("pdf.vat")} %${kdvRate}`, parts(curSet.map((cur) => [cur, subTotals[cur] * kdvRate / 100])))] : []),
+      row(t("pdf.grandTotal"), parts(curSet.map((cur) => [cur, subTotals[cur] * (1 + kdvRate / 100)])), true),
+    ];
     return `<div class="section">
       <div class="section-title">${t("pdf.serviceFee")}</div>
-      <table class="totals-table"><tbody>${head}${laborRow}${subRow}${kdvRow}${grandRow}</tbody></table>
+      <div class="total-block">${rows.join('')}</div>
     </div>`;
   })() : ''}
 
