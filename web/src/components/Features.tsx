@@ -82,7 +82,26 @@ function DocumentIcon() {
   );
 }
 
-const icons = [UsersIcon, DocumentIcon, WrenchIcon, WalletIcon, CalendarIcon, TeamIcon, DashboardIcon];
+function StockIcon() {
+  return (
+    <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m12 3.5 8.5 4.7v7.6L12 20.5l-8.5-4.7V8.2L12 3.5z" stroke={iconProps.stroke} strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="m3.5 8.2 8.5 4.7 8.5-4.7M12 12.9v7.5" stroke={iconProps.stroke} strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FinanceIcon() {
+  return (
+    <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 20.5h16" stroke={iconProps.stroke} strokeWidth="1.8" strokeLinecap="round" />
+      <rect x="7" y="11.5" width="3.4" height="6" rx="1" stroke={iconProps.stroke} strokeWidth="1.8" />
+      <rect x="13.9" y="6" width="3.4" height="11.5" rx="1" stroke={iconProps.stroke} strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+const icons = [UsersIcon, DocumentIcon, WrenchIcon, StockIcon, WalletIcon, FinanceIcon, CalendarIcon, TeamIcon, DashboardIcon];
 
 function Mini({ name, size = 15, color = "currentColor" }: { name: string; size?: number; color?: string }) {
   const p = {
@@ -154,7 +173,7 @@ function SigScribble({ t = "a" }: { t?: "a" | "b" }) {
 export default function Features() {
   const { t } = useLanguage();
   const [detail, setDetail] = useState<
-    "customer" | "quote" | "service" | "payment" | "schedule" | "team" | "dashboard" | null
+    "customer" | "quote" | "service" | "stock" | "payment" | "finance" | "schedule" | "team" | "dashboard" | null
   >(null);
   const open = detail !== null;
 
@@ -170,6 +189,8 @@ export default function Features() {
   const qd = fd.quote;
   const sd = fd.service;
   const pd = fd.payment;
+  const fnd = fd.finance;
+  const skd = fd.stock;
   const sched = fd.schedule;
   const td = fd.team;
   const dbd = fd.dashboard;
@@ -187,7 +208,7 @@ export default function Features() {
         <div className="features-grid">
           {t.features.items.map((feature, index) => {
             const Icon = icons[index % icons.length];
-            const detailKeys = ["customer", "quote", "service", "payment", "schedule", "team", "dashboard"] as const;
+            const detailKeys = ["customer", "quote", "service", "stock", "payment", "finance", "schedule", "team", "dashboard"] as const;
             return (
               <button
                 className={`feature-card feature-card-btn${index === 0 ? " customer" : ""}`}
@@ -572,6 +593,123 @@ export default function Features() {
                   </div>
                 </div>
               </>
+            ) : detail === "stock" ? (
+              <>
+                <h2 className="fmodal-title">{skd.title}</h2>
+                <p className="fmodal-intro">{skd.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{skd.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Stok</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Stok</h3>
+                            <span className="an-top-sub">Ürün stokları ve e-faturalar</span>
+                          </div>
+                          <span className="an-chip">₺</span>
+                        </div>
+
+                        <div className="an-btn-row" style={{ margin: "12px 0 2px" }}>
+                          <span className="an-btn"><Mini name="cloud" size={13} color="var(--sc-primary-on)" /> Fatura Al</span>
+                          <span className="an-btn"><Mini name="plus" size={13} color="var(--sc-primary-on)" /> Ürün Ekle</span>
+                        </div>
+
+                        <div className="an-stock-stats">
+                          <div className="an-stock-stat"><span>Toplam Ürün</span><strong>38</strong></div>
+                          <div className="an-stock-stat"><span>Kritik Stok</span><strong className="warn">2</strong></div>
+                          <div className="an-stock-stat"><span>Stok Değeri</span><strong>₺386.500</strong></div>
+                        </div>
+
+                        <div className="an-cloud-note">
+                          <span className="an-cloud-ic"><Mini name="check-circle" size={18} /></span>
+                          <div>
+                            <strong>Serviste kullanılan ürünler stoktan düşülür</strong>
+                            <span>Formdaki ürünler kayıt sırasında stoktan düşer; geçmişe “Servis Kaydı” olarak işlenir.</span>
+                          </div>
+                        </div>
+
+                        <div className="an-sec-head">
+                          <span className="an-sec-ic"><Mini name="doc" size={14} /></span>
+                          <strong>Ürünler</strong>
+                          <span className="an-sec-count">4</span>
+                        </div>
+                        <div className="an-rec-list">
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Kombi Fanı E9</strong>
+                              <span>Buderus · KDV %20</span>
+                            </span>
+                            <span className="an-rec-money">
+                              <strong>14 AD</strong>
+                              <span>₺950,00</span>
+                            </span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Klima Gazı R22 · 13,6 kg</strong>
+                              <span>Kritik seviye: 2 AD</span>
+                            </span>
+                            <span className="an-rec-money">
+                              <strong>2 AD</strong>
+                              <span>₺64,25</span>
+                            </span>
+                            <span className="an-ht-pill pending">Kritik</span>
+                          </span>
+                          <span className="an-rec">
+                            <span className="an-rec-main">
+                              <strong>Termostat Modülü</strong>
+                              <span>Kondor · KDV %20</span>
+                            </span>
+                            <span className="an-rec-money">
+                              <strong>22 AD</strong>
+                              <span>₺1.240,00</span>
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{skd.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{skd.pointsTitle}</h3>
+                    <ul>
+                      {skd.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{skd.docTitle}</h3>
+                    <p>{skd.docIntro}</p>
+                    <ul>
+                      {skd.docPoints.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
             ) : detail === "payment" ? (
               <>
                 <h2 className="fmodal-title">{pd.title}</h2>
@@ -643,6 +781,114 @@ export default function Features() {
                     <h3>{pd.pointsTitle}</h3>
                     <ul>
                       {pd.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
+            ) : detail === "finance" ? (
+              <>
+                <h2 className="fmodal-title">{fnd.title}</h2>
+                <p className="fmodal-intro">{fnd.intro}</p>
+
+                <div className="fmodal-grid">
+                  <div className="fmodal-mock">
+                    <span className="fmodal-mock-label">{fnd.visualTitle}</span>
+                    <div className="mock-frame">
+                      <div className="mock-frame-bar">
+                        <span className="mock-f-btn r" />
+                        <span className="mock-f-btn y" />
+                        <span className="mock-f-btn g" />
+                        <span className="mock-f-url">loomy-app · Finans</span>
+                      </div>
+                      <div className="mock-frame-body">
+                        <div className="an-head">
+                          <span className="an-chip" style={{ padding: 0 }}>
+                            <Mini name="back" size={18} color="var(--sc-primary)" />
+                          </span>
+                          <div style={{ minWidth: 0, flexGrow: 1, textAlign: "left" }}>
+                            <h3 className="an-title" style={{ fontSize: 15 }}>Finans</h3>
+                            <span className="an-top-sub">Ağustos 2026 · TCMB kuru ile</span>
+                          </div>
+                          <span className="an-chip">₺</span>
+                        </div>
+
+                        <div className="fmp-chips">
+                          <span className="fmp-chip on">Bu Ay</span>
+                          <span className="fmp-chip">Tüm Zamanlar</span>
+                        </div>
+
+                        <div className="an-stack">
+                          <div className="an-card">
+                            <div className="an-bar-wrap">
+                              <div className="an-bar-top">
+                                <span>Stok Değeri</span>
+                                <strong className="amt-primary">+ ₺386.500</strong>
+                              </div>
+                              <div className="an-bar"><i className="primary" style={{ width: "72%" }} /></div>
+                            </div>
+                            <div className="an-bar-wrap">
+                              <div className="an-bar-top">
+                                <span>Harcamalar · 22 fatura</span>
+                                <strong className="amt-warn">- ₺87.400</strong>
+                              </div>
+                              <div className="an-bar"><i className="warning" style={{ width: "18%" }} /></div>
+                            </div>
+                          </div>
+
+                          <div className="an-card">
+                            <div className="an-fin-chart">
+                              <i className="a" style={{ height: "26%" }} />
+                              <i className="d" style={{ height: "44%" }} />
+                              <i className="a" style={{ height: "38%" }} />
+                              <i className="c" style={{ height: "60%" }} />
+                              <i className="b" style={{ height: "30%" }} />
+                              <i className="c" style={{ height: "72%" }} />
+                              <i className="a" style={{ height: "52%" }} />
+                              <i className="d" style={{ height: "84%" }} />
+                            </div>
+                            <div className="an-fin-leg">
+                              <span><i className="a" /> Gelenler</span>
+                              <span><i className="b" /> Bekleyen</span>
+                              <span><i className="c" /> Stok Değeri</span>
+                              <span><i className="d" /> Harcamalar</span>
+                            </div>
+                          </div>
+
+                          <div className="an-card">
+                            <div className="an-total-row"><span>Servislerden Gelecekler</span><strong className="amt-warn">+ ₺18.900 · 6 bekleyen</strong></div>
+                            <div className="an-total-row"><span>Şu An Gelenler</span><strong className="amt-primary">+ ₺42.300 · 12 ödemeli</strong></div>
+                            <div className="an-total-row pb"><span>Genel Finansal Durum</span><strong className="amt-success">= ₺360.000</strong></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="fmodal-mock-desc">{fnd.visualDesc}</p>
+                  </div>
+
+                  <div className="fmodal-points">
+                    <h3>{fnd.pointsTitle}</h3>
+                    <ul>
+                      {fnd.points.map((point, i) => (
+                        <li key={i}>
+                          <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="fmodal-doc">
+                  <div className="fmodal-doc-list">
+                    <h3>{fnd.docTitle}</h3>
+                    <p>{fnd.docIntro}</p>
+                    <ul>
+                      {fnd.docPoints.map((point, i) => (
                         <li key={i}>
                           <span className="fmodal-check"><Mini name="check" size={13} color="var(--sc-bg)" /></span>
                           {point}

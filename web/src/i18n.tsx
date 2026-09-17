@@ -19,7 +19,7 @@ const tr = {
     title1: "İşletmenizi tek",
     title2: "panelden yönetin",
     description:
-      "Loomy; müşterilerinizi, servislerinizi, tekliflerinizi, ödemelerinizi, randevularınızı ve ekibinizi tek bir yerden yönetmenizi sağlar. Kağıt, hesap tablosu ve kafa karışıklığı olmadan.",
+      "Loomy; müşterilerinizi, servislerinizi, tekliflerinizi, stoklarınızı, finansınızı, ödemelerinizi, randevularınızı ve ekibinizi tek bir yerden yönetmenizi sağlar. Kağıt, hesap tablosu ve kafa karışıklığı olmadan.",
     ctaPrimary: "Ücretsiz Başla",
     ctaSecondary: "Nasıl Çalışır?",
     stat1Value: "7/24",
@@ -54,12 +54,22 @@ const tr = {
       {
         title: "Servis ve İş Takibi",
         description:
-          "Yapılan servisleri ve işleri kaydedin, dijital imza alın ve müşterinizle anında PDF rapor olarak paylaşın.",
+          "Yapılan servisleri ve işleri kaydedin, dijital imza alın ve müşterinizle anında PDF rapor olarak paylaşın. Kullanılan ürünler kayıt sırasında stoktan otomatik düşülür.",
+      },
+      {
+        title: "Stok Yönetimi",
+        description:
+          "Ürün stoklarınızı tek ekrandan yönetin; GİB e-fatura/e-arşiv XML içe aktarımı, kritik stok uyarıları ve serviste kullanılan ürünlerin kayıt sırasında otomatik stoktan düşülmesi.",
       },
       {
         title: "Ödeme Takibi",
         description:
           "Ödenmiş, ödenmemiş ve geciken ödemeleri görün; tek dokunuşla ödendi olarak işaretleyin. Aylık durum ve özet ile tahsilatınız hep gözünüzün önünde.",
+      },
+      {
+        title: "Finans Takibi",
+        description:
+          "Stok değeriniz, harcamalarınız ve servislerden gelen/gelecek ödemeler TCMB canlı kuruyla tek finans tablosunda; genel finansal durum ve finans akış grafiği hep gözünüzün önünde.",
       },
       {
         title: "Randevu ve Planlama",
@@ -144,6 +154,7 @@ const tr = {
           "İşletmenize özel birden fazla form oluşturun: alan, başlık ve düzeni kendi işinize göre düzenleyin",
           "Bakım, montaj, arıza, keşif gibi farklı servis türlerini tek uygulamadan kaydedin ve yönetin",
           "Servis kaydı ekleyin: müşteri, işlem, açıklama, ücret ve KDV tek ekranda",
+          "Kullanılan ürünleri stoktan seçin; tutarlar stok birim fiyatından gelir ve kayıt sırasında stoktan düşülür",
           "Teknisyen ve müşteri dijital imzasını formda alın",
           "Servis teslim formunu tek tıkla PDF olarak paylaşın",
         ],
@@ -153,7 +164,32 @@ const tr = {
         docPoints: [
           "Kendi formunuz, kendi şablonunuz: işletmenize göre özelleştirin",
           "Teknisyen ve müşteri dijital imzası + firma kaşesi",
+          "Kullanılan ürünler teslim formunda listelenir ve stoktan otomatik düşülür",
           "WhatsApp, e-posta veya güvenli bağlantıyla anında paylaşım",
+        ],
+      },
+      stock: {
+        title: "Stok Yönetimi",
+        intro:
+          "Ürün stoklarınızı ad, birim, birim fiyat ve kritik seviye ile tek ekrandan yönetin. GİB e-fatura/e-arşiv XML'lerini içe aktarın; servislerde kullandığınız ürünler kayıt sırasında otomatik olarak stoktan düşülür.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın stok ekranını yansıtır: ürün listesi, kritik stok uyarıları, toplam stok değeri ve gelir faturası içe aktarımı.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Ürün stoklarını miktar, birim, birim fiyat, tedarikçi ve kritik seviye ile yönetin",
+          "GİB e-fatura/e-arşiv XML dosyasını içe aktarın; ürünler ve adetler stoka otomatik işlenir",
+          "Kritik stok uyarısı açın; seviyenin altına düşen ürünler tek bakışta görünür",
+          "Stok giriş/çıkış kaydı tutun; her hareketin sebebi (fatura, manuel, servis kaydı) geçmişte görünür",
+          "Serviste kullanılan ürünler kayıt sırasında otomatik stoktan düşülür",
+          "Stok değeri döviz bazında ve TCMB kuruyla Türk Lirası karşılığıyla hesaplanır",
+        ],
+        docTitle: "Stoktan Düşmeyi Otomatik Yönetin",
+        docIntro:
+          "Servis formuna eklenen her ürün, kayıt onaylandığı anda stoktan düşülür ve stok hareket geçmişine \"Servis Kaydı\" olarak işlenir.",
+        docPoints: [
+          "Kullanılan ürünler servis kaydı sırasında otomatik stoktan düşülür",
+          "Her hareketin sebebi ve tarihi stok geçmişinde kayıt altında",
         ],
       },
       payment: {
@@ -169,6 +205,29 @@ const tr = {
           "Tek dokunuşla bir ödemeyi ödendi olarak işaretleyin",
           "Aylık ödeme durumunu ve özeti tek ekranda görün",
           "Ödeme geçmişini müşteriyle tek tıkla paylaşın",
+        ],
+      },
+      finance: {
+        title: "Finans Takibi",
+        intro:
+          "Stok değeriniz, harcamalarınız, servislerden gelen ve gelecek ödemeleriniz tek finans tablosunda; tüm tutarlar TCMB canlı kuruyla Türk Lirasına çevrilir ve dönem bazında finans akışını grafikte izlersiniz.",
+        visualTitle: "Gerçek Uygulama Görünümü",
+        visualDesc:
+          "Aşağıdaki örnek, uygulamanın finans ekranını yansıtır: stok değeri, harcamalar, bekleyen servis ödemeleri ve genel finansal durum.",
+        pointsTitle: "Neler yapabilirsiniz?",
+        points: [
+          "Stok değerini, harcamaları ve servis ödemelerini tek finans tablosunda görün",
+          "Tüm tutarlar TCMB canlı kuruyla TL'ye çevrilir; döviz bazında dağılım ayrıca gösterilir",
+          "Dönem (tüm zamanlar veya ay) seçin ve finans akışını grafikle izleyin",
+          "Bekleyen servislerden gelecek tahsilatı ve alınan ödemeleri önceden görün",
+          "Genel finansal durumunuzu tek satırda hesaplayın: stok + gelirler - harcamalar",
+        ],
+        docTitle: "Finansı Canlı Kurla Görün",
+        docIntro:
+          "Stok değeri, harcamalar ve servis ödemeleri farklı para birimlerinde olsa bile TCMB efektif satış kuruyla Türk Lirasına çevrilir; genel finansal durumunuz her an doğru ve günceldir.",
+        docPoints: [
+          "TL, dolar veya euro olsun; tüm tutarlar canlı kurla tek tabloda",
+          "Ay bazında finans akışını grafikle izleyin",
         ],
       },
       schedule: {
@@ -236,7 +295,7 @@ const tr = {
       {
         title: "Yönetmeye Başlayın",
         description:
-          "Müşterilerinizi, servislerinizi, ödemelerinizi ve planınızı tek panelden takip edin.",
+          "Müşterilerinizi, servislerinizi, stoklarınızı, finansınızı, ödemelerinizi ve planınızı tek panelden takip edin.",
       },
     ],
   },
@@ -260,6 +319,9 @@ const tr = {
           "Servis ve iş takibi",
           "Teklif ve PDF",
           "Ödeme takibi",
+          "Stok yönetimi",
+          "Finans takibi",
+          "Servislerden stok düşme",
           "Randevu ve planlama",
           "Ekip ve roller",
           "Dijital imza ve PDF raporlar",
@@ -274,7 +336,7 @@ const tr = {
     items: [
       {
         q: "Loomy nedir?",
-        a: "Loomy; müşteri, servis, teklif, ödeme, randevu ve ekip yönetimini tek panelde toplayan bir işletme yönetim uygulamasıdır.",
+        a: "Loomy; müşteri, servis, teklif, ödeme, stok, finans, randevu ve ekip yönetimini tek panelde toplayan bir işletme yönetim uygulamasıdır.",
       },
       {
         q: "Nasıl kayıt olabilirim?",
@@ -746,7 +808,7 @@ const en: Dictionary = {
     title1: "Manage your business",
     title2: "from a single panel",
     description:
-      "Loomy lets you manage your customers, services, quotes, payments, appointments and team all in one place. No paper, no spreadsheets, no confusion.",
+      "Loomy lets you manage your customers, services, quotes, stock, finance, payments, appointments and team all in one place. No paper, no spreadsheets, no confusion.",
     ctaPrimary: "Start Free",
     ctaSecondary: "How it works?",
     stat1Value: "24/7",
@@ -781,12 +843,22 @@ const en: Dictionary = {
       {
         title: "Service & Job Tracking",
         description:
-          "Record services and jobs, collect digital signatures and share instantly with your customer as a PDF report.",
+          "Record services and jobs, collect digital signatures and share instantly with your customer as a PDF report. Used products are deducted from stock automatically when you save.",
+      },
+      {
+        title: "Stock Management",
+        description:
+          "Manage product stock from one screen: import GİB e-invoice / e-archive XML, get low-stock alerts and let products used in a service be deducted from stock automatically on save.",
       },
       {
         title: "Payment Tracking",
         description:
           "See paid, unpaid and overdue payments and mark them paid with one tap. Keep your collections in sight with monthly status and summaries.",
+      },
+      {
+        title: "Finance Tracking",
+        description:
+          "Your stock value, expenses and payments from services in one finance table using live TCMB rates; overall financial position and a finance flow chart at a glance.",
       },
       {
         title: "Appointments & Planning",
@@ -871,6 +943,7 @@ const en: Dictionary = {
           "Create multiple forms tailored to your business: customize fields, titles and layout",
           "Manage different service types — maintenance, installation, repair, survey — from one app",
           "Add a service record: customer, work, description, fee and VAT in one screen",
+          "Pick used products from stock; totals come from stock unit prices and items are deducted from stock on save",
           "Capture technician and customer digital signatures on the form",
           "Share the service delivery form as a PDF in one tap",
         ],
@@ -880,7 +953,32 @@ const en: Dictionary = {
         docPoints: [
           "Your form, your template: customize it to fit your business",
           "Technician and customer digital signatures + company stamp",
+          "Used products are listed on the delivery form and deducted from stock automatically",
           "Instant sharing via WhatsApp, email or a secure link",
+        ],
+      },
+      stock: {
+        title: "Stock Management",
+        intro:
+          "Manage product stock by name, unit, unit price and low-stock level from one screen. Import GİB e-invoice / e-archive XML files and let products used in services be deducted from stock automatically on save.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's stock screen: product list, low-stock alerts, total stock value and purchase invoice import.",
+        pointsTitle: "What can you do?",
+        points: [
+          "Manage stock by quantity, unit, unit price, supplier and low-stock level",
+          "Import a GİB e-invoice / e-archive XML file; items and quantities are processed into stock automatically",
+          "Turn on low-stock alerts; items below the level stand out at a glance",
+          "Keep a stock movement log (in/out); every movement shows its reason — invoice, manual or service record",
+          "Products used in a service are deducted from stock automatically on save",
+          "Stock value is calculated per currency and converted to Turkish Lira with live rates",
+        ],
+        docTitle: "Let Stock Deduction Be Automatic",
+        docIntro:
+          "Every product added to a service form is deducted from stock the moment the record is saved, showing up in the stock movement history as a service record.",
+        docPoints: [
+          "Used products are deducted from stock automatically when a service is saved",
+          "Every movement keeps its reason and date in the stock history",
         ],
       },
       payment: {
@@ -896,6 +994,29 @@ const en: Dictionary = {
           "Mark a payment as paid with a single tap",
           "See the monthly payment status and summary in one screen",
           "Share the payment history with your customer in one tap",
+        ],
+      },
+      finance: {
+        title: "Finance Tracking",
+        intro:
+          "Your stock value, expenses and payments from services — incoming and upcoming — in one finance table; all amounts are converted to Turkish Lira with live TCMB rates and you can watch the finance flow on a chart per period.",
+        visualTitle: "Real App View",
+        visualDesc:
+          "The example below mirrors the app's finance screen: stock value, expenses, pending service payments and the overall financial position.",
+        pointsTitle: "What can you do?",
+        points: [
+          "See stock value, expenses and service payments in one finance table",
+          "All amounts are converted to TL with live TCMB rates; per-currency breakdown is shown too",
+          "Pick a period (all time or a month) and watch the finance flow on the chart",
+          "See upcoming collections from pending services and payments already received",
+          "Calculate your overall financial position in one line: stock + income - expenses",
+        ],
+        docTitle: "See Finance with Live Rates",
+        docIntro:
+          "Even when stock value, expenses and service payments are in different currencies, they are converted to Turkish Lira using the TCMB effective selling rate — your overall financial position is always accurate and up to date.",
+        docPoints: [
+          "TL, USD or EUR — every amount meets in one table via live rates",
+          "Watch the monthly finance flow on the chart",
         ],
       },
       schedule: {
@@ -963,7 +1084,7 @@ const en: Dictionary = {
       {
         title: "Start managing",
         description:
-          "Track your customers, services, payments and schedule from one panel.",
+          "Track your customers, services, stock, finance, payments and schedule from one panel.",
       },
     ],
   },
@@ -987,6 +1108,9 @@ const en: Dictionary = {
           "Service & job tracking",
           "Quotes & PDF",
           "Payment tracking",
+          "Stock management",
+          "Finance tracking",
+          "Stock deduction from services",
           "Appointments & planning",
           "Team & roles",
           "Digital signature & PDF reports",
@@ -1001,7 +1125,7 @@ const en: Dictionary = {
     items: [
       {
         q: "What is Loomy?",
-        a: "Loomy is a business management app that brings customer, service, quote, payment, appointment and team management into a single panel.",
+        a: "Loomy is a business management app that brings customer, service, quote, payment, stock, finance, appointment and team management into a single panel.",
       },
       {
         q: "How do I sign up?",
