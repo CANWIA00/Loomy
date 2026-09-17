@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://loomy-app.com/sitemap.xml

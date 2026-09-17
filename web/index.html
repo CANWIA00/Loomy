@@ -3,13 +3,172 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Loomy - İşletmenizi Tek Panelden Yönetin</title>
+
+    <title>Loomy | Servis, Stok, Teklif ve Finans Yönetimi</title>
     <meta
       name="description"
-      content="Loomy; müşterilerinizi, servislerinizi, ödemelerinizi, randevularınızı ve ekibinizi tek panelden yönetmenizi sağlayan işletme yönetim uygulamasıdır."
+      content="Servis yönetimi, stok takibi, teklif hazırlama, elektronik imza, ödeme ve finans yönetimini tek panelde toplayan işletme yönetim uygulaması. Müşterilerinizi ve ekibinizi tek yerden yönetin."
     />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="Loomy" />
+    <link rel="canonical" href="https://loomy-app.com/" />
     <meta name="theme-color" content="#0b0b14" />
+
     <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Loomy" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:url" content="https://loomy-app.com/" />
+    <meta property="og:title" content="Loomy – Servis, Stok, Teklif ve Finans Yönetimi" />
+    <meta
+      property="og:description"
+      content="Servis yönetimi, stok takibi, teklif hazırlama, elektronik imza, ödeme ve finans yönetimini tek panelde toplayan işletme yönetim uygulaması."
+    />
+    <meta property="og:image" content="https://loomy-app.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Loomy - İşletmenizi tek panelden yönetin" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Loomy – Servis, Stok, Teklif ve Finans Yönetimi" />
+    <meta
+      name="twitter:description"
+      content="Servis, stok takibi, teklif hazırlama, elektronik imza, ödeme ve finans yönetimini tek panelde toplayan işletme yönetim uygulaması."
+    />
+    <meta name="twitter:image" content="https://loomy-app.com/og-image.png" />
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://loomy-app.com/#organization",
+            "name": "Loomy",
+            "url": "https://loomy-app.com/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://loomy-app.com/logo.png"
+            },
+            "description": "Servis, stok takibi, teklif hazırlama, elektronik imza, ödeme ve finans yönetimini tek panelde toplayan işletme yönetimi uygulaması.",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "email": "lommy.app.info@gmail.com"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://loomy-app.com/#website",
+            "url": "https://loomy-app.com/",
+            "name": "Loomy",
+            "inLanguage": "tr-TR",
+            "description": "İşletmenizi tek panelden yönetin: servis, stok, teklif, finans ve ekip yönetimi.",
+            "publisher": { "@id": "https://loomy-app.com/#organization" }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Loomy",
+            "url": "https://app.loomy-app.com",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web, iOS, Android",
+            "inLanguage": "tr",
+            "image": "https://loomy-app.com/og-image.png",
+            "description": "Servis yönetimi, stok takibi, teklif hazırlama, elektronik imza, ödeme ve finans yönetimini tek panelde toplayan işletme yönetim uygulaması.",
+            "keywords": "servis yönetimi, stok takibi, teklif hazırlama, finans yönetimi, elektronik imza, işletme yönetimi",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "TRY",
+              "description": "Hesap davet koduyla oluşturulur"
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://loomy-app.com/#faq",
+            "inLanguage": "tr-TR",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Loomy nedir?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Loomy; müşteri, servis, teklif, ödeme, stok, finans, randevu ve ekip yönetimini tek panelde toplayan bir işletme yönetim uygulamasıdır."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Nasıl kayıt olabilirim?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Hesabınız, davet koduyla oluşturulur. Davet kodunuzla kayıt olup e-posta adresinizi doğrulamanız yeterlidir."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Teklif verebilir miyim?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Evet. Ürün satırları, KDV ve güncel döviz kuru (TCMB efektif satış) ile teklif hazırlayıp PDF olarak indirebilir; firma bilgileriniz ve KVKK notuyla müşterinizle paylaşabilirsiniz."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Stok takibini ve stok değerini nasıl görürüm?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Stok ekranında ürünlerinizi listeleyebilir, yeni ürün ekleyebilir ve fatura içe aktarabilirsiniz. Toplam ürün, kritik stok ve stok değeri istatistikleri tek bakışta görünür; stok düşen ürünlerde uyarı rozeti çıkar. Ürünlü servis kayıtlarında stok otomatik düşülür."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Servis formlarında elektronik imza kullanılıyor mu?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Evet. Müşteri ve teknisyen imzaları formda elektronik olarak atılır; PDF servis raporuna imzalar ve firma kaşesiyle birlikte yansır. Kendi imzanızı profilden kaydedip formlarda tek dokunuşla kullanabilirsiniz."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Servis formu şablonlarını düzenleyebilir miyim?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Evet. Form şablonları oluşturup düzenleyebilir, gösterilen alanları ve sık kullanılan arıza/işlem seçeneklerini (çip gruplarını) kendinize göre ayarlayabilirsiniz. Varsayılan şablon belirleyebilir; değişiklikleri mevcut kayıtların PDF'lerine de uygulayabilirsiniz."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Farklı para birimlerindeki tutarları nasıl takip ediyorum?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Stok değeri, giderler ve servis ödemeleri farklı para birimlerinde olsa da tüm tutarlar TCMB canlı kuruyla Türk Lirasına çevrilir; genel mali durumunuzu ve aylık finans akışını grafikte izlersiniz."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Hangi cihazlarda çalışır?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Loomy web tarayıcısından, telefonunuza kurulabilen uygulama olarak ve PWA olarak kullanılabilir."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Verilerim güvende mi?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Hesaplarınız şifreli tutulur ve yalnızca yetkili ekip üyeleri işletmenizin verilerine erişebilir."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
