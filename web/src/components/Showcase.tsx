@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "../i18n";
+import FinanceLineChart, { MONTHS_EN, MONTHS_TR } from "./FinanceLineChart";
 
 type ScreenKey =
   | "panel"
@@ -1378,22 +1379,17 @@ const PayBars = ({
               <span className="an-fpill">{ff.all}</span>
             </div>
             <p className="an-fin-note">{ff.tryNote}</p>
-            <div className="an-fin-chart">
-              <i className="a" style={{ height: "26%" }} />
-              <i className="d" style={{ height: "44%" }} />
-              <i className="a" style={{ height: "38%" }} />
-              <i className="c" style={{ height: "60%" }} />
-              <i className="b" style={{ height: "30%" }} />
-              <i className="c" style={{ height: "72%" }} />
-              <i className="a" style={{ height: "52%" }} />
-              <i className="d" style={{ height: "84%" }} />
-            </div>
-            <div className="an-fin-leg">
-              <span><i style={{ background: "#14b8a6" }} /> {ff.stock}</span>
-              <span><i style={{ background: "#ef4444" }} /> {ff.expense}</span>
-              <span><i style={{ background: "#f59e0b" }} /> {ff.pending}</span>
-              <span><i style={{ background: "#3b82f6" }} /> {ff.paid}</span>
-            </div>
+            <FinanceLineChart
+              title={ff.chartTitle}
+              note={ff.chartNote}
+              labels={lang === "tr" ? MONTHS_TR : MONTHS_EN}
+              series={[
+                { name: ff.stock, color: "#14b8a6", values: [120, 90, 140, 110, 95, 130, 160, 145, 118, 132, 150, 172] },
+                { name: ff.expense, color: "#ef4444", values: [42, 38, 50, 44, 36, 48, 52, 46, 55, 41, 47, 58] },
+                { name: ff.pending, color: "#f59e0b", values: [30, 42, 35, 28, 40, 26, 38, 45, 30, 36, 42, 50] },
+                { name: ff.paid, color: "#3b82f6", values: [60, 55, 70, 62, 74, 68, 80, 86, 78, 84, 90, 96] },
+              ]}
+            />
             <div className="an-total-row">
               <span>{ff.stock} · {ff.stockSub}</span>
               <strong className="amt-primary">+ ₺386.500</strong>

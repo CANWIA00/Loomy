@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "../i18n";
 import { FeatureIcon } from "../icons";
+import FinanceLineChart, { MONTHS_TR } from "./FinanceLineChart";
 
 const iconProps = { size: 24, stroke: "#8b5cf6" };
 
@@ -841,22 +842,17 @@ export default function Features() {
                           </div>
 
                           <div className="an-card">
-                            <div className="an-fin-chart">
-                              <i className="a" style={{ height: "26%" }} />
-                              <i className="d" style={{ height: "44%" }} />
-                              <i className="a" style={{ height: "38%" }} />
-                              <i className="c" style={{ height: "60%" }} />
-                              <i className="b" style={{ height: "30%" }} />
-                              <i className="c" style={{ height: "72%" }} />
-                              <i className="a" style={{ height: "52%" }} />
-                              <i className="d" style={{ height: "84%" }} />
-                            </div>
-                            <div className="an-fin-leg">
-                              <span><i className="a" /> Gelenler</span>
-                              <span><i className="b" /> Bekleyen</span>
-                              <span><i className="c" /> Stok Değeri</span>
-                              <span><i className="d" /> Harcamalar</span>
-                            </div>
+                            <FinanceLineChart
+                              title="Finans Akışı"
+                              note="Ağustos 2026 · aylık bazda"
+                              labels={MONTHS_TR}
+                              series={[
+                                { name: "Stok Değeri", color: "#14b8a6", values: [120, 90, 140, 110, 95, 130, 160, 145, 118, 132, 150, 172] },
+                                { name: "Harcamalar", color: "#ef4444", values: [42, 38, 50, 44, 36, 48, 52, 46, 55, 41, 47, 58] },
+                                { name: "Bekleyen", color: "#f59e0b", values: [30, 42, 35, 28, 40, 26, 38, 45, 30, 36, 42, 50] },
+                                { name: "Ödenen", color: "#3b82f6", values: [60, 55, 70, 62, 74, 68, 80, 86, 78, 84, 90, 96] },
+                              ]}
+                            />
                           </div>
 
                           <div className="an-card">
