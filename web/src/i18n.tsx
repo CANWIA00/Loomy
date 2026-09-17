@@ -347,6 +347,22 @@ const tr = {
         a: "Evet. Ürün satırları, KDV ve güncel döviz kuru (TCMB efektif satış) ile teklif hazırlayıp PDF olarak indirebilir; firma bilgileriniz ve KVKK notuyla müşterinizle paylaşabilirsiniz.",
       },
       {
+        q: "Stok takibini ve stok değerini nasıl görürüm?",
+        a: "Stok ekranında ürünlerinizi listeleyebilir, yeni ürün ekleyebilir ve fatura içe aktarabilirsiniz. Toplam ürün, kritik stok ve stok değeri istatistikleri tek bakışta görünür; stok düşen ürünlerde uyarı rozeti çıkar. Ürünlü servis kayıtlarında stok otomatik düşülür.",
+      },
+      {
+        q: "Servis formlarında elektronik imza kullanılıyor mu?",
+        a: "Evet. Müşteri ve teknisyen imzaları formda elektronik olarak atılır; PDF servis raporuna imzalar ve firma kaşesiyle birlikte yansır. Kendi imzanızı profilden kaydedip formlarda tek dokunuşla kullanabilirsiniz.",
+      },
+      {
+        q: "Servis formu şablonlarını düzenleyebilir miyim?",
+        a: "Evet. Form şablonları oluşturup düzenleyebilir, gösterilen alanları ve sık kullanılan arıza/işlem seçeneklerini (çip gruplarını) kendinize göre ayarlayabilirsiniz. Varsayılan şablon belirleyebilir; değişiklikleri mevcut kayıtların PDF'lerine de uygulayabilirsiniz.",
+      },
+      {
+        q: "Farklı para birimlerindeki tutarları nasıl takip ediyorum?",
+        a: "Stok değeri, giderler ve servis ödemeleri farklı para birimlerinde olsa da tüm tutarlar TCMB canlı kuruyla Türk Lirasına çevrilir; genel mali durumunuzu ve aylık finans akışını grafikte izlersiniz.",
+      },
+      {
         q: "Hangi cihazlarda çalışır?",
         a: "Loomy web tarayıcısından, telefonunuza kurulabilen uygulama olarak ve PWA olarak kullanılabilir.",
       },
@@ -1184,6 +1200,22 @@ const en: Dictionary = {
       {
         q: "Can I create quotes?",
         a: "Yes. Create quotes with product lines, VAT and the live exchange rate (TCMB effective selling rate), download them as PDF and share them with your customer along with your company info and KVKK note.",
+      },
+      {
+        q: "How do I track stock and stock value?",
+        a: "In the stock screen you can list products, add new ones and import invoices. Total products, low-stock count and stock value are all visible at a glance, and low-stock items get a warning badge. Stock is deducted automatically in service records that use products.",
+      },
+      {
+        q: "Do service forms support electronic signatures?",
+        a: "Yes. Customer and technician signatures are captured electronically right in the form and rendered on the PDF service report along with your company stamp. You can save your own signature from your profile and use it with one tap.",
+      },
+      {
+        q: "Can I customize service form templates?",
+        a: "Yes. Create and edit form templates, choose which fields are shown and tune the frequently used defect/operation options (chip groups) the way you want. You can set a default template and even apply your changes to existing records' PDFs.",
+      },
+      {
+        q: "How do I track amounts in different currencies?",
+        a: "Even when stock value, expenses and service payments are in different currencies, every amount is converted to Turkish Lira with live TCMB rates; you can watch your overall financial position and the monthly finance flow on a chart.",
       },
       {
         q: "Which devices does it work on?",
