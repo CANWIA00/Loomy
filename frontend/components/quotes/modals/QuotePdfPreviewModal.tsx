@@ -102,7 +102,7 @@ export default function QuotePdfPreviewModal() {
             </ScrollView>
           )}
         </View>
-        <View style={{ backgroundColor: colors.bgCard, paddingBottom: insets.bottom }}>
+        <View style={{ backgroundColor: colors.bgCard, paddingBottom: Platform.OS === "web" ? 0 : insets.bottom }}>
           <View className="px-4 py-3 border-t" style={{ borderColor: colors.border }}>
             <View className="flex-row items-center justify-center gap-4 mb-3">
             <TouchableOpacity
