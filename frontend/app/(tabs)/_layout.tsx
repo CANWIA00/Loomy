@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -40,6 +41,7 @@ function CustomTabBar({ state, navigation }: any) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const visibleRoutes = state.routes.filter((r: any) => {
     if (["profil", "settings", "_sitemap", "+not-found"].includes(r.name)) return false;
@@ -47,7 +49,8 @@ function CustomTabBar({ state, navigation }: any) {
   });
 
   return (
-    <View style={{ backgroundColor: colors.bg }} className="w-full flex-row items-center justify-around px-2 py-2">
+    <View style={{ backgroundColor: colors.bg, paddingBottom: Platform.OS === "web" ? insets.bottom : 0 }} className="w-full">
+      <View className="w-full flex-row items-center justify-around px-2 py-2">
       {visibleRoutes.map((route: any, index: number) => {
         const isFocused = state.index === index;
         const tab = allTabs[route.name];
@@ -73,6 +76,7 @@ function CustomTabBar({ state, navigation }: any) {
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }
