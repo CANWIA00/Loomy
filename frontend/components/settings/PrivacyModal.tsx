@@ -1,5 +1,6 @@
 import { Modal, View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -12,6 +13,7 @@ interface PrivacyModalProps {
 export default function PrivacyModal({ visible, onClose }: PrivacyModalProps) {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
 
   const CONTACT_EMAIL = "lommy.app.info@gmail.com";
 

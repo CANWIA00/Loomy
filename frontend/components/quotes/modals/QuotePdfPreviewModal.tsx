@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, Modal, ScrollView, Platform, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useQuotes } from "../QuoteContext";
@@ -9,6 +10,7 @@ import PdfPreviewWeb from "../../PdfPreviewWeb";
 export default function QuotePdfPreviewModal() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const {
     pdfPreviewVisible,
     setPdfPreviewVisible,
@@ -23,15 +25,17 @@ export default function QuotePdfPreviewModal() {
   return (
     <Modal visible={pdfPreviewVisible} animationType="slide" onRequestClose={close}>
       <View className="flex-1" style={{ backgroundColor: colors.bg }}>
-        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-          <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("qot.pdfTitle")}</Text>
-          <TouchableOpacity
-            className="h-9 px-4 rounded-lg items-center justify-center"
-            style={{ backgroundColor: colors.bgInput }}
-            onPress={close}
-          >
-            <Text className="text-sm font-medium" style={{ color: colors.text }}>{t("common.close")}</Text>
-          </TouchableOpacity>
+        <View style={{ backgroundColor: colors.bgCard, paddingTop: insets.top }}>
+          <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
+            <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("qot.pdfTitle")}</Text>
+            <TouchableOpacity
+              className="h-9 px-4 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.bgInput }}
+              onPress={close}
+            >
+              <Text className="text-sm font-medium" style={{ color: colors.text }}>{t("common.close")}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <View className="flex-1">
           {Platform.OS === "web" ? (
@@ -98,8 +102,9 @@ export default function QuotePdfPreviewModal() {
             </ScrollView>
           )}
         </View>
-        <View className="px-4 py-3 border-t" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-          <View className="flex-row items-center justify-center gap-4 mb-3">
+        <View style={{ backgroundColor: colors.bgCard, paddingBottom: insets.bottom }}>
+          <View className="px-4 py-3 border-t" style={{ borderColor: colors.border }}>
+            <View className="flex-row items-center justify-center gap-4 mb-3">
             <TouchableOpacity
               onPress={() => setPdfZoom((z) => Math.max(20, z - 20))}
               className="w-9 h-9 rounded-lg items-center justify-center"
@@ -126,6 +131,7 @@ export default function QuotePdfPreviewModal() {
             <Ionicons name="download-outline" size={20} color="white" />
             <Text className="font-semibold" style={{ color: "white" }}>{t("qot.downloadPdf")}</Text>
           </TouchableOpacity>
+        </View>
         </View>
       </View>
     </Modal>

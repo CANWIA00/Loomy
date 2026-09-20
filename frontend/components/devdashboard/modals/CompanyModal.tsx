@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Modal, ActivityIndicator, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useDevDashboard } from "../DevDashboardContext";
 import { formatDate, paymentInfo } from "../types";
@@ -7,6 +8,7 @@ import type { CompanySummary } from "../../../apiclient/dev";
 
 export default function CompanyModal() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const {
     companyModal,
     setCompanyModal,
@@ -19,14 +21,16 @@ export default function CompanyModal() {
   return (
     <Modal visible={companyModal} animationType="slide" onRequestClose={() => setCompanyModal(false)}>
       <View style={{ backgroundColor: colors.bg }} className="flex-1">
-        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={() => setCompanyModal(false)}>
-              <Ionicons name="arrow-back-outline" size={24} color={colors.primary} />
-            </TouchableOpacity>
-            <Text className="text-lg font-bold" style={{ color: colors.text }}>
-              Müşteri Detayı
-            </Text>
+        <View style={{ backgroundColor: colors.bgCard, paddingTop: insets.top }}>
+          <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
+            <View className="flex-row items-center gap-3">
+              <TouchableOpacity onPress={() => setCompanyModal(false)}>
+                <Ionicons name="arrow-back-outline" size={24} color={colors.primary} />
+              </TouchableOpacity>
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>
+                Müşteri Detayı
+              </Text>
+            </View>
           </View>
         </View>
         {companyLoading ? (
@@ -34,7 +38,7 @@ export default function CompanyModal() {
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : companyDetail ? (
-          <ScrollView className="flex-1" indicatorStyle={colors.indicatorBg as any}>
+          <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom }} indicatorStyle={colors.indicatorBg as any}>
             <View className="px-4 pt-5 pb-8 w-full max-w-6xl mx-auto">
               <View className="rounded-2xl p-5 mb-4" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1 }}>
                 <View className="flex-row items-center gap-3 mb-3">

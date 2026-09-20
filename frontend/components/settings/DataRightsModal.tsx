@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Platform, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as Clipboard from "expo-clipboard";
@@ -36,6 +37,7 @@ async function downloadJson(data: any, fileName: string): Promise<void> {
 export default function DataRightsModal({ visible, onClose }: DataRightsModalProps) {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [exporting, setExporting] = useState(false);
   const [status, setStatus] = useState<"idle" | "ok" | "error">("idle");
 
@@ -92,16 +94,18 @@ export default function DataRightsModal({ visible, onClose }: DataRightsModalPro
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={{ backgroundColor: colors.bg }} className="flex-1">
-        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="arrow-back-outline" size={24} color={colors.primary} />
-            </TouchableOpacity>
-            <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("kvkk.rightsTitle")}</Text>
+        <View style={{ backgroundColor: colors.bgCard, paddingTop: insets.top }}>
+          <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
+            <View className="flex-row items-center gap-3">
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="arrow-back-outline" size={24} color={colors.primary} />
+              </TouchableOpacity>
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("kvkk.rightsTitle")}</Text>
+            </View>
           </View>
         </View>
 
-        <ScrollView className="flex-1" indicatorStyle={colors.indicatorBg as any}>
+        <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom }} indicatorStyle={colors.indicatorBg as any}>
           <View className="px-4 pt-5 pb-8 w-full max-w-6xl mx-auto">
             <View className="rounded-2xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderColor: colors.borderAlt, borderWidth: 1 }}>
               <Text className="text-xs leading-5" style={{ color: colors.textSecondary }}>{t("kvkk.rightsDesc")}</Text>

@@ -89,6 +89,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const bg = isDark ? darkColors.bg : lightColors.bg;
+      document.documentElement.style.backgroundColor = bg;
+      document.body.style.backgroundColor = bg;
+    }
+  }, [isDark]);
+
   const toggleTheme = useCallback(() => {
     setIsDark((prev) => {
       const next = !prev;
