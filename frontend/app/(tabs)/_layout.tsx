@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text, Pressable, Platform } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -49,7 +49,7 @@ function CustomTabBar({ state, navigation }: any) {
   });
 
   return (
-    <View style={{ backgroundColor: colors.bg, paddingBottom: Platform.OS === "web" ? insets.bottom : 0 }} className="w-full">
+    <View style={{ backgroundColor: colors.bg, paddingBottom: insets.bottom }} className="w-full">
       <View className="w-full flex-row items-center justify-around px-2 py-2">
       {visibleRoutes.map((route: any, index: number) => {
         const isFocused = state.index === index;
