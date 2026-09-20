@@ -50,7 +50,7 @@ function CustomTabBar({ state, navigation }: any) {
 
   return (
     <View style={{ backgroundColor: colors.bg, paddingBottom: Platform.OS === "web" ? 0 : insets.bottom }} className="w-full">
-      <View className="w-full flex-row items-center justify-around px-2 py-2">
+      <View className="w-full flex-row items-center justify-around border-t" style={{ borderColor: colors.border }}>
       {visibleRoutes.map((route: any, index: number) => {
         const isFocused = state.index === index;
         const tab = allTabs[route.name];
@@ -59,12 +59,11 @@ function CustomTabBar({ state, navigation }: any) {
           <Pressable
             key={route.key}
             onPress={() => navigation.navigate(route.name)}
-            className="items-center justify-center py-1"
-            style={{ minWidth: 44 }}
+            className="flex-1 items-center justify-center py-1"
           >
             <Ionicons
               name={isFocused ? (tab?.icon as any) : (`${tab?.icon}-outline` as any)}
-              size={isFocused ? 24 : 22}
+              size={isFocused ? 21 : 19}
               color={isFocused ? colors.primary : colors.textMuted}
             />
             <Text
