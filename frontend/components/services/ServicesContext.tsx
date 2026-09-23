@@ -23,7 +23,7 @@ interface DeleteAlertState {
 
 interface ResultAlertState {
   visible: boolean;
-  type: "success" | "error";
+  type: "success" | "error" | "warning";
   title: string;
   message: string;
 }
@@ -415,11 +415,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       .filter((f) => !fieldValueByKey(f.key).trim());
     if (missing.length) {
       const names = missing.map((f: TemplateField) => (lang === "tr" ? f.labelTr : f.labelEn)).join(", ");
-      Alert.alert(t("svc.warning"), t("svc.errorRequiredFields", { fields: names }));
+      setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorRequiredFields", { fields: names }) });
       return;
     }
     if (form.startTime && form.startTime === form.endTime) {
-      Alert.alert(t("svc.warning"), t("svc.errorTimeEqual"));
+      setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorTimeEqual") });
       return;
     }
     setSaveAlertVisible(true);
