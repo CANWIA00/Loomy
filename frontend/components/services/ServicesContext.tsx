@@ -406,20 +406,33 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     }
   }, [form]);
 
-  const handleSave = () => {
-    if (!requireSignature()) return;
+  const missingRequiredFields = (): TemplateField[] => {
     const required = effectiveFields(templateConfig).filter((f) => f.required === true);
-    const missing = required
+    return required
       .filter((f) => !((f.key === "fee") && form.productsMode))
       .filter((f) => !((f.key === "labor" || f.key === "kdv") && !form.productsMode))
       .filter((f) => !fieldValueByKey(f.key).trim());
+  };
+
+  const showMissingFieldsWarning = (missing: TemplateField[]) => {
+    const names = missing.map((f: TemplateField) => (lang === "tr" ? f.labelTr : f.labelEn)).join(", ");
+    setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorRequiredFields", { fields: names }) });
+  };
+
+  const showTimeEqualWarning = () => {
+    setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorTimeEqual") });
+  };
+
+  const handleSave = () => {
+    if (!requireSignature()) return;
+    setSaveAlertVisible(false);
+    const missing = missingRequiredFields();
     if (missing.length) {
-      const names = missing.map((f: TemplateField) => (lang === "tr" ? f.labelTr : f.labelEn)).join(", ");
-      setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorRequiredFields", { fields: names }) });
+      showMissingFieldsWarning(missing);
       return;
     }
     if (form.startTime && form.startTime === form.endTime) {
-      setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorTimeEqual") });
+      showTimeEqualWarning();
       return;
     }
     setSaveAlertVisible(true);
@@ -427,6 +440,15 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const confirmSave = async () => {
     setSaveAlertVisible(false);
+    const missing = missingRequiredFields();
+    if (missing.length) {
+      showMissingFieldsWarning(missing);
+      return;
+    }
+    if (form.startTime && form.startTime === form.endTime) {
+      showTimeEqualWarning();
+      return;
+    }
     if (isEditing && editingId !== null) {
       setLoading(true);
       try {
@@ -550,6 +572,17 @@ ucret: form.fee || "0.00",
   }, [editParamId, records, handleEdit]);
 
   const handleSignatureSave = async (paths: any[]) => {
+    const missing = missingRequiredFields();
+    if (missing.length) {
+      setSignatureModal(false);
+      showMissingFieldsWarning(missing);
+      return;
+    }
+    if (form.startTime && form.startTime === form.endTime) {
+      setSignatureModal(false);
+      showTimeEqualWarning();
+      return;
+    }
     setLoading(true);
     try {
       await serviceApi.create({
