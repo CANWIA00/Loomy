@@ -8,6 +8,7 @@ export interface PaymentRecord {
   serviceType: string;
   amount: number;
   paid: boolean;
+  invoiced: boolean;
 }
 
 export interface PaymentSummary {
@@ -34,6 +35,6 @@ export const paymentApi = {
   getSummary: () =>
     apiClient.get<PaymentSummary>("/payments/summary"),
 
-  updateStatus: (id: number, paid: boolean) =>
-    apiClient.put<PaymentRecord>(`/payments/${id}/status`, { paid }),
+  updateStatus: (id: number, status: { paid?: boolean; invoiced?: boolean }) =>
+    apiClient.put<PaymentRecord>(`/payments/${id}/status`, status),
 };

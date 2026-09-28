@@ -804,7 +804,7 @@ export default function CustomerDetailScreen() {
 
   const handleTogglePayment = async (pm: PaymentRecord) => {
     try {
-      await paymentApi.updateStatus(pm.id, !pm.paid);
+      await paymentApi.updateStatus(pm.id, { paid: !pm.paid });
       setPayments((prev) => prev.map((p) => (p.id === pm.id ? { ...p, paid: !p.paid } : p)));
     } catch {
       Alert.alert(t("common.warning"), t("pay.errorUpdate"));

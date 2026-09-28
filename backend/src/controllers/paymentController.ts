@@ -8,6 +8,39 @@ import {
   scheduleRecomputeForRecord,
 } from "../services/monthlySummaries";
 
+const PAYMENT_SELECT = {
+  id: true,
+  customerName: true,
+  customerId: true,
+  documentDate: true,
+  serviceType: true,
+  fee: true,
+  paid: true,
+  invoiced: true,
+} as const;
+
+function toPaymentDto(record: {
+  id: number;
+  customerName: string;
+  customerId: string | null;
+  documentDate: string;
+  serviceType: string;
+  fee: string;
+  paid: boolean;
+  invoiced: boolean;
+}) {
+  return {
+    id: record.id,
+    customer: record.customerName,
+    customerId: record.customerId,
+    tarih: record.documentDate,
+    serviceType: record.serviceType || "",
+    amount: parseFloat(record.fee) || 0,
+    paid: record.paid,
+    invoiced: record.invoiced,
+  };
+}
+
 export async function getPayments(
   req: AuthRequest,
   res: Response
@@ -23,28 +56,12 @@ export async function getPayments(
         orderBy: { createdAt: "desc" },
         skip: page * size,
         take: size,
-        select: {
-          id: true,
-          customerName: true,
-          customerId: true,
-          documentDate: true,
-          serviceType: true,
-          fee: true,
-          paid: true,
-        },
+        select: PAYMENT_SELECT,
       }),
       prisma.serviceRecord.count({ where: { companyId } }),
     ]);
 
-    const mapped = content.map((r) => ({
-      id: r.id,
-      customer: r.customerName,
-      customerId: r.customerId,
-      tarih: r.documentDate,
-      serviceType: r.serviceType || "",
-      amount: parseFloat(r.fee) || 0,
-      paid: r.paid,
-    }));
+    const mapped = content.map(toPaymentDto);
 
     res.json({
       content: mapped,
@@ -115,7 +132,7 @@ export async function updatePaymentStatus(
   try {
     const id = parseInt(String(req.params.id));
     const companyId = req.user!.companyId!;
-    const { paid } = req.body;
+    const { paid, invoiced } = req.body;
 
     const existing = await prisma.serviceRecord.findFirst({
       where: { id, companyId },
@@ -126,31 +143,24 @@ export async function updatePaymentStatus(
       return;
     }
 
+    const data: { paid?: boolean; invoiced?: boolean } = {};
+    if (typeof paid === "boolean") data.paid = paid;
+    if (typeof invoiced === "boolean") data.invoiced = invoiced;
+    if (data.paid === undefined && data.invoiced === undefined) {
+      data.paid = !existing.paid;
+    }
+
     const record = await prisma.serviceRecord.update({
       where: { id },
-      data: { paid: paid ?? !existing.paid },
-      select: {
-        id: true,
-        customerName: true,
-        customerId: true,
-        documentDate: true,
-        serviceType: true,
-        fee: true,
-        paid: true,
-      },
+      data,
+      select: PAYMENT_SELECT,
     });
 
-    await scheduleRecomputeForRecord(companyId, existing.documentDate, existing.createdAt as any);
+    if (data.paid !== undefined) {
+      await scheduleRecomputeForRecord(companyId, existing.documentDate, existing.createdAt as any);
+    }
 
-    res.json({
-      id: record.id,
-      customer: record.customerName,
-      customerId: record.customerId,
-      tarih: record.documentDate,
-      serviceType: record.serviceType || "",
-      amount: parseFloat(record.fee) || 0,
-      paid: record.paid,
-    });
+    res.json(toPaymentDto(record));
   } catch (error: any) {
     console.error("UpdatePaymentStatus error:", error);
     res.status(500).json({ message: "Sunucu hatası: " + error.message });

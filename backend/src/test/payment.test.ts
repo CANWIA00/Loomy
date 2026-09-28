@@ -66,6 +66,7 @@ describe("payment controller", () => {
           serviceType: "Bakim",
           fee: "150.50",
           paid: true,
+          invoiced: false,
         },
       ]);
       (prisma.serviceRecord.count as jest.Mock).mockResolvedValue(1);
@@ -84,6 +85,7 @@ describe("payment controller", () => {
               serviceType: "Bakim",
               amount: 150.5,
               paid: true,
+              invoiced: false,
             },
           ],
         })
@@ -160,6 +162,7 @@ describe("payment controller", () => {
         serviceType: "Bakim",
         fee: "100.00",
         paid: true,
+        invoiced: false,
       });
 
       const res = mockRes();
@@ -185,6 +188,7 @@ describe("payment controller", () => {
         serviceType: "",
         fee: "0",
         paid: false,
+        invoiced: false,
       });
 
       const res = mockRes();
@@ -195,6 +199,63 @@ describe("payment controller", () => {
 
       const data = (prisma.serviceRecord.update as jest.Mock).mock.calls[0][0].data;
       expect(data.paid).toBe(false);
+    });
+
+    it("updates invoiced without touching paid", async () => {
+      (prisma.serviceRecord.findFirst as jest.Mock).mockResolvedValue({
+        id: 1,
+        paid: true,
+      });
+      (prisma.serviceRecord.update as jest.Mock).mockResolvedValue({
+        id: 1,
+        customerName: "M",
+        customerId: null,
+        documentDate: "d",
+        serviceType: "",
+        fee: "0",
+        paid: true,
+        invoiced: true,
+      });
+
+      const res = mockRes();
+      await updatePaymentStatus(
+        mockReq({ params: { id: "1" }, body: { invoiced: true } }),
+        res
+      );
+
+      const data = (prisma.serviceRecord.update as jest.Mock).mock.calls[0][0].data;
+      expect(data.invoiced).toBe(true);
+      expect(data.paid).toBeUndefined();
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ invoiced: true, paid: true })
+      );
+    });
+
+    it("does not recompute finance summaries when only invoiced changes", async () => {
+      (prisma.serviceRecord.findFirst as jest.Mock).mockResolvedValue({
+        id: 1,
+        paid: true,
+        documentDate: "d",
+        createdAt: new Date(),
+      });
+      (prisma.serviceRecord.update as jest.Mock).mockResolvedValue({
+        id: 1,
+        customerName: "M",
+        customerId: null,
+        documentDate: "d",
+        serviceType: "",
+        fee: "0",
+        paid: true,
+        invoiced: false,
+      });
+
+      const res = mockRes();
+      await updatePaymentStatus(
+        mockReq({ params: { id: "1" }, body: { invoiced: false } }),
+        res
+      );
+
+      expect(prisma.financeRecomputeJob.upsert).not.toHaveBeenCalled();
     });
   });
 });

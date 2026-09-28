@@ -28,8 +28,11 @@ interface PaymentsContextValue {
   fetchData: () => void;
   formatAmount: (amount: number) => string;
   handleTogglePaid: (record: PaymentRecord) => void;
+  handleToggleInvoiced: (record: PaymentRecord) => void;
   toggleAlert: ToggleAlertState;
   setToggleAlert: (v: ToggleAlertState) => void;
+  invoiceAlert: ToggleAlertState;
+  setInvoiceAlert: (v: ToggleAlertState) => void;
 }
 
 const PaymentsContext = createContext<PaymentsContextValue | null>(null);
@@ -55,6 +58,7 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [listPage, setListPage] = useState(0);
   const [toggleAlert, setToggleAlert] = useState<ToggleAlertState>({ visible: false, record: null });
+  const [invoiceAlert, setInvoiceAlert] = useState<ToggleAlertState>({ visible: false, record: null });
 
   const statusOptions: StatusOption[] = [
     { label: t("pay.allStatus"), value: "all" },
@@ -137,10 +141,19 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
 
   const handleTogglePaid = async (record: PaymentRecord) => {
     try {
-      await paymentApi.updateStatus(record.id, !record.paid);
+      await paymentApi.updateStatus(record.id, { paid: !record.paid });
       setRecords((prev) => prev.map((r) => r.id === record.id ? { ...r, paid: !r.paid } : r));
       const summaryRes = await paymentApi.getSummary();
       setSummary(summaryRes.data);
+    } catch {
+      Alert.alert(t("common.error"), t("pay.errorUpdate"));
+    }
+  };
+
+  const handleToggleInvoiced = async (record: PaymentRecord) => {
+    try {
+      await paymentApi.updateStatus(record.id, { invoiced: !record.invoiced });
+      setRecords((prev) => prev.map((r) => r.id === record.id ? { ...r, invoiced: !r.invoiced } : r));
     } catch {
       Alert.alert(t("common.error"), t("pay.errorUpdate"));
     }
@@ -176,8 +189,11 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     fetchData,
     formatAmount,
     handleTogglePaid,
+    handleToggleInvoiced,
     toggleAlert,
     setToggleAlert,
+    invoiceAlert,
+    setInvoiceAlert,
   };
 
   return (

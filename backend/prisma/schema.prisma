@@ -95,8 +95,9 @@ model ServiceRecord {
   technical    String   @default("[]")
   customChips  String?
   customValues String?
-  signed       Boolean  @default(false)
-  paid         Boolean  @default(false)
+  signed          Boolean  @default(false)
+  paid            Boolean  @default(false)
+  invoiced        Boolean  @default(false)
   signature    String?
   technicianSignature String?
   usedProducts String   @default("[]")

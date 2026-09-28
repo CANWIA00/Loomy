@@ -16,6 +16,9 @@ function FinansScreenInner() {
     toggleAlert,
     setToggleAlert,
     handleTogglePaid,
+    invoiceAlert,
+    setInvoiceAlert,
+    handleToggleInvoiced,
   } = usePayments();
 
   if (loading) {
@@ -49,6 +52,21 @@ function FinansScreenInner() {
         onClose={() => setToggleAlert({ visible: false, record: null })}
         onConfirm={() => {
           if (toggleAlert.record) handleTogglePaid(toggleAlert.record);
+        }}
+        confirmText={t("common.confirm")}
+      />
+
+      <CustomAlert
+        visible={invoiceAlert.visible}
+        type="confirm"
+        title={invoiceAlert.record?.invoiced ? t("pay.confirmRevertInvoice") : t("pay.confirmMarkInvoiced")}
+        message={invoiceAlert.record?.invoiced
+          ? t("pay.confirmRevertInvoiceMsg", { name: invoiceAlert.record?.customer || "" })
+          : t("pay.confirmMarkInvoicedMsg", { name: invoiceAlert.record?.customer || "" })
+        }
+        onClose={() => setInvoiceAlert({ visible: false, record: null })}
+        onConfirm={() => {
+          if (invoiceAlert.record) handleToggleInvoiced(invoiceAlert.record);
         }}
         confirmText={t("common.confirm")}
       />

@@ -86,7 +86,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const togglePaid = async (record: PaymentRecord) => {
     try {
-      await paymentApi.updateStatus(record.id, !record.paid);
+      await paymentApi.updateStatus(record.id, { paid: !record.paid });
       setRecentPayments((prev) => prev.map((r) => r.id === record.id ? { ...r, paid: !r.paid } : r));
       setPaymentSummary((prev) => {
         if (!prev) return prev;

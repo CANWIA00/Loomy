@@ -29,6 +29,7 @@ export default function PaymentsListSection() {
     fetchData,
     formatAmount,
     setToggleAlert,
+    setInvoiceAlert,
   } = usePayments();
 
   const timeFilterLabel = (f: TimeFilter) =>
@@ -118,16 +119,29 @@ export default function PaymentsListSection() {
 
               <Text style={{ color: colors.text }} className="text-sm font-semibold mr-3">{formatAmount(s.amount)}</Text>
 
-              <TouchableOpacity
-                className="flex-row items-center rounded-lg px-2 py-1"
-                style={{ backgroundColor: s.paid ? colors.success + '15' : colors.warning + '15' }}
-                onPress={() => setToggleAlert({ visible: true, record: s })}
-              >
-                <Ionicons name={s.paid ? "checkmark-circle" : "time"} size={12} color={s.paid ? colors.success : colors.warning} />
-                <Text className="text-xs font-medium ml-1" style={{ color: s.paid ? colors.success : colors.warning }}>
-                  {s.paid ? t("pay.paid") : t("pay.pending")}
-                </Text>
-              </TouchableOpacity>
+              <View className="flex-row items-center">
+                <TouchableOpacity
+                  className="flex-row items-center rounded-lg px-2 py-1 mr-1.5"
+                  style={{ backgroundColor: s.invoiced ? colors.primary + '15' : colors.bgCard }}
+                  onPress={() => setInvoiceAlert({ visible: true, record: s })}
+                >
+                  <Ionicons name={s.invoiced ? "receipt" : "receipt-outline"} size={12} color={s.invoiced ? colors.primary : colors.textMuted} />
+                  <Text className="text-xs font-medium ml-1" style={{ color: s.invoiced ? colors.primary : colors.textMuted }}>
+                    {s.invoiced ? t("pay.invoiced") : t("pay.notInvoiced")}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="flex-row items-center rounded-lg px-2 py-1"
+                  style={{ backgroundColor: s.paid ? colors.success + '15' : colors.warning + '15' }}
+                  onPress={() => setToggleAlert({ visible: true, record: s })}
+                >
+                  <Ionicons name={s.paid ? "checkmark-circle" : "time"} size={12} color={s.paid ? colors.success : colors.warning} />
+                  <Text className="text-xs font-medium ml-1" style={{ color: s.paid ? colors.success : colors.warning }}>
+                    {s.paid ? t("pay.paid") : t("pay.pending")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
