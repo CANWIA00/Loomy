@@ -114,7 +114,7 @@ export default function QuoteRecordsSection() {
             <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
             <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
             <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
-            <View className="w-32 ml-6" />
+            <View className="w-44 ml-6" />
           </View>
         )}
 
@@ -139,7 +139,7 @@ export default function QuoteRecordsSection() {
                 className="px-3 py-3 border-b"
                 style={{ borderColor: colors.borderAlt }}
               >
-                <View className="flex-row items-start justify-between">
+                <View className="flex-row items-center justify-between">
                   <View className="flex-1 pr-2">
                     <View className="flex-row items-baseline flex-wrap gap-x-2">
                       <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
@@ -152,37 +152,37 @@ export default function QuoteRecordsSection() {
                         {k.title}
                       </Text>
                     ) : null}
-                    <View className="items-end mt-1.5">
-                      <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
-                        {totalLabels}
-                      </Text>
-                      {totalTry > 0 && (
-                        <Text className="text-[10px] text-right mt-0.5" style={{ color: colors.textMuted }}>
-                          ≈ {formatMoney(totalTry)} ₺
-                        </Text>
-                      )}
-                    </View>
+                  </View>
+                  <View className="flex-row items-center gap-2.5 pr-1">
+                    <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="share-social-outline" size={20} color={colors.purple} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDuplicate(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="trash-outline" size={20} color={colors.danger} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleView(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="eye-outline" size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleEdit(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="create-outline" size={20} color={colors.teal} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => openQuotePDF(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="download-outline" size={20} color={colors.warning} />
+                    </TouchableOpacity>
                   </View>
                 </View>
-                <View className="flex-row items-center justify-end gap-2.5 mt-2 pt-2 border-t" style={{ borderColor: colors.borderAlt }}>
-                  <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="share-social-outline" size={20} color={colors.purple} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleDuplicate(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleView(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="eye-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleEdit(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="create-outline" size={20} color={colors.teal} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => openQuotePDF(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="download-outline" size={20} color={colors.warning} />
-                  </TouchableOpacity>
+                <View className="items-end mt-2">
+                  <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
+                    {totalLabels}
+                  </Text>
+                  {totalTry > 0 && (
+                    <Text className="text-[10px] text-right mt-0.5" style={{ color: colors.textMuted }}>
+                      ≈ {formatMoney(totalTry)} ₺
+                    </Text>
+                  )}
                 </View>
               </View>
             ) : (
@@ -212,7 +212,7 @@ export default function QuoteRecordsSection() {
                     </Text>
                   )}
                 </View>
-                <View className="w-32 ml-6 flex-row items-center justify-end gap-2.5">
+                <View className="w-44 ml-6 flex-row items-center justify-end gap-2.5">
                   <TouchableOpacity onPress={() => handleShare(k)}>
                     <Ionicons name="share-social-outline" size={20} color={colors.purple} />
                   </TouchableOpacity>
