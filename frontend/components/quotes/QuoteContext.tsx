@@ -61,6 +61,7 @@ interface QuoteContextValue {
   openQuotePDF: (record: QuoteRecord) => void;
   handleShare: (record: QuoteRecord) => void;
   handleEdit: (record: QuoteRecord) => void;
+  handleDuplicate: (record: QuoteRecord) => void;
   deleteAlert: DeleteAlertState;
   setDeleteAlert: (v: DeleteAlertState) => void;
   handleDelete: (record: QuoteRecord) => void;
@@ -296,6 +297,37 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setShowForm(true);
   };
 
+  const handleDuplicate = (record: QuoteRecord) => {
+    setForm({
+      title: record.title || "",
+      customerName: record.customer || "",
+      contactPerson: record.contactPerson || "",
+      email: record.email || "",
+      phone: record.telefon || "",
+      fax: record.fax || "",
+      website: record.website || "",
+      address: record.adres || "",
+      subscriberNo: record.subscriberNo || "",
+      documentDate: "",
+      validUntil: record.validUntil || "",
+      notes: record.notlar || "",
+      lines: record.lines?.length
+        ? record.lines.map((l) => ({
+            name: l.name,
+            details: l.details,
+            quantity: l.quantity != null ? String(l.quantity) : "1",
+            unitPrice: l.unitPrice != null ? String(l.unitPrice) : "",
+            currency: l.currency || "TRY",
+            unit: l.unit || "Adet",
+          }))
+        : [emptyLine()],
+    });
+    setSelectedCustomerId(record.customerId || null);
+    setEditingId(null);
+    setIsEditing(false);
+    setShowForm(true);
+  };
+
   const handledEditIdRef = useRef<string>("");
   const searchParams = useLocalSearchParams<{ edit?: string }>();
   const editParamId = typeof searchParams.edit === "string" ? searchParams.edit : "";
@@ -514,6 +546,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     openQuotePDF,
     handleShare,
     handleEdit,
+    handleDuplicate,
     deleteAlert,
     setDeleteAlert,
     handleDelete,

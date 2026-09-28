@@ -33,6 +33,7 @@ export default function QuoteRecordsSection() {
     handleView,
     openQuotePDF,
     handleEdit,
+    handleDuplicate,
     setDeleteAlert,
   } = useQuotes();
 
@@ -167,6 +168,9 @@ export default function QuoteRecordsSection() {
                   <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                     <Ionicons name="share-social-outline" size={20} color={colors.purple} />
                   </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDuplicate(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
+                  </TouchableOpacity>
                   <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                     <Ionicons name="trash-outline" size={20} color={colors.danger} />
                   </TouchableOpacity>
@@ -211,6 +215,9 @@ export default function QuoteRecordsSection() {
                 <View className="w-32 ml-6 flex-row items-center justify-end gap-2.5">
                   <TouchableOpacity onPress={() => handleShare(k)}>
                     <Ionicons name="share-social-outline" size={20} color={colors.purple} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDuplicate(k)}>
+                    <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })}>
                     <Ionicons name="trash-outline" size={20} color={colors.danger} />
