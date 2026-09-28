@@ -6,6 +6,9 @@ import { usePayments } from "./PaymentsContext";
 import { TIME_FILTERS, type TimeFilter } from "./types";
 import StatusDropdownModal from "./modals/StatusDropdownModal";
 
+const INVOICE_COL_WIDTH = 40;
+const PAYMENT_COL_WIDTH = 90;
+
 export default function PaymentsListSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
@@ -99,7 +102,27 @@ export default function PaymentsListSection() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ maxHeight: 500 }} indicatorStyle={colors.indicatorBg as any}>
+        {filteredServices.length > 0 && (
+        <View className="flex-row items-center px-1 pb-1.5">
+          <View className="flex-1" />
+          <Text
+            className="text-[10px] font-semibold text-center mr-1.5"
+            style={{ width: INVOICE_COL_WIDTH, color: colors.textMuted }}
+            numberOfLines={1}
+          >
+            {t("pay.invoiceColumn")}
+          </Text>
+          <Text
+            className="text-[10px] font-semibold text-center"
+            style={{ width: PAYMENT_COL_WIDTH, color: colors.textMuted }}
+            numberOfLines={1}
+          >
+            {t("pay.paymentColumn")}
+          </Text>
+        </View>
+        )}
+
+        <ScrollView style={{ maxHeight: 500 }} indicatorStyle={colors.indicatorBg as any}>
         {filteredServices.length === 0 ? (
           <View className="items-center py-10">
             <Ionicons name="wallet-outline" size={40} color={colors.textMuted} />
@@ -121,8 +144,8 @@ export default function PaymentsListSection() {
 
               <View className="flex-row items-center">
                 <TouchableOpacity
-                  className="w-7 h-7 rounded-lg items-center justify-center mr-1.5"
-                  style={{ backgroundColor: s.invoiced ? colors.primary + '15' : colors.bgCard }}
+                  className="items-center justify-center rounded-lg mr-1.5"
+                  style={{ width: INVOICE_COL_WIDTH, height: INVOICE_COL_WIDTH, backgroundColor: s.invoiced ? colors.primary + '15' : colors.bgCard }}
                   onPress={() => setInvoiceAlert({ visible: true, record: s })}
                   accessibilityRole="button"
                   accessibilityLabel={s.invoiced ? t("pay.invoiced") : t("pay.notInvoiced")}
@@ -131,8 +154,8 @@ export default function PaymentsListSection() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  className="flex-row items-center rounded-lg px-2 py-1"
-                  style={{ backgroundColor: s.paid ? colors.success + '15' : colors.warning + '15' }}
+                  className="flex-row items-center justify-center rounded-lg"
+                  style={{ width: PAYMENT_COL_WIDTH, backgroundColor: s.paid ? colors.success + '15' : colors.warning + '15' }}
                   onPress={() => setToggleAlert({ visible: true, record: s })}
                 >
                   <Ionicons name={s.paid ? "checkmark-circle" : "time"} size={12} color={s.paid ? colors.success : colors.warning} />
