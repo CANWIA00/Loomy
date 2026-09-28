@@ -9,6 +9,8 @@ import {
   listInvoices,
   importInvoiceXml,
   deleteInvoice,
+  listSavedProductNames,
+  saveProductName,
 } from "../controllers/stockController";
 import { authenticate, requirePanelAccess } from "../middleware/auth";
 
@@ -16,6 +18,8 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get("/saved-names", requirePanelAccess("stock", "view"), listSavedProductNames);
+router.post("/saved-names", requirePanelAccess("stock", "manage"), saveProductName);
 router.get("/invoices", requirePanelAccess("stock", "view"), listInvoices);
 router.post("/import-xml", requirePanelAccess("stock", "manage"), importInvoiceXml);
 router.delete("/invoices/:id", requirePanelAccess("stock", "manage"), deleteInvoice);

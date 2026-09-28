@@ -171,4 +171,12 @@ export const stockApi = {
     apiClient.delete(`/stock/invoices/${id}`, {
       params: { revertStock },
     }),
+
+  listSavedNames: (q: string) =>
+    apiClient.get<{ content: { id: number; name: string }[] }>("/stock/saved-names", {
+      params: { q },
+    }),
+
+  saveName: (name: string) =>
+    apiClient.post<{ id: number; name: string }>("/stock/saved-names", { name }),
 };

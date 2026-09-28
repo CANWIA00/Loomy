@@ -65,6 +65,7 @@ model Company {
   appointments   Appointment[]
   quoteRecords   QuoteRecord[]
   stockItems     StockItem[]
+  savedProductNames SavedProductName[]
   invoices       Invoice[]
   invoiceLines   InvoiceLine[]
   stockTransactions StockTransaction[]
@@ -274,6 +275,18 @@ model StockItem {
 
   @@index([companyId])
   @@index([name])
+}
+
+model SavedProductName {
+  id        Int      @id @default(autoincrement())
+  name      String
+  companyId String
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, name])
+  @@index([companyId, name])
 }
 
 model StockTransaction {

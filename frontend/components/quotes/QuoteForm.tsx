@@ -128,8 +128,22 @@ export default function QuoteForm() {
   const addBtnRef = useRef<View>(null);
 
   const [stockSuggestions, setStockSuggestions] = useState<StockItem[]>([]);
+  const [savedNameSuggestions, setSavedNameSuggestions] = useState<{ id: number; name: string }[]>([]);
   const [stockSearchIdx, setStockSearchIdx] = useState<number | null>(null);
   const stockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const searchSavedNames = useCallback(async (q: string, idx: number) => {
+    if (!q.trim() || q.trim().length < 2) {
+      setSavedNameSuggestions([]);
+      return;
+    }
+    try {
+      const res = await stockApi.listSavedNames(q.trim());
+      setSavedNameSuggestions(res.data.content.slice(0, 8));
+    } catch {
+      setSavedNameSuggestions([]);
+    }
+  }, []);
 
   const searchStock = useCallback((q: string, idx: number) => {
     if (stockTimerRef.current) clearTimeout(stockTimerRef.current);
@@ -143,11 +157,28 @@ export default function QuoteForm() {
         const res = await stockApi.list(q.trim());
         setStockSuggestions(res.data.content.slice(0, 8));
         setStockSearchIdx(idx);
+        searchSavedNames(q.trim(), idx);
       } catch {
         setStockSuggestions([]);
       }
     }, 300);
-  }, []);
+  }, [searchSavedNames]);
+
+  const saveNameFromLine = async (idx: number) => {
+    const name = form.lines[idx]?.name.trim();
+    if (!name) return;
+    try {
+      await stockApi.saveName(name);
+      searchSavedNames(name, idx);
+    } catch {}
+  };
+
+  const pickSavedName = (idx: number, name: string) => {
+    updateLine(idx, "name", name);
+    setSavedNameSuggestions([]);
+    setStockSuggestions([]);
+    setStockSearchIdx(null);
+  };
 
   const selectStockItem = (idx: number, item: StockItem) => {
     updateLine(idx, "name", item.name);
@@ -156,6 +187,7 @@ export default function QuoteForm() {
     if (item.unit) updateLine(idx, "unit", item.unit);
     if (item.notes) updateLine(idx, "details", item.notes);
     setStockSuggestions([]);
+    setSavedNameSuggestions([]);
     setStockSearchIdx(null);
   };
 
@@ -408,6 +440,7 @@ export default function QuoteForm() {
                           onPress={() => {
                             updateLine(idx, "name", "");
                             setStockSuggestions([]);
+                            setSavedNameSuggestions([]);
                             setStockSearchIdx(null);
                           }}
                           className="h-9 w-8 items-center justify-center"
@@ -415,8 +448,22 @@ export default function QuoteForm() {
                           <Ionicons name="close-circle" size={16} color={colors.textMuted} />
                         </TouchableOpacity>
                       ) : null}
+                      {line.name ? (
+                        <TouchableOpacity
+                          onPress={() => saveNameFromLine(idx)}
+                          className="h-9 flex-row items-center justify-center gap-1 border rounded-lg px-2 ml-1"
+                          style={{ borderColor: colors.border, backgroundColor: colors.bgCard2 }}
+                          accessibilityRole="button"
+                          accessibilityLabel={t("qot.saveName")}
+                        >
+                          <Ionicons name="bookmark-outline" size={14} color={colors.purple} />
+                          <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
+                            {t("qot.saveName")}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
                     </View>
-                    {stockSearchIdx === idx && stockSuggestions.length > 0 ? (
+                    {stockSearchIdx === idx && (stockSuggestions.length > 0 || savedNameSuggestions.length > 0) ? (
                       <ScrollView
                         nestedScrollEnabled
                         className="rounded-lg border mt-1"
@@ -434,6 +481,19 @@ export default function QuoteForm() {
                             <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>{s.name}</Text>
                             <Text className="text-[10px]" style={{ color: colors.textMuted }}>
                               {s.quantity} {s.unit} {s.supplierName ? `· ${s.supplierName}` : ""}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                        {savedNameSuggestions.map((s) => (
+                          <TouchableOpacity
+                            key={`saved-${s.id}`}
+                            className="px-3 py-2"
+                            style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+                            onPress={() => pickSavedName(idx, s.name)}
+                          >
+                            <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>{s.name}</Text>
+                            <Text className="text-[10px]" style={{ color: colors.purple }}>
+                              {t("qot.savedName")}
                             </Text>
                           </TouchableOpacity>
                         ))}

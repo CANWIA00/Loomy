@@ -624,3 +624,52 @@ export async function deleteInvoice(
     res.status(500).json({ message: "Sunucu hatası: " + error.message });
   }
 }
+
+export async function listSavedProductNames(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const companyId = req.user!.companyId!;
+    const q = String((req.query.q as string) || "").trim();
+
+    const names = await prisma.savedProductName.findMany({
+      where: {
+        companyId,
+        ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
+      },
+      orderBy: { name: "asc" },
+      take: 20,
+    });
+
+    res.json({ content: names.map((n) => ({ id: n.id, name: n.name })) });
+  } catch (error: any) {
+    console.error("ListSavedProductNames error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}
+
+export async function saveProductName(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const companyId = req.user!.companyId!;
+    const name = String(req.body?.name || "").trim();
+    if (!name) {
+      res.status(400).json({ message: "Ürün adı boş olamaz." });
+      return;
+    }
+
+    const saved = await prisma.savedProductName.upsert({
+      where: { companyId_name: { companyId, name } },
+      create: { companyId, name },
+      update: {},
+    });
+
+    res.status(201).json({ id: saved.id, name: saved.name });
+  } catch (error: any) {
+    console.error("SaveProductName error:", error);
+    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  }
+}

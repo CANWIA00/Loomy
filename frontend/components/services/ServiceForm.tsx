@@ -756,6 +756,7 @@ function UsedProductsSection() {
   const { form, addUsedProduct, updateUsedProduct, removeUsedProduct, updateForm } = useServices();
   const { rates, convert } = useCurrency();
   const [suggestions, setSuggestions] = useState<StockItem[]>([]);
+  const [savedNameSuggestions, setSavedNameSuggestions] = useState<{ id: number; name: string }[]>([]);
   const [activeRow, setActiveRow] = useState<number | null>(null);
   const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
   const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
@@ -772,12 +773,41 @@ function UsedProductsSection() {
 
   const runSearch = useCallback(async (q: string, index: number) => {
     setActiveRow(index);
-    if (!q.trim()) { setSuggestions([]); return; }
+    if (!q.trim()) { setSuggestions([]); setSavedNameSuggestions([]); return; }
     try {
-      const res = await stockApi.list(q.trim(), 0, 5);
-      setSuggestions(res.data.content);
-    } catch { setSuggestions([]); }
+      const [stockRes, savedRes] = await Promise.all([
+        stockApi.list(q.trim(), 0, 5),
+        stockApi.listSavedNames(q.trim()),
+      ]);
+      setSuggestions(stockRes.data.content);
+      setSavedNameSuggestions(savedRes.data.content.slice(0, 5));
+    } catch { setSuggestions([]); setSavedNameSuggestions([]); }
   }, []);
+
+  const saveNameForRow = async (index: number) => {
+    const name = (form.usedProducts?.[index]?.name || "").trim();
+    if (!name) return;
+    try {
+      await stockApi.saveName(name);
+      const savedRes = await stockApi.listSavedNames(name);
+      setSavedNameSuggestions(savedRes.data.content.slice(0, 5));
+    } catch {}
+  };
+
+  const pickSavedName = (index: number, name: string) => {
+    touchInSuggestions.current = false;
+    if (blurTimer.current) clearTimeout(blurTimer.current);
+    updateUsedProduct(index, {
+      name,
+      unitPrice: "",
+      currency: "TRY",
+      stockItemId: null,
+      inStock: false,
+    });
+    setSuggestions([]);
+    setSavedNameSuggestions([]);
+    setActiveRow(null);
+  };
 
   const onNameChange = useCallback((index: number, value: string) => {
     updateUsedProduct(index, { name: value, stockItemId: null });
@@ -802,6 +832,7 @@ function UsedProductsSection() {
       inStock: true,
     });
     setSuggestions([]);
+    setSavedNameSuggestions([]);
     setActiveRow(null);
   };
 
@@ -897,22 +928,38 @@ function UsedProductsSection() {
               </View>
 
               <View style={{ position: "relative", zIndex: activeRow === i ? 1000 : undefined }}>
-                <TextInput
-                  className="w-full h-9 border rounded-lg px-3 text-sm"
-                  style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
-                  placeholder={t("svc.productNamePlaceholder")}
-                  placeholderTextColor={colors.textMuted}
+                <View className="flex-row items-center">
+                  <TextInput
+                    className="flex-1 h-9 border rounded-lg px-3 text-sm"
+                    style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                    placeholder={t("svc.productNamePlaceholder")}
+                    placeholderTextColor={colors.textMuted}
 value={p.name}
-                  onChangeText={(v) => onNameChange(i, v)}
-                  onFocus={() => { setActiveRow(i); if (p.name.trim()) runSearch(p.name, i); }}
-                  onBlur={() => {
-                    if (blurTimer.current) clearTimeout(blurTimer.current);
-                    blurTimer.current = setTimeout(() => {
-                      if (!touchInSuggestions.current) setSuggestions([]);
-                    }, 250);
-                  }}
-                />
-                {activeRow === i && suggestions.length > 0 && (
+                    onChangeText={(v) => onNameChange(i, v)}
+                    onFocus={() => { setActiveRow(i); if (p.name.trim()) runSearch(p.name, i); }}
+                    onBlur={() => {
+                      if (blurTimer.current) clearTimeout(blurTimer.current);
+                      blurTimer.current = setTimeout(() => {
+                        if (!touchInSuggestions.current) setSuggestions([]);
+                      }, 250);
+                    }}
+                  />
+                  {p.name.trim() ? (
+                    <TouchableOpacity
+                      onPress={() => saveNameForRow(i)}
+                      className="h-9 flex-row items-center justify-center gap-1 border rounded-lg px-2 ml-1"
+                      style={{ borderColor: colors.border, backgroundColor: colors.bgCard2 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("svc.saveName")}
+                    >
+                      <Ionicons name="bookmark-outline" size={14} color={colors.purple} />
+                      <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
+                        {t("svc.saveName")}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+                {activeRow === i && (suggestions.length > 0 || savedNameSuggestions.length > 0) && (
                   <View className="overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8, position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, zIndex: 1000, elevation: 10, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
                     onTouchStart={() => { touchInSuggestions.current = true; }}
                     onTouchEnd={() => { touchInSuggestions.current = false; }}
@@ -923,6 +970,12 @@ value={p.name}
                         <TouchableOpacity key={s.id} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, ...(si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}) }} onPress={() => pick(i, s)}>
                           <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
                           <Text className="text-[11px]" style={{ color: colors.textMuted }}>{s.unit} · {s.quantity}</Text>
+                        </TouchableOpacity>
+                      ))}
+                      {savedNameSuggestions.map((s) => (
+                        <TouchableOpacity key={`saved-${s.id}`} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border }} onPress={() => pickSavedName(i, s.name)}>
+                          <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
+                          <Text className="text-[11px]" style={{ color: colors.purple }}>{t("svc.savedName")}</Text>
                         </TouchableOpacity>
                       ))}
                     </ScrollView>
