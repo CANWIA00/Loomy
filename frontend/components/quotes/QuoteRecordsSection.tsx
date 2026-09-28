@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
+import QuoteActionsMenu from "./modals/QuoteActionsMenu";
+import type { QuoteRecord } from "../../apiclient/quotes";
 import type { QuoteFilter } from "./types";
 import { getCurrencySymbol, round2, formatMoney } from "./types";
 import { useCurrency } from "../../contexts/CurrencyContext";
@@ -47,6 +49,9 @@ export default function QuoteRecordsSection() {
   const changePage = (delta: number) => {
     setPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
   };
+
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionsRecord, setActionsRecord] = useState<QuoteRecord | null>(null);
 
   const filterLabel = (f: QuoteFilter) =>
     f === "all" ? t("qot.filterAll") : f === "gun" ? t("qot.filterDay") : f === "ay" ? t("qot.filterMonth") : t("qot.filterYear");
@@ -139,7 +144,7 @@ export default function QuoteRecordsSection() {
                 className="px-3 py-3 border-b"
                 style={{ borderColor: colors.borderAlt }}
               >
-                <View className="flex-row items-center justify-between">
+                <View className="flex-row items-start justify-between">
                   <View className="flex-1 pr-2">
                     <View className="flex-row items-baseline flex-wrap gap-x-2">
                       <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
@@ -152,37 +157,30 @@ export default function QuoteRecordsSection() {
                         {k.title}
                       </Text>
                     ) : null}
+                    <View className="mt-1">
+                      <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>
+                        {totalLabels}
+                      </Text>
+                      {totalTry > 0 && (
+                        <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
+                          ≈ {formatMoney(totalTry)} ₺
+                        </Text>
+                      )}
+                    </View>
                   </View>
-                  <View className="flex-row items-center gap-2.5 pr-1">
-                    <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="share-social-outline" size={20} color={colors.purple} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDuplicate(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleView(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="eye-outline" size={20} color={colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleEdit(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="create-outline" size={20} color={colors.teal} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => openQuotePDF(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="download-outline" size={20} color={colors.warning} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <View className="items-end mt-2">
-                  <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
-                    {totalLabels}
-                  </Text>
-                  {totalTry > 0 && (
-                    <Text className="text-[10px] text-right mt-0.5" style={{ color: colors.textMuted }}>
-                      ≈ {formatMoney(totalTry)} ₺
-                    </Text>
-                  )}
+                  <TouchableOpacity
+                    className="w-9 h-9 rounded-lg items-center justify-center"
+                    style={{ backgroundColor: colors.bgInput }}
+                    onPress={() => {
+                      setActionsRecord(k);
+                      setActionsOpen(true);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("common.more")}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
+                  </TouchableOpacity>
                 </View>
               </View>
             ) : (
@@ -261,6 +259,12 @@ export default function QuoteRecordsSection() {
           </TouchableOpacity>
         </View>
       ) : null}
+
+      <QuoteActionsMenu
+        record={actionsRecord}
+        visible={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+      />
     </>
   );
 }
