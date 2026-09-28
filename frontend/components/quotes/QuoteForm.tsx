@@ -154,6 +154,7 @@ export default function QuoteForm() {
     if (item.unitPrice != null) updateLine(idx, "unitPrice", String(item.unitPrice));
     if (item.currency) updateLine(idx, "currency", item.currency);
     if (item.unit) updateLine(idx, "unit", item.unit);
+    if (item.notes) updateLine(idx, "details", item.notes);
     setStockSuggestions([]);
     setStockSearchIdx(null);
   };
