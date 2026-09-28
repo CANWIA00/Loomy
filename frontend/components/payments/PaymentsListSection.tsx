@@ -3,8 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { usePayments } from "./PaymentsContext";
-import { TIME_FILTERS, type TimeFilter } from "./types";
+import { TIME_FILTERS, type TimeFilter, type InvoiceFilter } from "./types";
 import StatusDropdownModal from "./modals/StatusDropdownModal";
+import OptionDropdownModal from "./modals/OptionDropdownModal";
 
 const INVOICE_COL_WIDTH = 40;
 const PAYMENT_COL_WIDTH = 90;
@@ -23,6 +24,11 @@ export default function PaymentsListSection() {
     searchQuery,
     setSearchQuery,
     statusOptions,
+    invoiceFilter,
+    setInvoiceFilter,
+    invoiceDropdownOpen,
+    setInvoiceDropdownOpen,
+    invoiceOptions,
     filteredServices,
     listPage,
     setListPage,
@@ -82,8 +88,23 @@ export default function PaymentsListSection() {
             className="flex-row items-center h-8 px-3 rounded-lg"
             onPress={() => setStatusDropdownOpen(true)}
           >
-            <Text style={{ color: colors.text }} className="text-xs mr-2">
+            <Ionicons name="wallet-outline" size={13} color={colors.textMuted} />
+            <Text style={{ color: colors.text }} className="text-xs ml-1.5 mr-2">
               {statusOptions.find((s) => s.value === statusFilter)?.label}
+            </Text>
+            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+
+        <View className="relative">
+          <TouchableOpacity
+            style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
+            className="flex-row items-center h-8 px-3 rounded-lg"
+            onPress={() => setInvoiceDropdownOpen(true)}
+          >
+            <Ionicons name="receipt-outline" size={13} color={colors.textMuted} />
+            <Text style={{ color: colors.text }} className="text-xs ml-1.5 mr-2">
+              {invoiceOptions.find((s) => s.value === invoiceFilter)?.label}
             </Text>
             <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
           </TouchableOpacity>
@@ -95,6 +116,7 @@ export default function PaymentsListSection() {
           onPress={() => {
             setTimeFilter("all");
             setStatusFilter("all");
+            setInvoiceFilter("all");
             setSearchQuery("");
             fetchData();
           }}
@@ -224,6 +246,15 @@ export default function PaymentsListSection() {
       )}
 
       <StatusDropdownModal />
+
+      <OptionDropdownModal
+        visible={invoiceDropdownOpen}
+        title={t("pay.selectInvoiceStatus")}
+        options={invoiceOptions}
+        value={invoiceFilter}
+        onSelect={(v) => setInvoiceFilter(v as InvoiceFilter)}
+        onClose={() => setInvoiceDropdownOpen(false)}
+      />
     </View>
   );
 }

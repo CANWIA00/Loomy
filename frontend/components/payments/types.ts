@@ -2,6 +2,7 @@ import type { PaymentRecord } from "../../apiclient/payments";
 
 export type TimeFilter = "all" | "gun" | "hafta" | "ay";
 export type StatusFilter = "all" | "odendi" | "bekliyor";
+export type InvoiceFilter = "all" | "faturalandi" | "faturalanmadi";
 export type StatusOption = { label: string; value: string };
 
 export const TIME_FILTERS: TimeFilter[] = ["all", "gun", "hafta", "ay"];

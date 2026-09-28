@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 import { paymentApi, type PaymentRecord, type PaymentSummary } from "../../apiclient/payments";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFocusedPolling } from "../../hooks/useFocusedPolling";
-import { LIST_SIZE, parseDate, type StatusOption, type StatusFilter, type TimeFilter, type ToggleAlertState } from "./types";
+import { LIST_SIZE, parseDate, type StatusOption, type StatusFilter, type InvoiceFilter, type TimeFilter, type ToggleAlertState } from "./types";
 
 interface PaymentsContextValue {
   loading: boolean;
@@ -14,6 +14,11 @@ interface PaymentsContextValue {
   setStatusFilter: (f: StatusFilter) => void;
   statusDropdownOpen: boolean;
   setStatusDropdownOpen: (v: boolean) => void;
+  invoiceFilter: InvoiceFilter;
+  setInvoiceFilter: (f: InvoiceFilter) => void;
+  invoiceDropdownOpen: boolean;
+  setInvoiceDropdownOpen: (v: boolean) => void;
+  invoiceOptions: StatusOption[];
   searchQuery: string;
   setSearchQuery: (v: string) => void;
   statusOptions: StatusOption[];
@@ -55,6 +60,8 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>("all");
+  const [invoiceDropdownOpen, setInvoiceDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [listPage, setListPage] = useState(0);
   const [toggleAlert, setToggleAlert] = useState<ToggleAlertState>({ visible: false, record: null });
@@ -64,6 +71,12 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     { label: t("pay.allStatus"), value: "all" },
     { label: t("pay.paid"), value: "odendi" },
     { label: t("pay.pending"), value: "bekliyor" },
+  ];
+
+  const invoiceOptions: StatusOption[] = [
+    { label: t("pay.allInvoices"), value: "all" },
+    { label: t("pay.invoiced"), value: "faturalandi" },
+    { label: t("pay.notInvoiced"), value: "faturalanmadi" },
   ];
 
   const fetchData = useCallback(async (silent = false) => {
@@ -108,7 +121,7 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setListPage(0);
-  }, [searchQuery, timeFilter, statusFilter]);
+  }, [searchQuery, timeFilter, statusFilter, invoiceFilter]);
 
   const filteredServices = records
     .filter((s) => {
@@ -134,6 +147,10 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       if (statusFilter !== "all") {
         const durum = s.paid ? "odendi" : "bekliyor";
         if (durum !== statusFilter) return false;
+      }
+      if (invoiceFilter !== "all") {
+        const fatura = s.invoiced ? "faturalandi" : "faturalanmadi";
+        if (fatura !== invoiceFilter) return false;
       }
       return true;
     })
@@ -175,6 +192,11 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     setStatusFilter,
     statusDropdownOpen,
     setStatusDropdownOpen,
+    invoiceFilter,
+    setInvoiceFilter,
+    invoiceDropdownOpen,
+    setInvoiceDropdownOpen,
+    invoiceOptions,
     searchQuery,
     setSearchQuery,
     statusOptions,
