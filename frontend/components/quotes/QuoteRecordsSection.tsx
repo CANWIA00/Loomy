@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -15,6 +15,8 @@ const PAGE_SIZE = 15;
 export default function QuoteRecordsSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const compact = width < 900;
   const { convert: convertTry } = useCurrency();
   const [page, setPage] = useState(0);
   const {
@@ -106,12 +108,14 @@ export default function QuoteRecordsSection() {
       </View>
 
       <View className="rounded-2xl border overflow-hidden" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
-        <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-          <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
-          <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
-          <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
-          <View className="w-32 ml-6" />
-        </View>
+        {!compact && (
+          <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+            <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
+            <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
+            <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
+            <View className="w-32 ml-6" />
+          </View>
+        )}
 
         <ScrollView nestedScrollEnabled className="max-h-96" indicatorStyle={colors.indicatorBg as any}>
           {pagedRecords.map((k) => {
@@ -128,7 +132,56 @@ export default function QuoteRecordsSection() {
               const conv = savedRates ? convertToTry(val, cur, savedRates) : convertTry(val, cur);
               return conv === null ? s : s + conv;
             }, 0);
-            return (
+            return compact ? (
+              <View
+                key={k.id}
+                className="px-3 py-3 border-b"
+                style={{ borderColor: colors.borderAlt }}
+              >
+                <View className="flex-row items-start justify-between">
+                  <View className="flex-1 pr-2">
+                    <View className="flex-row items-baseline flex-wrap gap-x-2">
+                      <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
+                      <Text className="flex-1 text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>
+                        {k.customer}
+                      </Text>
+                    </View>
+                    {k.title ? (
+                      <Text className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                        {k.title}
+                      </Text>
+                    ) : null}
+                    <View className="items-end mt-1.5">
+                      <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
+                        {totalLabels}
+                      </Text>
+                      {totalTry > 0 && (
+                        <Text className="text-[10px] text-right mt-0.5" style={{ color: colors.textMuted }}>
+                          ≈ {formatMoney(totalTry)} ₺
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+                <View className="flex-row items-center justify-end gap-2.5 mt-2 pt-2 border-t" style={{ borderColor: colors.borderAlt }}>
+                  <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="share-social-outline" size={20} color={colors.purple} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="trash-outline" size={20} color={colors.danger} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleView(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="eye-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleEdit(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="create-outline" size={20} color={colors.teal} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => openQuotePDF(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="download-outline" size={20} color={colors.warning} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
               <View
                 key={k.id}
                 className="flex-row items-center px-3 py-3 border-b"
