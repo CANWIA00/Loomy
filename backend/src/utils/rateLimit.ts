@@ -18,8 +18,8 @@ function cleanup(): void {
 }
 
 function clientIp(req: Request): string {
-  const forwarded = req.headers["x-forwarded-for"]?.toString().split(",")[0].trim();
-  return forwarded || req.socket.remoteAddress || "unknown";
+  const forwarded = req.headers?.["x-forwarded-for"]?.toString().split(",")[0].trim();
+  return forwarded || req.socket?.remoteAddress || "unknown";
 }
 
 export function attemptKey(req: Request, email: string, prefix: string): string {

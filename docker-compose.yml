@@ -10,7 +10,9 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - type: volume
+        source: pgdata
+        target: /var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -28,6 +30,8 @@ services:
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/management_dashboard?schema=public"
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET ortam değişkenini belirle (git'e anahtar işlenmez)}
+      DEV_EMAIL: ${DEV_EMAIL:-}
+      DEV_PASSWORD: ${DEV_PASSWORD:-}
       PORT: 8080
     depends_on:
       postgres:
@@ -35,3 +39,4 @@ services:
 
 volumes:
   pgdata:
+    name: ${POSTGRES_VOLUME:-pgdata}
