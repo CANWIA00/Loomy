@@ -113,7 +113,15 @@ export default function PaymentsListSection() {
             style={{ backgroundColor: colors.bgCard2 }}
             className="flex-row items-center px-1 pb-1.5"
           >
-            <View className="flex-1" />
+            <View className="flex-1">
+              <Text
+                className="text-[10px] font-semibold"
+                style={{ color: colors.textMuted }}
+                numberOfLines={1}
+              >
+                {t("pay.servicesColumn")}
+              </Text>
+            </View>
             <View className="mr-1.5 items-center justify-center" style={{ width: INVOICE_COL_WIDTH }}>
               <Text
                 className="text-[10px] font-semibold"
