@@ -8,6 +8,7 @@ import StatusDropdownModal from "./modals/StatusDropdownModal";
 
 const INVOICE_COL_WIDTH = 40;
 const PAYMENT_COL_WIDTH = 90;
+const ROW_BTN_HEIGHT = 32;
 
 export default function PaymentsListSection() {
   const { colors } = useTheme();
@@ -156,7 +157,7 @@ export default function PaymentsListSection() {
               <View className="flex-row items-center">
                 <TouchableOpacity
                   className="items-center justify-center rounded-lg mr-1.5"
-                  style={{ width: INVOICE_COL_WIDTH, height: INVOICE_COL_WIDTH, backgroundColor: s.invoiced ? colors.primary + '15' : colors.bgCard }}
+                  style={{ width: INVOICE_COL_WIDTH, height: ROW_BTN_HEIGHT, borderWidth: 1, borderColor: colors.border, backgroundColor: s.invoiced ? colors.primary + '15' : colors.bgCard }}
                   onPress={() => setInvoiceAlert({ visible: true, record: s })}
                   accessibilityRole="button"
                   accessibilityLabel={s.invoiced ? t("pay.invoiced") : t("pay.notInvoiced")}
@@ -166,10 +167,10 @@ export default function PaymentsListSection() {
 
                 <TouchableOpacity
                   className="flex-row items-center justify-center rounded-lg"
-                  style={{ width: PAYMENT_COL_WIDTH, backgroundColor: s.paid ? colors.success + '15' : colors.warning + '15' }}
+                  style={{ width: PAYMENT_COL_WIDTH, height: ROW_BTN_HEIGHT, borderWidth: 1, borderColor: colors.border, backgroundColor: s.paid ? colors.success + '15' : colors.warning + '15' }}
                   onPress={() => setToggleAlert({ visible: true, record: s })}
                 >
-                  <Ionicons name={s.paid ? "checkmark-circle" : "time"} size={12} color={s.paid ? colors.success : colors.warning} />
+                  <Ionicons name={s.paid ? "checkmark-circle" : "time"} size={14} color={s.paid ? colors.success : colors.warning} />
                   <Text className="text-xs font-medium ml-1" style={{ color: s.paid ? colors.success : colors.warning }}>
                     {s.paid ? t("pay.paid") : t("pay.pending")}
                   </Text>
