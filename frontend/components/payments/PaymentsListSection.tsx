@@ -102,27 +102,38 @@ export default function PaymentsListSection() {
         </TouchableOpacity>
       </View>
 
+      <ScrollView
+        style={{ maxHeight: 500 }}
+        indicatorStyle={colors.indicatorBg as any}
+        stickyHeaderIndices={filteredServices.length > 0 ? [0] : []}
+      >
         {filteredServices.length > 0 && (
-        <View className="flex-row items-center px-1 pb-1.5">
-          <View className="flex-1" />
-          <Text
-            className="text-[10px] font-semibold text-center mr-1.5"
-            style={{ width: INVOICE_COL_WIDTH, color: colors.textMuted }}
-            numberOfLines={1}
+          <View
+            style={{ backgroundColor: colors.bgCard2 }}
+            className="flex-row items-center px-1 pb-1.5"
           >
-            {t("pay.invoiceColumn")}
-          </Text>
-          <Text
-            className="text-[10px] font-semibold text-center"
-            style={{ width: PAYMENT_COL_WIDTH, color: colors.textMuted }}
-            numberOfLines={1}
-          >
-            {t("pay.paymentColumn")}
-          </Text>
-        </View>
+            <View className="flex-1" />
+            <View className="mr-1.5 items-center justify-center" style={{ width: INVOICE_COL_WIDTH }}>
+              <Text
+                className="text-[10px] font-semibold"
+                style={{ color: colors.textMuted }}
+                numberOfLines={1}
+              >
+                {t("pay.invoiceColumn")}
+              </Text>
+            </View>
+            <View className="items-center justify-center" style={{ width: PAYMENT_COL_WIDTH }}>
+              <Text
+                className="text-[10px] font-semibold"
+                style={{ color: colors.textMuted }}
+                numberOfLines={1}
+              >
+                {t("pay.paymentColumn")}
+              </Text>
+            </View>
+          </View>
         )}
 
-        <ScrollView style={{ maxHeight: 500 }} indicatorStyle={colors.indicatorBg as any}>
         {filteredServices.length === 0 ? (
           <View className="items-center py-10">
             <Ionicons name="wallet-outline" size={40} color={colors.textMuted} />
