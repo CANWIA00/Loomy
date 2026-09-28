@@ -3,6 +3,7 @@ import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
 import { scheduleRecomputeForRecord, periodKey, scheduleRecomputeMonth } from "../services/monthlySummaries";
 import { applyUsedProductsTx, parseUsedProducts, reverseUsedProductsTx } from "../services/serviceUsedProducts";
+import { resolveProductsModeTotal } from "../utils/serviceTotals";
 
 export async function getServiceRecords(
   req: AuthRequest,
@@ -93,11 +94,25 @@ export async function createServiceRecord(
       });
 
       const resolved = await applyUsedProductsTx(tx, companyId, record.id, null, usedProducts, deductStock !== undefined ? !!deductStock : true);
+      const patch: { usedProducts?: string; fee?: string; feeCurrency?: string } = {};
       if (resolved.length) {
-        await tx.serviceRecord.update({
-          where: { id: record.id },
-          data: { usedProducts: JSON.stringify(resolved) },
-        });
+        patch.usedProducts = JSON.stringify(resolved);
+      }
+      const total = await resolveProductsModeTotal({
+        productsMode: !!productsMode,
+        usedProducts: resolved.length ? resolved : (Array.isArray(usedProducts) ? usedProducts : []),
+        fee,
+        feeCurrency,
+        labor,
+        laborCurrency,
+        kdvRate,
+      });
+      if (total != null) {
+        patch.fee = total;
+        patch.feeCurrency = "TRY";
+      }
+      if (Object.keys(patch).length) {
+        await tx.serviceRecord.update({ where: { id: record.id }, data: patch });
       }
     });
 
@@ -138,6 +153,7 @@ export async function updateServiceRecord(
     }
 
     const hasUsedProducts = Array.isArray(usedProducts);
+    const effectiveProductsMode = productsMode !== undefined ? !!productsMode : existing.productsMode;
 
     await prisma.$transaction(async (tx) => {
       await tx.serviceRecord.update({
@@ -175,6 +191,9 @@ export async function updateServiceRecord(
         },
       });
 
+      let effectiveProducts = parseUsedProducts(existing.usedProducts);
+      const patch: { usedProducts?: string; fee?: string; feeCurrency?: string } = {};
+
       if (hasUsedProducts) {
         const resolved = await applyUsedProductsTx(
           tx,
@@ -184,10 +203,28 @@ export async function updateServiceRecord(
           usedProducts,
           deductStock !== undefined ? !!deductStock : true
         );
-        await tx.serviceRecord.update({
-          where: { id },
-          data: { usedProducts: JSON.stringify(resolved) },
+        effectiveProducts = resolved;
+        patch.usedProducts = JSON.stringify(resolved);
+      }
+
+      if (effectiveProductsMode) {
+        const total = await resolveProductsModeTotal({
+          productsMode: true,
+          usedProducts: effectiveProducts,
+          fee: fee ?? existing.fee,
+          feeCurrency: feeCurrency ?? existing.feeCurrency,
+          labor: labor ?? existing.labor,
+          laborCurrency: laborCurrency ?? existing.laborCurrency,
+          kdvRate: kdvRate ?? existing.kdvRate,
         });
+        if (total != null) {
+          patch.fee = total;
+          patch.feeCurrency = "TRY";
+        }
+      }
+
+      if (Object.keys(patch).length) {
+        await tx.serviceRecord.update({ where: { id }, data: patch });
       }
     });
 

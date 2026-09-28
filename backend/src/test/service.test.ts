@@ -94,6 +94,98 @@ describe("service controller", () => {
       expect(data.companyId).toBe("c1");
       expect(res.status).toHaveBeenCalledWith(201);
     });
+
+    // Regresyon: stok dusmeli kayitlarda "ucret" alani gizli oldugu icin 0.00
+    // gonderiliyor ve odeme listesi 0 gosteriyordu. Genel toplam backend'de
+    // hesaplanip fee alanina TRY olarak yazilmali.
+    it("productsMode: genel toplami hesaplayip fee alanina yazar", async () => {
+      (prisma.serviceRecord.create as jest.Mock).mockResolvedValue({ id: 1 });
+      (prisma.serviceRecord.findFirst as jest.Mock).mockResolvedValue({
+        id: 1, usedProducts: "[]", productsMode: true, deducted: false,
+      });
+
+      const res = mockRes();
+      const req = mockReq({
+        body: {
+          customerName: "M",
+          productsMode: true,
+          deductStock: false,
+          fee: "0.00",
+          labor: "50",
+          laborCurrency: "TRY",
+          kdvRate: "20",
+          usedProducts: [{ name: "Kamera", quantity: 2, unitPrice: 100, currency: "TRY" }],
+        },
+      });
+
+      await createServiceRecord(req, res);
+
+      const updateData = (prisma.serviceRecord.update as jest.Mock).mock.calls[0][0].data;
+      // 200 urun + 50 iscilik = 250, %20 KDV = 50 -> 300
+      expect(updateData.fee).toBe("300.00");
+      expect(updateData.feeCurrency).toBe("TRY");
+      expect(updateData.usedProducts).toContain("Kamera");
+    });
+
+    it("productsMode: KDV'siz kayitta yalnizca urun+labor yazilir", async () => {
+      (prisma.serviceRecord.create as jest.Mock).mockResolvedValue({ id: 1 });
+      (prisma.serviceRecord.findFirst as jest.Mock).mockResolvedValue({ id: 1, usedProducts: "[]" });
+
+      const res = mockRes();
+      const req = mockReq({
+        body: {
+          customerName: "M",
+          productsMode: true,
+          deductStock: false,
+          fee: "0.00",
+          labor: "0",
+          kdvRate: "0",
+          usedProducts: [{ name: "Kamera", quantity: 1, unitPrice: 750.25, currency: "TRY" }],
+        },
+      });
+
+      await createServiceRecord(req, res);
+
+      const updateData = (prisma.serviceRecord.update as jest.Mock).mock.calls[0][0].data;
+      expect(updateData.fee).toBe("750.25");
+    });
+
+    it("productsMode: ucret/tutar yoksa fee 0.00 olarak yazilir", async () => {
+      (prisma.serviceRecord.create as jest.Mock).mockResolvedValue({ id: 1 });
+      (prisma.serviceRecord.findFirst as jest.Mock).mockResolvedValue({ id: 1, usedProducts: "[]" });
+
+      const res = mockRes();
+      const req = mockReq({
+        body: { customerName: "M", productsMode: true, deductStock: false, fee: "0.00" },
+      });
+
+      await createServiceRecord(req, res);
+
+      expect((prisma.serviceRecord.update as jest.Mock).mock.calls[0][0].data.fee).toBe("0.00");
+    });
+
+    it("productsMode false: elle girilen fee'ye dokunmaz", async () => {
+      (prisma.serviceRecord.create as jest.Mock).mockResolvedValue({ id: 1 });
+      (prisma.serviceRecord.findFirst as jest.Mock).mockResolvedValue({ id: 1, usedProducts: "[]" });
+
+      const res = mockRes();
+      const req = mockReq({
+        body: {
+          customerName: "M",
+          productsMode: false,
+          deductStock: false,
+          fee: "150.50",
+          feeCurrency: "EUR",
+          usedProducts: [{ name: "Kamera", quantity: 1, unitPrice: 100, currency: "TRY" }],
+        },
+      });
+
+      await createServiceRecord(req, res);
+
+      const updateData = (prisma.serviceRecord.update as jest.Mock).mock.calls[0][0].data;
+      expect(updateData.fee).toBeUndefined();
+      expect(updateData.feeCurrency).toBeUndefined();
+    });
   });
 
   describe("updateServiceRecord", () => {
@@ -151,6 +243,111 @@ describe("service controller", () => {
       expect(data.customerName).toBe("New");
       expect(data.services).toBe('["alarm"]');
       expect(data.fee).toBe("0.00");
+    });
+
+    it("productsMode: guncellenirken genel toplam yeniden hesaplanir", async () => {
+      (prisma.serviceRecord.findFirst as jest.Mock)
+        .mockResolvedValueOnce({
+          id: 1,
+          documentDate: "08/09/2026",
+          customerName: "M",
+          customerId: null,
+          serviceType: "",
+          address: null,
+          startTime: null,
+          endTime: null,
+          phone: null,
+          internalIp: null,
+          externalIp: null,
+          details: null,
+          fee: "0.00",
+          feeCurrency: "TRY",
+          labor: "50",
+          laborCurrency: "TRY",
+          kdvRate: "20",
+          technician: null,
+          technicianPhone: null,
+          services: "[]",
+          technical: "[]",
+          customChips: null,
+          customValues: null,
+          signed: false,
+          paid: false,
+          signature: null,
+          technicianSignature: null,
+          templateName: null,
+          templateConfig: null,
+          usedProducts: "[]",
+          productsMode: true,
+        })
+        .mockResolvedValueOnce({ id: 1, documentDate: "08/09/2026", usedProducts: "[]" });
+      (prisma.serviceRecord.update as jest.Mock).mockImplementation(async ({ data }) => data);
+
+      const res = mockRes();
+      const req = mockReq({
+        params: { id: "1" },
+        body: {
+          customerName: "M",
+          deductStock: false,
+          usedProducts: [{ name: "Kamera", quantity: 2, unitPrice: 100, currency: "TRY" }],
+        },
+      });
+
+      await updateServiceRecord(req, res);
+
+      // Ilk update alan gecisidir (fee: fee ?? existing.fee), ikinci hesaplanan toplam patch'idir.
+      const patch = (prisma.serviceRecord.update as jest.Mock).mock.calls[1][0].data;
+      expect(patch.fee).toBe("300.00");
+      expect(patch.feeCurrency).toBe("TRY");
+    });
+
+    it("productsMode: usedProducts gonderilmese bile kayitli urunlerden toplam hesaplanir", async () => {
+      (prisma.serviceRecord.findFirst as jest.Mock)
+        .mockResolvedValueOnce({
+          id: 1,
+          documentDate: "08/09/2026",
+          customerName: "M",
+          customerId: null,
+          serviceType: "",
+          address: null,
+          startTime: null,
+          endTime: null,
+          phone: null,
+          internalIp: null,
+          externalIp: null,
+          details: null,
+          fee: "0.00",
+          feeCurrency: "TRY",
+          labor: "0",
+          laborCurrency: "TRY",
+          kdvRate: "0",
+          technician: null,
+          technicianPhone: null,
+          services: "[]",
+          technical: "[]",
+          customChips: null,
+          customValues: null,
+          signed: false,
+          paid: false,
+          signature: null,
+          technicianSignature: null,
+          templateName: null,
+          templateConfig: null,
+          usedProducts: JSON.stringify([
+            { name: "Kamera", quantity: 1, unitPrice: 99.99, currency: "TRY" },
+          ]),
+          productsMode: true,
+        })
+        .mockResolvedValueOnce({ id: 1, documentDate: "08/09/2026", usedProducts: "[]" });
+      (prisma.serviceRecord.update as jest.Mock).mockImplementation(async ({ data }) => data);
+
+      const res = mockRes();
+      const req = mockReq({ params: { id: "1" }, body: { customerName: "M2" } });
+
+      await updateServiceRecord(req, res);
+
+      const patch = (prisma.serviceRecord.update as jest.Mock).mock.calls[1][0].data;
+      expect(patch.fee).toBe("99.99");
     });
   });
 
