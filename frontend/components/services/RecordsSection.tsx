@@ -195,59 +195,62 @@ export default function RecordsSection() {
       </Modal>
 
       <View className="rounded-2xl border overflow-hidden" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
-        <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-          {columns.map((col) => (
-            <Text
-              key={col}
-              className={`text-xs font-semibold ${colClass(col)}`}
-              style={{ color: colors.textSecondary }}
-            >
-              {col}
-            </Text>
-          ))}
-        </View>
+        {!compact && (
+          <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+            {columns.map((col) => (
+              <Text
+                key={col}
+                className={`text-xs font-semibold ${colClass(col)}`}
+                style={{ color: colors.textSecondary }}
+              >
+                {col}
+              </Text>
+            ))}
+          </View>
+        )}
 
         <ScrollView nestedScrollEnabled className="max-h-96" indicatorStyle={colors.indicatorBg as any}>
-          {pagedRecords.map((k) => (
-            <View
-              key={k.id}
-              className="flex-row items-center px-3 py-3 border-b"
-              style={{ borderColor: colors.borderAlt }}
-            >
-              <Text className="w-24 text-xs" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
-              <Text className="flex-1 text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
-                {k.customer} - {k.tarih}
-              </Text>
-              <Text className="flex-1 text-sm" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                {k.customer}
-              </Text>
-              <View className="flex-1">
-                <Text className="text-xs" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                  {k.service}
-                </Text>
-                {k.usedProducts && k.usedProducts.length > 0 && (
-                  <Text className="text-[10px] mt-0.5" numberOfLines={1} style={{ color: colors.teal }}>
-                    {k.usedProducts.map((p) => `${p.name} x${p.quantity}`).join(", ")}
-                  </Text>
-                )}
-                {k.usedProducts && k.usedProducts.some((p) => p.inStock === false) && (
-                  <Text className="text-[9px] mt-0.5" style={{ color: colors.warning }}>
-                    {t("svc.notInStockCount").replace("{count}", String(k.usedProducts.filter((p) => p.inStock === false).length))}
-                  </Text>
-                )}
-              </View>
-              <View className="w-32 pr-2">
-                <View
-                  className="self-start px-1.5 py-0.5 rounded-md"
-                  style={{ backgroundColor: k.templateName ? colors.purple + "1A" : colors.bgInput }}
-                >
-                  <Text className="text-[10px] font-medium" numberOfLines={1} style={{ color: k.templateName ? colors.purple : colors.textMuted }}>
-                    {k.templateName || t("svc.noTemplate")}
-                  </Text>
-                </View>
-              </View>
-              <View className="items-center justify-end">
-                {compact ? (
+          {pagedRecords.map((k) =>
+            compact ? (
+              <View
+                key={k.id}
+                className="px-3 py-3 border-b"
+                style={{ borderColor: colors.borderAlt }}
+              >
+                <View className="flex-row items-start justify-between">
+                  <View className="flex-1 pr-2">
+                    <View className="flex-row items-baseline flex-wrap gap-x-2">
+                      <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
+                      <Text className="flex-1 text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>
+                        {k.customer}
+                      </Text>
+                    </View>
+                    <View className="mt-1">
+                      <Text className="text-sm" style={{ color: colors.textSecondary }} numberOfLines={2}>
+                        {k.service}
+                      </Text>
+                      {k.usedProducts && k.usedProducts.length > 0 && (
+                        <Text className="text-[10px] mt-0.5" numberOfLines={1} style={{ color: colors.teal }}>
+                          {k.usedProducts.map((p) => `${p.name} x${p.quantity}`).join(", ")}
+                        </Text>
+                      )}
+                      {k.usedProducts && k.usedProducts.some((p) => p.inStock === false) && (
+                        <Text className="text-[9px] mt-0.5" style={{ color: colors.warning }}>
+                          {t("svc.notInStockCount").replace("{count}", String(k.usedProducts.filter((p) => p.inStock === false).length))}
+                        </Text>
+                      )}
+                    </View>
+                    <View className="mt-1.5">
+                      <View
+                        className="self-start px-1.5 py-0.5 rounded-md"
+                        style={{ backgroundColor: k.templateName ? colors.purple + "1A" : colors.bgInput }}
+                      >
+                        <Text className="text-[10px] font-medium" numberOfLines={1} style={{ color: k.templateName ? colors.purple : colors.textMuted }}>
+                          {k.templateName || t("svc.noTemplate")}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
                   <TouchableOpacity
                     className="w-9 h-9 rounded-lg items-center justify-center"
                     style={{ backgroundColor: colors.bgInput }}
@@ -261,7 +264,47 @@ export default function RecordsSection() {
                   >
                     <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
                   </TouchableOpacity>
-                ) : (
+                </View>
+              </View>
+            ) : (
+              <View
+                key={k.id}
+                className="flex-row items-center px-3 py-3 border-b"
+                style={{ borderColor: colors.borderAlt }}
+              >
+                <Text className="w-24 text-xs" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
+                <Text className="flex-1 text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
+                  {k.customer} - {k.tarih}
+                </Text>
+                <Text className="flex-1 text-sm" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                  {k.customer}
+                </Text>
+                <View className="flex-1">
+                  <Text className="text-xs" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                    {k.service}
+                  </Text>
+                  {k.usedProducts && k.usedProducts.length > 0 && (
+                    <Text className="text-[10px] mt-0.5" numberOfLines={1} style={{ color: colors.teal }}>
+                      {k.usedProducts.map((p) => `${p.name} x${p.quantity}`).join(", ")}
+                    </Text>
+                  )}
+                  {k.usedProducts && k.usedProducts.some((p) => p.inStock === false) && (
+                    <Text className="text-[9px] mt-0.5" style={{ color: colors.warning }}>
+                      {t("svc.notInStockCount").replace("{count}", String(k.usedProducts.filter((p) => p.inStock === false).length))}
+                    </Text>
+                  )}
+                </View>
+                <View className="w-32 pr-2">
+                  <View
+                    className="self-start px-1.5 py-0.5 rounded-md"
+                    style={{ backgroundColor: k.templateName ? colors.purple + "1A" : colors.bgInput }}
+                  >
+                    <Text className="text-[10px] font-medium" numberOfLines={1} style={{ color: k.templateName ? colors.purple : colors.textMuted }}>
+                      {k.templateName || t("svc.noTemplate")}
+                    </Text>
+                  </View>
+                </View>
+                <View className="items-center justify-end">
                   <View className="flex-row items-center gap-2.5">
                     <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                       <Ionicons name="share-social-outline" size={20} color={colors.purple} />
@@ -279,10 +322,10 @@ export default function RecordsSection() {
                       <Ionicons name="download-outline" size={20} color={colors.warning} />
                     </TouchableOpacity>
                   </View>
-                )}
+                </View>
               </View>
-            </View>
-          ))}
+            )
+          )}
         </ScrollView>
       </View>
 
