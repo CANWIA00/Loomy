@@ -121,14 +121,13 @@ export default function PaymentsListSection() {
 
               <View className="flex-row items-center">
                 <TouchableOpacity
-                  className="flex-row items-center rounded-lg px-2 py-1 mr-1.5"
+                  className="w-7 h-7 rounded-lg items-center justify-center mr-1.5"
                   style={{ backgroundColor: s.invoiced ? colors.primary + '15' : colors.bgCard }}
                   onPress={() => setInvoiceAlert({ visible: true, record: s })}
+                  accessibilityRole="button"
+                  accessibilityLabel={s.invoiced ? t("pay.invoiced") : t("pay.notInvoiced")}
                 >
-                  <Ionicons name={s.invoiced ? "receipt" : "receipt-outline"} size={12} color={s.invoiced ? colors.primary : colors.textMuted} />
-                  <Text className="text-xs font-medium ml-1" style={{ color: s.invoiced ? colors.primary : colors.textMuted }}>
-                    {s.invoiced ? t("pay.invoiced") : t("pay.notInvoiced")}
-                  </Text>
+                  <Ionicons name={s.invoiced ? "receipt" : "receipt-outline"} size={14} color={s.invoiced ? colors.primary : colors.textMuted} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
