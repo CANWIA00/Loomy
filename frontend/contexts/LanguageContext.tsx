@@ -323,6 +323,9 @@ const translations: Record<Lang, Record<string, string>> = {
 
     // Services
     "svc.title": "Servis Yönetimi",
+    "svc.preview": "Ön İzle",
+    "common.actions": "İşlemler",
+    "common.more": "Daha fazla işlem",
     "svc.subtitle": "Servis kayıtlarını oluşturun ve yönetin",
     "svc.newRecord": "Yeni Servis Kaydı",
     "svc.editRecord": "Servis Kaydını Düzenle",
@@ -1496,6 +1499,9 @@ const translations: Record<Lang, Record<string, string>> = {
 
     // Services
     "svc.title": "Service Management",
+    "svc.preview": "Preview",
+    "common.actions": "Actions",
+    "common.more": "More actions",
     "svc.subtitle": "Create and manage service records",
     "svc.newRecord": "New Service Record",
     "svc.editRecord": "Edit Service Record",

@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useServices } from "./ServicesContext";
+import RecordActionsMenu from "./modals/RecordActionsMenu";
+import type { ServiceRecord } from "../../apiclient/services";
 import type { RecordFilter } from "./types";
 
 const FILTERS: RecordFilter[] = ["all", "gun", "ay", "yil"];
@@ -29,11 +31,6 @@ export default function RecordsSection() {
     setFilterTemplate,
     resetFilters,
     refreshRecords,
-    handleShare,
-    handleViewService,
-    openServicePDF,
-    handleEdit,
-    setDeleteAlert,
     templates,
   } = useServices();
 
@@ -49,6 +46,8 @@ export default function RecordsSection() {
   };
 
   const [templateFilterOpen, setTemplateFilterOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionsRecord, setActionsRecord] = useState<ServiceRecord | null>(null);
 
   const filterLabel = (f: RecordFilter) =>
     f === "all" ? t("svc.filterAll") : f === "gun" ? t("svc.filterDay") : f === "ay" ? t("svc.filterMonth") : t("svc.filterYear");
@@ -240,21 +239,19 @@ export default function RecordsSection() {
                   </Text>
                 </View>
               </View>
-              <View className="flex-row items-center justify-end gap-2.5">
-                <TouchableOpacity onPress={() => handleShare(k)}>
-                  <Ionicons name="share-social-outline" size={20} color={colors.purple} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })}>
-                  <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleViewService(k)}>
-                  <Ionicons name="eye-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleEdit(k)}>
-                  <Ionicons name="create-outline" size={20} color={colors.teal} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => openServicePDF(k)}>
-                  <Ionicons name="download-outline" size={20} color={colors.warning} />
+              <View className="items-center justify-end">
+                <TouchableOpacity
+                  className="w-9 h-9 rounded-lg items-center justify-center"
+                  style={{ backgroundColor: colors.bgInput }}
+                  onPress={() => {
+                    setActionsRecord(k);
+                    setActionsOpen(true);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.more")}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -295,6 +292,12 @@ export default function RecordsSection() {
           <Text style={{ color: colors.primary }} className="font-semibold text-sm">{t("svc.loadMore")}</Text>
         </TouchableOpacity>
       )}
+
+      <RecordActionsMenu
+        record={actionsRecord}
+        visible={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+      />
     </>
   );
 }
