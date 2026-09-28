@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -14,6 +14,8 @@ const PAGE_SIZE = 15;
 export default function RecordsSection() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const compact = width < 900;
   const [page, setPage] = useState(0);
   const {
     filteredRecords,
@@ -31,6 +33,11 @@ export default function RecordsSection() {
     setFilterTemplate,
     resetFilters,
     refreshRecords,
+    handleShare,
+    handleViewService,
+    openServicePDF,
+    handleEdit,
+    setDeleteAlert,
     templates,
   } = useServices();
 
@@ -240,19 +247,39 @@ export default function RecordsSection() {
                 </View>
               </View>
               <View className="items-center justify-end">
-                <TouchableOpacity
-                  className="w-9 h-9 rounded-lg items-center justify-center"
-                  style={{ backgroundColor: colors.bgInput }}
-                  onPress={() => {
-                    setActionsRecord(k);
-                    setActionsOpen(true);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("common.more")}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
-                </TouchableOpacity>
+                {compact ? (
+                  <TouchableOpacity
+                    className="w-9 h-9 rounded-lg items-center justify-center"
+                    style={{ backgroundColor: colors.bgInput }}
+                    onPress={() => {
+                      setActionsRecord(k);
+                      setActionsOpen(true);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("common.more")}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                ) : (
+                  <View className="flex-row items-center gap-2.5">
+                    <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="share-social-outline" size={20} color={colors.purple} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="trash-outline" size={20} color={colors.danger} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleViewService(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="eye-outline" size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleEdit(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="create-outline" size={20} color={colors.teal} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => openServicePDF(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="download-outline" size={20} color={colors.warning} />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             </View>
           ))}
