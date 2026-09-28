@@ -32,13 +32,25 @@ const ALLOWED_ORIGINS = (
       ]
 ).filter(Boolean);
 
+function toOriginPattern(allowed: string): RegExp {
+  const escaped = allowed.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("^" + escaped.replace(/\*/g, "[^/]+") + "$");
+}
+
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return true;
+  return ALLOWED_ORIGINS.some((allowed) =>
+    allowed.includes("*") ? toOriginPattern(allowed).test(origin) : allowed === origin
+  );
+}
+
 const app = express();
 
 app.use(compression());
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
       return;
     }

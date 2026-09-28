@@ -333,4 +333,54 @@ describe("auth API routes", () => {
       expect(res.body.payments[0].paid).toBe(true);
     });
   });
+
+  describe("CORS", () => {
+    it("allows a configured exact origin", async () => {
+      const res = await request(app)
+        .get("/api/health")
+        .set("Origin", "https://app.loomy-app.com");
+
+      expect(res.status).toBe(200);
+      expect(res.headers["access-control-allow-origin"]).toBe("https://app.loomy-app.com");
+    });
+
+    it("rejects an origin outside the allowlist", async () => {
+      const res = await request(app)
+        .get("/api/health")
+        .set("Origin", "https://loomy-abc123.vercel.app");
+
+      expect(res.status).toBe(500);
+    });
+
+    it("matches wildcard patterns from ALLOWED_ORIGINS", async () => {
+      const original = process.env.ALLOWED_ORIGINS;
+      process.env.ALLOWED_ORIGINS = "https://*.vercel.app";
+      jest.resetModules();
+      const freshApp = (require("../app") as typeof import("../app")).default;
+
+      try {
+        const allowed = await request(freshApp)
+          .get("/api/health")
+          .set("Origin", "https://loomy-abc123.vercel.app");
+        expect(allowed.status).toBe(200);
+        expect(allowed.headers["access-control-allow-origin"]).toBe(
+          "https://loomy-abc123.vercel.app"
+        );
+
+        const rejected = await request(freshApp)
+          .get("/api/health")
+          .set("Origin", "https://evil.example.com");
+        expect(rejected.status).toBe(500);
+
+        const notVercel = await request(freshApp)
+          .get("/api/health")
+          .set("Origin", "https://loomy-abc123.vercel.app.evil.com");
+        expect(notVercel.status).toBe(500);
+      } finally {
+        if (original === undefined) delete process.env.ALLOWED_ORIGINS;
+        else process.env.ALLOWED_ORIGINS = original;
+        jest.resetModules();
+      }
+    });
+  });
 });
