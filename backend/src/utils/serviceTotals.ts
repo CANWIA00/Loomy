@@ -1,9 +1,11 @@
 import { convertToTry, getTryRates, type TryRatesData } from "./tcmbRates";
 
 export interface UsedProductLike {
+  name?: string;
   quantity?: number | string | null;
   unitPrice?: number | string | null;
   currency?: string | null;
+  vatRate?: number | string | null;
 }
 
 export interface ServiceTotalInput {
@@ -114,37 +116,96 @@ export function roundMoney(value: number): string {
 }
 
 /**
+ * Frontend'in toplami gostermek icin kullandigi kur snapshot'ini guvenli hale getirir.
+ * Kur tutar hesabini etkiledigi icin istemciden gelen degerler mutlaka sinirlandirilir:
+ * aksi halde bozuk/zararli bir istek kasada devasa tutarlar yazabilir.
+ */
+export function sanitizeClientRates(
+  input: unknown,
+  neededCurrencies: string[]
+): TryRatesData | null {
+  const src = (input as any)?.rates;
+  if (!src || typeof src !== "object") return null;
+
+  const rates: Record<string, number> = { TRY: 1 };
+  for (const cur of neededCurrencies) {
+    const code = cur.toUpperCase();
+    if (code === "TRY") continue;
+    const value = Number((src as Record<string, unknown>)[code] ?? (src as Record<string, unknown>)[cur]);
+    if (!isFinite(value) || value <= 0) return null;
+    if (value < MIN_RATE || value > MAX_RATE) return null;
+    rates[code] = value;
+  }
+  return {
+    source: "TCMB",
+    rateDate: String((input as any)?.rateDate ?? ""),
+    fetchedAt: Date.now(),
+    rates,
+  };
+}
+
+const MIN_RATE = 0.0001;
+const MAX_RATE = 1_000_000;
+
+/**
  * Stok düşmeli (productsMode) kayıtlarda "Servis Ücreti" alanı formda gizlidir,
  * bu yüzden kayıt 0.00 ile yazılır ve ödeme listesi tutarı 0 gösterir.
  * Tutarı ürünler + işçilik + KDV'den hesaplayıp fee alanına yazıyoruz.
  *
- * Kur gelemezse yanlis (kismi) tutar yazmak yerine null doner; cagiran taraf
- * fee alanina dokunmaz ve kayit yine de olusturulur.
+ * Kur kaynagi onceligi:
+ *   1) clientRates: frontend'in toplami ekranda gosterirken kullandigi anlik kur.
+ *      TCMB cagrisina bagimli kalmamak icin tercih edilir; boylece kullaniciya
+ *      ekranda gordugu tutarin aynisi kaydedilir.
+ *   2) getTryRates: TCMB'den canli (onbellekli) cekme, clientRates yoksa.
+ * Ikisi de yoksa null doner; cagiran taraf fee alanina dokunmaz.
  */
-export async function resolveProductsModeTotal(input: ServiceTotalInput): Promise<string | null> {
+export async function resolveProductsModeTotal(
+  input: ServiceTotalInput,
+  clientRates?: unknown
+): Promise<string | null> {
   if (!input.productsMode) return null;
 
-  const hasForeignCurrency =
-    (input.usedProducts || []).some((p) => (p.currency || "TRY").toUpperCase() !== "TRY") ||
-    (input.laborCurrency || "TRY").toUpperCase() !== "TRY";
+  const foreignCurrencies = new Set<string>();
+  for (const p of input.usedProducts || []) {
+    const cur = (p.currency || "TRY").toUpperCase();
+    if (cur !== "TRY") foreignCurrencies.add(cur);
+  }
+  const laborCur = (input.laborCurrency || "TRY").toUpperCase();
+  if (laborCur !== "TRY" && toNumber(input.labor) > 0) foreignCurrencies.add(laborCur);
 
-  const tryOnly: TryRatesData = {
-    source: "TCMB",
-    rateDate: "",
-    fetchedAt: Date.now(),
-    rates: { TRY: 1 },
-  };
-  const rates = hasForeignCurrency ? await getTryRates() : tryOnly;
+  let rates: TryRatesData | null = null;
+  if (foreignCurrencies.size > 0) {
+    rates = sanitizeClientRates(clientRates, [...foreignCurrencies]);
+    if (rates) {
+      rates.rateDate = `istemci (${(clientRates as any)?.rateDate ?? "bilinmiyor"})`;
+    }
+  }
+
+  if (!rates && foreignCurrencies.size > 0) {
+    rates = await getTryRates();
+  }
+
+  if (!rates) {
+    const tryOnly: TryRatesData = {
+      source: "TCMB",
+      rateDate: "",
+      fetchedAt: Date.now(),
+      rates: { TRY: 1 },
+    };
+    rates = tryOnly;
+  }
 
   try {
     return roundMoney(computeServiceTotal(input, rates).grandTry);
   } catch (error) {
     if (error instanceof MissingRateError) {
-      console.warn(
-        `serviceTotal: genel toplam hesaplanamadi, kur alinamadi (${error.currencies.join(", ")}) - fee alani degistirilmedi`
+      console.error(
+        `serviceTotal: GENEL TOPLAM HESAPLANAMADI, kur alinamadi (${error.currencies.join(", ")}). ` +
+        `Odeme listesinde 0 gorunecek. Istemciden tryRates gonderilmedi ve TCMB cagrisi basarisiz.`
       );
       return null;
     }
     throw error;
   }
 }
+

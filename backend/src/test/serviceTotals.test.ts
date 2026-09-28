@@ -1,15 +1,15 @@
-import { computeServiceTotal, MissingRateError, roundMoney, resolveProductsModeTotal } from "../utils/serviceTotals";
+import { computeServiceTotal, MissingRateError, roundMoney, resolveProductsModeTotal, sanitizeClientRates } from "../utils/serviceTotals";
 import { isZeroFee, selectBackfillCandidates } from "../scripts/backfillServiceTotals";
+import * as tcmbRates from "../utils/tcmbRates";
 import type { TryRatesData } from "../utils/tcmbRates";
 
-// Kur agi hic cagrilmasin: resolveProductsModeTotal yabanci para birimi gordugunde
-// getTryRates() cagirir, testlerde hep null donmesi yeterli (TRY-only durumlar
-// getTryRates'i hic cagirmaz).
+// Gercek convertToTry kullanilir; getTryRates testlerde hep null doner, boylece
+// ag cagrisi olmaz. resolveProductsModeTotal yabanci para birimi gordugunde
+// getTryRates'e duser, TRY-only durumlar hic cagirmaz.
 jest.mock("../utils/tcmbRates", () => ({
   getTryRates: jest.fn(async () => null),
   convertToTry: jest.requireActual("../utils/tcmbRates").convertToTry,
 }));
-
 
 const RATES: TryRatesData = {
   source: "TCMB",
@@ -149,6 +149,10 @@ describe("roundMoney", () => {
 });
 
 describe("resolveProductsModeTotal", () => {
+  beforeEach(() => {
+    (tcmbRates.getTryRates as jest.Mock).mockClear();
+  });
+
   it("productsMode false ise null doner (fee elle girilmistir)", async () => {
     const total = await resolveProductsModeTotal({
       productsMode: false,
@@ -187,6 +191,83 @@ describe("resolveProductsModeTotal", () => {
     // 100 iscilik + %20 KDV = 120 tutardi, ama kur olmadigi icin yazilmamali.
     expect(total).toBeNull();
     warn.mockRestore();
+  });
+
+  // Regresyon: yabanci para birimli urunlerde TCMB cagrisi basarisiz olunca
+  // kayit 0.00 ile kaydediliyordu. Frontend'in gonderdigi anlik kur sayesinde
+  // hesap TCMB'ye ihtiyac duymadan tamamlanmali.
+  it("istemciden gelen anlik kuru kullanir, TCMB'ye baglanmaz", async () => {
+    const total = await resolveProductsModeTotal(
+      {
+        productsMode: true,
+        usedProducts: [
+          { name: "Kamera", quantity: 2, unitPrice: 100, currency: "USD" },
+        ],
+        fee: "0.00",
+        labor: "0",
+        kdvRate: "20",
+      },
+      { rates: { TRY: 1, USD: 40 }, source: "TCMB", rateDate: "28/09/2026", fetchedAt: Date.now() }
+    );
+    // 2 * 100 USD = 200 USD * 40 = 8000 TRY, %20 KDV = 1600 -> 9600
+    expect(total).toBe("9600.00");
+    expect(tcmbRates.getTryRates).not.toHaveBeenCalled();
+  });
+
+  it("istemci kuru eksikse TCMB'ye duser", async () => {
+    const total = await resolveProductsModeTotal(
+      {
+        productsMode: true,
+        usedProducts: [{ name: "Kamera", quantity: 1, unitPrice: 100, currency: "USD" }],
+        fee: "0.00",
+        labor: "0",
+        kdvRate: "0",
+      },
+      undefined
+    );
+    expect(tcmbRates.getTryRates).toHaveBeenCalled();
+    // TCMB mock olarak null dondugu icin hesaplanamaz -> null
+    expect(total).toBeNull();
+  });
+
+  it("TRY-only kayitlar kur paketi istemeden hesaplanir", async () => {
+    const total = await resolveProductsModeTotal(
+      {
+        productsMode: true,
+        usedProducts: [{ name: "Kamera", quantity: 1, unitPrice: 250, currency: "TRY" }],
+        fee: "0.00",
+        labor: "50",
+        laborCurrency: "TRY",
+        kdvRate: "20",
+      },
+      undefined
+    );
+    expect(total).toBe("360.00");
+    expect(tcmbRates.getTryRates).not.toHaveBeenCalled();
+  });
+});
+
+describe("sanitizeClientRates", () => {
+  it("yalnizca gerekli para birimlerini alir", () => {
+    const r = sanitizeClientRates({ rates: { TRY: 1, USD: 40, EUR: 55 } }, ["USD"]);
+    expect(r?.rates).toEqual({ TRY: 1, USD: 40 });
+  });
+
+  it("istenen kur eksikse null doner", () => {
+    expect(sanitizeClientRates({ rates: { TRY: 1, USD: 40 } }, ["GBP"])).toBeNull();
+  });
+
+  it("gecersiz/olceklenmis kurlari reddeder", () => {
+    expect(sanitizeClientRates({ rates: { USD: 0 } }, ["USD"])).toBeNull();
+    expect(sanitizeClientRates({ rates: { USD: -5 } }, ["USD"])).toBeNull();
+    expect(sanitizeClientRates({ rates: { USD: "abc" } }, ["USD"])).toBeNull();
+    expect(sanitizeClientRates({ rates: { USD: 1e12 } }, ["USD"])).toBeNull();
+  });
+
+  it("input bicimi yanlissa null doner", () => {
+    expect(sanitizeClientRates(null, ["USD"])).toBeNull();
+    expect(sanitizeClientRates({ rates: "x" }, ["USD"])).toBeNull();
+    expect(sanitizeClientRates({}, ["USD"])).toBeNull();
   });
 });
 

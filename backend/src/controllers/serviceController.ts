@@ -46,7 +46,7 @@ export async function createServiceRecord(
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
       fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-      templateName, templateConfig, usedProducts, productsMode, deductStock,
+      templateName, templateConfig, usedProducts, productsMode, deductStock, tryRates,
     } = req.body;
     const companyId = req.user!.companyId!;
 
@@ -106,7 +106,7 @@ export async function createServiceRecord(
         labor,
         laborCurrency,
         kdvRate,
-      });
+      }, tryRates);
       if (total != null) {
         patch.fee = total;
         patch.feeCurrency = "TRY";
@@ -140,7 +140,7 @@ export async function updateServiceRecord(
       documentDate, customerName, customerId, serviceType, address,
       startTime, endTime, phone, internalIp, externalIp, details,
       fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-      templateName, templateConfig, usedProducts, productsMode, deductStock,
+      templateName, templateConfig, usedProducts, productsMode, deductStock, tryRates,
     } = req.body;
 
     const existing = await prisma.serviceRecord.findFirst({
@@ -216,7 +216,7 @@ export async function updateServiceRecord(
           labor: labor ?? existing.labor,
           laborCurrency: laborCurrency ?? existing.laborCurrency,
           kdvRate: kdvRate ?? existing.kdvRate,
-        });
+        }, tryRates);
         if (total != null) {
           patch.fee = total;
           patch.feeCurrency = "TRY";

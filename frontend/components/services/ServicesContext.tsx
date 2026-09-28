@@ -449,6 +449,12 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       showTimeEqualWarning();
       return;
     }
+    // Formda gosterilen genel toplam bu kurlarla hesaplandi; backend'in ayni
+    // tutari yazmasi icin anlik kur snapshot'ini istekle birlikte gonderiyoruz.
+    const tryRates = form.usedProducts.some((p) => (p.currency || "TRY") !== "TRY")
+      || (form.laborCurrency || "TRY") !== "TRY"
+      ? (await getTryRates()).data ?? undefined
+      : undefined;
     if (isEditing && editingId !== null) {
       setLoading(true);
       try {
@@ -479,6 +485,7 @@ ucret: form.fee || "0.00",
           service: form.services.join(", ") || "-",
           templateName: activeTemplate?.name || undefined,
           templateConfig: templateSnapshot(templateConfig),
+          tryRates,
         });
         setResultAlert({ visible: true, type: "success", title: t("svc.success"), message: t("svc.successUpdated") });
         setIsEditing(false);
@@ -583,6 +590,12 @@ ucret: form.fee || "0.00",
       showTimeEqualWarning();
       return;
     }
+    // Formda gosterilen genel toplam bu kurlarla hesaplandi; backend'in ayni
+    // tutari yazmasi icin anlik kur snapshot'ini istekle birlikte gonderiyoruz.
+    const tryRates = form.usedProducts.some((p) => (p.currency || "TRY") !== "TRY")
+      || (form.laborCurrency || "TRY") !== "TRY"
+      ? (await getTryRates()).data ?? undefined
+      : undefined;
     setLoading(true);
     try {
       await serviceApi.create({
@@ -616,6 +629,7 @@ ucret: form.fee || "0.00",
         technicianSignature: technicianSignatureRef.current || null,
         templateName: activeTemplate?.name || undefined,
         templateConfig: templateSnapshot(templateConfig),
+        tryRates,
       });
       setResultAlert({ visible: true, type: "success", title: t("svc.success"), message: t("svc.successCreated") });
 

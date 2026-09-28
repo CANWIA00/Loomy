@@ -45,6 +45,8 @@ export interface ServiceRecord {
   technicianSignature?: any;
   templateName?: string;
   templateConfig?: any;
+  /** Formda gosterilen toplam icin kullanilan anlik kur; backend ayni tutari yazsin diye gonderilir. */
+  tryRates?: { rates: Record<string, number>; source: string; rateDate: string; fetchedAt: number } | undefined;
 }
 
 interface ServiceRecordBackend {
@@ -183,6 +185,7 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   if (f.templateConfig !== undefined) data.templateConfig = f.templateConfig;
   if (f.productsMode !== undefined) data.productsMode = f.productsMode;
   if (f.deductStock !== undefined) data.deductStock = f.deductStock;
+  if (f.tryRates) data.tryRates = f.tryRates;
   if (f.usedProducts !== undefined) {
     data.usedProducts = f.usedProducts.map((p) => ({
       name: p.name,
