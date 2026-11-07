@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback, type ReactNode } from "react";
-import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, useWindowDimensions } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, Alert, ActivityIndicator, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -7,6 +7,7 @@ import { useCurrency } from "../../contexts/CurrencyContext";
 import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../apiclient/customers";
 import { stockApi, type StockItem } from "../../apiclient/stock";
+import { getCurrentAddress } from "../../utils/location";
 import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, formatNumericInput, parseNumericInput } from "./types";
 
 const formatRate = (rate: number) =>
@@ -120,9 +121,16 @@ export default function QuoteForm() {
     setCustomerSelectModal,
     customerSearch,
     setCustomerSearch,
+    newCustomerModal,
+    setNewCustomerModal,
+    newCustomerForm,
+    updateNewCustomerForm,
+    resetNewCustomerForm,
+    createNewCustomer,
   } = useQuotes();
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [locatingNewAddress, setLocatingNewAddress] = useState(false);
   const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
   const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
   const addBtnRef = useRef<View>(null);
@@ -233,6 +241,28 @@ export default function QuoteForm() {
   const openCustomerModal = () => {
     setCustomerSearch("");
     setCustomerModalOpen(true);
+  };
+
+  const openNewCustomerModal = () => {
+    resetNewCustomerForm();
+    setCustomerModalOpen(false);
+    setNewCustomerModal(true);
+  };
+
+  const handleLocateNewAddress = async () => {
+    setLocatingNewAddress(true);
+    try {
+      const adres = await getCurrentAddress();
+      updateNewCustomerForm("address", adres);
+    } catch (e: any) {
+      if (e?.message === "PERMISSION_DENIED") {
+        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
+      } else {
+        Alert.alert(t("common.error"), t("map.errorLocation"));
+      }
+    } finally {
+      setLocatingNewAddress(false);
+    }
   };
 
   return (
@@ -758,6 +788,123 @@ export default function QuoteForm() {
             {customerList.length === 0 && (
               <Text className="text-xs mt-2 text-center" style={{ color: colors.textMuted }}>{t("qot.noCustomers")}</Text>
             )}
+            <TouchableOpacity
+              className="flex-row items-center justify-center h-10 rounded-lg mt-3"
+              style={{ backgroundColor: colors.primary + '15' }}
+              onPress={openNewCustomerModal}
+            >
+              <Ionicons name="person-add-outline" size={18} color={colors.primary} />
+              <Text className="text-sm font-medium ml-2" style={{ color: colors.primary }}>{t("qot.addNewCustomer")}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={newCustomerModal} transparent animationType="fade" onRequestClose={() => setNewCustomerModal(false)}>
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className="rounded-2xl w-11/12 max-w-md p-4" style={{ backgroundColor: colors.bgCard }}>
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("qot.newCustomer")}</Text>
+              <TouchableOpacity onPress={() => setNewCustomerModal(false)}>
+                <Ionicons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.companyName")}</Text>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("svc.companyNamePlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              value={newCustomerForm.companyName}
+              onChangeText={(v) => updateNewCustomerForm("companyName", v)}
+            />
+            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.subscriberNo")}</Text>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.subscriberNoPlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              value={newCustomerForm.subscriberNo}
+              onChangeText={(v) => updateNewCustomerForm("subscriberNo", v)}
+            />
+            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.address")}</Text>
+            <View className="relative mb-3">
+              <TextInput
+                className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+                placeholder={t("qot.addressPlaceholder")}
+                placeholderTextColor={colors.textMuted}
+                value={newCustomerForm.address}
+                onChangeText={(v) => updateNewCustomerForm("address", v)}
+              />
+              <TouchableOpacity
+                className="absolute right-2 top-1/2 -translate-y-1/2"
+                onPress={handleLocateNewAddress}
+                disabled={locatingNewAddress}
+              >
+                {locatingNewAddress ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Ionicons name="locate-outline" size={20} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            </View>
+            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.email")}</Text>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.emailPlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={newCustomerForm.email}
+              onChangeText={(v) => updateNewCustomerForm("email", v)}
+            />
+            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.phone")}</Text>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.phonePlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              value={newCustomerForm.phone}
+              onChangeText={(v) => updateNewCustomerForm("phone", v)}
+            />
+            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.contactPerson")}</Text>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.contactPersonPlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              value={newCustomerForm.contactPerson}
+              onChangeText={(v) => updateNewCustomerForm("contactPerson", v)}
+            />
+            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.contactPhone")}</Text>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm mb-4"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.contactPhonePlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              value={newCustomerForm.contactPhone}
+              onChangeText={(v) => updateNewCustomerForm("contactPhone", v)}
+            />
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                className="flex-1 h-10 rounded-lg items-center justify-center"
+                style={{ backgroundColor: colors.bgInput }}
+                onPress={() => setNewCustomerModal(false)}
+              >
+                <Text className="font-medium" style={{ color: colors.textSecondary }}>{t("common.cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 h-10 rounded-lg items-center justify-center"
+                style={{ backgroundColor: colors.primary }}
+                onPress={createNewCustomer}
+              >
+                <Text className="font-medium" style={{ color: "white" }}>{t("common.save")}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

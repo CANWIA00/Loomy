@@ -49,6 +49,26 @@ export type UnitOption = (typeof UNIT_OPTIONS)[number];
 
 export const emptyLine = (): QuoteFormLine => ({ name: "", details: "", quantity: "1", unitPrice: "", currency: "TRY", unit: "Adet" });
 
+export interface NewCustomerFormData {
+  companyName: string;
+  subscriberNo: string;
+  address: string;
+  email: string;
+  phone: string;
+  contactPerson: string;
+  contactPhone: string;
+}
+
+export const initialNewCustomerForm: NewCustomerFormData = {
+  companyName: "",
+  subscriberNo: "",
+  address: "",
+  email: "",
+  phone: "",
+  contactPerson: "",
+  contactPhone: "",
+};
+
 export const initialQuoteForm: QuoteFormData = {
   title: "",
   customerName: "",

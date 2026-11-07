@@ -12,7 +12,7 @@ import { quoteApi, QuoteRecord } from "../../apiclient/quotes";
 import { customerApi, Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
-import { initialQuoteForm, emptyLine, parseNumericInput, type QuoteFormData, type QuotePdfData, type QuoteFilter } from "./types";
+import { initialQuoteForm, emptyLine, parseNumericInput, initialNewCustomerForm, type QuoteFormData, type QuotePdfData, type QuoteFilter, type NewCustomerFormData } from "./types";
 
 interface DeleteAlertState {
   visible: boolean;
@@ -49,6 +49,12 @@ interface QuoteContextValue {
   setCustomerSelectModal: (v: boolean) => void;
   customerSearch: string;
   setCustomerSearch: (v: string) => void;
+  newCustomerModal: boolean;
+  setNewCustomerModal: (v: boolean) => void;
+  newCustomerForm: NewCustomerFormData;
+  updateNewCustomerForm: (key: keyof NewCustomerFormData, value: string) => void;
+  resetNewCustomerForm: () => void;
+  createNewCustomer: () => void;
   filteredRecords: QuoteRecord[];
   filter: QuoteFilter;
   setFilter: (f: QuoteFilter) => void;
@@ -96,6 +102,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [customerSelectModal, setCustomerSelectModal] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
+  const [newCustomerModal, setNewCustomerModal] = useState(false);
+  const [newCustomerForm, setNewCustomerForm] = useState<NewCustomerFormData>({ ...initialNewCustomerForm });
   const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
   const [pdfPreviewHtml, setPdfPreviewHtml] = useState("");
   const [pdfPreviewData, setPdfPreviewData] = useState<QuotePdfData | null>(null);
@@ -505,6 +513,32 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const updateNewCustomerForm = (key: keyof NewCustomerFormData, value: string) =>
+    setNewCustomerForm((prev) => ({ ...prev, [key]: value }));
+
+  const resetNewCustomerForm = () => setNewCustomerForm({ ...initialNewCustomerForm });
+
+  const createNewCustomer = () => {
+    if (!newCustomerForm.companyName.trim()) {
+      Alert.alert(t("qot.warning"), t("qot.errorCompanyRequired"));
+      return;
+    }
+    setLoading(true);
+    customerApi
+      .create(newCustomerForm)
+      .then((res) => {
+        const yeni = res.data;
+        setCustomerList((prev) => [...prev, yeni]);
+        selectCustomer(yeni);
+        resetNewCustomerForm();
+        setNewCustomerModal(false);
+      })
+      .catch(() => {
+        Alert.alert(t("qot.error"), t("qot.errorCustomerAdd"));
+      })
+      .finally(() => setLoading(false));
+  };
+
   const resetFilters = () => {
     setFilterDate("");
     setFilterCustomer("");
@@ -534,6 +568,12 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setCustomerSelectModal,
     customerSearch,
     setCustomerSearch,
+    newCustomerModal,
+    setNewCustomerModal,
+    newCustomerForm,
+    updateNewCustomerForm,
+    resetNewCustomerForm,
+    createNewCustomer,
     filteredRecords,
     filter,
     setFilter,
