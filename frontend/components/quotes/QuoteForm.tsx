@@ -118,6 +118,7 @@ export default function QuoteForm() {
     updateLine,
     addLine,
     removeLine,
+    requiredErrors,
     isEditing,
     handleCancelEditing,
     handleClear,
@@ -332,12 +333,15 @@ export default function QuoteForm() {
             <FieldLabel required>{t("qot.customerName")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
-              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              style={{ backgroundColor: colors.bg, borderColor: requiredErrors.customerName ? colors.danger : colors.border, color: colors.text }}
               placeholder={t("qot.customerNamePlaceholder")}
               placeholderTextColor={colors.textMuted}
               value={form.customerName}
               onChangeText={(v) => updateForm("customerName", v)}
             />
+            {requiredErrors.customerName && (
+              <Text className="text-[10px] mt-1" style={{ color: colors.danger }}>{t("qot.fieldRequired")}</Text>
+            )}
           </View>
           <View className="flex-1">
             <FieldLabel>{t("qot.phone")}</FieldLabel>
@@ -462,6 +466,7 @@ export default function QuoteForm() {
 
           {form.lines.map((line, idx) => {
             const lineTotal = round2(parseNumericInput(line.quantity) * parseNumericInput(line.unitPrice));
+            const nameHasError = requiredErrors.lines.includes(idx);
             return (
               <View key={idx} className="rounded-xl border p-2.5 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.borderAlt }}>
                 <View className="flex-row items-center gap-2 mb-2">
@@ -473,7 +478,7 @@ export default function QuoteForm() {
                     <View className="flex-row items-center">
                       <TextInput
                         className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
-                        style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                        style={{ backgroundColor: colors.bgCard2, borderColor: nameHasError ? colors.danger : colors.border, color: colors.text }}
                         placeholder={t("qot.productNamePlaceholder")}
                         placeholderTextColor={colors.textMuted}
                         value={line.name}
@@ -510,6 +515,11 @@ export default function QuoteForm() {
                         </TouchableOpacity>
                       ) : null}
                     </View>
+                    {nameHasError && (
+                      <Text className="text-[10px] mt-1" style={{ color: colors.danger }}>
+                        {t("qot.requiredLineName", { n: String(idx + 1) })} {t("qot.fieldRequired")}
+                      </Text>
+                    )}
                     {stockSearchIdx === idx && (stockSuggestions.length > 0 || savedNameSuggestions.length > 0) ? (
                       <ScrollView
                         nestedScrollEnabled

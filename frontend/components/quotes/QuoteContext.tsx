@@ -26,6 +26,13 @@ interface ResultAlertState {
   message: string;
 }
 
+export interface RequiredErrors {
+  customerName: boolean;
+  lines: number[];
+}
+
+const NO_REQUIRED_ERRORS: RequiredErrors = { customerName: false, lines: [] };
+
 interface QuoteContextValue {
   loading: boolean;
   refreshRecords: () => void;
@@ -34,6 +41,7 @@ interface QuoteContextValue {
   updateLine: (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency" | "unit", value: string) => void;
   addLine: () => void;
   removeLine: (index: number) => void;
+  requiredErrors: RequiredErrors;
   scrollRef: React.RefObject<ScrollView | null>;
   isEditing: boolean;
   handleCancelEditing: () => void;
@@ -93,6 +101,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const { t, locale } = useLanguage();
   const { rates } = useCurrency();
   const [form, setForm] = useState<QuoteFormData>({ ...initialQuoteForm });
+  const [requiredErrors, setRequiredErrors] = useState<RequiredErrors>({ ...NO_REQUIRED_ERRORS });
   const [records, setRecords] = useState<QuoteRecord[]>([]);
   const [filter, setFilter] = useState<QuoteFilter>("all");
   const [showForm, setShowForm] = useState(true);
@@ -181,10 +190,14 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }, [fetchRecords, loadCompany])
   );
 
-  const updateForm = (key: keyof QuoteFormData, value: string) =>
+  const updateForm = (key: keyof QuoteFormData, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === "customerName" && value.trim()) {
+      setRequiredErrors((prev) => (prev.customerName ? { ...prev, customerName: false } : prev));
+    }
+  };
 
-  const updateLine = (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency" | "unit", value: string) =>
+  const updateLine = (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency" | "unit", value: string) => {
     setForm((prev) => {
       const lines = prev.lines.map((l, i) => {
         if (i !== index) return l;
@@ -195,24 +208,44 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       });
       return { ...prev, lines };
     });
+    if (key === "name" && value.trim()) {
+      setRequiredErrors((prev) => (prev.lines.includes(index) ? { ...prev, lines: prev.lines.filter((i) => i !== index) } : prev));
+    }
+  };
 
   const addLine = () => setForm((prev) => ({ ...prev, lines: [...prev.lines, emptyLine()] }));
 
-  const removeLine = (index: number) =>
+  const removeLine = (index: number) => {
     setForm((prev) => ({ ...prev, lines: prev.lines.filter((_, i) => i !== index) }));
+    setRequiredErrors((prev) => ({
+      ...prev,
+      lines: prev.lines.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)),
+    }));
+  };
 
   const handleSave = () => {
-    if (!form.customerName) {
-      Alert.alert(t("qot.warning"), t("qot.customerRequired"));
+    const customerMissing = !form.customerName.trim();
+    const hasNamedLine = form.lines.some((l) => l.name.trim());
+    const partialLineIndexes = form.lines.reduce<number[]>((acc, l, i) => {
+      const hasAnyValue = !!(l.name.trim() || l.details?.trim() || l.unitPrice.trim());
+      if (hasAnyValue && !l.name.trim()) acc.push(i);
+      return acc;
+    }, []);
+    const lineIndexesToFlag = hasNamedLine || partialLineIndexes.length > 0 ? partialLineIndexes : [0];
+
+    if (customerMissing || lineIndexesToFlag.length > 0) {
+      setRequiredErrors({ customerName: customerMissing, lines: lineIndexesToFlag });
+      const missingLabels: string[] = [];
+      if (customerMissing) missingLabels.push(`• ${t("qot.customerName")}`);
+      lineIndexesToFlag.forEach((i) => missingLabels.push(`• ${t("qot.requiredLineName", { n: String(i + 1) })}`));
+      Alert.alert(t("qot.warning"), `${t("qot.requiredFieldsMissing")}\n${missingLabels.join("\n")}`);
       return;
     }
+
     const validLines = form.lines.filter((l) => l.name || l.details);
-    if (validLines.length === 0) {
-      Alert.alert(t("qot.warning"), t("qot.lineRequired"));
-      return;
-    }
     const finalForm = { ...form, lines: validLines };
     setForm(finalForm);
+    setRequiredErrors({ ...NO_REQUIRED_ERRORS });
     persist(finalForm);
   };
 
@@ -265,6 +298,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const resetForm = () => {
     setForm({ ...initialQuoteForm });
+    setRequiredErrors({ ...NO_REQUIRED_ERRORS });
     setEditingId(null);
     setIsEditing(false);
     setSelectedCustomerId(null);
@@ -303,6 +337,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setEditingId(record.id);
     setIsEditing(true);
     setShowForm(true);
+    setRequiredErrors({ ...NO_REQUIRED_ERRORS });
   };
 
   const handleDuplicate = (record: QuoteRecord) => {
@@ -334,6 +369,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setEditingId(null);
     setIsEditing(false);
     setShowForm(true);
+    setRequiredErrors({ ...NO_REQUIRED_ERRORS });
   };
 
   const handledEditIdRef = useRef<string>("");
@@ -553,6 +589,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     updateLine,
     addLine,
     removeLine,
+    requiredErrors,
     scrollRef,
     isEditing,
     handleCancelEditing,
