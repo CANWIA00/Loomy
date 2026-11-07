@@ -36,9 +36,19 @@ const computeValidUntil = (documentDate: string, daysToAdd = 0, monthsToAdd = 0)
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 };
 
-function FieldLabel({ children }: { children: ReactNode }) {
+function RequiredMark() {
   const { colors } = useTheme();
-  return <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{children}</Text>;
+  return <Text style={{ color: colors.danger }}> *</Text>;
+}
+
+function FieldLabel({ children, required }: { children: ReactNode; required?: boolean }) {
+  const { colors } = useTheme();
+  return (
+    <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>
+      {children}
+      {required ? <RequiredMark /> : null}
+    </Text>
+  );
 }
 
 function DateField({
@@ -279,6 +289,10 @@ export default function QuoteForm() {
           )}
         </View>
 
+        <Text className="text-[10px] mb-3" style={{ color: colors.textMuted }}>
+          <Text style={{ color: colors.danger }}>*</Text> {t("qot.requiredHint")}
+        </Text>
+
         <View className="mb-3">
           <FieldLabel>{t("qot.quoteTitle")}</FieldLabel>
           <TextInput
@@ -315,7 +329,7 @@ export default function QuoteForm() {
 
         <View className="flex-row gap-3 mb-3">
           <View className="flex-1">
-            <FieldLabel>{t("qot.customerName")}</FieldLabel>
+            <FieldLabel required>{t("qot.customerName")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
               style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
@@ -452,7 +466,10 @@ export default function QuoteForm() {
               <View key={idx} className="rounded-xl border p-2.5 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.borderAlt }}>
                 <View className="flex-row items-center gap-2 mb-2">
                   <View className="flex-1">
-                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.productName")}</Text>
+                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>
+                      {t("qot.productName")}
+                      <RequiredMark />
+                    </Text>
                     <View className="flex-row items-center">
                       <TextInput
                         className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
@@ -809,7 +826,7 @@ export default function QuoteForm() {
                 <Ionicons name="close" size={24} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
-            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.companyName")}</Text>
+            <FieldLabel required>{t("qot.companyName")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm mb-3"
               style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
