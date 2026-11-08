@@ -35,140 +35,160 @@ export default function CustomerForm() {
     setMapSelectorVisible,
   } = useCustomers();
 
+  const inputStyle = {
+    backgroundColor: colors.bg,
+    borderColor: colors.border,
+    borderWidth: 1,
+    color: colors.text,
+    minHeight: 40,
+  } as const;
+
   return (
     <>
       <TouchableOpacity
         onPress={() => {
-          if (formOpen) {
-            resetForm();
-          }
+          if (formOpen) resetForm();
           setFormOpen(!formOpen);
         }}
-        className="flex-row items-center justify-between rounded-2xl p-4 mb-4"
+        className="flex-row items-center justify-between rounded-xl px-3 py-2.5 mb-3"
         style={{ backgroundColor: colors.bgCard }}
       >
-        <Text className="text-lg font-bold" style={{ color: colors.text }}>
+        <Text className="text-[15px] font-semibold" style={{ color: colors.text }}>
           {editingCustomer ? t("cst.editCustomer") : t("cst.newCustomer")}
         </Text>
-        <Ionicons name={formOpen ? "chevron-up" : "chevron-down"} size={22} color={colors.primary} />
+        <Ionicons name={formOpen ? "chevron-up" : "chevron-down"} size={20} color={colors.primary} />
       </TouchableOpacity>
 
       {formOpen && (
-        <View className="rounded-2xl p-4 mb-4" style={{ backgroundColor: colors.bgCard }}>
+        <View className="rounded-xl p-3 mb-3" style={{ backgroundColor: colors.bgCard }}>
           {editingCustomer && (
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-base font-semibold" style={{ color: colors.text }}>{t("cst.editCustomer")}</Text>
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-[13px] font-semibold" style={{ color: colors.text }}>{t("cst.editCustomer")}</Text>
               <TouchableOpacity
                 onPress={() => {
                   resetForm();
                   setFormOpen(false);
                 }}
-                className="w-7 h-7 rounded-full items-center justify-center"
+                className="w-6 h-6 rounded-full items-center justify-center"
                 style={{ backgroundColor: colors.bgInput }}
               >
-                <Ionicons name="close" size={16} color={colors.danger} />
+                <Ionicons name="close" size={14} color={colors.danger} />
               </TouchableOpacity>
             </View>
           )}
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-3"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.companyName")}
-            placeholderTextColor={colors.textMuted}
-            value={newCompany}
-            onChangeText={setNewCompany}
-          />
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-3"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.subscriberNo")}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="default"
-            value={newSubscriberNo}
-            onChangeText={setNewSubscriberNo}
-          />
-          <View className="relative mb-3">
+
+          <View className="flex-row gap-2 mb-2">
             <TextInput
-              className="rounded-lg px-4 py-3 text-sm pr-10"
-              style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
+              className="flex-1 rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.companyName")}
+              placeholderTextColor={colors.textMuted}
+              value={newCompany}
+              onChangeText={setNewCompany}
+            />
+            <TextInput
+              className="w-[38%] rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.subscriberNo")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="default"
+              value={newSubscriberNo}
+              onChangeText={setNewSubscriberNo}
+            />
+          </View>
+
+          <View className="relative mb-2">
+            <TextInput
+              className="rounded-lg px-3 text-[13px] pr-9"
+              style={inputStyle}
               placeholder={t("cst.address")}
               placeholderTextColor={colors.textMuted}
               value={newAddress}
               onChangeText={setNewAddress}
             />
             <TouchableOpacity
-              className="absolute right-2 top-1/2 -translate-y-1/2"
+              className="absolute right-2 top-0 bottom-0 justify-center"
               onPress={() => setMapSelectorVisible(true)}
             >
-              <Ionicons name="locate-outline" size={20} color={colors.primary} />
+              <Ionicons name="locate-outline" size={18} color={colors.primary} />
             </TouchableOpacity>
           </View>
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-3"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.email")}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="email-address"
-            value={newEmail}
-            onChangeText={setNewEmail}
-          />
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-3"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.phone")}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="phone-pad"
-            value={newPhone}
-            onChangeText={(v) => setNewPhone(v.replace(/[^0-9]/g, ""))}
-          />
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-3"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.contactPerson")}
-            placeholderTextColor={colors.textMuted}
-            value={newContact}
-            onChangeText={setNewContact}
-          />
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-4"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.contactPhone")}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="phone-pad"
-            value={newContactPhone}
-            onChangeText={(v) => setNewContactPhone(v.replace(/[^0-9]/g, ""))}
-          />
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-3"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.fax")}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="phone-pad"
-            value={newFax}
-            onChangeText={(v) => setNewFax(v.replace(/[^0-9]/g, ""))}
-          />
-          <TextInput
-            className="rounded-lg px-4 py-3 text-sm mb-4"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, color: colors.text }}
-            placeholder={t("cst.website")}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="url"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={newWebsite}
-            onChangeText={setNewWebsite}
-          />
+
+          <View className="flex-row gap-2 mb-2">
+            <TextInput
+              className="flex-1 rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.email")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={newEmail}
+              onChangeText={setNewEmail}
+            />
+            <TextInput
+              className="w-[38%] rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.phone")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              value={newPhone}
+              onChangeText={(v) => setNewPhone(v.replace(/[^0-9]/g, ""))}
+            />
+          </View>
+
+          <View className="flex-row gap-2 mb-2">
+            <TextInput
+              className="flex-1 rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.contactPerson")}
+              placeholderTextColor={colors.textMuted}
+              value={newContact}
+              onChangeText={setNewContact}
+            />
+            <TextInput
+              className="w-[38%] rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.contactPhone")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              value={newContactPhone}
+              onChangeText={(v) => setNewContactPhone(v.replace(/[^0-9]/g, ""))}
+            />
+          </View>
+
+          <View className="flex-row gap-2 mb-3">
+            <TextInput
+              className="flex-1 rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.fax")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              value={newFax}
+              onChangeText={(v) => setNewFax(v.replace(/[^0-9]/g, ""))}
+            />
+            <TextInput
+              className="flex-1 rounded-lg px-3 text-[13px]"
+              style={inputStyle}
+              placeholder={t("cst.website")}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="url"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={newWebsite}
+              onChangeText={setNewWebsite}
+            />
+          </View>
 
           <TouchableOpacity
             onPress={handleSave}
             disabled={loading}
-            className="rounded-lg py-3 items-center"
-            style={{ backgroundColor: colors.primary }}
+            className="rounded-lg py-2.5 items-center"
+            style={{ backgroundColor: colors.primary, minHeight: 40 }}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text className="text-sm font-bold" style={{ color: "white" }}>
+              <Text className="text-[13px] font-bold" style={{ color: "white" }}>
                 {editingCustomer ? t("svc.update") : t("common.save")}
               </Text>
             )}
