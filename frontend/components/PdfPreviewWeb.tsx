@@ -36,7 +36,21 @@ function dragToScroll(
 
 export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPreviewWebProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef(pdfZoom);
   const pinchRef = useRef<{ d: number; z: number } | null>(null);
+
+  useEffect(() => { zoomRef.current = pdfZoom; }, [pdfZoom]);
+
+  const applyLive = (z: number) => {
+    const s = z / 100;
+    if (wrapRef.current) {
+      wrapRef.current.style.width = `${794 * s}px`;
+      wrapRef.current.style.minHeight = `${1123 * s}px`;
+    }
+    if (pageRef.current) pageRef.current.style.transform = `scale(${s})`;
+  };
 
   useEffect(() => {
     const el = containerRef.current;
@@ -51,46 +65,50 @@ export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPrevie
 
     const onStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
-        pinchRef.current = { d: dist(e.touches), z: pdfZoom };
+        pinchRef.current = { d: dist(e.touches), z: zoomRef.current };
         e.preventDefault();
       }
     };
     const onMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && pinchRef.current && onZoomChange) {
+      if (e.touches.length === 2 && pinchRef.current) {
         e.preventDefault();
         const d = dist(e.touches);
         if (pinchRef.current.d > 0) {
-          const next = Math.min(400, Math.max(20, Math.round(pinchRef.current.z * (d / pinchRef.current.d))));
-          onZoomChange(next);
+          const next = Math.min(400, Math.max(20, pinchRef.current.z * (d / pinchRef.current.d)));
+          zoomRef.current = next;
+          applyLive(next);
         }
       }
     };
     const onEnd = () => {
+      if (pinchRef.current && onZoomChange) onZoomChange(Math.round(zoomRef.current));
       pinchRef.current = null;
     };
 
     el.addEventListener("touchstart", onStart, { passive: false });
     el.addEventListener("touchmove", onMove, { passive: false });
     el.addEventListener("touchend", onEnd);
+    el.addEventListener("touchcancel", onEnd);
     return () => {
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onEnd);
     };
-  }, [pdfZoom, onZoomChange]);
+  }, [onZoomChange]);
 
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
+    if ((e.nativeEvent as any).pointerType === "touch") return;
     const container = containerRef.current;
     if (!container) return;
     container.style.cursor = "grabbing";
     container.classList.add("dragging");
-    if (container.classList.contains("dragging")) {
-      container.style.userSelect = "none";
-    }
+    container.style.userSelect = "none";
     dragToScroll(container, e.clientX, e.clientY);
   };
 
+  const s = pdfZoom / 100;
   return (
     <div
       ref={containerRef}
@@ -108,13 +126,15 @@ export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPrevie
       } as any}
     >
       <div
+        ref={wrapRef}
         style={{
-          width: 794 * (pdfZoom / 100),
-          minHeight: 1123 * (pdfZoom / 100),
+          width: 794 * s,
+          minHeight: 1123 * s,
           margin: "0 auto",
         } as any}
       >
         <div
+          ref={pageRef}
           style={{
             width: "210mm",
             minHeight: "297mm",
@@ -122,31 +142,19 @@ export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPrevie
             boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
             padding: "15mm",
             borderRadius: 4,
-            transform: `scale(${pdfZoom / 100})`,
+            transform: `scale(${s})`,
             transformOrigin: "top left",
             flexShrink: 0,
+            willChange: "transform",
           } as any}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       </div>
       <style>{`
-        .pdf-preview-container {
-          -webkit-user-select: none;
-          user-select: none;
-        }
-        .pdf-preview-container.dragging {
-          scroll-behavior: auto;
-          -webkit-user-select: none;
-          user-select: none;
-        }
-        .pdf-preview-container::-webkit-scrollbar {
-          width: 12px;
-          height: 12px;
-        }
-        .pdf-preview-container::-webkit-scrollbar-thumb {
-          background: #c0c0c0;
-          border-radius: 6px;
-        }
+        .pdf-preview-container { -webkit-user-select: none; user-select: none; }
+        .pdf-preview-container.dragging { scroll-behavior: auto; -webkit-user-select: none; user-select: none; }
+        .pdf-preview-container::-webkit-scrollbar { width: 12px; height: 12px; }
+        .pdf-preview-container::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 6px; }
       `}</style>
     </div>
   );
