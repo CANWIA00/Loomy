@@ -125,7 +125,6 @@ export default function QuoteForm() {
     handleCancelEditing,
     handleClear,
     handleSave,
-    scrollRef,
     customerList,
     selectedCustomerId,
     clearCustomerSelection,
@@ -146,7 +145,6 @@ export default function QuoteForm() {
   const [locatingNewAddress, setLocatingNewAddress] = useState(false);
   const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
   const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
-  const addBtnRef = useRef<View>(null);
 
   // Masaüstünde üst alanı 3-4 kolona yay; mobilde mevcut 2'li düzeni koru.
   const cell = (mobileSpan: 1 | 2, desktopSpan: 1 | 2, wideSpan: 1 | 2 | 3 = desktopSpan) => ({
@@ -223,17 +221,6 @@ export default function QuoteForm() {
 
   const handleAddLine = () => {
     addLine();
-    setTimeout(() => {
-      if (isTable) {
-        scrollRef.current?.scrollToEnd({ animated: true });
-        return;
-      }
-      addBtnRef.current?.measureLayout(
-        scrollRef.current as any,
-        (x, y) => { scrollRef.current?.scrollTo({ y: y - 80, animated: true }); },
-        () => {}
-      );
-    }, 150);
   };
 
   const validLines = form.lines.filter((l) => l.name || l.details);
@@ -479,7 +466,6 @@ export default function QuoteForm() {
             <Text className={`text-sm font-semibold ${isTable ? "" : "mb-1.5"}`} style={{ color: colors.text }}>{t("qot.items")}</Text>
             {isTable && (
               <TouchableOpacity
-                ref={addBtnRef}
                 className="flex-row items-center justify-center h-8 px-3 rounded-lg border border-dashed"
                 style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
                 onPress={handleAddLine}
@@ -758,7 +744,6 @@ export default function QuoteForm() {
 
           {!isTable && (
             <TouchableOpacity
-              ref={addBtnRef}
               className="flex-row items-center justify-center h-10 rounded-xl border border-dashed mt-1"
               style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
               onPress={handleAddLine}
