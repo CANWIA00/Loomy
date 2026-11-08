@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { View, Text, TouchableOpacity, Modal, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
@@ -11,6 +12,8 @@ export default function PdfPreviewModal() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
+  const webViewRef = useRef<WebView>(null);
+  const zoomRef = useRef(50);
   const {
     pdfPreviewVisible,
     setPdfPreviewVisible,
@@ -21,6 +24,19 @@ export default function PdfPreviewModal() {
   } = useServices();
 
   const close = () => setPdfPreviewVisible(false);
+
+  const applyZoom = (next: number) => {
+    const z = Math.max(20, Math.min(400, next));
+    zoomRef.current = z;
+    setPdfZoom(z);
+    webViewRef.current?.injectJavaScript(`
+      (function(){
+        var scale=${(z / 100).toFixed(2)};
+        var m=document.querySelector('meta[name="viewport"]');
+        if(m) m.content='width=device-width, initial-scale='+scale+', minimum-scale=0.2, maximum-scale=5.0, user-scalable=yes';
+      })(); true;
+    `);
+  };
 
   return (
     <Modal visible={pdfPreviewVisible} animationType="slide" onRequestClose={close}>
@@ -43,7 +59,7 @@ export default function PdfPreviewModal() {
           ) : (
             <View style={{ flex: 1, backgroundColor: "#e5e5e5" }}>
               <WebView
-                key={String(pdfZoom)}
+                ref={webViewRef}
                 source={{ html: pdfPreviewHtml }}
                 style={{ flex: 1, backgroundColor: "white" }}
                 originWhitelist={["*"]}
@@ -54,19 +70,16 @@ export default function PdfPreviewModal() {
                 scrollEnabled={true}
                 bounces={false}
                 overScrollMode="never"
-                showsHorizontalScrollIndicator={false}
+                showsHorizontalScrollIndicator={true}
                 showsVerticalScrollIndicator={true}
                 javaScriptEnabled
                 domStorageEnabled
-                injectedJavaScript={`
+                injectedJavaScriptBeforeContentLoaded={`
                   (function() {
-                    var scale = ${(pdfZoom / 100).toFixed(2)};
                     var meta = document.querySelector('meta[name="viewport"]');
                     if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
-                    meta.content = 'width=device-width, initial-scale=' + scale + ', minimum-scale=0.2, maximum-scale=5.0, user-scalable=yes';
-                    document.documentElement.style.width = '100%';
-                    document.body.style.margin = '0';
-                    document.body.style.webkitTextSizeAdjust = '100%';
+                    meta.content = 'width=device-width, initial-scale=0.5, minimum-scale=0.2, maximum-scale=5.0, user-scalable=yes';
+                    document.documentElement.style.webkitTextSizeAdjust = '100%';
                   })();
                   true;
                 `}
@@ -78,7 +91,7 @@ export default function PdfPreviewModal() {
           <View className="px-4 py-3 border-t" style={{ borderColor: colors.border }}>
             <View className="flex-row items-center justify-center gap-4 mb-3">
             <TouchableOpacity
-              onPress={() => setPdfZoom((z) => Math.max(20, z - 20))}
+              onPress={() => applyZoom(pdfZoom - 20)}
               className="w-9 h-9 rounded-lg items-center justify-center"
               style={{ backgroundColor: colors.bgInput }}
             >
@@ -88,7 +101,7 @@ export default function PdfPreviewModal() {
               %{pdfZoom}
             </Text>
             <TouchableOpacity
-              onPress={() => setPdfZoom((z) => Math.min(400, z + 20))}
+              onPress={() => applyZoom(pdfZoom + 20)}
               className="w-9 h-9 rounded-lg items-center justify-center"
               style={{ backgroundColor: colors.bgInput }}
             >

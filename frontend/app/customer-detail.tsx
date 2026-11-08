@@ -406,27 +406,8 @@ function PreviewPdfModal({
               </div>
             </div>
           ) : (
-            <View
-              style={{ flex: 1, backgroundColor: "#e5e5e5" }}
-              onStartShouldSetResponder={(e) => e.nativeEvent.touches.length === 2}
-              onMoveShouldSetResponder={(e) => e.nativeEvent.touches.length === 2}
-              onResponderGrant={(e) => {
-                if (e.nativeEvent.touches.length === 2) pinchRef.current = { d: dist(e.nativeEvent.touches), z: zoom };
-              }}
-              onResponderMove={(e) => {
-                if (e.nativeEvent.touches.length === 2 && pinchRef.current) {
-                  const d = dist(e.nativeEvent.touches);
-                  if (pinchRef.current.d > 0) {
-                    const next = Math.min(250, Math.max(30, Math.round(pinchRef.current.z * (d / pinchRef.current.d))));
-                    setZoom(next);
-                  }
-                }
-              }}
-              onResponderRelease={() => { pinchRef.current = null; }}
-              onResponderTerminationRequest={() => false}
-            >
+            <View style={{ flex: 1, backgroundColor: "#e5e5e5" }}>
               <WebView
-                key={String(zoom)}
                 source={{ html }}
                 style={{ flex: 1, backgroundColor: "white" }}
                 originWhitelist={["*"]}
@@ -436,15 +417,16 @@ function PreviewPdfModal({
                 nestedScrollEnabled={true}
                 scrollEnabled={true}
                 bounces={false}
+                showsHorizontalScrollIndicator={true}
+                showsVerticalScrollIndicator={true}
                 javaScriptEnabled
                 domStorageEnabled
-                injectedJavaScript={`
+                injectedJavaScriptBeforeContentLoaded={`
                   (function() {
-                    var scale = ${(zoom / 100).toFixed(2)};
                     var meta = document.querySelector('meta[name="viewport"]');
                     if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
-                    meta.content = 'width=device-width, initial-scale=' + scale + ', minimum-scale=0.2, maximum-scale=4.0, user-scalable=yes';
-                    document.body.style.margin = '0';
+                    meta.content = 'width=device-width, initial-scale=0.5, minimum-scale=0.2, maximum-scale=5.0, user-scalable=yes';
+                    document.documentElement.style.webkitTextSizeAdjust = '100%';
                   })();
                   true;
                 `}
