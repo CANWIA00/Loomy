@@ -110,6 +110,7 @@ export default function QuoteForm() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const isWide = width >= 1100;
+  const isTable = width >= 900;
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { convert: convertTry, rates, refresh: refreshRates, loading: loadingRates, stale: ratesStale } = useCurrency();
@@ -223,6 +224,10 @@ export default function QuoteForm() {
   const handleAddLine = () => {
     addLine();
     setTimeout(() => {
+      if (isTable) {
+        scrollRef.current?.scrollToEnd({ animated: true });
+        return;
+      }
       addBtnRef.current?.measureLayout(
         scrollRef.current as any,
         (x, y) => { scrollRef.current?.scrollTo({ y: y - 80, animated: true }); },
@@ -470,20 +475,46 @@ export default function QuoteForm() {
         </View>
 
         <View className="mt-3 mb-2">
-          <Text className="text-sm font-semibold mb-1.5" style={{ color: colors.text }}>{t("qot.items")}</Text>
+          <View className={isTable ? "flex-row items-center justify-between mb-1.5" : ""}>
+            <Text className={`text-sm font-semibold ${isTable ? "" : "mb-1.5"}`} style={{ color: colors.text }}>{t("qot.items")}</Text>
+            {isTable && (
+              <TouchableOpacity
+                ref={addBtnRef}
+                className="flex-row items-center justify-center h-8 px-3 rounded-lg border border-dashed"
+                style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
+                onPress={handleAddLine}
+              >
+                <Ionicons name="add" size={14} color={colors.primary} />
+                <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("qot.addItem")}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {isTable && (
+            <View className="flex-row items-center gap-1.5 mb-1 px-0.5">
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { flex: 1.6, minWidth: 140 }]}>{t("qot.productName")}<RequiredMark /></Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { flex: 1, minWidth: 110 }]}>{t("qot.details")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 68 }]}>{t("qot.quantity")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 76 }]}>{t("qot.unit")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("qot.unitPrice")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 78 }]}>{t("qot.currency")}</Text>
+              <Text className="text-[10px] font-medium text-right" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("qot.total")}</Text>
+              <View style={{ width: 32 }} />
+            </View>
+          )}
 
           {form.lines.map((line, idx) => {
             const lineTotal = round2(parseNumericInput(line.quantity) * parseNumericInput(line.unitPrice));
             const nameHasError = requiredErrors.lines.includes(idx);
-            return (
-              <View key={idx} className="rounded-xl border p-2.5 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.borderAlt }}>
-                <View className="flex-row items-center gap-2 mb-2">
-                  <View className="flex-1">
-                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>
-                      {t("qot.productName")}
-                      <RequiredMark />
-                    </Text>
-                    <View className="flex-row items-center">
+            const nameBlock = (
+              <View className={isTable ? "" : "flex-1"} style={isTable ? { flex: 1.6, minWidth: 140 } : undefined}>
+                {!isTable && (
+                  <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>
+                    {t("qot.productName")}
+                    <RequiredMark />
+                  </Text>
+                )}
+                <View className="flex-row items-center">
                       <TextInput
                         className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
                         style={{ backgroundColor: colors.bgCard2, borderColor: nameHasError ? colors.danger : colors.border, color: colors.text }}
@@ -511,15 +542,17 @@ export default function QuoteForm() {
                       {line.name ? (
                         <TouchableOpacity
                           onPress={() => saveNameFromLine(idx)}
-                          className="h-9 flex-row items-center justify-center gap-1 border rounded-lg px-2 ml-1"
-                          style={{ borderColor: colors.border, backgroundColor: colors.bgCard2 }}
+                          className={isTable ? "h-9 w-7 items-center justify-center ml-0.5" : "h-9 flex-row items-center justify-center gap-1 border rounded-lg px-2 ml-1"}
+                          style={isTable ? undefined : { borderColor: colors.border, backgroundColor: colors.bgCard2 }}
                           accessibilityRole="button"
                           accessibilityLabel={t("qot.saveName")}
                         >
                           <Ionicons name="bookmark-outline" size={14} color={colors.purple} />
-                          <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
-                            {t("qot.saveName")}
-                          </Text>
+                          {!isTable && (
+                            <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
+                              {t("qot.saveName")}
+                            </Text>
+                          )}
                         </TouchableOpacity>
                       ) : null}
                     </View>
@@ -564,15 +597,93 @@ export default function QuoteForm() {
                         ))}
                       </ScrollView>
                     ) : null}
+                </View>
+            );
+
+            const deleteBtn = (
+              <TouchableOpacity
+                onPress={() => removeLine(idx)}
+                disabled={form.lines.length <= 1}
+                style={{ opacity: form.lines.length <= 1 ? 0.3 : 1 }}
+                className={isTable ? "h-9 w-8 items-center justify-center" : "h-9 w-9 items-center justify-center"}
+              >
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+              </TouchableOpacity>
+            );
+
+            if (isTable) {
+              return (
+                <View key={idx} className="flex-row items-start gap-1.5 mb-2">
+                  {nameBlock}
+                  <View style={{ flex: 1, minWidth: 110 }}>
+                    <TextInput
+                      className="w-full h-9 border rounded-lg px-2.5 text-sm"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      placeholder={t("qot.detailsPlaceholder")}
+                      placeholderTextColor={colors.textMuted}
+                      value={line.details}
+                      onChangeText={(v) => updateLine(idx, "details", v)}
+                    />
                   </View>
-                  <TouchableOpacity
-                    onPress={() => removeLine(idx)}
-                    disabled={form.lines.length <= 1}
-                    style={{ opacity: form.lines.length <= 1 ? 0.3 : 1 }}
-                    className="h-9 w-9 items-center justify-center"
-                  >
-                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                  </TouchableOpacity>
+                  <View style={{ width: 68 }}>
+                    <TextInput
+                      className="w-full h-9 border rounded-lg px-2 text-sm text-right"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      keyboardType="decimal-pad"
+                      value={formatNumericInput(line.quantity)}
+                      onChangeText={(v) => updateLine(idx, "quantity", v)}
+                    />
+                  </View>
+                  <View style={{ width: 76 }}>
+                    <TouchableOpacity
+                      className="h-9 border rounded-lg px-1.5 flex-row items-center justify-center"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
+                      onPress={() => setUnitModalIdx(idx)}
+                    >
+                      <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{line.unit || "Adet"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ width: 100 }}>
+                    <TextInput
+                      className="w-full h-9 border rounded-lg px-2 text-sm"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      keyboardType="decimal-pad"
+                      value={formatNumericInput(line.unitPrice)}
+                      onChangeText={(v) => updateLine(idx, "unitPrice", v)}
+                    />
+                    {line.currency !== "TRY" && convertTry(parseNumericInput(line.unitPrice), line.currency) !== null && (
+                      <Text className="text-[9px] mt-0.5" style={{ color: colors.textMuted }} numberOfLines={1}>
+                        ≈ {formatMoney(convertTry(parseNumericInput(line.unitPrice), line.currency)!)} ₺
+                      </Text>
+                    )}
+                  </View>
+                  <View style={{ width: 78 }}>
+                    <TouchableOpacity
+                      className="h-9 border rounded-lg px-1.5 flex-row items-center justify-center"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
+                      onPress={() => setCurrencyModalIdx(idx)}
+                    >
+                      <Text className="text-xs font-medium" style={{ color: colors.text }}>{line.currency || "TRY"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ width: 100 }} className="items-end">
+                    <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{formatMoney(lineTotal)} {getCurrencySymbol(line.currency)}</Text>
+                    {line.currency !== "TRY" && convertTry(lineTotal, line.currency) !== null && (
+                      <Text className="text-[9px]" style={{ color: colors.textMuted }} numberOfLines={1}>≈ {formatMoney(convertTry(lineTotal, line.currency)!)} ₺</Text>
+                    )}
+                  </View>
+                  {deleteBtn}
+                </View>
+              );
+            }
+
+            return (
+              <View key={idx} className="rounded-xl border p-2.5 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.borderAlt }}>
+                <View className="flex-row items-center gap-2 mb-2">
+                  {nameBlock}
+                  {deleteBtn}
                 </View>
                 <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.details")}</Text>
                 <TextInput
@@ -645,15 +756,17 @@ export default function QuoteForm() {
             );
           })}
 
-          <TouchableOpacity
-            ref={addBtnRef}
-            className="flex-row items-center justify-center h-10 rounded-xl border border-dashed mt-1"
-            style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
-            onPress={handleAddLine}
-          >
-            <Ionicons name="add" size={16} color={colors.primary} />
-            <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("qot.addItem")}</Text>
-          </TouchableOpacity>
+          {!isTable && (
+            <TouchableOpacity
+              ref={addBtnRef}
+              className="flex-row items-center justify-center h-10 rounded-xl border border-dashed mt-1"
+              style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
+              onPress={handleAddLine}
+            >
+              <Ionicons name="add" size={16} color={colors.primary} />
+              <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("qot.addItem")}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View className="rounded-xl p-3 mb-3" style={{ backgroundColor: colors.bg }}>
