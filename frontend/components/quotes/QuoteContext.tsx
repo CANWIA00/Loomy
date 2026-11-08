@@ -326,8 +326,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         ? record.lines.map((l) => ({
             name: l.name,
             details: l.details,
-            quantity: l.quantity != null ? String(l.quantity) : "1",
-            unitPrice: l.unitPrice != null ? String(l.unitPrice) : "",
+            quantity: l.quantity != null ? String(l.quantity).replace(".", ",") : "1",
+            unitPrice: l.unitPrice != null ? String(l.unitPrice).replace(".", ",") : "",
             currency: l.currency || "TRY",
             unit: l.unit || "Adet",
           }))
@@ -358,8 +358,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         ? record.lines.map((l) => ({
             name: l.name,
             details: l.details,
-            quantity: l.quantity != null ? String(l.quantity) : "1",
-            unitPrice: l.unitPrice != null ? String(l.unitPrice) : "",
+            quantity: l.quantity != null ? String(l.quantity).replace(".", ",") : "1",
+            unitPrice: l.unitPrice != null ? String(l.unitPrice).replace(".", ",") : "",
             currency: l.currency || "TRY",
             unit: l.unit || "Adet",
           }))

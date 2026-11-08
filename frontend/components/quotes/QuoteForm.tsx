@@ -8,7 +8,7 @@ import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../apiclient/customers";
 import { stockApi, type StockItem } from "../../apiclient/stock";
 import { getCurrentAddress } from "../../utils/location";
-import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, formatNumericInput, parseNumericInput } from "./types";
+import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, parseNumericInput } from "./types";
 
 const formatRate = (rate: number) =>
   rate.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -630,7 +630,7 @@ export default function QuoteForm() {
                       className="w-full h-9 border rounded-lg px-2 text-sm text-right"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
-                      value={formatNumericInput(line.quantity)}
+                      value={line.quantity}
                       onChangeText={(v) => updateLine(idx, "quantity", v)}
                     />
                   </View>
@@ -649,7 +649,7 @@ export default function QuoteForm() {
                       className="w-full h-9 border rounded-lg px-2 text-sm"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
-                      value={formatNumericInput(line.unitPrice)}
+                      value={line.unitPrice}
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
                     />
                     {line.currency !== "TRY" && convertTry(parseNumericInput(line.unitPrice), line.currency) !== null && (
@@ -703,7 +703,7 @@ export default function QuoteForm() {
                       className="w-full h-9 border rounded-lg px-2.5 text-sm"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
-                      value={formatNumericInput(line.quantity)}
+                      value={line.quantity}
                       onChangeText={(v) => updateLine(idx, "quantity", v)}
                     />
                   </View>
@@ -724,7 +724,7 @@ export default function QuoteForm() {
                       className="w-full h-9 border rounded-lg px-2.5 text-sm"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
-                      value={formatNumericInput(line.unitPrice)}
+                      value={line.unitPrice}
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
                     />
                     {line.currency !== "TRY" && convertTry(parseNumericInput(line.unitPrice), line.currency) !== null && (
