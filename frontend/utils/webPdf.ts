@@ -1,4 +1,4 @@
-import { toPng } from "html-to-image";
+import { toJpeg } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { toSafeFileName } from "./fileName";
 
@@ -40,11 +40,15 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
     const width = A4_WIDTH_PX;
     const height = Math.max(node.scrollHeight, A4_WIDTH_PX * (A4_HEIGHT_MM / A4_WIDTH_MM));
 
-    const dataUrl = await toPng(node, {
+    // Sayfa bir bütün olarak rasterize edilip PDF'e gömülüyor. PNG bu tür
+    // metin ağırlıklı sayfalarda 10 MB'a kadar çıkabildiği için JPEG kullanıyoruz;
+    // 2x piksel oranıyla kalite kaybı baskıda fark edilmez, dosya boyutu ~10 kat düşer.
+    const dataUrl = await toJpeg(node, {
       width,
       height,
       pixelRatio: 2,
       backgroundColor: "#ffffff",
+      quality: 0.92,
     });
 
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -58,7 +62,7 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
     const x = (A4_WIDTH_MM - w) / 2;
     const y = (A4_HEIGHT_MM - h) / 2;
 
-    pdf.addImage(dataUrl, "PNG", x, y, w, h);
+    pdf.addImage(dataUrl, "JPEG", x, y, w, h);
 
     return pdf.output("blob");
   } finally {
