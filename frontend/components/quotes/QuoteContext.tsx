@@ -21,7 +21,7 @@ interface DeleteAlertState {
 
 interface ResultAlertState {
   visible: boolean;
-  type: "success" | "error";
+  type: "success" | "error" | "warning";
   title: string;
   message: string;
 }
@@ -238,7 +238,12 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       const missingLabels: string[] = [];
       if (customerMissing) missingLabels.push(`• ${t("qot.customerName")}`);
       lineIndexesToFlag.forEach((i) => missingLabels.push(`• ${t("qot.requiredLineName", { n: String(i + 1) })}`));
-      Alert.alert(t("qot.warning"), `${t("qot.requiredFieldsMissing")}\n${missingLabels.join("\n")}`);
+      setResultAlert({
+        visible: true,
+        type: "warning",
+        title: t("qot.warning"),
+        message: `${t("qot.requiredFieldsMissing")}\n${missingLabels.join("\n")}`,
+      });
       return;
     }
 
