@@ -109,6 +109,7 @@ function DateField({
 export default function QuoteForm() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+  const isWide = width >= 1100;
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { convert: convertTry, rates, refresh: refreshRates, loading: loadingRates, stale: ratesStale } = useCurrency();
@@ -145,6 +146,15 @@ export default function QuoteForm() {
   const [currencyModalIdx, setCurrencyModalIdx] = useState<number | null>(null);
   const [unitModalIdx, setUnitModalIdx] = useState<number | null>(null);
   const addBtnRef = useRef<View>(null);
+
+  // Masaüstünde üst alanı 3-4 kolona yay; mobilde mevcut 2'li düzeni koru.
+  const cell = (mobileSpan: 1 | 2, desktopSpan: 1 | 2, wideSpan: 1 | 2 | 3 = desktopSpan) => ({
+    width: (!isDesktop
+      ? mobileSpan === 2 ? "100%" : "47%"
+      : isWide
+        ? wideSpan === 3 ? "71%" : wideSpan === 2 ? "47%" : "23%"
+        : desktopSpan === 2 ? "63%" : "31%") as `${number}%`,
+  });
 
   const [stockSuggestions, setStockSuggestions] = useState<StockItem[]>([]);
   const [savedNameSuggestions, setSavedNameSuggestions] = useState<{ id: number; name: string }[]>([]);
@@ -279,35 +289,37 @@ export default function QuoteForm() {
   return (
     <>
       <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="font-semibold text-base" style={{ color: colors.text }}>
-            {isEditing ? t("qot.editQuote") : t("qot.newQuote")}
-          </Text>
-          {isEditing && (
-            <TouchableOpacity onPress={handleCancelEditing} className="w-7 h-7 rounded-full items-center justify-center" style={{ backgroundColor: colors.bgInput }}>
-              <Ionicons name="close-outline" size={16} color={colors.danger} />
-            </TouchableOpacity>
-          )}
-        </View>
+        {(!isDesktop || isEditing) && (
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="font-semibold text-base" style={{ color: colors.text }}>
+              {isEditing ? t("qot.editQuote") : t("qot.newQuote")}
+            </Text>
+            {isEditing && (
+              <TouchableOpacity onPress={handleCancelEditing} className="w-7 h-7 rounded-full items-center justify-center" style={{ backgroundColor: colors.bgInput }}>
+                <Ionicons name="close-outline" size={16} color={colors.danger} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         <Text className="text-[10px] mb-3" style={{ color: colors.textMuted }}>
           <Text style={{ color: colors.danger }}>*</Text> {t("qot.requiredHint")}
         </Text>
 
-        <View className="mb-3">
-          <FieldLabel>{t("qot.quoteTitle")}</FieldLabel>
-          <TextInput
-            className="w-full h-10 border rounded-lg px-3 text-sm"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-            placeholder={t("qot.quoteTitlePlaceholder")}
-            placeholderTextColor={colors.textMuted}
-            value={form.title}
-            onChangeText={(v) => updateForm("title", v)}
-          />
-        </View>
+        <View className="flex-row flex-wrap gap-3">
+          <View style={cell(2, 2, 2)}>
+            <FieldLabel>{t("qot.quoteTitle")}</FieldLabel>
+            <TextInput
+              className="w-full h-10 border rounded-lg px-3 text-sm"
+              style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+              placeholder={t("qot.quoteTitlePlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              value={form.title}
+              onChangeText={(v) => updateForm("title", v)}
+            />
+          </View>
 
-        <View className="flex-row gap-3 mb-3">
-          <View className="flex-1">
+          <View style={cell(2, 1, 1)}>
             <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("qot.selectCustomer")}</Text>
             <TouchableOpacity
               className="flex-row items-center h-10 border rounded-lg px-3"
@@ -326,10 +338,8 @@ export default function QuoteForm() {
               {!selectedCustomerId && <Ionicons name="chevron-down" size={16} color={colors.textMuted} />}
             </TouchableOpacity>
           </View>
-        </View>
 
-        <View className="flex-row gap-3 mb-3">
-          <View className="flex-1">
+          <View style={cell(1, 1, 1)}>
             <FieldLabel required>{t("qot.customerName")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -343,7 +353,8 @@ export default function QuoteForm() {
               <Text className="text-[10px] mt-1" style={{ color: colors.danger }}>{t("qot.fieldRequired")}</Text>
             )}
           </View>
-          <View className="flex-1">
+
+          <View style={cell(1, 1, 1)}>
             <FieldLabel>{t("qot.phone")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -355,10 +366,8 @@ export default function QuoteForm() {
               onChangeText={(v) => updateForm("phone", v)}
             />
           </View>
-        </View>
 
-        <View className="flex-row gap-3 mb-3">
-          <View className="flex-1">
+          <View style={cell(1, 1, 1)}>
             <FieldLabel>{t("qot.contactPerson")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -369,7 +378,8 @@ export default function QuoteForm() {
               onChangeText={(v) => updateForm("contactPerson", v)}
             />
           </View>
-          <View className="flex-1">
+
+          <View style={cell(1, 1, 1)}>
             <FieldLabel>{t("qot.subscriberNo")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -380,10 +390,8 @@ export default function QuoteForm() {
               onChangeText={(v) => updateForm("subscriberNo", v)}
             />
           </View>
-        </View>
 
-        <View className="flex-row gap-3 mb-3">
-          <View className="flex-1">
+          <View style={cell(1, 1, 1)}>
             <FieldLabel>{t("qot.email")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -395,7 +403,8 @@ export default function QuoteForm() {
               onChangeText={(v) => updateForm("email", v)}
             />
           </View>
-          <View className="flex-1">
+
+          <View style={cell(1, 1, 2)}>
             <FieldLabel>{t("qot.address")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -406,10 +415,8 @@ export default function QuoteForm() {
               onChangeText={(v) => updateForm("address", v)}
             />
           </View>
-        </View>
 
-        <View className="flex-row gap-3 mb-3">
-          <View className="flex-1">
+          <View style={cell(1, 1, 1)}>
             <FieldLabel>{t("qot.fax")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -421,7 +428,8 @@ export default function QuoteForm() {
               onChangeText={(v) => updateForm("fax", v)}
             />
           </View>
-          <View className="flex-1">
+
+          <View style={cell(1, 1, 1)}>
             <FieldLabel>{t("qot.website")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -437,7 +445,7 @@ export default function QuoteForm() {
           </View>
         </View>
 
-        <View className="flex-row gap-3">
+        <View className="flex-row gap-3 mt-3">
           <DateField
             label={t("qot.documentDate")}
             value={form.documentDate}
