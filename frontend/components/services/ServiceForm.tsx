@@ -751,6 +751,8 @@ function SingleField({ field }: { field: TemplateField }) {
 }
 
 function UsedProductsSection() {
+  const { width } = useWindowDimensions();
+  const isTable = width >= 900;
   const { colors } = useTheme();
   const { t, lang } = useLanguage();
   const { form, addUsedProduct, updateUsedProduct, removeUsedProduct, updateForm } = useServices();
@@ -906,116 +908,218 @@ function UsedProductsSection() {
     <View className="mb-3">
       {!form.productsMode ? null : (
         <>
-          <View className="flex-row items-center gap-2 mb-2">
-            <Ionicons name="cube-outline" size={16} color={colors.primary} />
-            <Text className="text-sm font-medium" style={{ color: colors.text }}>{t("svc.usedProducts")}</Text>
-            {items.length > 0 && (
-              <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.primary + "1A" }}>
-                <Text className="text-[10px] font-semibold" style={{ color: colors.primary }}>
-                  {t("svc.usedProductsCount").replace("{count}", String(items.length))}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {items.map((p, i) => (
-            <View key={i} className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, zIndex: activeRow === i ? 100 : 0 }}>
-              <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{t("svc.productName")}</Text>
-                <TouchableOpacity onPress={() => removeUsedProduct(i)} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color={colors.danger} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={{ position: "relative", zIndex: activeRow === i ? 1000 : undefined }}>
-                <View className="flex-row items-center">
-                  <TextInput
-                    className="flex-1 h-9 border rounded-lg px-3 text-sm"
-                    style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
-                    placeholder={t("svc.productNamePlaceholder")}
-                    placeholderTextColor={colors.textMuted}
-value={p.name}
-                    onChangeText={(v) => onNameChange(i, v)}
-                    onFocus={() => { setActiveRow(i); if (p.name.trim()) runSearch(p.name, i); }}
-                    onBlur={() => {
-                      if (blurTimer.current) clearTimeout(blurTimer.current);
-                      blurTimer.current = setTimeout(() => {
-                        if (!touchInSuggestions.current) setSuggestions([]);
-                      }, 250);
-                    }}
-                  />
-                  {p.name.trim() ? (
-                    <TouchableOpacity
-                      onPress={() => saveNameForRow(i)}
-                      className="h-9 flex-row items-center justify-center gap-1 border rounded-lg px-2 ml-1"
-                      style={{ borderColor: colors.border, backgroundColor: colors.bgCard2 }}
-                      accessibilityRole="button"
-                      accessibilityLabel={t("svc.saveName")}
-                    >
-                      <Ionicons name="bookmark-outline" size={14} color={colors.purple} />
-                      <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
-                        {t("svc.saveName")}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-                {activeRow === i && (suggestions.length > 0 || savedNameSuggestions.length > 0) && (
-                  <View className="overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8, position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, zIndex: 1000, elevation: 10, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
-                    onTouchStart={() => { touchInSuggestions.current = true; }}
-                    onTouchEnd={() => { touchInSuggestions.current = false; }}
-                    onTouchCancel={() => { touchInSuggestions.current = false; }}
-                  >
-                    <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="always" className="max-h-56">
-                      {suggestions.map((s, si, arr) => (
-                        <TouchableOpacity key={s.id} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, ...(si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}) }} onPress={() => pick(i, s)}>
-                          <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
-                          <Text className="text-[11px]" style={{ color: colors.textMuted }}>{s.unit} · {s.quantity}</Text>
-                        </TouchableOpacity>
-                      ))}
-                      {savedNameSuggestions.map((s) => (
-                        <TouchableOpacity key={`saved-${s.id}`} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border }} onPress={() => pickSavedName(i, s.name)}>
-                          <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
-                          <Text className="text-[11px]" style={{ color: colors.purple }}>{t("svc.savedName")}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
-              </View>
-
-              <View className="flex-row gap-2 mt-2">
-                <View className="flex-1">
-                  <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.qty")}</Text>
-                  <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.quantity} onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.,]/g, "") })} />
-                </View>
-                <View style={{ width: 84 }}>
-                  <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.unit")}</Text>
-                  <TouchableOpacity className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => setUnitModalIdx(i)}>
-                    <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.unit || "Adet"}</Text>
-                    <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 3 }} />
-                  </TouchableOpacity>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.price")}</Text>
-                  <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0.00" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.unitPrice} onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.,]/g, "") })} />
-                </View>
-                <View style={{ width: 84 }}>
-                  <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.currency")}</Text>
-                  <TouchableOpacity className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => setCurrencyModalIdx(i)}>
-                    <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.currency || "TRY"}</Text>
-                    <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {p.stockItemId != null && p.inStock !== false && (
-                <View className="flex-row items-center gap-1 mt-2">
-                  <View className="h-2 w-2 rounded-full" style={{ backgroundColor: "#10B981" }} />
-                  <Text className="text-[10px]" style={{ color: "#10B981" }}>{t("svc.inStock")}</Text>
+          <View className={isTable ? "flex-row items-center justify-between mb-1.5" : "flex-row items-center gap-2 mb-2"}>
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="cube-outline" size={16} color={colors.primary} />
+              <Text className="text-sm font-medium" style={{ color: colors.text }}>{t("svc.usedProducts")}</Text>
+              {items.length > 0 && (
+                <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.primary + "1A" }}>
+                  <Text className="text-[10px] font-semibold" style={{ color: colors.primary }}>
+                    {t("svc.usedProductsCount").replace("{count}", String(items.length))}
+                  </Text>
                 </View>
               )}
             </View>
-          ))}
+            {isTable && (
+              <TouchableOpacity
+                className="flex-row items-center justify-center h-8 px-3 rounded-lg border border-dashed"
+                style={{ borderColor: colors.primary, backgroundColor: colors.primary + "0A" }}
+                onPress={addUsedProduct}
+              >
+                <Ionicons name="add" size={14} color={colors.primary} />
+                <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("svc.addProduct")}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {isTable && (
+            <View className="flex-row items-center gap-1.5 mb-1 px-0.5">
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { flex: 1.6, minWidth: 140 }]}>{t("svc.productName")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 68 }]}>{t("svc.qty")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 76 }]}>{t("svc.unit")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("svc.price")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 78 }]}>{t("svc.currency")}</Text>
+              <Text className="text-[10px] font-medium text-right" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("svc.total")}</Text>
+              <View style={{ width: 32 }} />
+            </View>
+          )}
+
+          {items.map((p, i) => {
+            const lineTotalValue = lineTotal(p);
+            const convertedLineTotal = p.currency !== "TRY" ? convert(lineTotalValue, p.currency || "TRY") : null;
+            const nameCell = (
+              <View className={isTable ? "" : "flex-1"} style={isTable ? { flex: 1.6, minWidth: 140 } : undefined}>
+                <View style={{ position: "relative", zIndex: activeRow === i ? 1000 : undefined }}>
+                  <View className="flex-row items-center">
+                    <TextInput
+                      className="flex-1 h-9 border rounded-lg px-3 text-sm"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      placeholder={t("svc.productNamePlaceholder")}
+                      placeholderTextColor={colors.textMuted}
+                      value={p.name}
+                      onChangeText={(v) => onNameChange(i, v)}
+                      onFocus={() => { setActiveRow(i); if (p.name.trim()) runSearch(p.name, i); }}
+                      onBlur={() => {
+                        if (blurTimer.current) clearTimeout(blurTimer.current);
+                        blurTimer.current = setTimeout(() => {
+                          if (!touchInSuggestions.current) setSuggestions([]);
+                        }, 250);
+                      }}
+                    />
+                    {p.name.trim() ? (
+                      <TouchableOpacity
+                        onPress={() => saveNameForRow(i)}
+                        className={isTable ? "h-9 w-7 items-center justify-center ml-0.5" : "h-9 flex-row items-center justify-center gap-1 border rounded-lg px-2 ml-1"}
+                        style={isTable ? undefined : { borderColor: colors.border, backgroundColor: colors.bgCard2 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("svc.saveName")}
+                      >
+                        <Ionicons name="bookmark-outline" size={14} color={colors.purple} />
+                        {!isTable && (
+                          <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
+                            {t("svc.saveName")}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  {activeRow === i && (suggestions.length > 0 || savedNameSuggestions.length > 0) && (
+                    <View className="overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8, position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, zIndex: 1000, elevation: 10, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
+                      onTouchStart={() => { touchInSuggestions.current = true; }}
+                      onTouchEnd={() => { touchInSuggestions.current = false; }}
+                      onTouchCancel={() => { touchInSuggestions.current = false; }}
+                    >
+                      <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="always" className="max-h-56">
+                        {suggestions.map((s, si, arr) => (
+                          <TouchableOpacity key={s.id} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, ...(si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}) }} onPress={() => pick(i, s)}>
+                            <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
+                            <Text className="text-[11px]" style={{ color: colors.textMuted }}>{s.unit} · {s.quantity}</Text>
+                          </TouchableOpacity>
+                        ))}
+                        {savedNameSuggestions.map((s) => (
+                          <TouchableOpacity key={`saved-${s.id}`} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border }} onPress={() => pickSavedName(i, s.name)}>
+                            <Text className="text-sm" style={{ color: colors.text }}>{s.name}</Text>
+                            <Text className="text-[11px]" style={{ color: colors.purple }}>{t("svc.savedName")}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
+                {p.stockItemId != null && p.inStock !== false && (
+                  <View className="flex-row items-center gap-1 mt-1">
+                    <View className="h-2 w-2 rounded-full" style={{ backgroundColor: "#10B981" }} />
+                    <Text className="text-[10px]" style={{ color: "#10B981" }}>{t("svc.inStock")}</Text>
+                  </View>
+                )}
+              </View>
+            );
+
+            if (isTable) {
+              return (
+                <View key={i} className="flex-row items-start gap-1.5 mb-2" style={{ zIndex: activeRow === i ? 100 : 0 }}>
+                  {nameCell}
+                  <View style={{ width: 68 }}>
+                    <TextInput
+                      className="w-full h-9 border rounded-lg px-2 text-sm text-right"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      placeholder="0"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="decimal-pad"
+                      value={p.quantity}
+                      onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.,]/g, "") })}
+                    />
+                  </View>
+                  <View style={{ width: 76 }}>
+                    <TouchableOpacity
+                      className="h-9 border rounded-lg px-1.5 flex-row items-center justify-center"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
+                      onPress={() => setUnitModalIdx(i)}
+                    >
+                      <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.unit || "Adet"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ width: 100 }}>
+                    <TextInput
+                      className="w-full h-9 border rounded-lg px-2 text-sm"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      placeholder="0.00"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="decimal-pad"
+                      value={p.unitPrice}
+                      onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.,]/g, "") })}
+                    />
+                    {p.currency !== "TRY" && convert(parseNumericInput(p.unitPrice ?? ""), p.currency || "TRY") !== null && (
+                      <Text className="text-[9px] mt-0.5" style={{ color: colors.textMuted }} numberOfLines={1}>
+                        ≈ {formatMoney(convert(parseNumericInput(p.unitPrice ?? ""), p.currency || "TRY")!)} ₺
+                      </Text>
+                    )}
+                  </View>
+                  <View style={{ width: 78 }}>
+                    <TouchableOpacity
+                      className="h-9 border rounded-lg px-1.5 flex-row items-center justify-center"
+                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
+                      onPress={() => setCurrencyModalIdx(i)}
+                    >
+                      <Text className="text-xs font-medium" style={{ color: colors.text }}>{p.currency || "TRY"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ width: 100 }} className="items-end">
+                    <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{formatMoney(lineTotalValue, p.currency)}</Text>
+                    {convertedLineTotal !== null && (
+                      <Text className="text-[9px]" style={{ color: colors.textMuted }} numberOfLines={1}>≈ {formatMoney(convertedLineTotal)} ₺</Text>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => removeUsedProduct(i)}
+                    className="h-9 w-8 items-center justify-center"
+                  >
+                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                  </TouchableOpacity>
+                </View>
+              );
+            }
+
+            return (
+              <View key={i} className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, zIndex: activeRow === i ? 100 : 0 }}>
+                <View className="flex-row items-center justify-between mb-1">
+                  <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{t("svc.productName")}</Text>
+                  <TouchableOpacity onPress={() => removeUsedProduct(i)} hitSlop={8}>
+                    <Ionicons name="close-circle" size={18} color={colors.danger} />
+                  </TouchableOpacity>
+                </View>
+
+                {nameCell}
+
+                <View className="flex-row gap-2 mt-2">
+                  <View className="flex-1">
+                    <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.qty")}</Text>
+                    <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.quantity} onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.,]/g, "") })} />
+                  </View>
+                  <View style={{ width: 84 }}>
+                    <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.unit")}</Text>
+                    <TouchableOpacity className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => setUnitModalIdx(i)}>
+                      <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.unit || "Adet"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 3 }} />
+                    </TouchableOpacity>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.price")}</Text>
+                    <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0.00" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.unitPrice} onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.,]/g, "") })} />
+                  </View>
+                  <View style={{ width: 84 }}>
+                    <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.currency")}</Text>
+                    <TouchableOpacity className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => setCurrencyModalIdx(i)}>
+                      <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.currency || "TRY"}</Text>
+                      <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
 
           {notInStockCount > 0 && (
             <Text className="text-xs mb-2" style={{ color: colors.warning }}>
@@ -1023,14 +1127,16 @@ value={p.name}
             </Text>
           )}
 
-          <TouchableOpacity
-            className="h-9 rounded-lg items-center justify-center flex-row gap-1.5 border mb-3"
-            style={{ borderColor: colors.border, backgroundColor: colors.bg }}
-            onPress={addUsedProduct}
-          >
-            <Ionicons name="add" size={16} color={colors.primary} />
-            <Text className="text-xs font-medium" style={{ color: colors.primary }}>{t("svc.addProduct")}</Text>
-          </TouchableOpacity>
+          {!isTable && (
+            <TouchableOpacity
+              className="h-9 rounded-lg items-center justify-center flex-row gap-1.5 border mb-3"
+              style={{ borderColor: colors.border, backgroundColor: colors.bg }}
+              onPress={addUsedProduct}
+            >
+              <Ionicons name="add" size={16} color={colors.primary} />
+              <Text className="text-xs font-medium" style={{ color: colors.primary }}>{t("svc.addProduct")}</Text>
+            </TouchableOpacity>
+          )}
 
           {laborField && (
             <View className="mb-3">
