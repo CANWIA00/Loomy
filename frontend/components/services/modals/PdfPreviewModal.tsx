@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Modal, ScrollView, Platform, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, Modal, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -39,67 +39,39 @@ export default function PdfPreviewModal() {
         </View>
         <View className="flex-1">
           {Platform.OS === "web" ? (
-            <PdfPreviewWeb pdfZoom={pdfZoom} html={pdfPreviewHtml} />
+            <PdfPreviewWeb pdfZoom={pdfZoom} html={pdfPreviewHtml} onZoomChange={setPdfZoom} />
           ) : (
-            <ScrollView
-              style={{ flex: 1, backgroundColor: "#e5e5e5" }}
-              contentContainerStyle={{
-                flexGrow: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 12,
-              }}
-              showsVerticalScrollIndicator={true}
-              maximumZoomScale={3}
-              minimumZoomScale={0.2}
-              bouncesZoom={true}
-            >
-              <View
-                style={{
-                  width: Dimensions.get("window").width - 24,
-                  minHeight: (Dimensions.get("window").width - 24) * 1.414,
-                  backgroundColor: "white",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 12,
-                  elevation: 8,
-                  borderRadius: 4,
-                  padding: 24,
-                }}
-              >
-                <WebView
-                  source={{ html: pdfPreviewHtml }}
-                  style={{
-                    width: "100%",
-                    height: Math.max((Dimensions.get("window").width - 24) * 1.414, 700),
-                    backgroundColor: "white",
-                  }}
-                  scrollEnabled={true}
-                  setSupportMultipleWindows
-                  javaScriptEnabled
-                  domStorageEnabled
-                  injectedJavaScript={`
-                    (function() {
-                      var meta = document.createElement('meta');
-                      meta.name = 'viewport';
-                      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes, viewport-fit=cover';
-                      document.head.appendChild(meta);
-                      document.body.style.zoom = ${(pdfZoom / 100).toFixed(2)};
-                      document.documentElement.style.zoom = ${(pdfZoom / 100).toFixed(2)};
-                      document.body.style.transformOrigin = 'top left';
-                      document.addEventListener('dblclick', function(e) {
-                        var s = document.body.style.zoom;
-                        var cur = s ? parseFloat(s) : 1;
-                        document.body.style.zoom = cur > 1.1 ? 1 : 2;
-                        document.documentElement.style.zoom = cur > 1.1 ? 1 : 2;
-                      });
-                    })();
-                    true;
-                  `}
-                />
-              </View>
-            </ScrollView>
+            <View style={{ flex: 1, backgroundColor: "#e5e5e5" }}>
+              <WebView
+                key={String(pdfZoom)}
+                source={{ html: pdfPreviewHtml }}
+                style={{ flex: 1, backgroundColor: "white" }}
+                originWhitelist={["*"]}
+                scalesPageToFit={true}
+                setBuiltInZoomControls={true}
+                setDisplayZoomControls={false}
+                nestedScrollEnabled={true}
+                scrollEnabled={true}
+                bounces={false}
+                overScrollMode="never"
+                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
+                javaScriptEnabled
+                domStorageEnabled
+                injectedJavaScript={`
+                  (function() {
+                    var scale = ${(pdfZoom / 100).toFixed(2)};
+                    var meta = document.querySelector('meta[name="viewport"]');
+                    if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
+                    meta.content = 'width=device-width, initial-scale=' + scale + ', minimum-scale=0.2, maximum-scale=5.0, user-scalable=yes';
+                    document.documentElement.style.width = '100%';
+                    document.body.style.margin = '0';
+                    document.body.style.webkitTextSizeAdjust = '100%';
+                  })();
+                  true;
+                `}
+              />
+            </View>
           )}
         </View>
         <View style={{ backgroundColor: colors.bgCard, paddingBottom: Platform.OS === "web" ? 0 : insets.bottom }}>
