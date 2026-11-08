@@ -39,7 +39,7 @@ export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPrevie
   const wrapRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef(pdfZoom);
-  const pinchRef = useRef<{ d: number; z: number } | null>(null);
+  const pinchRef = useRef<{ d: number; z: number; fx: number; fy: number; sl: number; st: number } | null>(null);
 
   useEffect(() => { zoomRef.current = pdfZoom; }, [pdfZoom]);
 
@@ -62,10 +62,23 @@ export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPrevie
       const dy = t[0].clientY - t[1].clientY;
       return Math.hypot(dx, dy);
     };
+    const mid = (t: TouchList) => ({
+      x: (t[0].clientX + t[1].clientX) / 2,
+      y: (t[0].clientY + t[1].clientY) / 2,
+    });
 
     const onStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
-        pinchRef.current = { d: dist(e.touches), z: zoomRef.current };
+        const m = mid(e.touches);
+        const rect = el.getBoundingClientRect();
+        pinchRef.current = {
+          d: dist(e.touches),
+          z: zoomRef.current,
+          fx: m.x - rect.left,
+          fy: m.y - rect.top,
+          sl: el.scrollLeft,
+          st: el.scrollTop,
+        };
         e.preventDefault();
       }
     };
@@ -77,6 +90,13 @@ export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPrevie
           const next = Math.min(400, Math.max(20, pinchRef.current.z * (d / pinchRef.current.d)));
           zoomRef.current = next;
           applyLive(next);
+          const rect = el.getBoundingClientRect();
+          const m = mid(e.touches);
+          const fx = m.x - rect.left;
+          const fy = m.y - rect.top;
+          const ratio = next / pinchRef.current.z;
+          el.scrollLeft = (pinchRef.current.sl + pinchRef.current.fx) * ratio - fx;
+          el.scrollTop = (pinchRef.current.st + pinchRef.current.fy) * ratio - fy;
         }
       }
     };
