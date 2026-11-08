@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 interface PdfPreviewWebProps {
   pdfZoom: number;
   html: string;
+  onZoomChange?: (z: number) => void;
 }
 
 function dragToScroll(
@@ -33,8 +34,50 @@ function dragToScroll(
   document.addEventListener("mouseup", onUp);
 }
 
-export default function PdfPreviewWeb({ pdfZoom, html }: PdfPreviewWebProps) {
+export default function PdfPreviewWeb({ pdfZoom, html, onZoomChange }: PdfPreviewWebProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const pinchRef = useRef<{ d: number; z: number } | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const dist = (t: TouchList) => {
+      if (t.length < 2) return 0;
+      const dx = t[0].clientX - t[1].clientX;
+      const dy = t[0].clientY - t[1].clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinchRef.current = { d: dist(e.touches), z: pdfZoom };
+        e.preventDefault();
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && pinchRef.current && onZoomChange) {
+        e.preventDefault();
+        const d = dist(e.touches);
+        if (pinchRef.current.d > 0) {
+          const next = Math.min(400, Math.max(20, Math.round(pinchRef.current.z * (d / pinchRef.current.d))));
+          onZoomChange(next);
+        }
+      }
+    };
+    const onEnd = () => {
+      pinchRef.current = null;
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: false });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd);
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+    };
+  }, [pdfZoom, onZoomChange]);
 
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -60,7 +103,7 @@ export default function PdfPreviewWeb({ pdfZoom, html }: PdfPreviewWebProps) {
         overflow: "auto",
         display: "block",
         cursor: "grab",
-        touchAction: "pan-x pan-y",
+        touchAction: "manipulation",
         WebkitOverflowScrolling: "touch",
       } as any}
     >

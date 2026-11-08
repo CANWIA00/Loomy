@@ -352,6 +352,8 @@ function PreviewPdfModal({
 }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const pinchRef = useRef<{ d: number; z: number } | null>(null);
+  const dist = (t: any) => Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -374,53 +376,80 @@ function PreviewPdfModal({
                 height: "100%",
                 display: "flex",
                 justifyContent: "center",
-                alignItems: "center",
+                alignItems: "flex-start",
                 backgroundColor: "#e5e5e5",
                 overflow: "auto",
+                touchAction: "manipulation",
               } as any}
             >
               <div
                 style={{
-                  width: "210mm",
-                  minHeight: "297mm",
-                  backgroundColor: "white",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-                  padding: "15mm",
-                  borderRadius: 4,
-                  transform: `scale(${zoom / 100})`,
-                  transformOrigin: "center center",
-                  flexShrink: 0,
+                  width: 794 * (zoom / 100),
+                  minHeight: 1123 * (zoom / 100),
+                  margin: "12px auto",
                 } as any}
-                dangerouslySetInnerHTML={{ __html: html }}
-              />
+              >
+                <div
+                  style={{
+                    width: "210mm",
+                    minHeight: "297mm",
+                    backgroundColor: "white",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                    padding: "15mm",
+                    borderRadius: 4,
+                    transform: `scale(${zoom / 100})`,
+                    transformOrigin: "top left",
+                    flexShrink: 0,
+                  } as any}
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+              </div>
             </div>
           ) : (
-            <ScrollView
+            <View
               style={{ flex: 1, backgroundColor: "#e5e5e5" }}
-              contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 12 }}
-              showsVerticalScrollIndicator={true}
+              onStartShouldSetResponder={(e) => e.nativeEvent.touches.length === 2}
+              onMoveShouldSetResponder={(e) => e.nativeEvent.touches.length === 2}
+              onResponderGrant={(e) => {
+                if (e.nativeEvent.touches.length === 2) pinchRef.current = { d: dist(e.nativeEvent.touches), z: zoom };
+              }}
+              onResponderMove={(e) => {
+                if (e.nativeEvent.touches.length === 2 && pinchRef.current) {
+                  const d = dist(e.nativeEvent.touches);
+                  if (pinchRef.current.d > 0) {
+                    const next = Math.min(250, Math.max(30, Math.round(pinchRef.current.z * (d / pinchRef.current.d))));
+                    setZoom(next);
+                  }
+                }
+              }}
+              onResponderRelease={() => { pinchRef.current = null; }}
+              onResponderTerminationRequest={() => false}
             >
-              <View
-                style={{
-                  width: Dimensions.get("window").width - 24,
-                  minHeight: (Dimensions.get("window").width - 24) * 1.414,
-                  backgroundColor: "white",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 12,
-                  elevation: 8,
-                  borderRadius: 4,
-                  padding: 24,
-                }}
-              >
-                <WebView
-                  source={{ html }}
-                  style={{ width: "100%", height: Math.max((Dimensions.get("window").width - 24) * 1.414, 700), backgroundColor: "white" }}
-                  scrollEnabled={false}
-                />
-              </View>
-            </ScrollView>
+              <WebView
+                key={String(zoom)}
+                source={{ html }}
+                style={{ flex: 1, backgroundColor: "white" }}
+                originWhitelist={["*"]}
+                scalesPageToFit={true}
+                setBuiltInZoomControls={true}
+                setDisplayZoomControls={false}
+                nestedScrollEnabled={true}
+                scrollEnabled={true}
+                bounces={false}
+                javaScriptEnabled
+                domStorageEnabled
+                injectedJavaScript={`
+                  (function() {
+                    var scale = ${(zoom / 100).toFixed(2)};
+                    var meta = document.querySelector('meta[name="viewport"]');
+                    if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
+                    meta.content = 'width=device-width, initial-scale=' + scale + ', minimum-scale=0.2, maximum-scale=4.0, user-scalable=yes';
+                    document.body.style.margin = '0';
+                  })();
+                  true;
+                `}
+              />
+            </View>
           )}
         </View>
         <View className="px-4 py-3 border-t" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
@@ -434,7 +463,7 @@ function PreviewPdfModal({
             </TouchableOpacity>
             <Text className="text-sm font-semibold min-w-[50px] text-center" style={{ color: colors.text }}>%{zoom}</Text>
             <TouchableOpacity
-              onPress={() => setZoom(Math.min(150, zoom + 10))}
+              onPress={() => setZoom(Math.min(250, zoom + 10))}
               className="w-9 h-9 rounded-lg items-center justify-center"
               style={{ backgroundColor: colors.bgInput }}
             >
