@@ -38,6 +38,7 @@ export default function Apply() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ businessName, name, email, phone, message }),
+        signal: AbortSignal.timeout(25000),
       });
       if (!res.ok) throw new Error("apply request failed");
       setStatus("sent");
