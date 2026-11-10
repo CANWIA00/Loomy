@@ -21,7 +21,10 @@ export default function Pricing() {
               {plan.featured ? <span className="plan-badge">{featuredLabel}</span> : null}
               <div className="plan-name">{plan.name}</div>
               <div className="plan-desc">{plan.description}</div>
-              <div className="plan-price is-label">{plan.price}</div>
+              <div className="plan-price">
+                {plan.price}
+                <span className="plan-period">{plan.period}</span>
+              </div>
               <ul className="plan-features">
                 {plan.features.map((feature) => (
                   <li key={feature}>

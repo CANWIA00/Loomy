@@ -127,10 +127,20 @@
 }
 
 .plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   font-size: 40px;
   font-weight: 900;
   margin: 22px 0;
   letter-spacing: -0.02em;
+}
+
+.plan-period {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-muted);
 }
 
 .pricing-grid .plan-card.featured.only {
