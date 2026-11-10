@@ -1,3 +1,5 @@
+import dns from "dns";
+import net from "net";
 import nodemailer from "nodemailer";
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
@@ -8,19 +10,38 @@ const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_SECURE = process.env.SMTP_SECURE === "true";
 
-function smtpTransport() {
-  const gmail = (SMTP_HOST || "").includes("gmail.com");
+async function smtpTransport() {
+  const hostName = (process.env.SMTP_HOST || SMTP_HOST || "").trim();
+  const port = parseInt(process.env.SMTP_PORT || String(SMTP_PORT || 587), 10);
+  const secure = process.env.SMTP_SECURE === "true" || port === 465;
+  const user = (process.env.SMTP_USER || SMTP_USER || "").trim();
+  const pass = (process.env.SMTP_PASS || SMTP_PASS || "").replace(/\s+/g, "");
+
+  let host = hostName;
+  const tls: { servername?: string } = {};
+  if (hostName && net.isIP(hostName) === 0) {
+    try {
+      const addresses = await dns.promises.resolve4(hostName);
+      if (addresses[0]) {
+        host = addresses[0];
+        tls.servername = hostName;
+      }
+    } catch {
+      host = hostName;
+    }
+  }
+
   return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: gmail ? 465 : SMTP_PORT,
-    secure: gmail ? true : SMTP_SECURE,
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
+    tls,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 20000,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-    // Gmail'in IPv6 adresi Railway'den açılmıyor; bağlantı "gönderiliyor"da kalıyor.
-    family: 4,
-  } as nodemailer.TransportOptions);
+    auth: { user, pass },
+  });
 }
 
 function parseFrom(raw: string): { email: string; name: string } {
@@ -98,7 +119,7 @@ export async function sendVerificationEmail(
   const text = `Merhaba ${name},\n\nE-posta dogrulama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`;
 
   if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
-    const transporter = smtpTransport();
+    const transporter = await smtpTransport();
 
     await transporter.sendMail({
       from: `${from.name} <${from.email}>`,
@@ -213,7 +234,7 @@ export async function sendApplicationEmail(data: ApplicationData): Promise<void>
   const cleanTo = to.replace(/^.*?<([^>]+)>$/, "$1").trim();
 
   if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
-    const transporter = smtpTransport();
+    const transporter = await smtpTransport();
 
     await transporter.sendMail({
       from: `${from.name} <${from.email}>`,
@@ -311,7 +332,7 @@ export async function sendPasswordResetEmail(
   const text = `Merhaba ${name},\n\nSifre sifirlama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`;
 
   if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
-    const transporter = smtpTransport();
+    const transporter = await smtpTransport();
 
     await transporter.sendMail({
       from: `${from.name} <${from.email}>`,
