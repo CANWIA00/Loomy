@@ -303,15 +303,13 @@ const tr = {
     badge: "Paketler",
     title: "Kaç kişisiniz?",
     description:
-      "Üç planda da modüllerin hepsi açık. Fark, ekibin büyüklüğü. Fiyatlar KDV dahildir.",
+      "Üç planda da modüllerin hepsi açık. Fark, ekibin büyüklüğü.",
     comingSoon: "Önerilen",
-    note: "Yıllık ödemede 10 ay ödeyin, 12 ay kullanın. Koltuk yetmezse bir üst plana geçin.",
+    note: "Koltuk yetmezse bir üst plana geçin.",
     plans: [
       {
         name: "Atölye",
         description: "Usta kendi işine de gidiyor.",
-        price: "990",
-        period: "TL / ay",
         featured: false,
         features: [
           "1 yönetici + 3 çalışan",
@@ -324,8 +322,6 @@ const tr = {
       {
         name: "Ekip",
         description: "Birkaç teknisyeni olan saha ekibi.",
-        price: "1.990",
-        period: "TL / ay",
         featured: true,
         features: [
           "1 yönetici + 10 çalışan",
@@ -338,8 +334,6 @@ const tr = {
       {
         name: "İşletme",
         description: "Depo ve ofisi olan işletme.",
-        price: "3.990",
-        period: "TL / ay",
         featured: false,
         features: [
           "2 yönetici + 25 çalışan",
@@ -1184,15 +1178,13 @@ const en: Dictionary = {
     badge: "Pricing",
     title: "How big is your team?",
     description:
-      "Every plan includes the full product. The difference is team size. Prices include VAT.",
+      "Every plan includes the full product. The difference is team size.",
     comingSoon: "Recommended",
-    note: "Pay for 10 months, use it for 12. If you need more seats, move up a plan.",
+    note: "If you need more seats, move up a plan.",
     plans: [
       {
         name: "Workshop",
         description: "The owner still goes out on jobs.",
-        price: "990",
-        period: "TL / month",
         featured: false,
         features: [
           "1 admin + 3 employees",
@@ -1205,8 +1197,6 @@ const en: Dictionary = {
       {
         name: "Crew",
         description: "A field crew with several technicians.",
-        price: "1,990",
-        period: "TL / month",
         featured: true,
         features: [
           "1 admin + 10 employees",
@@ -1219,8 +1209,6 @@ const en: Dictionary = {
       {
         name: "Business",
         description: "A company with a warehouse and an office.",
-        price: "3,990",
-        period: "TL / month",
         featured: false,
         features: [
           "2 admins + 25 employees",
