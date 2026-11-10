@@ -305,7 +305,7 @@ const tr = {
     description:
       "Üç planda da modüllerin hepsi açık. Fark, ekibin büyüklüğü. Fiyatlar KDV dahildir.",
     comingSoon: "Önerilen",
-    note: "Yıllık ödemede 10 ay ödeyin, 12 ay kullanın. Koltuk tavanını aşan her çalışan +150 TL/ay. Atölye ve Ekip’te ikinci yönetici +250 TL/ay.",
+    note: "Yıllık ödemede 10 ay ödeyin, 12 ay kullanın. Koltuk yetmezse bir üst plana geçin.",
     plans: [
       {
         name: "Atölye",
@@ -1186,7 +1186,7 @@ const en: Dictionary = {
     description:
       "Every plan includes the full product. The difference is team size. Prices include VAT.",
     comingSoon: "Recommended",
-    note: "Pay for 10 months, use it for 12. Each employee over the seat cap is +150 TL/month. A second admin on Workshop and Crew is +250 TL/month.",
+    note: "Pay for 10 months, use it for 12. If you need more seats, move up a plan.",
     plans: [
       {
         name: "Workshop",
