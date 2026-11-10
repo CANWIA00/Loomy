@@ -8,12 +8,15 @@ const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_SECURE = process.env.SMTP_SECURE === "true";
 
-async function smtpTransport() {
+function smtpConnectError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /timeout|ENETUNREACH|ECONNREFUSED|ECONNRESET|ECONNECTION|ETIMEDOUT/i.test(message);
+}
+
+async function sendSmtp(mail: nodemailer.SendMailOptions): Promise<void> {
   const hostName = (process.env.SMTP_HOST || SMTP_HOST || "").trim();
-  const port = parseInt(process.env.SMTP_PORT || String(SMTP_PORT || 587), 10);
-  const secure = process.env.SMTP_SECURE === "true" || port === 465;
+  const configuredPort = parseInt(process.env.SMTP_PORT || String(SMTP_PORT || 587), 10);
   const user = (process.env.SMTP_USER || SMTP_USER || "").trim();
   const pass = (process.env.SMTP_PASS || SMTP_PASS || "").replace(/\s+/g, "");
 
@@ -31,17 +34,31 @@ async function smtpTransport() {
     }
   }
 
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    requireTLS: !secure,
-    tls,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
-    auth: { user, pass },
-  });
+  const attempts = [{ port: configuredPort, secure: configuredPort === 465 }];
+  if (configuredPort !== 465) attempts.push({ port: 465, secure: true });
+
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    const transporter = nodemailer.createTransport({
+      host,
+      port: attempt.port,
+      secure: attempt.secure,
+      requireTLS: !attempt.secure,
+      tls,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 15000,
+      auth: { user, pass },
+    });
+    try {
+      await transporter.sendMail(mail);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!smtpConnectError(error) || attempt.port === 465) throw error;
+    }
+  }
+  throw lastError;
 }
 
 function parseFrom(raw: string): { email: string; name: string } {
@@ -119,9 +136,7 @@ export async function sendVerificationEmail(
   const text = `Merhaba ${name},\n\nE-posta dogrulama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`;
 
   if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
-    const transporter = await smtpTransport();
-
-    await transporter.sendMail({
+    await sendSmtp({
       from: `${from.name} <${from.email}>`,
       to,
       subject: "Loomy - E-posta Dogrulama Kodu",
@@ -234,9 +249,7 @@ export async function sendApplicationEmail(data: ApplicationData): Promise<void>
   const cleanTo = to.replace(/^.*?<([^>]+)>$/, "$1").trim();
 
   if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
-    const transporter = await smtpTransport();
-
-    await transporter.sendMail({
+    await sendSmtp({
       from: `${from.name} <${from.email}>`,
       to: cleanTo,
       subject,
@@ -332,9 +345,7 @@ export async function sendPasswordResetEmail(
   const text = `Merhaba ${name},\n\nSifre sifirlama kodunuz: ${code}\n\nBu kod 15 dakika gecerlidir.`;
 
   if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
-    const transporter = await smtpTransport();
-
-    await transporter.sendMail({
+    await sendSmtp({
       from: `${from.name} <${from.email}>`,
       to,
       subject: "Loomy - Sifre Sifirlama Kodu",
