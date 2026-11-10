@@ -58,7 +58,12 @@ export async function submitApplication(req: Request, res: Response): Promise<vo
   try {
     await sendApplicationEmail({ businessName, name, email, phone, message });
     res.json({ success: true, message: "Başvurunuz alındı. En kısa sürede size dönüş yapacağız." });
-  } catch {
-    res.status(500).json({ message: "Başvuru gönderilemedi. Lütfen daha sonra tekrar deneyin." });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "unknown";
+    console.error("apply email failed:", detail);
+    res.status(500).json({
+      message: "Başvuru gönderilemedi. Lütfen daha sonra tekrar deneyin.",
+      detail,
+    });
   }
 }
