@@ -163,3 +163,67 @@ export function computeQuoteTotals(lines: QuoteFormLine[]): Record<string, Quote
   });
   return groups;
 }
+
+// ---------------------------------------------------------------------------
+// Teklif zorunlu alan kurallari (sunucudaki backend/src/schemas/quote.ts ile ayni)
+// ---------------------------------------------------------------------------
+
+/** "GG/AA/YYYY" (veya eski kayitlardaki "GG.AA.YYYY") -> Date; gecersizse null. */
+export function parseQuoteDate(value: string): Date | null {
+  const m = (value || "").trim().match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (!m) return null;
+  const [d, mo, y] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const date = new Date(y, mo - 1, d);
+  if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d) return null;
+  return date;
+}
+
+export type QuoteDateError = "required" | "invalid" | "beforeDocument" | null;
+
+export interface QuoteValidation {
+  customerName: boolean;
+  documentDate: QuoteDateError;
+  validUntil: QuoteDateError;
+  /** Urun adi eksik satirlar */
+  lines: number[];
+  /** Miktari bos/0 olan satirlar */
+  quantity: number[];
+  /** Birim fiyati bos/0 olan satirlar */
+  unitPrice: number[];
+}
+
+export const NO_QUOTE_ERRORS: QuoteValidation = {
+  customerName: false, documentDate: null, validUntil: null, lines: [], quantity: [], unitPrice: [],
+};
+
+export function hasQuoteErrors(v: QuoteValidation): boolean {
+  return v.customerName || !!v.documentDate || !!v.validUntil || v.lines.length > 0 || v.quantity.length > 0 || v.unitPrice.length > 0;
+}
+
+/**
+ * Bir teklifin olusturulabilmesi icin zorunlu alanlar:
+ * musteri adi, belge tarihi, gecerlilik tarihi (belge tarihinden once olamaz) ve
+ * en az bir urun satiri; her satirda urun adi, 0'dan buyuk miktar ve birim fiyat.
+ * Tamamen bos satirlar yok sayilir (kayitta zaten atilir); hic dolu satir yoksa
+ * ilk satir isaretlenir.
+ */
+export function validateQuoteForm(form: QuoteFormData): QuoteValidation {
+  const v: QuoteValidation = { ...NO_QUOTE_ERRORS, lines: [], quantity: [], unitPrice: [] };
+  v.customerName = !form.customerName.trim();
+
+  const doc = parseQuoteDate(form.documentDate);
+  v.documentDate = !form.documentDate.trim() ? "required" : doc ? null : "invalid";
+  const until = parseQuoteDate(form.validUntil);
+  v.validUntil = !form.validUntil.trim() ? "required" : !until ? "invalid" : doc && until < doc ? "beforeDocument" : null;
+
+  const filled = form.lines
+    .map((l, i) => ({ l, i }))
+    .filter(({ l }) => l.name.trim() || l.details?.trim() || l.unitPrice.trim());
+  const toCheck = filled.length ? filled : form.lines.length ? [{ l: form.lines[0], i: 0 }] : [];
+  toCheck.forEach(({ l, i }) => {
+    if (!l.name.trim()) v.lines.push(i);
+    if (!(parseNumericInput(l.quantity) > 0)) v.quantity.push(i);
+    if (!(parseNumericInput(l.unitPrice) > 0)) v.unitPrice.push(i);
+  });
+  return v;
+}

@@ -15,8 +15,11 @@ export function validateBody<S extends ZodTypeAny>(schema: S, requiredMessage = 
       return;
     }
     const issue = result.error.issues[0];
+    // Eksik alanda semada ozel mesaj (required_error) yoksa zod'un varsayilan "Required"
+    // mesaji yerine endpoint'e ozel requiredMessage donulur.
     const isMissing = issue?.code === "invalid_type" && issue.received === "undefined";
-    res.status(400).json({ message: isMissing ? requiredMessage : issue?.message ?? "Geçersiz istek." });
+    const message = isMissing && issue.message === "Required" ? requiredMessage : issue?.message ?? "Geçersiz istek.";
+    res.status(400).json({ message });
   };
 }
 

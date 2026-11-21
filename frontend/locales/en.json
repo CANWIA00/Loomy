@@ -1146,5 +1146,13 @@
   "qot.colStatus": "Status",
   "qot.changeStatus": "Quote status",
   "qot.changeStatusHint": "The customer's response to this quote",
-  "qot.errorStatus": "Could not update the quote status. Please try again."
+  "qot.errorStatus": "Could not update the quote status. Please try again.",
+  "qot.requiredTitle": "Quote cannot be created",
+  "qot.errDateInvalid": "enter a valid date",
+  "qot.errBeforeDocument": "cannot be before the document date",
+  "qot.lineN": "Line {n}",
+  "qot.errDateInvalidField": "Enter a valid date (DD/MM/YYYY).",
+  "qot.errBeforeDocumentField": "Valid-until date cannot be before the document date.",
+  "qot.errQuantityField": "Quantity must be greater than 0.",
+  "qot.errUnitPriceField": "Enter a unit price."
 }

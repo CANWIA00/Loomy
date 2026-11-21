@@ -12,7 +12,7 @@ import { quoteApi, QuoteRecord, type QuoteStatus } from "../../apiclient/quotes"
 import { customerApi, Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
-import { freshQuoteForm, todayDateInput, emptyLine, parseNumericInput, initialNewCustomerForm, type QuoteFormData, type QuotePdfData, type QuoteFilter, type NewCustomerFormData } from "./types";
+import { freshQuoteForm, todayDateInput, emptyLine, parseNumericInput, initialNewCustomerForm, type QuoteFormData, type QuotePdfData, type QuoteFilter, type NewCustomerFormData, validateQuoteForm, hasQuoteErrors, NO_QUOTE_ERRORS, type QuoteValidation } from "./types";
 
 interface DeleteAlertState {
   visible: boolean;
@@ -26,12 +26,8 @@ interface ResultAlertState {
   message: string;
 }
 
-export interface RequiredErrors {
-  customerName: boolean;
-  lines: number[];
-}
-
-const NO_REQUIRED_ERRORS: RequiredErrors = { customerName: false, lines: [] };
+export type RequiredErrors = QuoteValidation;
+const NO_REQUIRED_ERRORS: RequiredErrors = NO_QUOTE_ERRORS;
 
 interface QuoteContextValue {
   loading: boolean;
@@ -225,6 +221,14 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     if (key === "customerName" && value.trim()) {
       setRequiredErrors((prev) => (prev.customerName ? { ...prev, customerName: false } : prev));
     }
+    if (key === "documentDate" || key === "validUntil") {
+      // Tarih hatalari iki alana birden bagli (gecerlilik >= belge tarihi); sadece tarihleri yeniden degerlendir.
+      setRequiredErrors((prev) => {
+        if (!prev.documentDate && !prev.validUntil) return prev;
+        const next = validateQuoteForm({ ...form, [key]: value });
+        return { ...prev, documentDate: prev.documentDate ? next.documentDate : null, validUntil: prev.validUntil ? next.validUntil : null };
+      });
+    }
   };
 
   const updateLine = (index: number, key: "name" | "details" | "quantity" | "unitPrice" | "currency" | "unit", value: string) => {
@@ -238,8 +242,15 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       });
       return { ...prev, lines };
     });
+    const drop = (arr: number[]) => arr.filter((i) => i !== index);
     if (key === "name" && value.trim()) {
-      setRequiredErrors((prev) => (prev.lines.includes(index) ? { ...prev, lines: prev.lines.filter((i) => i !== index) } : prev));
+      setRequiredErrors((prev) => (prev.lines.includes(index) ? { ...prev, lines: drop(prev.lines) } : prev));
+    }
+    if (key === "quantity" && parseNumericInput(value) > 0) {
+      setRequiredErrors((prev) => (prev.quantity.includes(index) ? { ...prev, quantity: drop(prev.quantity) } : prev));
+    }
+    if (key === "unitPrice" && parseNumericInput(value) > 0) {
+      setRequiredErrors((prev) => (prev.unitPrice.includes(index) ? { ...prev, unitPrice: drop(prev.unitPrice) } : prev));
     }
   };
 
@@ -247,26 +258,42 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const removeLine = (index: number) => {
     setForm((prev) => ({ ...prev, lines: prev.lines.filter((_, i) => i !== index) }));
+    const shift = (arr: number[]) => arr.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i));
     setRequiredErrors((prev) => ({
       ...prev,
-      lines: prev.lines.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)),
+      lines: shift(prev.lines),
+      quantity: shift(prev.quantity),
+      unitPrice: shift(prev.unitPrice),
     }));
   };
 
   const handleSave = () => {
-    const customerMissing = !form.customerName.trim();
-    const hasNamedLine = form.lines.some((l) => l.name.trim());
-    const partialLineIndexes = form.lines.reduce<number[]>((acc, l, i) => {
-      const hasAnyValue = !!(l.name.trim() || l.details?.trim() || l.unitPrice.trim());
-      if (hasAnyValue && !l.name.trim()) acc.push(i);
-      return acc;
-    }, []);
-    const lineIndexesToFlag = hasNamedLine || partialLineIndexes.length > 0 ? partialLineIndexes : [0];
-
-    if (customerMissing || lineIndexesToFlag.length > 0) {
-      // Uyari penceresi yerine ilk hatali alana kaydirilir; alan altinda mesaj gorunur.
-      setRequiredErrors({ customerName: customerMissing, lines: lineIndexesToFlag });
+    const errors = validateQuoteForm(form);
+    if (hasQuoteErrors(errors)) {
+      setRequiredErrors(errors);
+      // Eksikler uyari penceresinde listelenir; arkada form ilk hatali alana kayar.
       setErrorScrollNonce((n) => n + 1);
+      const missing: string[] = [];
+      if (errors.customerName) missing.push(`• ${t("qot.customerName")}`);
+      if (errors.documentDate) missing.push(`• ${t("qot.documentDate")}${errors.documentDate === "invalid" ? ` (${t("qot.errDateInvalid")})` : ""}`);
+      if (errors.validUntil) {
+        const why = errors.validUntil === "invalid" ? t("qot.errDateInvalid") : errors.validUntil === "beforeDocument" ? t("qot.errBeforeDocument") : "";
+        missing.push(`• ${t("qot.validUntil").replace(/:$/, "")}${why ? ` (${why})` : ""}`);
+      }
+      const lineIdx = Array.from(new Set([...errors.lines, ...errors.quantity, ...errors.unitPrice])).sort((x, y) => x - y);
+      lineIdx.forEach((i) => {
+        const parts: string[] = [];
+        if (errors.lines.includes(i)) parts.push(t("qot.productName").toLocaleLowerCase(locale));
+        if (errors.quantity.includes(i)) parts.push(t("qot.quantity").toLocaleLowerCase(locale));
+        if (errors.unitPrice.includes(i)) parts.push(t("qot.unitPrice").toLocaleLowerCase(locale));
+        missing.push(`• ${t("qot.lineN", { n: String(i + 1) })}: ${parts.join(", ")}`);
+      });
+      setResultAlert({
+        visible: true,
+        type: "warning",
+        title: t("qot.requiredTitle"),
+        message: `${t("qot.requiredFieldsMissing")}\n${missing.join("\n")}`,
+      });
       return;
     }
 

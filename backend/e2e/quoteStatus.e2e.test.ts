@@ -16,6 +16,7 @@ const quoteBody = {
   title: "Kamera Kurulumu",
   customerName: "Durum Test A.Ş.",
   documentDate: "21/11/2026",
+  validUntil: "05/12/2026",
   lines: [{ name: "IP Kamera", quantity: 2, unitPrice: 1000, currency: "TRY", unit: "Adet" }],
 };
 
@@ -62,5 +63,22 @@ describe("teklif durumu", () => {
     expect(res.status).toBe(404);
     const row = await prisma.quoteRecord.findUnique({ where: { id: created.body.id } });
     expect(row?.status).toBe("PENDING");
+  });
+});
+
+describe("teklif zorunlu alanlari (gercek sunucu)", () => {
+  it("gecerlilik tarihi olmadan teklif olusturulamaz ve veritabanina yazilmaz", async () => {
+    const token = await loginNewAdmin();
+    const before = await prisma.quoteRecord.count({ where: { customerName: "Eksik Alan Testi" } });
+    const res = await api("POST", "/quotes", { token, body: { ...quoteBody, customerName: "Eksik Alan Testi", validUntil: "" } });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Geçerlilik tarihi zorunludur.");
+    expect(await prisma.quoteRecord.count({ where: { customerName: "Eksik Alan Testi" } })).toBe(before);
+  });
+
+  it("fiyatsiz satirla teklif olusturulamaz", async () => {
+    const token = await loginNewAdmin();
+    const res = await api("POST", "/quotes", { token, body: { ...quoteBody, lines: [{ ...quoteBody.lines[0], unitPrice: 0 }] } });
+    expect(res.status).toBe(400);
   });
 });

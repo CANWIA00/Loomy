@@ -9,7 +9,7 @@ import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../apiclient/customers";
 import { stockApi, type StockItem } from "../../apiclient/stock";
 import { getCurrentAddress } from "../../utils/location";
-import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, parseNumericInput, computeQuoteTotals } from "./types";
+import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, parseNumericInput, computeQuoteTotals, type QuoteDateError } from "./types";
 
 const formatRate = (rate: number) =>
   rate.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -53,17 +53,20 @@ function FieldLabel({ children, required }: { children: ReactNode; required?: bo
 }
 
 function DateField({
-  label, value, onChange, placeholder, quickOptions = [], base = "",
+  label, value, onChange, placeholder, quickOptions = [], base = "", required = false, error = null,
 }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string;
   quickOptions?: { label: string; days: number; months: number }[];
   base?: string;
+  required?: boolean;
+  /** Alanin altinda gosterilecek hata metni */
+  error?: string | null;
 }) {
   const { colors } = useTheme();
   return (
     <View className="mb-3 flex-1">
-      <FieldLabel>{label}</FieldLabel>
-      <View className="flex-row items-center border rounded-lg px-2" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
+      <FieldLabel required={required}>{label}</FieldLabel>
+      <View className="flex-row items-center border rounded-lg px-2" style={{ backgroundColor: colors.bg, borderColor: error ? colors.danger : colors.border }}>
         <TextInput
           className="flex-1 h-11 px-1 text-sm"
           style={{ color: colors.text }}
@@ -83,6 +86,7 @@ function DateField({
           <Ionicons name="calendar-outline" size={20} color={colors.primary} />
         </TouchableOpacity>
       </View>
+      {error ? <Text className="text-[10px] mt-1" style={{ color: colors.danger }}>{error}</Text> : null}
       {quickOptions.length > 0 && (
         <View className="flex-row flex-wrap gap-1.5 mt-1.5">
           {quickOptions.map((opt) => {
@@ -161,13 +165,27 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
   const filledCustomerDetails = [form.phone, form.contactPerson, form.subscriberNo, form.email, form.address, form.fax, form.website]
     .filter((v) => (v || "").trim()).length;
 
-  // Kaydette eksik alan varsa ilk hatali bolume kaydir (uyari penceresi yerine).
+  const dateErrorText = (e: QuoteDateError) =>
+    e === "required" ? t("qot.fieldRequired") : e === "invalid" ? t("qot.errDateInvalidField") : e === "beforeDocument" ? t("qot.errBeforeDocumentField") : null;
+  const lineFieldErrors = (idx: number) => {
+    const out: string[] = [];
+    if (requiredErrors.quantity.includes(idx)) out.push(t("qot.errQuantityField"));
+    if (requiredErrors.unitPrice.includes(idx)) out.push(t("qot.errUnitPriceField"));
+    return out;
+  };
+
+  // Kaydette eksik alan varsa ilk hatali bolume kaydir (uyari penceresinin arkasinda).
   const rootYRef = useRef(0);
   const customerSectionYRef = useRef(0);
+  const datesSectionYRef = useRef(0);
   const linesSectionYRef = useRef(0);
   useEffect(() => {
     if (!errorScrollNonce) return;
-    const sectionY = requiredErrors.customerName ? customerSectionYRef.current : linesSectionYRef.current;
+    const sectionY = requiredErrors.customerName
+      ? customerSectionYRef.current
+      : requiredErrors.documentDate || requiredErrors.validUntil
+        ? datesSectionYRef.current
+        : linesSectionYRef.current;
     const y = Math.max(0, rootYRef.current + sectionY - 12);
     const id = setTimeout(() => scrollRef.current?.scrollTo({ y, animated: true }), 30);
     return () => clearTimeout(id);
@@ -485,8 +503,10 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
           )}
         </View>
 
-        <View className="flex-row gap-3 mt-3">
+        <View className="flex-row gap-3 mt-3" onLayout={(e) => { datesSectionYRef.current = e.nativeEvent.layout.y; }}>
           <DateField
+            required
+            error={dateErrorText(requiredErrors.documentDate)}
             label={t("qot.documentDate")}
             value={form.documentDate}
             onChange={(v) => updateForm("documentDate", v)}
@@ -494,6 +514,8 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
             quickOptions={[{ label: t("qot.today"), days: 0, months: 0 }]}
           />
           <DateField
+            required
+            error={dateErrorText(requiredErrors.validUntil)}
             label={t("qot.validUntil")}
             value={form.validUntil}
             onChange={(v) => updateForm("validUntil", v)}
@@ -528,9 +550,9 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
             <View className="flex-row items-center gap-1.5 mb-1 px-0.5">
               <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { flex: 1.6, minWidth: 140 }]}>{t("qot.productName")}<RequiredMark /></Text>
               <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { flex: 1, minWidth: 110 }]}>{t("qot.details")}</Text>
-              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 68 }]}>{t("qot.quantity")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 68 }]}>{t("qot.quantity")}<RequiredMark /></Text>
               <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 76 }]}>{t("qot.unit")}</Text>
-              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("qot.unitPrice")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("qot.unitPrice")}<RequiredMark /></Text>
               <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 78 }]}>{t("qot.currency")}</Text>
               <Text className="text-[10px] font-medium text-right" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("qot.total")}</Text>
               <View style={{ width: 32 }} />
@@ -619,6 +641,9 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
                         {t("qot.fieldRequired")}
                       </Text>
                     )}
+                    {isTable && lineFieldErrors(idx).map((msg) => (
+                      <Text key={msg} className="text-[10px] mt-1" style={{ color: colors.danger }}>{msg}</Text>
+                    ))}
                     {stockSearchIdx === idx && (stockSuggestions.length > 0 || savedNameSuggestions.length > 0) ? (
                       <ScrollView
                         nestedScrollEnabled
@@ -676,7 +701,7 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
                   <View style={{ width: 68 }}>
                     <TextInput
                       className="w-full h-9 border rounded-lg px-2 text-sm text-right"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      style={{ backgroundColor: colors.bgCard2, borderColor: requiredErrors.quantity.includes(idx) ? colors.danger : colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
                       value={line.quantity}
                       onChangeText={(v) => updateLine(idx, "quantity", v)}
@@ -695,7 +720,7 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
                   <View style={{ width: 100 }}>
                     <TextInput
                       className="w-full h-9 border rounded-lg px-2 text-sm"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      style={{ backgroundColor: colors.bgCard2, borderColor: requiredErrors.unitPrice.includes(idx) ? colors.danger : colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
                       value={line.unitPrice}
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
@@ -745,10 +770,10 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
                 />
                 <View className="flex-row flex-wrap items-start gap-2">
                   <View className="flex-1" style={{ minWidth: 100, maxWidth: isDesktop ? 150 : undefined }}>
-                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}</Text>
+                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.quantity")}<RequiredMark /></Text>
                     <TextInput
                       className="w-full h-9 border rounded-lg px-2.5 text-sm"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      style={{ backgroundColor: colors.bgCard2, borderColor: requiredErrors.quantity.includes(idx) ? colors.danger : colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
                       value={line.quantity}
                       onChangeText={(v) => updateLine(idx, "quantity", v)}
@@ -766,10 +791,10 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
                     </TouchableOpacity>
                   </View>
                   <View className="flex-1" style={{ minWidth: 120, maxWidth: isDesktop ? 160 : undefined }}>
-                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}</Text>
+                    <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.unitPrice")}<RequiredMark /></Text>
                     <TextInput
                       className="w-full h-9 border rounded-lg px-2.5 text-sm"
-                      style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
+                      style={{ backgroundColor: colors.bgCard2, borderColor: requiredErrors.unitPrice.includes(idx) ? colors.danger : colors.border, color: colors.text }}
                       keyboardType="decimal-pad"
                       value={line.unitPrice}
                       onChangeText={(v) => updateLine(idx, "unitPrice", v)}
@@ -799,6 +824,9 @@ export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
                     )}
                   </View>
                 </View>
+                {lineFieldErrors(idx).map((msg) => (
+                  <Text key={msg} className="text-[10px] mt-1" style={{ color: colors.danger }}>{msg}</Text>
+                ))}
               </View>
             );
           })}

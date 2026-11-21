@@ -1146,5 +1146,13 @@
   "qot.colStatus": "Durum",
   "qot.changeStatus": "Teklif durumu",
   "qot.changeStatusHint": "Müşterinin bu teklife yanıtı",
-  "qot.errorStatus": "Teklif durumu güncellenemedi. Lütfen tekrar deneyin."
+  "qot.errorStatus": "Teklif durumu güncellenemedi. Lütfen tekrar deneyin.",
+  "qot.requiredTitle": "Teklif oluşturulamadı",
+  "qot.errDateInvalid": "geçerli bir tarih girin",
+  "qot.errBeforeDocument": "belge tarihinden önce olamaz",
+  "qot.lineN": "{n}. satır",
+  "qot.errDateInvalidField": "Geçerli bir tarih girin (GG/AA/YYYY).",
+  "qot.errBeforeDocumentField": "Geçerlilik tarihi belge tarihinden önce olamaz.",
+  "qot.errQuantityField": "Miktar 0’dan büyük olmalı.",
+  "qot.errUnitPriceField": "Birim fiyat girin."
 }
