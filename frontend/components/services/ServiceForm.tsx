@@ -1394,6 +1394,7 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
     selectTemplate,
     templateConfig,
     hasSignature,
+    signatureChecked,
     setTechSignatureModal,
     setResultAlert,
     fromJobLabel,
@@ -1461,7 +1462,7 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
         style={isScreen ? undefined : { backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}
       >
         {/* Teknisyen imzasi yoksa en basta uyar; imza sayfadan ayrilmadan atilir */}
-        {!hasSignature && (
+        {signatureChecked && !hasSignature && (
           <View className="flex-row items-center rounded-xl p-3 mb-3" style={{ backgroundColor: colors.warning + "1A", borderColor: colors.warning + "55", borderWidth: 1 }}>
             <Ionicons name="create-outline" size={20} color={colors.warning} />
             <View className="flex-1 mx-2.5">

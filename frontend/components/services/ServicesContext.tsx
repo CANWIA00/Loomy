@@ -111,6 +111,8 @@ interface ServicesContextValue {
   // --- UX iyilestirmeleri ---
   /** Teknisyenin (giris yapan kullanicinin) profilde kayitli imzasi var mi */
   hasSignature: boolean;
+  /** Profil yuklenip imza durumu ogrenildi mi (once uyari yanip sonmesin diye) */
+  signatureChecked: boolean;
   techSignatureModal: boolean;
   setTechSignatureModal: (v: boolean) => void;
   /** Teknisyen imzasini sayfadan ayrilmadan profile kaydeder */
@@ -175,6 +177,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [customerSelectModal, setCustomerSelectModal] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
   const [hasSignature, setHasSignature] = useState(false);
+  const [signatureChecked, setSignatureChecked] = useState(false);
   const [signatureAlertVisible, setSignatureAlertVisible] = useState(false);
   const [mapSelectorVisible, setMapSelectorVisible] = useState(false);
   const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
@@ -280,6 +283,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       const stamp = res.data.company?.stampUrl || null;
       const company = res.data.company;
       setHasSignature(!!sig);
+      setSignatureChecked(true);
       if (name) {
         currentUserName.current = name;
         setForm((prev) => ({ ...prev, technician: name }));
@@ -323,6 +327,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       profileApi.getProfile().then((res) => {
         const sig = res.data.user?.signature;
         setHasSignature(!!sig);
+        setSignatureChecked(true);
         if (res.data.user?.phone) {
           currentUserPhone.current = res.data.user.phone;
         }
@@ -1292,6 +1297,7 @@ ucret: form.fee || "0.00",
     selectTemplate,
     templateConfig,
     hasSignature,
+    signatureChecked,
     techSignatureModal,
     setTechSignatureModal,
     handleTechnicianSignatureSave,
