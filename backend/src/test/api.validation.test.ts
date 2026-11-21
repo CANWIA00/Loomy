@@ -117,6 +117,34 @@ describe("error handling", () => {
   });
 });
 
+describe("customer filter on list endpoints", () => {
+  it("filters service records by customerId or name within the company", async () => {
+    loginAsAdmin();
+    (prisma.serviceRecord.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.serviceRecord.count as jest.Mock).mockResolvedValue(0);
+    const res = await request(app)
+      .get("/api/services?customerId=cust-1&customerName=Acme")
+      .set("Authorization", "Bearer t");
+    expect(res.status).toBe(200);
+    const { where } = (prisma.serviceRecord.findMany as jest.Mock).mock.calls[0][0];
+    expect(where.companyId).toBe("c1");
+    expect(where.OR).toEqual([
+      { customerId: "cust-1" },
+      { customerName: { contains: "Acme", mode: "insensitive" } },
+    ]);
+    expect((prisma.serviceRecord.count as jest.Mock).mock.calls[0][0].where).toEqual(where);
+  });
+
+  it("does not filter when no customer params are given", async () => {
+    loginAsAdmin();
+    (prisma.serviceRecord.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.serviceRecord.count as jest.Mock).mockResolvedValue(0);
+    await request(app).get("/api/services").set("Authorization", "Bearer t");
+    const { where } = (prisma.serviceRecord.findMany as jest.Mock).mock.calls[0][0];
+    expect(where).toEqual({ companyId: "c1" });
+  });
+});
+
 describe("parsePagination", () => {
   it("falls back to defaults for invalid input", () => {
     expect(parsePagination({ page: "abc", size: "0" }, 20)).toEqual({ page: 0, size: 20 });

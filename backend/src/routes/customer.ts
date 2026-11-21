@@ -11,6 +11,8 @@ import {
   deleteCustomer,
 } from "../controllers/customerController";
 import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
+import { validateBody } from "../middleware/validate";
+import { createCustomerSchema, updateCustomerSchema } from "../schemas/customer";
 
 const router = Router();
 
@@ -19,8 +21,8 @@ router.get("/search", authenticate, requirePanelAccess("customers", "view"), asy
 router.get("/", authenticate, requirePanelAccess("customers", "view"), asyncHandler(getCustomers));
 router.get("/:id/related-counts", authenticate, requirePanelAccess("customers", "view"), asyncHandler(getCustomerRelatedCounts));
 router.get("/:id", authenticate, requirePanelAccess("customers", "view"), asyncHandler(getCustomerById));
-router.post("/", authenticate, isAdmin, asyncHandler(createCustomer));
-router.put("/:id", authenticate, isAdmin, asyncHandler(updateCustomer));
+router.post("/", authenticate, isAdmin, validateBody(createCustomerSchema, "Şirket adı zorunludur."), asyncHandler(createCustomer));
+router.put("/:id", authenticate, isAdmin, validateBody(updateCustomerSchema), asyncHandler(updateCustomer));
 router.delete("/:id", authenticate, isAdmin, asyncHandler(deleteCustomer));
 
 export default router;

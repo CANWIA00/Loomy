@@ -5,6 +5,7 @@ import { scheduleRecomputeForRecord, periodKey, scheduleRecomputeMonth } from ".
 import { applyUsedProductsTx, parseUsedProducts, reverseUsedProductsTx } from "../services/serviceUsedProducts";
 import { resolveProductsModeTotal } from "../utils/serviceTotals";
 import { parsePagination } from "../utils/pagination";
+import { customerWhere } from "../utils/customerFilter";
 
 export async function getServiceRecords(
   req: AuthRequest,
@@ -12,15 +13,16 @@ export async function getServiceRecords(
 ): Promise<void> {
   const { page, size } = parsePagination(req.query, 20);
   const companyId = req.user!.companyId!;
+  const where = { companyId, ...customerWhere(req.query) };
 
   const [content, totalElements] = await Promise.all([
     prisma.serviceRecord.findMany({
-      where: { companyId },
+      where,
       orderBy: { createdAt: "desc" },
       skip: page * size,
       take: size,
     }),
-    prisma.serviceRecord.count({ where: { companyId } }),
+    prisma.serviceRecord.count({ where }),
   ]);
 
   res.json({

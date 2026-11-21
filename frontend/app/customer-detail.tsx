@@ -562,17 +562,35 @@ export default function CustomerDetailScreen() {
         return !!nm && !!target && (nm === target || nm.includes(target) || target.includes(nm));
       };
 
-      const [svcRes, qRes, payRes] = await Promise.all([
-        serviceApi.getAll(0, 100),
-        quoteApi.getAll(0, 100),
-        paymentApi.getAll(0, 200),
+      // Sunucu yalnizca bu musteriye ait kayitlari dondurur; tum sayfalar cekilir.
+      // (Eskiden sirketin son 100 kaydi cekiliyordu, daha eski kayitlar gorunmuyordu.)
+      const targetName = c?.companyName && c.companyName !== "?" ? c.companyName : undefined;
+      const filter = { customerId: id || undefined, customerName: targetName };
+      const PAGE_SIZE = 200;
+      const MAX_PAGES = 25;
+      const fetchAllPages = async <T,>(
+        fetchPage: (page: number) => Promise<{ data: { content: T[]; totalPages: number } }>
+      ): Promise<T[]> => {
+        const all: T[] = [];
+        for (let page = 0; page < MAX_PAGES; page++) {
+          const res = await fetchPage(page);
+          all.push(...res.data.content);
+          if (page + 1 >= res.data.totalPages) break;
+        }
+        return all;
+      };
+
+      const [svcAll, qAll, payAll] = await Promise.all([
+        fetchAllPages((p) => serviceApi.getAll(p, PAGE_SIZE, filter)),
+        fetchAllPages((p) => quoteApi.getAll(p, PAGE_SIZE, filter)),
+        fetchAllPages((p) => paymentApi.getAll(p, PAGE_SIZE, filter)),
       ]);
 
-      const svc = (svcRes.data.content as ServiceRecord[]).filter((r) =>
+      const svc = (svcAll as ServiceRecord[]).filter((r) =>
         (id && r.customerId === id) || customersMatch(r.customer));
-      const qts = (qRes.data.content as QuoteRecord[]).filter((r) =>
+      const qts = (qAll as QuoteRecord[]).filter((r) =>
         (id && r.customerId === id) || customersMatch(r.customer));
-      const pays = (payRes.data.content as PaymentRecord[]).filter((r) =>
+      const pays = (payAll as PaymentRecord[]).filter((r) =>
         (id && r.customerId === id) || customersMatch(r.customer));
 
       setServices(svc);

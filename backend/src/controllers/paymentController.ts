@@ -8,6 +8,7 @@ import {
   scheduleRecomputeForRecord,
 } from "../services/monthlySummaries";
 import { parsePagination } from "../utils/pagination";
+import { customerWhere } from "../utils/customerFilter";
 
 const PAYMENT_SELECT = {
   id: true,
@@ -48,16 +49,17 @@ export async function getPayments(
 ): Promise<void> {
   const { page, size } = parsePagination(req.query, 50);
   const companyId = req.user!.companyId!;
+  const where = { companyId, ...customerWhere(req.query) };
 
   const [content, totalElements] = await Promise.all([
     prisma.serviceRecord.findMany({
-      where: { companyId },
+      where,
       orderBy: { createdAt: "desc" },
       skip: page * size,
       take: size,
       select: PAYMENT_SELECT,
     }),
-    prisma.serviceRecord.count({ where: { companyId } }),
+    prisma.serviceRecord.count({ where }),
   ]);
 
   const mapped = content.map(toPaymentDto);

@@ -2,6 +2,7 @@ import { Response } from "express";
 import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
 import { parsePagination } from "../utils/pagination";
+import { customerWhere } from "../utils/customerFilter";
 
 export async function getQuoteRecords(
   req: AuthRequest,
@@ -9,15 +10,16 @@ export async function getQuoteRecords(
 ): Promise<void> {
   const { page, size } = parsePagination(req.query, 20);
   const companyId = req.user!.companyId!;
+  const where = { companyId, ...customerWhere(req.query) };
 
   const [content, totalElements] = await Promise.all([
     prisma.quoteRecord.findMany({
-      where: { companyId },
+      where,
       orderBy: { createdAt: "desc" },
       skip: page * size,
       take: size,
     }),
-    prisma.quoteRecord.count({ where: { companyId } }),
+    prisma.quoteRecord.count({ where }),
   ]);
 
   res.json({

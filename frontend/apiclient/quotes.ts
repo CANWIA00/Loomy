@@ -1,3 +1,4 @@
+import type { CustomerListFilter } from "./services";
 import apiClient from "./client";
 import type { TryRatesData } from "../utils/currencyRates";
 
@@ -96,8 +97,8 @@ function toBackend(f: Partial<QuoteRecord>): Record<string, any> {
 }
 
 export const quoteApi = {
-  getAll: async (page: number = 0, size: number = 100) => {
-    const res = await apiClient.get<{ content: QuoteRecordBackend[]; totalElements: number; totalPages: number; number: number; size: number }>("/quotes", { params: { page, size } });
+  getAll: async (page: number = 0, size: number = 100, filter?: CustomerListFilter) => {
+    const res = await apiClient.get<{ content: QuoteRecordBackend[]; totalElements: number; totalPages: number; number: number; size: number }>("/quotes", { params: { page, size, ...filter } });
     return {
       ...res,
       data: {
