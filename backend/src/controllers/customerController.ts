@@ -30,7 +30,7 @@ export async function getCustomers(
     });
   } catch (error: any) {
     console.error("GetCustomers error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -74,7 +74,7 @@ export async function searchCustomers(
     });
   } catch (error: any) {
     console.error("SearchCustomers error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -94,7 +94,7 @@ export async function getAllCustomersSimple(
     res.json(customers);
   } catch (error: any) {
     console.error("GetAllCustomersSimple error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -118,7 +118,7 @@ export async function getCustomerById(
     res.json(customer);
   } catch (error: any) {
     console.error("GetCustomerById error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -163,7 +163,7 @@ export async function createCustomer(
     res.status(201).json(customer);
   } catch (error: any) {
     console.error("CreateCustomer error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -213,7 +213,7 @@ export async function updateCustomer(
     res.json(customer);
   } catch (error: any) {
     console.error("UpdateCustomer error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -243,7 +243,7 @@ export async function getCustomerRelatedCounts(
     res.json({ services, quotes, appointments });
   } catch (error: any) {
     console.error("GetCustomerRelatedCounts error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -277,6 +277,6 @@ export async function deleteCustomer(
     res.json({ message: mode === "cascade" ? "Müşteri ve bağlı kayıtlar silindi." : "Müşteri silindi." });
   } catch (error: any) {
     console.error("DeleteCustomer error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

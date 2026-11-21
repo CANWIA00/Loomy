@@ -61,7 +61,7 @@ export async function devLogin(req: Request, res: Response): Promise<void> {
     res.json({ token, email: email.trim().toLowerCase() });
   } catch (error: any) {
     console.error("Dev login error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -93,7 +93,7 @@ export async function getStats(_req: Request, res: Response): Promise<void> {
     });
   } catch (error: any) {
     console.error("Dev stats error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -106,7 +106,7 @@ export async function listAdminKeys(_req: Request, res: Response): Promise<void>
     res.json(keys);
   } catch (error: any) {
     console.error("Dev listAdminKeys error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -130,7 +130,7 @@ export async function createAdminKey(req: Request, res: Response): Promise<void>
     res.status(201).json({ created });
   } catch (error: any) {
     console.error("Dev createAdminKey error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -159,7 +159,7 @@ export async function updateAdminKey(req: Request, res: Response): Promise<void>
     res.json(updated);
   } catch (error: any) {
     console.error("Dev updateAdminKey error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -170,7 +170,7 @@ export async function deleteAdminKey(req: Request, res: Response): Promise<void>
     res.json({ message: "Admin key silindi." });
   } catch (error: any) {
     console.error("Dev deleteAdminKey error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -194,7 +194,7 @@ export async function listUsers(req: Request, res: Response): Promise<void> {
     res.json(users);
   } catch (error: any) {
     console.error("Dev listUsers error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -228,7 +228,7 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
     res.json(tempPassword ? { ...updated, tempPassword } : updated);
   } catch (error: any) {
     console.error("Dev updateUser error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -255,7 +255,7 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
     res.json({ message: "Kullanıcı silindi." });
   } catch (error: any) {
     console.error("Dev deleteUser error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -270,7 +270,7 @@ export async function listCompanies(_req: Request, res: Response): Promise<void>
     res.json(companies);
   } catch (error: any) {
     console.error("Dev listCompanies error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -295,7 +295,7 @@ export async function getCompany(req: Request, res: Response): Promise<void> {
     res.json(company);
   } catch (error: any) {
     console.error("Dev getCompany error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -331,6 +331,6 @@ export async function updateCompany(req: Request, res: Response): Promise<void> 
     res.json(updated);
   } catch (error: any) {
     console.error("Dev updateCompany error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

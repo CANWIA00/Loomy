@@ -4,10 +4,19 @@ import prisma from "../prisma";
 import { generateToken } from "../services/jwt";
 import { AuthRequest } from "../middleware/auth";
 import { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from "../services/email";
-import { attemptKey, isBlocked, recordFailure, clearAttempts } from "../utils/rateLimit";
+import { attemptKey, accountKey, isBlocked, recordFailure, clearAttempts } from "../utils/rateLimit";
 import { parsePanelAccess } from "../utils/panelAccess";
 
 export const PRIVACY_POLICY_VERSION = "1.0";
+
+const TOO_MANY_CODE_ATTEMPTS =
+  "Cok fazla hatali kod denemesi. Lutfen yeni bir kod isteyin ve 15 dakika sonra tekrar deneyin.";
+
+// Hesap varligini disari sizdirmamak icin kayitli olsun olmasin ayni yanit donulur.
+const RESET_REQUESTED_MESSAGE =
+  "Bu e-posta adresi ile kayitli bir hesap varsa sifre sifirlama kodu gonderildi.";
+const RESEND_REQUESTED_MESSAGE =
+  "Bu e-posta adresi dogrulanmayi bekleyen bir hesaba aitse yeni kod gonderildi.";
 
 export async function register(req: Request, res: Response): Promise<void> {
   try {
@@ -158,7 +167,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     });
   } catch (error: any) {
     console.error("Register error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -171,13 +180,20 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const limiterKey = accountKey(String(email), "verify-email");
+    if (isBlocked(limiterKey)) {
+      res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
+      return;
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
       include: { company: true },
     });
 
     if (!user) {
-      res.status(404).json({ message: "Kullanici bulunamadi." });
+      recordFailure(limiterKey);
+      res.status(400).json({ message: "Gecersiz dogrulama kodu." });
       return;
     }
 
@@ -190,20 +206,10 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Dogrulanmis hesaplar icin kod kontrolu yapilmadan token verilmez; aksi halde
+    // yalnizca e-posta adresini bilen biri hesaba giris yapabilir.
     if (user.emailVerified) {
-      const token = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        companyId: user.companyId ?? undefined,
-      });
-
-      res.json({
-        token,
-        role: user.role,
-        profileCompleted: user.company?.profileCompleted ?? false,
-        panelAccess: parsePanelAccess(user.panelAccess),
-      });
+      res.status(400).json({ message: "E-posta adresi zaten dogrulanmis. Lutfen giris yapin." });
       return;
     }
 
@@ -217,10 +223,22 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (user.verificationCode !== code.trim()) {
+    if (user.verificationCode !== String(code).trim()) {
+      recordFailure(limiterKey);
+      if (isBlocked(limiterKey)) {
+        // Limit dolunca mevcut kod iptal edilir; saldirgan yeni kodu bilemez.
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { verificationCode: null, verificationExpires: null },
+        });
+        res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
+        return;
+      }
       res.status(400).json({ message: "Gecersiz dogrulama kodu." });
       return;
     }
+
+    clearAttempts(limiterKey);
 
     await prisma.user.update({
       where: { id: user.id },
@@ -246,7 +264,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
     });
   } catch (error: any) {
     console.error("Verify email error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -259,17 +277,19 @@ export async function resendVerification(req: Request, res: Response): Promise<v
       return;
     }
 
+    const sendKey = accountKey(String(email), "resend-verification");
+    if (isBlocked(sendKey)) {
+      res.status(429).json({ message: "Cok fazla kod istegi. Lutfen 15 dakika sonra tekrar deneyin." });
+      return;
+    }
+    recordFailure(sendKey);
+
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (!user) {
-      res.status(404).json({ message: "Kullanici bulunamadi." });
-      return;
-    }
-
-    if (user.emailVerified) {
-      res.status(400).json({ message: "E-posta adresi zaten dogrulanmis." });
+    if (!user || user.emailVerified) {
+      res.json({ message: RESEND_REQUESTED_MESSAGE });
       return;
     }
 
@@ -289,7 +309,7 @@ export async function resendVerification(req: Request, res: Response): Promise<v
     res.json({ message: "Yeni dogrulama kodu e-posta adresinize gonderildi." });
   } catch (error: any) {
     console.error("Resend verification error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -370,7 +390,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     });
   } catch (error: any) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -401,7 +421,7 @@ export async function validate(req: AuthRequest, res: Response): Promise<void> {
     res.json({ ...user, panelAccess: parsePanelAccess(user.panelAccess) });
   } catch (error: any) {
     console.error("Validate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -432,7 +452,7 @@ export async function deleteAccount(req: AuthRequest, res: Response): Promise<vo
     res.json({ message: "Hesap başarıyla silindi." });
   } catch (error: any) {
     console.error("Delete account error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -445,17 +465,19 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
       return;
     }
 
+    const sendKey = accountKey(String(email), "forgot-password");
+    if (isBlocked(sendKey)) {
+      res.status(429).json({ message: "Cok fazla kod istegi. Lutfen 15 dakika sonra tekrar deneyin." });
+      return;
+    }
+    recordFailure(sendKey);
+
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (!user) {
-      res.status(404).json({ message: "Bu e-posta adresi ile kayitli hesap bulunamadi." });
-      return;
-    }
-
-    if (!user.isActive) {
-      res.status(403).json({ message: "Hesabiniz devre disi birakilmistir." });
+    if (!user || !user.isActive) {
+      res.json({ message: RESET_REQUESTED_MESSAGE });
       return;
     }
 
@@ -472,10 +494,10 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
 
     await sendPasswordResetEmail(email, resetCode, user.name);
 
-    res.json({ message: "Sifre sifirlama kodu e-posta adresinize gonderildi." });
+    res.json({ message: RESET_REQUESTED_MESSAGE });
   } catch (error: any) {
     console.error("Forgot password error:", error);
-    res.status(500).json({ message: "Sunucu hatasi: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -493,12 +515,19 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
       return;
     }
 
+    const limiterKey = accountKey(String(email), "reset-password");
+    if (isBlocked(limiterKey)) {
+      res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
+      return;
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      res.status(404).json({ message: "Kullanici bulunamadi." });
+      recordFailure(limiterKey);
+      res.status(400).json({ message: "Gecersiz sifre sifirlama kodu." });
       return;
     }
 
@@ -512,10 +541,22 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (user.resetCode !== code.trim()) {
+    if (user.resetCode !== String(code).trim()) {
+      recordFailure(limiterKey);
+      if (isBlocked(limiterKey)) {
+        // Limit dolunca kod iptal edilir; 6 haneli kod brute-force ile bulunamaz.
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { resetCode: null, resetCodeExpires: null },
+        });
+        res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
+        return;
+      }
       res.status(400).json({ message: "Gecersiz sifre sifirlama kodu." });
       return;
     }
+
+    clearAttempts(limiterKey);
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -531,6 +572,6 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     res.json({ message: "Sifreniz basariyla sifirlandi. Artik yeni sifrenizle giris yapabilirsiniz." });
   } catch (error: any) {
     console.error("Reset password error:", error);
-    res.status(500).json({ message: "Sunucu hatasi: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

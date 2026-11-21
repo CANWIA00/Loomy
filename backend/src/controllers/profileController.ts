@@ -115,7 +115,7 @@ export async function getProfile(
     res.json({ user: { ...user, panelAccess: parsePanelAccess(user.panelAccess) }, company });
   } catch (error: any) {
     console.error("GetProfile error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -202,7 +202,7 @@ export async function exportData(
     res.json(exportPackage);
   } catch (error: any) {
     console.error("ExportData error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -236,7 +236,7 @@ export async function updateUser(
     res.json(user);
   } catch (error: any) {
     console.error("UpdateUser error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -300,6 +300,6 @@ export async function updateCompany(
     res.json(company);
   } catch (error: any) {
     console.error("UpdateCompany error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

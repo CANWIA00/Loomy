@@ -43,7 +43,7 @@ export async function getCompanyManagement(req: AuthRequest, res: Response): Pro
     });
   } catch (error: any) {
     console.error("GetCompanyManagement error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -78,7 +78,7 @@ export async function updateUserPanelAccess(req: AuthRequest, res: Response): Pr
     res.json({ id: updated.id, panelAccess: parsePanelAccessOrEmpty(updated.panelAccess) });
   } catch (error: any) {
     console.error("UpdateUserPanelAccess error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -95,6 +95,6 @@ export async function applyPanelAccessToAll(req: AuthRequest, res: Response): Pr
     res.json({ updated: result.count, panelAccess });
   } catch (error: any) {
     console.error("ApplyPanelAccessToAll error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

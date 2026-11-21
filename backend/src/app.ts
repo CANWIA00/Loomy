@@ -46,6 +46,10 @@ function isOriginAllowed(origin: string | undefined): boolean {
 
 const app = express();
 
+// Railway gibi tek bir reverse proxy arkasinda calisiyoruz; req.ip bu sayede
+// gercek istemci IP'sini verir ve x-forwarded-for sahteciligine kapali olur.
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? 1));
+
 app.use(compression());
 
 app.use(cors({

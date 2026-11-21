@@ -165,7 +165,7 @@ export async function getFinanceOverview(
     });
   } catch (error: any) {
     console.error("GetFinanceOverview error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -499,6 +499,6 @@ export async function getFinanceTimeline(
     });
   } catch (error: any) {
     console.error("GetFinanceTimeline error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

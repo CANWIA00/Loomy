@@ -100,7 +100,7 @@ export async function listStockItems(
     });
   } catch (error: any) {
     console.error("ListStockItems error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -133,7 +133,7 @@ export async function getStockItem(
     res.json(item);
   } catch (error: any) {
     console.error("GetStockItem error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -201,7 +201,7 @@ export async function createStockItem(
     res.status(201).json(created);
   } catch (error: any) {
     console.error("CreateStockItem error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -271,7 +271,7 @@ export async function updateStockItem(
     res.json(updated);
   } catch (error: any) {
     console.error("UpdateStockItem error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -293,7 +293,7 @@ export async function deleteStockItem(
     res.json({ message: "Stok ürünü silindi." });
   } catch (error: any) {
     console.error("DeleteStockItem error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -363,7 +363,7 @@ export async function addStockTransaction(
     res.json(updated);
   } catch (error: any) {
     console.error("AddStockTransaction error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -402,7 +402,7 @@ export async function listInvoices(
     });
   } catch (error: any) {
     console.error("ListInvoices error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -573,7 +573,7 @@ export async function importInvoiceXml(
     res.status(201).json({ message: "Fatura başarıyla içe aktarıldı.", ...result });
   } catch (error: any) {
     console.error("ImportInvoiceXml error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -621,7 +621,7 @@ export async function deleteInvoice(
     });
   } catch (error: any) {
     console.error("DeleteInvoice error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -645,7 +645,7 @@ export async function listSavedProductNames(
     res.json({ content: names.map((n) => ({ id: n.id, name: n.name })) });
   } catch (error: any) {
     console.error("ListSavedProductNames error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -670,6 +670,6 @@ export async function saveProductName(
     res.status(201).json({ id: saved.id, name: saved.name });
   } catch (error: any) {
     console.error("SaveProductName error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

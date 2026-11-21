@@ -47,7 +47,7 @@ export async function getCompanyUsers(req: AuthRequest, res: Response): Promise<
     res.json(users);
   } catch (error: any) {
     console.error("GetCompanyUsers error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -67,7 +67,7 @@ export async function getTeams(req: AuthRequest, res: Response): Promise<void> {
     res.json(result);
   } catch (error: any) {
     console.error("GetTeams error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -100,7 +100,7 @@ export async function createTeam(req: AuthRequest, res: Response): Promise<void>
     res.status(201).json(serializeTeam(team));
   } catch (error: any) {
     console.error("CreateTeam error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -119,7 +119,7 @@ export async function deleteTeam(req: AuthRequest, res: Response): Promise<void>
     res.json({ message: "Ekip silindi." });
   } catch (error: any) {
     console.error("DeleteTeam error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -182,7 +182,7 @@ export async function updateTeam(req: AuthRequest, res: Response): Promise<void>
     res.json(serializeTeam(team));
   } catch (error: any) {
     console.error("UpdateTeam error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -224,7 +224,7 @@ export async function addTeamMember(req: AuthRequest, res: Response): Promise<vo
     res.json(serializeTeam(team));
   } catch (error: any) {
     console.error("AddTeamMember error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -263,6 +263,6 @@ export async function removeTeamMembers(req: AuthRequest, res: Response): Promis
     res.json(serializeTeam(team));
   } catch (error: any) {
     console.error("RemoveTeamMembers error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

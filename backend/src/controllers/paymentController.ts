@@ -72,7 +72,7 @@ export async function getPayments(
     });
   } catch (error: any) {
     console.error("GetPayments error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -121,7 +121,7 @@ export async function getPaymentSummary(
     });
   } catch (error: any) {
     console.error("GetPaymentSummary error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -163,6 +163,6 @@ export async function updatePaymentStatus(
     res.json(toPaymentDto(record));
   } catch (error: any) {
     console.error("UpdatePaymentStatus error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

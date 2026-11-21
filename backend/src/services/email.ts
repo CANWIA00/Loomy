@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import dns from "dns";
 import net from "net";
 import nodemailer from "nodemailer";
@@ -70,7 +71,7 @@ function parseFrom(raw: string): { email: string; name: string } {
 }
 
 export function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 }
 
 export async function sendVerificationEmail(

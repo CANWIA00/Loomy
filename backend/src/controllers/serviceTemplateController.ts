@@ -133,7 +133,7 @@ export async function listServiceTemplates(
     );
   } catch (error: any) {
     console.error("ListServiceTemplates error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -182,7 +182,7 @@ export async function createServiceTemplate(
     });
   } catch (error: any) {
     console.error("CreateServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -234,7 +234,7 @@ export async function updateServiceTemplate(
     });
   } catch (error: any) {
     console.error("UpdateServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -276,7 +276,7 @@ export async function setDefaultServiceTemplate(
     });
   } catch (error: any) {
     console.error("SetDefaultServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -319,6 +319,6 @@ export async function deleteServiceTemplate(
     res.json({ message: "Şablon silindi." });
   } catch (error: any) {
     console.error("DeleteServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

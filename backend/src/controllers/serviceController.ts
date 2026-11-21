@@ -33,7 +33,7 @@ export async function getServiceRecords(
     });
   } catch (error: any) {
     console.error("GetServiceRecords error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -125,7 +125,7 @@ export async function createServiceRecord(
     res.status(201).json(saved);
   } catch (error: any) {
     console.error("CreateServiceRecord error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -238,7 +238,7 @@ export async function updateServiceRecord(
     res.json(saved);
   } catch (error: any) {
     console.error("UpdateServiceRecord error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -255,7 +255,7 @@ export async function countServiceRecordsByTemplate(
     res.json({ count });
   } catch (error: any) {
     console.error("CountServiceRecordsByTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -285,7 +285,7 @@ export async function applyTemplateConfigToRecords(
     res.json({ updated: result.count });
   } catch (error: any) {
     console.error("ApplyTemplateConfigToRecords error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -315,6 +315,6 @@ export async function deleteServiceRecord(
     res.json({ message: "Servis kaydı silindi." });
   } catch (error: any) {
     console.error("DeleteServiceRecord error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

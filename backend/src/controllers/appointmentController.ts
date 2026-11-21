@@ -64,7 +64,7 @@ export async function getAppointments(req: AuthRequest, res: Response): Promise<
     res.json(appointments.map(mapAppointment));
   } catch (error: any) {
     console.error("GetAppointments error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -110,7 +110,7 @@ export async function createAppointment(req: AuthRequest, res: Response): Promis
     res.status(201).json(mapAppointment(appointment));
   } catch (error: any) {
     console.error("CreateAppointment error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -150,7 +150,7 @@ export async function updateAppointment(req: AuthRequest, res: Response): Promis
     res.json(mapAppointment(appointment));
   } catch (error: any) {
     console.error("UpdateAppointment error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -169,6 +169,6 @@ export async function deleteAppointment(req: AuthRequest, res: Response): Promis
     res.json({ message: "Randevu silindi." });
   } catch (error: any) {
     console.error("DeleteAppointment error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }

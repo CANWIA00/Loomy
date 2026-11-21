@@ -30,7 +30,7 @@ export async function getQuoteRecords(
     });
   } catch (error: any) {
     console.error("GetQuoteRecords error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -74,7 +74,7 @@ export async function createQuoteRecord(
     res.status(201).json(record);
   } catch (error: any) {
     console.error("CreateQuoteRecord error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -123,7 +123,7 @@ export async function updateQuoteRecord(
     res.json(record);
   } catch (error: any) {
     console.error("UpdateQuoteRecord error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
 
@@ -148,6 +148,6 @@ export async function deleteQuoteRecord(
     res.json({ message: "Teklif kaydı silindi." });
   } catch (error: any) {
     console.error("DeleteQuoteRecord error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
 }
