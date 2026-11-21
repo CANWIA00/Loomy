@@ -1,5 +1,6 @@
 import { Response } from "express";
 import prisma from "../prisma";
+import { completeQuoteJob } from "../services/quoteJobs";
 import { AuthRequest } from "../middleware/auth";
 import { scheduleRecomputeForRecord, periodKey, scheduleRecomputeMonth } from "../services/monthlySummaries";
 import { applyUsedProductsTx, parseUsedProducts, reverseUsedProductsTx } from "../services/serviceUsedProducts";
@@ -42,7 +43,7 @@ export async function createServiceRecord(
     documentDate, customerName, customerId, serviceType, address,
     startTime, endTime, phone, internalIp, externalIp, details,
     fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-    templateName, templateConfig, usedProducts, productsMode, deductStock, tryRates, appointmentId,
+    templateName, templateConfig, usedProducts, productsMode, deductStock, tryRates, appointmentId, quoteId,
   } = req.body;
   const companyId = req.user!.companyId!;
 
@@ -112,11 +113,15 @@ export async function createServiceRecord(
     }
     // Planlama isinden acildiysa is tamamlandi olarak isaretlenir ve kayda baglanir.
     const jobId = Number(appointmentId);
+    const fromQuoteId = Number(quoteId);
     if (Number.isInteger(jobId) && jobId > 0) {
       await tx.appointment.updateMany({
         where: { id: jobId, companyId, status: { in: ["AWAITING", "SCHEDULED"] } },
         data: { status: "DONE", serviceRecordId: record.id },
       });
+    } else if (Number.isInteger(fromQuoteId) && fromQuoteId > 0) {
+      // Tekliften acildi ve teklifin acik isi yoktu: teklif kabul edilir, is tamamlanmis kaydedilir.
+      await completeQuoteJob(tx, companyId, fromQuoteId, record.id);
     }
   });
 

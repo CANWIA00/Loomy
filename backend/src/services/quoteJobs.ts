@@ -66,3 +66,36 @@ export async function syncQuoteJob(tx: Tx, companyId: string, quoteId: number, s
   if (existing.status === "DONE") return { job: { id: existing.id, status: existing.status }, warning: "done" };
   return { job: { id: existing.id, status: existing.status }, warning: null };
 }
+
+/**
+ * Tekliften dogrudan servis kaydi olusturuldu: is yapilmis demektir.
+ * - Teklif "Kabul edildi" olur.
+ * - Acik ya da iptal edilmis is varsa tamamlanir; is hic yoksa tamamlanmis olarak
+ *   olusturulur. Boylece teklif sonradan kabul edilse bile atama bekleyenlere dusmez.
+ * - Is zaten tamamlanmissa dokunulmaz.
+ */
+export async function completeQuoteJob(tx: Tx, companyId: string, quoteId: number, serviceRecordId: number): Promise<void> {
+  const quote = await tx.quoteRecord.findFirst({ where: { id: quoteId, companyId } });
+  if (!quote) return;
+  if (quote.status !== "ACCEPTED") {
+    await tx.quoteRecord.update({ where: { id: quote.id }, data: { status: "ACCEPTED", statusUpdatedAt: new Date() } });
+  }
+  const existing = await tx.appointment.findFirst({ where: { quoteId, companyId } });
+  if (existing?.status === "DONE") return;
+  if (existing) {
+    await tx.appointment.update({ where: { id: existing.id }, data: { status: "DONE", serviceRecordId } });
+    return;
+  }
+  await tx.appointment.create({
+    data: {
+      companyId,
+      quoteId: quote.id,
+      customerName: quote.customerName,
+      customerId: quote.customerId,
+      serviceType: quote.title?.trim() || "Teklif",
+      notes: `Teklif #${quote.id}${quote.title ? ` · ${quote.title}` : ""}`,
+      status: "DONE",
+      serviceRecordId,
+    },
+  });
+}

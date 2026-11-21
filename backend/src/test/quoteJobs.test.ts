@@ -1,9 +1,11 @@
-import { syncQuoteJob } from "../services/quoteJobs";
+import { syncQuoteJob, completeQuoteJob } from "../services/quoteJobs";
 
-function makeTx(existingJob: any) {
+function makeTx(existingJob: any, quoteStatus = "PENDING") {
   return {
     quoteRecord: {
+      update: jest.fn().mockResolvedValue({}),
       findFirst: jest.fn().mockResolvedValue({
+        status: quoteStatus,
         id: 7, title: "Kamera Kurulumu", customerName: "Acme", customerId: "cust-1",
         lines: JSON.stringify([{ name: "IP Kamera", quantity: 4, unit: "Adet" }]),
       }),
@@ -64,5 +66,29 @@ describe("syncQuoteJob", () => {
     const tx = makeTx(null);
     const r = await syncQuoteJob(tx, "c1", 7, "REJECTED");
     expect(r).toEqual({ job: null, warning: null });
+  });
+});
+
+describe("completeQuoteJob (tekliften servis kaydi)", () => {
+  it("isi olmayan teklifi kabul eder ve tamamlanmis is olusturur", async () => {
+    const tx = makeTx(null);
+    await completeQuoteJob(tx, "c1", 7, 300);
+    expect(tx.quoteRecord.update.mock.calls[0][0].data.status).toBe("ACCEPTED");
+    expect(tx.appointment.create.mock.calls[0][0].data).toMatchObject({ quoteId: 7, status: "DONE", serviceRecordId: 300, customerName: "Acme" });
+  });
+
+  it("iptal edilmis isi tamamlar", async () => {
+    const tx = makeTx({ id: 5, status: "CANCELLED" }, "REJECTED");
+    await completeQuoteJob(tx, "c1", 7, 300);
+    expect(tx.appointment.update).toHaveBeenCalledWith({ where: { id: 5 }, data: { status: "DONE", serviceRecordId: 300 } });
+    expect(tx.appointment.create).not.toHaveBeenCalled();
+  });
+
+  it("tamamlanmis ise ve kabul edilmis teklife dokunmaz", async () => {
+    const tx = makeTx({ id: 5, status: "DONE" }, "ACCEPTED");
+    await completeQuoteJob(tx, "c1", 7, 301);
+    expect(tx.quoteRecord.update).not.toHaveBeenCalled();
+    expect(tx.appointment.update).not.toHaveBeenCalled();
+    expect(tx.appointment.create).not.toHaveBeenCalled();
   });
 });

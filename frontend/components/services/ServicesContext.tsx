@@ -212,6 +212,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [templatesLoaded, setTemplatesLoaded] = useState(false);
   /** Form planlama isinden acildiysa o isin numarasi; kayitla birlikte is tamamlanir. */
   const jobIdRef = useRef<number | null>(null);
+  /** Tekliften acildi ve teklifin acik isi yok: kayitla teklif kabul edilir, is tamamlanmis kaydedilir. */
+  const quoteIdRef = useRef<number | null>(null);
   const handledJobIdRef = useRef<string>("");
   const [fromJobLabel, setFromJobLabel] = useState<string | null>(null);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
@@ -635,6 +637,8 @@ ucret: form.fee || "0.00",
   };
 
   const handleClear = () => {
+    // Temizlenen form artik o is/teklife ait degil; baska bir is icin kaydedilirse is yanlislikla kapanmasin.
+    clearJobLink();
     if (isEditing && originalFormRef.current) {
       setForm({ ...originalFormRef.current });
     } else {
@@ -715,6 +719,7 @@ ucret: form.fee || "0.00",
 
   const clearJobLink = () => {
     jobIdRef.current = null;
+    quoteIdRef.current = null;
     setFromJobLabel(null);
   };
 
@@ -763,6 +768,7 @@ ucret: form.fee || "0.00",
     address?: string;
     phone?: string;
     jobId: number | null;
+    quoteId?: number | null;
     banner: string;
   }) => {
     let useProducts = !!activeTemplate?.useProducts;
@@ -798,6 +804,7 @@ ucret: form.fee || "0.00",
     setSelectedCustomerId(cust?.id || src.customerId || null);
     setMissingKeys([]);
     jobIdRef.current = src.jobId;
+    quoteIdRef.current = src.jobId ? null : src.quoteId ?? null;
     setFromJobLabel(src.banner);
     setShowForm(true);
     scrollToForm();
@@ -851,6 +858,7 @@ ucret: form.fee || "0.00",
           address: quote.adres,
           phone: quote.telefon,
           jobId: openJob ? openJob.id : null,
+          quoteId: quote.id,
           banner: openJob
             ? t("svc.fromJobBanner", { job: `${quote.customer} · ${title}` })
             : t("svc.fromQuoteBanner", { quote: `${quote.customer} · ${title}` }),
@@ -923,10 +931,10 @@ ucret: form.fee || "0.00",
         templateName: activeTemplate?.name || undefined,
         templateConfig: templateSnapshot(templateConfig),
         tryRates,
-      }, { appointmentId: jobIdRef.current });
+      }, { appointmentId: jobIdRef.current, quoteId: quoteIdRef.current });
       setResultAlert({
         visible: true, type: "success", title: t("svc.success"),
-        message: jobIdRef.current ? t("svc.successCreatedJob") : t("svc.successCreated"),
+        message: jobIdRef.current ? t("svc.successCreatedJob") : quoteIdRef.current ? t("svc.successCreatedQuote") : t("svc.successCreated"),
       });
       clearJobLink();
       // Form yalnizca basarili kayittan sonra temizlenir; hata olursa kullanicinin

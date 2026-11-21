@@ -121,6 +121,24 @@ describe("teklif -> planlama -> servis akisi", () => {
     expect((await api("GET", `/quotes/${quoteId}`, { token })).body.job).toMatchObject({ status: "DONE", serviceRecordId: svc.body.id });
   });
 
+  it("kabul edilmemis tekliften servis kaydi: teklif kabul olur, is tamamlanmis kaydedilir", async () => {
+    const { token, quoteId } = await setup();
+    const svc = await api("POST", "/services", {
+      token,
+      body: { customerName: "Akış Test A.Ş.", documentDate: "26/11/2026", serviceType: "Kurulum", quoteId },
+    });
+    expect(svc.status).toBe(201);
+    const q = await api("GET", `/quotes/${quoteId}`, { token });
+    expect(q.body.status).toBe("ACCEPTED");
+    expect(q.body.job).toMatchObject({ status: "DONE", serviceRecordId: svc.body.id });
+    expect((await awaiting(token)).body.some((j: any) => j.quoteId === quoteId)).toBe(false);
+
+    // sonradan tekrar kabul edilse de atama bekleyenlere dusmez
+    await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });
+    expect((await awaiting(token)).body.some((j: any) => j.quoteId === quoteId)).toBe(false);
+    expect(await prisma.appointment.count({ where: { quoteId } })).toBe(1);
+  });
+
   it("teklif silinince atanmamis is iptal olur", async () => {
     const { token, quoteId } = await setup();
     const acc = await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });
