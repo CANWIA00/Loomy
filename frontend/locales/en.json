@@ -1215,5 +1215,12 @@
   "svc.fromQuoteBanner": "Creating from a quote: {quote}. When saved, the quote is marked accepted and the job completed.",
   "svc.quoteDefaultTitle": "Quote",
   "svc.errorQuoteLoad": "Could not load the quote.",
-  "svc.successCreatedQuote": "Service record created; the quote was marked accepted and the job completed."
+  "svc.successCreatedQuote": "Service record created; the quote was marked accepted and the job completed.",
+  "qot.customerPromptTitle": "Save as customer?",
+  "qot.customerPromptMessage": "\"{name}\" is not in your customers. Save it as a customer using the quote details?",
+  "qot.customerPromptSave": "Save customer and continue",
+  "qot.customerPromptSkipAccept": "Accept without saving",
+  "qot.customerPromptSkipService": "Open service form without saving",
+  "qot.customerSavedNote": "\"{name}\" was added to customers.",
+  "qot.errorSaveCustomer": "Could not save the customer."
 }

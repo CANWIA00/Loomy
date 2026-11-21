@@ -11,6 +11,7 @@ import { profileApi } from "../../apiclient/profile";
 import { quoteApi, QuoteRecord, type QuoteStatus } from "../../apiclient/quotes";
 import { customerApi, Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { freshQuoteForm, todayDateInput, emptyLine, parseNumericInput, initialNewCustomerForm, type QuoteFormData, type QuotePdfData, type QuoteFilter, type NewCustomerFormData, validateQuoteForm, hasQuoteErrors, NO_QUOTE_ERRORS, type QuoteValidation } from "./types";
 
@@ -75,6 +76,10 @@ interface QuoteContextValue {
   setQuoteStatus: (record: QuoteRecord, status: QuoteStatus) => Promise<void>;
   /** Tekliften servis formu: teklif kabul edilir (is planlamaya duser) ve form o ise bagli acilir. */
   createServiceFromQuote: (record: QuoteRecord) => Promise<void>;
+  /** Musteri kaydi olmayan teklifte kabul/servis oncesi "musteri kaydedilsin mi?" sorusu */
+  customerPrompt: { record: QuoteRecord; action: "accept" | "service" } | null;
+  customerPromptSaving: boolean;
+  resolveCustomerPrompt: (choice: "save" | "skip" | "cancel") => Promise<void>;
   filter: QuoteFilter;
   setFilter: (f: QuoteFilter) => void;
   filterDate: string;
@@ -460,14 +465,62 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   records.forEach((r) => { statusCounts[r.status || "PENDING"] += 1; });
 
   // Durum degisikligi ekranda hemen gorunur; sunucu hata verirse eski haline doner.
+  // --- Musteri kaydi olmayan teklif: kabul ederken / servis formu acarken sor ---
+  const { user } = useAuth();
+  const canSaveCustomer = user?.role === "ADMIN";
+  const [customerPrompt, setCustomerPrompt] = useState<{ record: QuoteRecord; action: "accept" | "service" } | null>(null);
+  const [customerPromptSaving, setCustomerPromptSaving] = useState(false);
+  const needsCustomerPrompt = (record: QuoteRecord) =>
+    canSaveCustomer && !record.customerId && !!record.customer?.trim();
+
+  const resolveCustomerPrompt = async (choice: "save" | "skip" | "cancel") => {
+    const prompt = customerPrompt;
+    if (!prompt) return;
+    if (choice === "cancel") { setCustomerPrompt(null); return; }
+    let record = prompt.record;
+    let savedName: string | null = null;
+    if (choice === "save") {
+      setCustomerPromptSaving(true);
+      try {
+        const res = await quoteApi.saveCustomer(record.id);
+        record = { ...record, customerId: res.data.customer.id };
+        savedName = res.data.customer.companyName;
+        setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, customerId: res.data.customer.id } : r)));
+        if (res.data.created) {
+          customerApi.getAllSimple().then((r) => setCustomerList(r.data)).catch(() => {});
+        }
+      } catch (error: any) {
+        setCustomerPromptSaving(false);
+        setCustomerPrompt(null);
+        setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: error?.response?.data?.message || t("qot.errorSaveCustomer") });
+        return;
+      }
+      setCustomerPromptSaving(false);
+    }
+    setCustomerPrompt(null);
+    if (prompt.action === "accept") await applyQuoteStatus(record, "ACCEPTED", savedName);
+    else await openServiceFromQuote(record);
+  };
+
   const setQuoteStatus = async (record: QuoteRecord, status: QuoteStatus) => {
+    if (status === "ACCEPTED" && (record.status || "PENDING") !== "ACCEPTED" && needsCustomerPrompt(record)) {
+      setCustomerPrompt({ record, action: "accept" });
+      return;
+    }
+    await applyQuoteStatus(record, status, null);
+  };
+
+  const applyQuoteStatus = async (record: QuoteRecord, status: QuoteStatus, savedCustomer: string | null) => {
     const previous = record.status || "PENDING";
     if (previous === status) return;
     setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, status } : r)));
     try {
       const res = await quoteApi.setStatus(record.id, status);
       if (status === "ACCEPTED" && res.job?.status === "AWAITING") {
-        setResultAlert({ visible: true, type: "success", title: t("qot.jobCreatedTitle"), message: t("qot.jobCreatedMessage") });
+        setResultAlert({
+          visible: true, type: "success", title: t("qot.jobCreatedTitle"),
+          message: t("qot.jobCreatedMessage") + (savedCustomer ? "\n\n" + t("qot.customerSavedNote", { name: savedCustomer }) : ""),
+        });
       } else if (res.jobWarning === "scheduled") {
         setResultAlert({ visible: true, type: "warning", title: t("qot.warning"), message: t("qot.jobScheduledWarning") });
       } else if (res.jobWarning === "done") {
@@ -481,6 +534,14 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const router = useRouter();
   const createServiceFromQuote = async (record: QuoteRecord) => {
+    if (needsCustomerPrompt(record)) {
+      setCustomerPrompt({ record, action: "service" });
+      return;
+    }
+    await openServiceFromQuote(record);
+  };
+
+  const openServiceFromQuote = async (record: QuoteRecord) => {
     // Servis formu olusturmak = musteri teklifi kabul etti. Teklif hemen kabul edilir;
     // atama bekleyen is olusur ve form o ise bagli acilir. Form kaydedilmezse is
     // bekleyenlerde kalir, kaydedilirse tamamlanir.
@@ -746,6 +807,9 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     statusCounts,
     setQuoteStatus,
     createServiceFromQuote,
+    customerPrompt,
+    customerPromptSaving,
+    resolveCustomerPrompt,
     filter,
     setFilter,
     filterDate,

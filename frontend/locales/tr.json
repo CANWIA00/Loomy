@@ -1215,5 +1215,12 @@
   "svc.fromQuoteBanner": "Tekliften oluşturuluyor: {quote}. Kaydedince teklif kabul edildi ve iş tamamlandı olarak işaretlenir.",
   "svc.quoteDefaultTitle": "Teklif",
   "svc.errorQuoteLoad": "Teklif bilgileri yüklenemedi.",
-  "svc.successCreatedQuote": "Servis kaydı oluşturuldu; teklif kabul edildi ve iş tamamlandı olarak işaretlendi."
+  "svc.successCreatedQuote": "Servis kaydı oluşturuldu; teklif kabul edildi ve iş tamamlandı olarak işaretlendi.",
+  "qot.customerPromptTitle": "Müşteri kaydedilsin mi?",
+  "qot.customerPromptMessage": "\"{name}\" müşteri kayıtlarınızda yok. Teklifteki bilgilerle müşteri olarak kaydedilsin mi?",
+  "qot.customerPromptSave": "Müşteriyi kaydet ve devam et",
+  "qot.customerPromptSkipAccept": "Kaydetmeden kabul et",
+  "qot.customerPromptSkipService": "Kaydetmeden servis formuna geç",
+  "qot.customerSavedNote": "\"{name}\" müşteri kayıtlarına eklendi.",
+  "qot.errorSaveCustomer": "Müşteri kaydedilemedi."
 }

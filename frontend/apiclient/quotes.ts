@@ -128,6 +128,10 @@ export const quoteApi = {
   delete: (id: number) =>
     apiClient.delete(`/quotes/${id}`),
 
+  /** Musteri kaydi olmayan teklifin musterisini kaydeder (ayni isimde varsa ona baglar). */
+  saveCustomer: (id: number) =>
+    apiClient.post<{ customer: { id: string; companyName: string }; created: boolean }>(`/quotes/${id}/save-customer`),
+
   /** Tek teklif ve (varsa) planlamadaki isi */
   getById: async (id: number) => {
     const res = await apiClient.get<QuoteRecordBackend & {

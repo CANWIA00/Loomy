@@ -8,6 +8,7 @@ import ScreenHeader from "../../components/ScreenHeader";
 import { QuotesProvider, useQuotes } from "../../components/quotes/QuoteContext";
 import QuoteForm from "../../components/quotes/QuoteForm";
 import QuoteRecordsSection from "../../components/quotes/QuoteRecordsSection";
+import QuoteCustomerPrompt from "../../components/quotes/modals/QuoteCustomerPrompt";
 import QuotePdfPreviewModal from "../../components/quotes/modals/QuotePdfPreviewModal";
 import { computeQuoteTotals, formatMoney, getCurrencySymbol } from "../../components/quotes/types";
 import CustomAlert from "../../components/CustomAlert";
@@ -199,6 +200,7 @@ function QuotesScreenInner() {
       />
 
       <QuotePdfPreviewModal />
+      <QuoteCustomerPrompt />
     </>
   );
 }

@@ -139,6 +139,33 @@ describe("teklif -> planlama -> servis akisi", () => {
     expect(await prisma.appointment.count({ where: { quoteId } })).toBe(1);
   });
 
+  it("musteri kaydi olmayan teklifin musterisi kaydedilir; teklif ve is baglanir", async () => {
+    const { token, quoteId } = await setup();
+    await prisma.quoteRecord.update({ where: { id: quoteId }, data: { contactPerson: "Ayşe Y.", phone: "05321112233", email: "ayse@akis.test", address: "Kadıköy" } });
+    const acc = await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });
+
+    const saved = await api("POST", `/quotes/${quoteId}/save-customer`, { token });
+    expect(saved.status).toBe(201);
+    expect(saved.body.created).toBe(true);
+    expect(saved.body.customer).toMatchObject({ companyName: "Akış Test A.Ş.", contactPerson: "Ayşe Y.", phone: "05321112233", email: "ayse@akis.test", address: "Kadıköy" });
+    const customerId = saved.body.customer.id;
+    expect((await prisma.quoteRecord.findUnique({ where: { id: quoteId } }))!.customerId).toBe(customerId);
+    expect((await prisma.appointment.findUnique({ where: { id: acc.body.job.id } }))!.customerId).toBe(customerId);
+
+    // tekrar cagrilirsa yeni musteri acilmaz
+    const again = await api("POST", `/quotes/${quoteId}/save-customer`, { token });
+    expect(again.status).toBe(200);
+    expect(again.body).toMatchObject({ created: false, customer: { id: customerId } });
+  });
+
+  it("ayni isimde musteri varsa yenisi acilmaz, ona baglanir", async () => {
+    const { token, quoteId } = await setup();
+    const existing = await api("POST", "/customers", { token, body: { companyName: "akış test a.ş." } });
+    const saved = await api("POST", `/quotes/${quoteId}/save-customer`, { token });
+    expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject({ created: false, customer: { id: existing.body.id } });
+  });
+
   it("teklif silinince atanmamis is iptal olur", async () => {
     const { token, quoteId } = await setup();
     const acc = await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });

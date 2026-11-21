@@ -188,3 +188,52 @@ export async function getQuoteRecord(req: AuthRequest, res: Response): Promise<v
   });
   res.json({ ...record, job });
 }
+
+/**
+ * Musteri kaydi olmayan teklifin musterisini kaydeder (kabul / servis formu oncesi).
+ * Ayni isimde musteri varsa yenisi acilmaz, ona baglanir. Teklif ve teklife bagli
+ * planlama isi bu musteriye baglanir.
+ */
+export async function saveQuoteCustomer(req: AuthRequest, res: Response): Promise<void> {
+  const id = parseInt(String(req.params.id));
+  const companyId = req.user!.companyId!;
+  const quote = await prisma.quoteRecord.findFirst({ where: { id, companyId } });
+  if (!quote) {
+    res.status(404).json({ message: "Teklif kaydı bulunamadı." });
+    return;
+  }
+  const name = quote.customerName.trim();
+  if (!name) {
+    res.status(400).json({ message: "Teklifte müşteri adı yok." });
+    return;
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const linked = quote.customerId
+      ? await tx.customer.findFirst({ where: { id: quote.customerId, companyId } })
+      : null;
+    if (linked) return { customer: linked, created: false };
+    const existing = await tx.customer.findFirst({
+      where: { companyId, companyName: { equals: name, mode: "insensitive" } },
+    });
+    const opt = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);
+    const customer = existing ?? await tx.customer.create({
+      data: {
+        companyId,
+        companyName: name,
+        contactPerson: opt(quote.contactPerson),
+        phone: opt(quote.phone),
+        email: opt(quote.email),
+        address: opt(quote.address),
+        fax: opt(quote.fax),
+        website: opt(quote.website),
+        subscriberNo: opt(quote.subscriberNo),
+      },
+    });
+    await tx.quoteRecord.update({ where: { id: quote.id }, data: { customerId: customer.id } });
+    await tx.appointment.updateMany({ where: { quoteId: quote.id, companyId }, data: { customerId: customer.id } });
+    return { customer, created: !existing };
+  });
+
+  res.status(result.created ? 201 : 200).json(result);
+}
