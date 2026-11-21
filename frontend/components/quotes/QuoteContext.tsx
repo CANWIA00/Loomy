@@ -395,7 +395,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       address: record.adres || "",
       subscriberNo: record.subscriberNo || "",
       documentDate: todayDateInput(),
-      validUntil: record.validUntil || "",
+      validUntil: todayDateInput(),
       notes: record.notlar || "",
       lines: record.lines?.length
         ? record.lines.map((l) => ({

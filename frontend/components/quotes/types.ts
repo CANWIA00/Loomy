@@ -70,8 +70,8 @@ export function todayDateInput(now: Date = new Date()): string {
   return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
 }
 
-/** Yeni teklif formu: belge tarihi bugunle dolu gelir. */
-export const freshQuoteForm = (): QuoteFormData => ({ ...initialQuoteForm, documentDate: todayDateInput() });
+/** Yeni teklif formu: belge tarihi ve gecerlilik bugunle dolu gelir. */
+export const freshQuoteForm = (): QuoteFormData => ({ ...initialQuoteForm, documentDate: todayDateInput(), validUntil: todayDateInput() });
 
 export const initialQuoteForm: QuoteFormData = {
   title: "",
