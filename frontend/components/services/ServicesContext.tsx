@@ -18,6 +18,9 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField, type UsedProductFormItem } from "./types";
 
+/** Bagli (teklif/planli is) formda kilitli musteri alanlari */
+const LOCKED_KEYS: (keyof ServiceFormData)[] = ["customerName", "serviceAddress", "phone"];
+
 interface DeleteAlertState {
   visible: boolean;
   record: ServiceRecord | null;
@@ -54,6 +57,13 @@ interface ServicesContextValue {
   customerList: Customer[];
   /** Form planlama isinden acildiysa gosterilecek etiket */
   fromJobLabel: string | null;
+  /** Form teklif/planli ise bagli: musteri bilgileri kilitli, degistirmek icin form temizlenmeli */
+  customerLocked: boolean;
+  /** Temizle: bagli formda once onay sorar (bagi da kaldirir) */
+  requestClear: () => void;
+  clearConfirmVisible: boolean;
+  closeClearConfirm: () => void;
+  confirmClear: () => void;
   selectedCustomerId: string | null;
   clearCustomerSelection: () => void;
   selectCustomer: (id: string, name: string, address: string, phone: string) => void;
@@ -219,6 +229,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const quoteIdRef = useRef<number | null>(null);
   const handledJobIdRef = useRef<string>("");
   const [fromJobLabel, setFromJobLabel] = useState<string | null>(null);
+  const [clearConfirmVisible, setClearConfirmVisible] = useState(false);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
 
   const fetchRecords = useCallback(async () => {
@@ -405,6 +416,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   };
 
   const updateForm = (key: keyof ServiceFormData, value: string | boolean) => {
+    if (customerLockedRef.current && LOCKED_KEYS.includes(key)) return;
     setForm((prev) => ({ ...prev, [key]: value }));
     clearMissing(key === "kdvRate" ? "kdv" : key === "serviceAddress" ? "serviceAddress" : key, value);
   };
@@ -634,11 +646,27 @@ ucret: form.fee || "0.00",
   };
 
   const handleCancelEditing = () => {
+    clearJobLink();
     setIsEditing(false);
     setEditingId(null);
     originalFormRef.current = null;
     setForm(freshForm());
     setSelectedCustomerId(null);
+  };
+
+  // Teklif/planli isten gelen formda musteri o ise aittir: kilitli. Degistirmek icin
+  // form tamamen temizlenir; temizleme is/teklif bagini da kaldirir (is bekleyenlerde kalir).
+  const customerLocked = !!fromJobLabel && !isEditing;
+  const customerLockedRef = useRef(false);
+  customerLockedRef.current = customerLocked;
+  const requestClear = () => {
+    if (customerLocked) setClearConfirmVisible(true);
+    else handleClear();
+  };
+  const closeClearConfirm = () => setClearConfirmVisible(false);
+  const confirmClear = () => {
+    setClearConfirmVisible(false);
+    handleClear();
   };
 
   const handleClear = () => {
@@ -653,6 +681,7 @@ ucret: form.fee || "0.00",
   };
 
   const handleEdit = (record: ServiceRecord) => {
+    clearJobLink();
     const editForm: ServiceFormData = {
       customerName: record.customer || "",
       serviceAddress: record.adres || "",
@@ -1122,11 +1151,13 @@ ucret: form.fee || "0.00",
   };
 
   const clearCustomerSelection = () => {
+    if (customerLockedRef.current) return;
     setSelectedCustomerId(null);
     setForm((prev) => ({ ...prev, customerName: "", serviceAddress: "", phone: "" }));
   };
 
   const selectCustomer = (id: string, name: string, address: string, phone: string) => {
+    if (customerLockedRef.current) { setCustomerSelectModal(false); return; }
     setSelectedCustomerId(id);
     setCustomerSelectModal(false);
     setForm((prev) => ({ ...prev, customerName: name, serviceAddress: address, phone }));
@@ -1221,6 +1252,11 @@ ucret: form.fee || "0.00",
 
   const value: ServicesContextValue = {
     fromJobLabel,
+    customerLocked,
+    requestClear,
+    clearConfirmVisible,
+    closeClearConfirm,
+    confirmClear,
     loading,
     refreshRecords: fetchRecords,
     companyLogo,

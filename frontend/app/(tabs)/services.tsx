@@ -18,7 +18,7 @@ import CustomAlert from "../../components/CustomAlert";
 function PhoneFormScreen({ onRequestClose }: { onRequestClose: () => void }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const { isEditing, handleClear, handleSave, scrollRef, contentTopRef } = useServices();
+  const { isEditing, requestClear, handleSave, scrollRef, contentTopRef } = useServices();
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.bg }}>
@@ -34,7 +34,7 @@ function PhoneFormScreen({ onRequestClose }: { onRequestClose: () => void }) {
         <Text className="flex-1 text-base font-semibold ml-1" style={{ color: colors.text }} numberOfLines={1}>
           {isEditing ? t("svc.editRecord") : t("svc.newRecord")}
         </Text>
-        <TouchableOpacity onPress={handleClear} className="h-11 px-3 flex-row items-center justify-center" accessibilityRole="button">
+        <TouchableOpacity onPress={requestClear} className="h-11 px-3 flex-row items-center justify-center" accessibilityRole="button">
           <Ionicons name="refresh-outline" size={15} color={colors.danger} />
           <Text className="text-sm font-medium ml-1" style={{ color: colors.danger }}>{t("svc.clear")}</Text>
         </TouchableOpacity>
@@ -86,6 +86,9 @@ function ServicesScreenInner() {
     openNewRecord,
     closeFormScreen,
     isFormDirty,
+    clearConfirmVisible,
+    closeClearConfirm,
+    confirmClear,
   } = useServices();
   const [discardAlert, setDiscardAlert] = useState(false);
 
@@ -171,6 +174,17 @@ function ServicesScreenInner() {
         onClose={() => setSaveAlertVisible(false)}
         onConfirm={confirmSave}
         confirmText={t("common.confirm")}
+      />
+
+      <CustomAlert
+        visible={clearConfirmVisible}
+        type="confirm"
+        title={t("svc.clearLinkedTitle")}
+        message={t("svc.clearLinkedMessage")}
+        onClose={closeClearConfirm}
+        onConfirm={confirmClear}
+        confirmText={t("svc.clearLinkedConfirm")}
+        confirmColor={colors.danger}
       />
 
       <CustomAlert

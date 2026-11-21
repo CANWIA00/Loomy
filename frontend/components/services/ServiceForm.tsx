@@ -45,6 +45,11 @@ const labelOf = (field: TemplateField, lang: string) => (lang === "tr" ? field.l
  * Alan etiketi. `field` verilirse zorunlu alanlarda * gosterir, eksikse kirmizi
  * olur ve "Bu alan zorunludur" yazar; konumunu kaydeder (eksik alana kaydirma).
  */
+/** Kilitli (bagli is/teklif) musteri alanlari: soluk, duzenlenemez gorunur */
+function lockedStyle(colors: { bgInput: string }) {
+  return { backgroundColor: colors.bgInput, opacity: 0.85 } as const;
+}
+
 function FieldLabel({ children, field }: { children: ReactNode; field?: TemplateField }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
@@ -270,7 +275,7 @@ function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
 function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm, updateCustomField, isMissing } = useServices();
+  const { form, updateForm, updateCustomField, isMissing, customerLocked } = useServices();
   const missing = isMissing(field.key);
   const label = labelOf(field, lang);
   const cellClass = compact ? "flex-1" : "flex-1 mb-3";
@@ -346,6 +351,8 @@ function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean
           {...inputProps}
           placeholder={t("svc.phonePlaceholder")}
           keyboardType="phone-pad"
+          editable={!customerLocked}
+          style={[(inputProps as any).style, customerLocked && lockedStyle(colors)]}
           value={form.phone}
           onChangeText={(v) => updateForm("phone", v)}
         />
@@ -437,7 +444,7 @@ function DocumentDateField({ field, compact }: { field: TemplateField; compact?:
 function CustomerNameField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm, isMissing } = useServices();
+  const { form, updateForm, isMissing, customerLocked } = useServices();
   const missing = isMissing(field.key);
 
   return (
@@ -445,7 +452,8 @@ function CustomerNameField({ field }: { field: TemplateField }) {
       <FieldLabel field={field}>{labelOf(field, lang)}</FieldLabel>
       <TextInput
         className="w-full h-10 border rounded-lg px-3 text-sm"
-        style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
+        style={[{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }, customerLocked && lockedStyle(colors)]}
+        editable={!customerLocked}
         placeholder={t("svc.customerNamePlaceholder")}
         placeholderTextColor={colors.textMuted}
         value={form.customerName}
@@ -458,7 +466,7 @@ function CustomerNameField({ field }: { field: TemplateField }) {
 function ServiceAddressField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm, setMapSelectorVisible, isMissing } = useServices();
+  const { form, updateForm, setMapSelectorVisible, isMissing, customerLocked } = useServices();
   const missing = isMissing(field.key);
 
   return (
@@ -467,15 +475,22 @@ function ServiceAddressField({ field }: { field: TemplateField }) {
       <View className="relative flex-1">
         <TextInput
           className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
+          style={[{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }, customerLocked && lockedStyle(colors)]}
+          editable={!customerLocked}
           placeholder={t("svc.serviceAddressPlaceholder")}
           placeholderTextColor={colors.textMuted}
           value={form.serviceAddress}
           onChangeText={(v) => updateForm("serviceAddress", v)}
         />
-        <TouchableOpacity className="absolute right-2 top-1/2 -translate-y-1/2" onPress={() => setMapSelectorVisible(true)}>
-          <Ionicons name="locate-outline" size={20} color={colors.primary} />
-        </TouchableOpacity>
+        {customerLocked ? (
+          <View className="absolute right-2 top-1/2 -translate-y-1/2">
+            <Ionicons name="lock-closed-outline" size={16} color={colors.textMuted} />
+          </View>
+        ) : (
+          <TouchableOpacity className="absolute right-2 top-1/2 -translate-y-1/2" onPress={() => setMapSelectorVisible(true)}>
+            <Ionicons name="locate-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -560,7 +575,29 @@ function CustomerSelectField() {
     clearCustomerSelection,
     setCustomerSelectModal,
     setCustomerSearch,
+    customerLocked,
+    form,
   } = useServices();
+
+  if (customerLocked) {
+    return (
+      <View className="flex-1">
+        <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.selectCustomer")}</Text>
+        <View
+          className="flex-row items-center h-10 border rounded-lg px-3"
+          style={[{ backgroundColor: colors.bg, borderColor: colors.border }, lockedStyle(colors)]}
+          accessibilityLabel={t("svc.customerLockedHint")}
+          {...({ title: t("svc.customerLockedHint") } as any)}
+        >
+          <Ionicons name="person-outline" size={18} color={colors.textMuted} />
+          <Text className="text-sm ml-2 flex-1" style={{ color: colors.text }} numberOfLines={1}>
+            {customerList.find((m) => m.id === selectedCustomerId)?.companyName || form.customerName}
+          </Text>
+          <Ionicons name="lock-closed-outline" size={16} color={colors.textMuted} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1">
@@ -1373,7 +1410,6 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
     updateForm,
     isEditing,
     handleCancelEditing,
-    handleClear,
     handleSave,
     customerList,
     selectedCustomerId,
@@ -1398,6 +1434,7 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
     setTechSignatureModal,
     setResultAlert,
     fromJobLabel,
+    requestClear,
   } = useServices();
 
   const isAdmin = user?.role === "ADMIN";
@@ -1483,8 +1520,10 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
         {fromJobLabel && !isEditing ? (
           <View className="flex-row items-center rounded-lg px-3 py-2 mb-3" style={{ backgroundColor: colors.success + "14", borderWidth: 1, borderColor: colors.success + "44" }}>
             <Ionicons name="link-outline" size={14} color={colors.success} />
-            <Text className="text-xs ml-2 flex-1" style={{ color: colors.text }} numberOfLines={2}>
+            <Text className="text-xs ml-2 flex-1" style={{ color: colors.text }} numberOfLines={4}>
               {fromJobLabel}
+              {"\n"}
+              <Text style={{ color: colors.textSecondary }}>{t("svc.customerLockedHint")}</Text>
             </Text>
           </View>
         ) : null}
@@ -1779,7 +1818,7 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
           <TouchableOpacity
             className="h-10 px-4 rounded-lg items-center justify-center"
             style={{ backgroundColor: colors.bgInput, borderColor: colors.border, borderWidth: 1 }}
-            onPress={handleClear}
+            onPress={requestClear}
           >
             <View className="flex-row items-center">
               <Ionicons name="refresh-outline" size={14} color={colors.danger} />

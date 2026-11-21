@@ -1222,5 +1222,9 @@
   "qot.customerPromptSkipAccept": "Accept without saving",
   "qot.customerPromptSkipService": "Open service form without saving",
   "qot.customerSavedNote": "\"{name}\" was added to customers.",
-  "qot.errorSaveCustomer": "Could not save the customer."
+  "qot.errorSaveCustomer": "Could not save the customer.",
+  "svc.customerLockedHint": "Customer details are locked because this form is linked to a job. Clear the form to change them.",
+  "svc.clearLinkedTitle": "Clear the form?",
+  "svc.clearLinkedMessage": "The form will be fully reset and the link to the quote/planned job removed. The job stays where it is (awaiting or on the calendar).",
+  "svc.clearLinkedConfirm": "Clear"
 }
