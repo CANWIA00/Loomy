@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Platform, type ScrollView } from "react-native";
+import { Platform, type ScrollView } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Print from "expo-print";
 
@@ -12,7 +12,7 @@ import { quoteApi, QuoteRecord } from "../../apiclient/quotes";
 import { customerApi, Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
-import { initialQuoteForm, emptyLine, parseNumericInput, initialNewCustomerForm, type QuoteFormData, type QuotePdfData, type QuoteFilter, type NewCustomerFormData } from "./types";
+import { freshQuoteForm, todayDateInput, emptyLine, parseNumericInput, initialNewCustomerForm, type QuoteFormData, type QuotePdfData, type QuoteFilter, type NewCustomerFormData } from "./types";
 
 interface DeleteAlertState {
   visible: boolean;
@@ -100,7 +100,7 @@ export function useQuotes() {
 export function QuotesProvider({ children }: { children: ReactNode }) {
   const { t, locale } = useLanguage();
   const { rates } = useCurrency();
-  const [form, setForm] = useState<QuoteFormData>({ ...initialQuoteForm });
+  const [form, setForm] = useState<QuoteFormData>(freshQuoteForm);
   const [requiredErrors, setRequiredErrors] = useState<RequiredErrors>({ ...NO_REQUIRED_ERRORS });
   const [records, setRecords] = useState<QuoteRecord[]>([]);
   const [filter, setFilter] = useState<QuoteFilter>("all");
@@ -125,6 +125,11 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const companyLogoRef = useRef<string | null>(null);
   const companyStampRef = useRef<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  // Duzenle/Kopyala sonrasi form sayfanin ustunde dolar; kullanici listede kalmasin diye
+  // forma kaydirilir. Form render edildikten sonra kaydirmak icin kisa gecikme.
+  const scrollToForm = () => {
+    setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 50);
+  };
   const companyInfoRef = useRef<{ name: string; address: string; phone: string; gsm: string; email: string; fax: string; website: string; taxNumber: string }>({
     name: "",
     address: "",
@@ -302,7 +307,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   };
 
   const resetForm = () => {
-    setForm({ ...initialQuoteForm });
+    setForm(freshQuoteForm());
     setRequiredErrors({ ...NO_REQUIRED_ERRORS });
     setEditingId(null);
     setIsEditing(false);
@@ -343,6 +348,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setIsEditing(true);
     setShowForm(true);
     setRequiredErrors({ ...NO_REQUIRED_ERRORS });
+    scrollToForm();
   };
 
   const handleDuplicate = (record: QuoteRecord) => {
@@ -356,7 +362,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       website: record.website || "",
       address: record.adres || "",
       subscriberNo: record.subscriberNo || "",
-      documentDate: "",
+      documentDate: todayDateInput(),
       validUntil: record.validUntil || "",
       notes: record.notlar || "",
       lines: record.lines?.length
@@ -375,6 +381,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setIsEditing(false);
     setShowForm(true);
     setRequiredErrors({ ...NO_REQUIRED_ERRORS });
+    scrollToForm();
   };
 
   const handledEditIdRef = useRef<string>("");
@@ -464,7 +471,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
-      Alert.alert(t("qot.error"), t("qot.errorPdfCreate") + (error as any).message);
+      setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorPdfCreate") + (error as any).message });
     }
   };
 
@@ -484,7 +491,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const handleDownloadPDF = async () => {
     if (!pdfPreviewData) {
-      Alert.alert(t("qot.error"), t("qot.errorPdfData"));
+      setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorPdfData") });
       return;
     }
     await performDownloadPDF(pdfPreviewData);
@@ -495,7 +502,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       await quoteApi.delete(record.id);
       setRecords((prev) => prev.filter((r) => r.id !== record.id));
     } catch {
-      Alert.alert(t("qot.error"), t("qot.errorDelete"));
+      setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorDelete") });
     }
   };
 
@@ -519,7 +526,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
-      Alert.alert(t("qot.error"), t("qot.errorPdfCreate") + (error as any).message);
+      setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorPdfCreate") + (error as any).message });
     }
   };
 
@@ -561,7 +568,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const createNewCustomer = () => {
     if (!newCustomerForm.companyName.trim()) {
-      Alert.alert(t("qot.warning"), t("qot.errorCompanyRequired"));
+      setResultAlert({ visible: true, type: "warning", title: t("qot.warning"), message: t("qot.errorCompanyRequired") });
       return;
     }
     setLoading(true);
@@ -575,7 +582,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         setNewCustomerModal(false);
       })
       .catch(() => {
-        Alert.alert(t("qot.error"), t("qot.errorCustomerAdd"));
+        setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorCustomerAdd") });
       })
       .finally(() => setLoading(false));
   };

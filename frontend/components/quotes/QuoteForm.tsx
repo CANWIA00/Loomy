@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback, type ReactNode } from "react";
-import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, Alert, ActivityIndicator, useWindowDimensions } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, ActivityIndicator, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -140,6 +140,7 @@ export default function QuoteForm() {
     updateNewCustomerForm,
     resetNewCustomerForm,
     createNewCustomer,
+    setResultAlert,
   } = useQuotes();
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
@@ -270,9 +271,9 @@ export default function QuoteForm() {
       updateNewCustomerForm("address", adres);
     } catch (e: any) {
       if (e?.message === "PERMISSION_DENIED") {
-        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
+        setResultAlert({ visible: true, type: "warning", title: t("map.permissionRequired"), message: t("map.permissionDenied") });
       } else {
-        Alert.alert(t("common.error"), t("map.errorLocation"));
+        setResultAlert({ visible: true, type: "error", title: t("common.error"), message: t("map.errorLocation") });
       }
     } finally {
       setLocatingNewAddress(false);
@@ -569,7 +570,7 @@ export default function QuoteForm() {
                     ) : null}
                     {nameHasError && (
                       <Text className="text-[10px] mt-1" style={{ color: colors.danger }}>
-                        {t("qot.requiredLineName", { n: String(idx + 1) })} {t("qot.fieldRequired")}
+                        {t("qot.fieldRequired")}
                       </Text>
                     )}
                     {stockSearchIdx === idx && (stockSuggestions.length > 0 || savedNameSuggestions.length > 0) ? (

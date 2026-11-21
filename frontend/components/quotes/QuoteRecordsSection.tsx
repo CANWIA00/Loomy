@@ -134,6 +134,8 @@ export default function QuoteRecordsSection() {
               .map((cur) => `${round2(currencyTotals[cur]).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${getCurrencySymbol(cur)}`)
               .join(" · ");
             const savedRates = k.tryRates && k.tryRates.rates && Object.keys(k.tryRates.rates).length ? k.tryRates : null;
+            // Yalnizca TL iceren tekliflerde "≈ ... ₺" satiri ayni tutari tekrarlar; gosterilmez.
+            const hasForeignCurrency = Object.keys(currencyTotals).some((c) => c !== "TRY");
             const totalTry = Object.entries(currencyTotals).reduce((s, [cur, val]) => {
               const conv = savedRates ? convertToTry(val, cur, savedRates) : convertTry(val, cur);
               return conv === null ? s : s + conv;
@@ -161,7 +163,7 @@ export default function QuoteRecordsSection() {
                       <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>
                         {totalLabels}
                       </Text>
-                      {totalTry > 0 && (
+                      {hasForeignCurrency && totalTry > 0 && (
                         <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
                           ≈ {formatMoney(totalTry)} ₺
                         </Text>
@@ -204,7 +206,7 @@ export default function QuoteRecordsSection() {
                   <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
                     {totalLabels}
                   </Text>
-                  {totalTry > 0 && (
+                  {hasForeignCurrency && totalTry > 0 && (
                     <Text className="text-[10px] text-right mt-0.5" style={{ color: colors.textMuted }}>
                       ≈ {formatMoney(totalTry)} ₺
                     </Text>
