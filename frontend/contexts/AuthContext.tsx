@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { secureStorage } from "../utils/secureStorage";
 import { authApi, User, CompanyRequestDto } from "../apiclient/auth";
 import { setOnUnauthorized } from "../apiclient/client";
 
@@ -26,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // proceed with local logout even if API call fails
     }
-    await AsyncStorage.removeItem("token");
+    await secureStorage.removeItem("token");
     await AsyncStorage.removeItem("user");
     setToken(null);
     setUser(null);
@@ -34,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setOnUnauthorized(async () => {
-      await AsyncStorage.removeItem("token");
+      await secureStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
       setToken(null);
       setUser(null);
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadStoredAuth = useCallback(async () => {
     try {
-      const storedToken = await AsyncStorage.getItem("token");
+      const storedToken = await secureStorage.getItem("token");
       const storedUser = await AsyncStorage.getItem("user");
 
       if (storedToken && storedUser) {
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(response.data);
           await AsyncStorage.setItem("user", JSON.stringify(response.data));
         } catch {
-          await AsyncStorage.removeItem("token");
+          await secureStorage.removeItem("token");
           await AsyncStorage.removeItem("user");
           setToken(null);
           setUser(null);
@@ -92,13 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
-      await AsyncStorage.setItem("token", data.token);
+      await secureStorage.setItem("token", data.token);
       await AsyncStorage.setItem("user", JSON.stringify(loggedInUser));
     } catch (storageError: any) {
       throw new Error("Oturum bilgileri kaydedilemedi: " + storageError.message);
     }
 
-    const savedToken = await AsyncStorage.getItem("token");
+    const savedToken = await secureStorage.getItem("token");
     if (!savedToken) {
       throw new Error("Token kaydedilemedi. Lutfen tekrar deneyin.");
     }

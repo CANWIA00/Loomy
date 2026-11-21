@@ -10,6 +10,7 @@ import type { CodeInputHandle } from "../../components/auth/CodeInput";
 import PrimaryButton from "../../components/auth/PrimaryButton";
 import CustomAlert from "../../components/CustomAlert";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { secureStorage } from "../../utils/secureStorage";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
@@ -57,7 +58,7 @@ export default function VerifyEmailScreen() {
       const data = response.data;
 
       if (data.token) {
-        await AsyncStorage.setItem("token", data.token);
+        await secureStorage.setItem("token", data.token);
         await AsyncStorage.setItem(
           "user",
           JSON.stringify({
