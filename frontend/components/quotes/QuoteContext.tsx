@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Platform, type ScrollView } from "react-native";
+import { Dimensions, Platform, type ScrollView } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Print from "expo-print";
 
@@ -49,6 +49,14 @@ interface QuoteContextValue {
   handleSave: () => void;
   showForm: boolean;
   setShowForm: (v: boolean) => void;
+  /** Telefonda: yeni teklif icin formu tam ekran acar. */
+  openNewQuote: () => void;
+  /** Telefonda: form ekranini kapatip listeye doner (onay cagiran tarafta). */
+  closeFormScreen: () => void;
+  /** Form, acildigi/yuklendigi andan beri degisti mi? */
+  isFormDirty: () => boolean;
+  /** Kaydette eksik alan varsa artar; form ilk hatali alana kaydirir. */
+  errorScrollNonce: number;
   customerList: Customer[];
   selectedCustomerId: string | null;
   clearCustomerSelection: () => void;
@@ -100,11 +108,22 @@ export function useQuotes() {
 export function QuotesProvider({ children }: { children: ReactNode }) {
   const { t, locale } = useLanguage();
   const { rates } = useCurrency();
-  const [form, setForm] = useState<QuoteFormData>(freshQuoteForm);
+  // Telefonda (768px alti) liste once gelir; form "Yeni Teklif" ile tam ekran acilir.
+  const isPhoneNow = () => Dimensions.get("window").width < 768;
+  const initialFormRef = useRef<QuoteFormData>(freshQuoteForm());
+  const [form, setFormState] = useState<QuoteFormData>(initialFormRef.current);
+  // Formun acildigi/yuklendigi andaki hali: kaydedilmemis degisiklik kontrolu icin.
+  const baselineRef = useRef<string>(JSON.stringify(initialFormRef.current));
+  const loadForm = (f: QuoteFormData) => {
+    baselineRef.current = JSON.stringify(f);
+    setFormState(f);
+  };
+  const setForm = setFormState;
+  const [errorScrollNonce, setErrorScrollNonce] = useState(0);
   const [requiredErrors, setRequiredErrors] = useState<RequiredErrors>({ ...NO_REQUIRED_ERRORS });
   const [records, setRecords] = useState<QuoteRecord[]>([]);
   const [filter, setFilter] = useState<QuoteFilter>("all");
-  const [showForm, setShowForm] = useState(true);
+  const [showForm, setShowForm] = useState(() => !isPhoneNow());
   const [filterDate, setFilterDate] = useState("");
   const [filterCustomer, setFilterCustomer] = useState("");
   const [customerList, setCustomerList] = useState<Customer[]>([]);
@@ -239,16 +258,9 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     const lineIndexesToFlag = hasNamedLine || partialLineIndexes.length > 0 ? partialLineIndexes : [0];
 
     if (customerMissing || lineIndexesToFlag.length > 0) {
+      // Uyari penceresi yerine ilk hatali alana kaydirilir; alan altinda mesaj gorunur.
       setRequiredErrors({ customerName: customerMissing, lines: lineIndexesToFlag });
-      const missingLabels: string[] = [];
-      if (customerMissing) missingLabels.push(`• ${t("qot.customerName")}`);
-      lineIndexesToFlag.forEach((i) => missingLabels.push(`• ${t("qot.requiredLineName", { n: String(i + 1) })}`));
-      setResultAlert({
-        visible: true,
-        type: "warning",
-        title: t("qot.warning"),
-        message: `${t("qot.requiredFieldsMissing")}\n${missingLabels.join("\n")}`,
-      });
+      setErrorScrollNonce((n) => n + 1);
       return;
     }
 
@@ -298,6 +310,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         setResultAlert({ visible: true, type: "success", title: t("qot.success"), message: t("qot.successCreated") });
       }
       resetForm();
+      if (isPhoneNow()) setShowForm(false);
       fetchRecords();
     } catch {
       setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorSave") });
@@ -307,7 +320,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   };
 
   const resetForm = () => {
-    setForm(freshQuoteForm());
+    loadForm(freshQuoteForm());
     setRequiredErrors({ ...NO_REQUIRED_ERRORS });
     setEditingId(null);
     setIsEditing(false);
@@ -318,8 +331,21 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const handleClear = () => resetForm();
 
+  const isFormDirty = () => JSON.stringify(form) !== baselineRef.current;
+
+  const openNewQuote = () => {
+    resetForm();
+    setShowForm(true);
+    scrollToForm();
+  };
+
+  const closeFormScreen = () => {
+    resetForm();
+    setShowForm(false);
+  };
+
   const handleEdit = (record: QuoteRecord) => {
-    setForm({
+    loadForm({
       title: record.title || "",
       customerName: record.customer || "",
       contactPerson: record.contactPerson || "",
@@ -352,7 +378,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   };
 
   const handleDuplicate = (record: QuoteRecord) => {
-    setForm({
+    loadForm({
       title: record.title || "",
       customerName: record.customer || "",
       contactPerson: record.contactPerson || "",
@@ -609,6 +635,10 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     handleSave,
     showForm,
     setShowForm,
+    openNewQuote,
+    closeFormScreen,
+    isFormDirty,
+    errorScrollNonce,
     customerList,
     selectedCustomerId,
     clearCustomerSelection,

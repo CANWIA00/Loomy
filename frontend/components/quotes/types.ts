@@ -138,3 +138,28 @@ export function round2(n: number): number {
 }
 
 export const KDV_RATE = 0.20;
+
+export interface QuoteCurrencyTotals {
+  subTotal: number;
+  kdv: number;
+  grandTotal: number;
+}
+
+/** Para birimine gore ara toplam, KDV ve genel toplam (formdaki ozet ve alt cubuk ayni hesabi kullanir). */
+export function computeQuoteTotals(lines: QuoteFormLine[]): Record<string, QuoteCurrencyTotals> {
+  const groups: Record<string, QuoteCurrencyTotals> = {};
+  lines
+    .filter((l) => l.name || l.details)
+    .forEach((l) => {
+      const cur = l.currency || "TRY";
+      const lineTotal = parseNumericInput(l.quantity) * parseNumericInput(l.unitPrice);
+      if (!groups[cur]) groups[cur] = { subTotal: 0, kdv: 0, grandTotal: 0 };
+      groups[cur].subTotal += lineTotal;
+    });
+  Object.keys(groups).forEach((cur) => {
+    groups[cur].subTotal = round2(groups[cur].subTotal);
+    groups[cur].kdv = round2(groups[cur].subTotal * KDV_RATE);
+    groups[cur].grandTotal = round2(groups[cur].subTotal + groups[cur].kdv);
+  });
+  return groups;
+}

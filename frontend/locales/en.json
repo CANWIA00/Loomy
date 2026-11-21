@@ -1131,5 +1131,12 @@
   "unit.addFromSearch": "Add \"{unit}\" as a unit",
   "unit.addError": "Could not add the unit. Please try again.",
   "unit.deleteConfirm": "Remove \"{unit}\" from the list? Records using it are not affected.",
-  "unit.deleteError": "Could not delete the unit."
+  "unit.deleteError": "Could not delete the unit.",
+  "qot.customerDetails": "Customer details",
+  "qot.customerDetailsFilled": "{n} filled",
+  "qot.discardTitle": "Unsaved changes",
+  "qot.discardMessage": "Changes to this quote have not been saved. They will be lost if you leave.",
+  "qot.discardConfirm": "Leave without saving",
+  "qot.backToList": "Back to quotes",
+  "qot.grandTotalShort": "Grand total"
 }

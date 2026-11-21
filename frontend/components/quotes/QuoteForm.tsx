@@ -9,7 +9,7 @@ import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../apiclient/customers";
 import { stockApi, type StockItem } from "../../apiclient/stock";
 import { getCurrentAddress } from "../../utils/location";
-import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, parseNumericInput } from "./types";
+import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, parseNumericInput, computeQuoteTotals } from "./types";
 
 const formatRate = (rate: number) =>
   rate.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -107,7 +107,16 @@ function DateField({
   );
 }
 
-export default function QuoteForm() {
+interface QuoteFormProps {
+  /**
+   * "card": masaustu/sayfa ici kart (baslik ve Kaydet butonlari formun icinde).
+   * "screen": telefonda tam ekran; baslik ve Kaydet cubugu sayfa tarafinda.
+   */
+  variant?: "card" | "screen";
+}
+
+export default function QuoteForm({ variant = "card" }: QuoteFormProps) {
+  const isScreen = variant === "screen";
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const isWide = width >= 1100;
@@ -141,7 +150,28 @@ export default function QuoteForm() {
     resetNewCustomerForm,
     createNewCustomer,
     setResultAlert,
+    scrollRef,
+    errorScrollNonce,
   } = useQuotes();
+
+  // Telefonda musteri iletisim alanlari katlanir (musteri secilince zaten dolar).
+  const [customerDetailsOpen, setCustomerDetailsOpen] = useState(false);
+  const collapsibleCustomer = !isDesktop;
+  const showCustomerDetails = !collapsibleCustomer || customerDetailsOpen;
+  const filledCustomerDetails = [form.phone, form.contactPerson, form.subscriberNo, form.email, form.address, form.fax, form.website]
+    .filter((v) => (v || "").trim()).length;
+
+  // Kaydette eksik alan varsa ilk hatali bolume kaydir (uyari penceresi yerine).
+  const rootYRef = useRef(0);
+  const customerSectionYRef = useRef(0);
+  const linesSectionYRef = useRef(0);
+  useEffect(() => {
+    if (!errorScrollNonce) return;
+    const sectionY = requiredErrors.customerName ? customerSectionYRef.current : linesSectionYRef.current;
+    const y = Math.max(0, rootYRef.current + sectionY - 12);
+    const id = setTimeout(() => scrollRef.current?.scrollTo({ y, animated: true }), 30);
+    return () => clearTimeout(id);
+  }, [errorScrollNonce]);
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [locatingNewAddress, setLocatingNewAddress] = useState(false);
@@ -225,20 +255,7 @@ export default function QuoteForm() {
     addLine();
   };
 
-  const validLines = form.lines.filter((l) => l.name || l.details);
-
-  const currencyGroups: Record<string, { subTotal: number; kdv: number; grandTotal: number }> = {};
-  validLines.forEach((l) => {
-    const cur = l.currency || "TRY";
-    const lineTotal = parseNumericInput(l.quantity) * parseNumericInput(l.unitPrice);
-    if (!currencyGroups[cur]) currencyGroups[cur] = { subTotal: 0, kdv: 0, grandTotal: 0 };
-    currencyGroups[cur].subTotal += lineTotal;
-  });
-  Object.keys(currencyGroups).forEach((cur) => {
-    currencyGroups[cur].subTotal = round2(currencyGroups[cur].subTotal);
-    currencyGroups[cur].kdv = round2(currencyGroups[cur].subTotal * KDV_RATE);
-    currencyGroups[cur].grandTotal = round2(currencyGroups[cur].subTotal + currencyGroups[cur].kdv);
-  });
+  const currencyGroups = computeQuoteTotals(form.lines);
 
   const currencyKeys = Object.keys(currencyGroups);
   const totalTry = currencyKeys.reduce((s, cur) => {
@@ -282,8 +299,12 @@ export default function QuoteForm() {
 
   return (
     <>
-      <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
-        {(!isDesktop || isEditing) && (
+      <View
+        className={isScreen ? "" : "rounded-2xl border p-4 mb-6"}
+        style={isScreen ? undefined : { backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}
+        onLayout={(e) => { rootYRef.current = e.nativeEvent.layout.y; }}
+      >
+        {!isScreen && (!isDesktop || isEditing) && (
           <View className="flex-row items-center justify-between mb-3">
             <Text className="font-semibold text-base" style={{ color: colors.text }}>
               {isEditing ? t("qot.editQuote") : t("qot.newQuote")}
@@ -300,7 +321,7 @@ export default function QuoteForm() {
           <Text style={{ color: colors.danger }}>*</Text> {t("qot.requiredHint")}
         </Text>
 
-        <View className="flex-row flex-wrap gap-3">
+        <View className="flex-row flex-wrap gap-3" onLayout={(e) => { customerSectionYRef.current = e.nativeEvent.layout.y; }}>
           <View style={cell(2, 2, 2)}>
             <FieldLabel>{t("qot.quoteTitle")}</FieldLabel>
             <TextInput
@@ -333,7 +354,7 @@ export default function QuoteForm() {
             </TouchableOpacity>
           </View>
 
-          <View style={cell(1, 1, 1)}>
+          <View style={cell(2, 1, 1)}>
             <FieldLabel required>{t("qot.customerName")}</FieldLabel>
             <TextInput
               className="w-full h-10 border rounded-lg px-3 text-sm"
@@ -348,6 +369,29 @@ export default function QuoteForm() {
             )}
           </View>
 
+          {collapsibleCustomer && (
+            <TouchableOpacity
+              style={{ ...cell(2, 2, 2), borderColor: colors.border, backgroundColor: colors.bg }}
+              className="flex-row items-center justify-between h-10 px-3 rounded-lg border"
+              onPress={() => setCustomerDetailsOpen((v) => !v)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: customerDetailsOpen }}
+            >
+              <View className="flex-row items-center">
+                <Ionicons name="id-card-outline" size={16} color={colors.textSecondary} />
+                <Text className="text-sm font-medium ml-2" style={{ color: colors.text }}>{t("qot.customerDetails")}</Text>
+                {filledCustomerDetails > 0 && (
+                  <View className="ml-2 px-1.5 py-0.5 rounded-full" style={{ backgroundColor: colors.primary + "1A" }}>
+                    <Text className="text-[10px] font-semibold" style={{ color: colors.primary }}>{t("qot.customerDetailsFilled", { n: String(filledCustomerDetails) })}</Text>
+                  </View>
+                )}
+              </View>
+              <Ionicons name={customerDetailsOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
+
+          {showCustomerDetails && (
+            <>
           <View style={cell(1, 1, 1)}>
             <FieldLabel>{t("qot.phone")}</FieldLabel>
             <TextInput
@@ -437,6 +481,8 @@ export default function QuoteForm() {
               onChangeText={(v) => updateForm("website", v)}
             />
           </View>
+            </>
+          )}
         </View>
 
         <View className="flex-row gap-3 mt-3">
@@ -463,7 +509,7 @@ export default function QuoteForm() {
           />
         </View>
 
-        <View className="mt-3 mb-2">
+        <View className="mt-3 mb-2" onLayout={(e) => { linesSectionYRef.current = e.nativeEvent.layout.y; }}>
           <View className={isTable ? "flex-row items-center justify-between mb-1.5" : ""}>
             <Text className={`text-sm font-semibold ${isTable ? "" : "mb-1.5"}`} style={{ color: colors.text }}>{t("qot.items")}</Text>
             {isTable && (
@@ -869,6 +915,7 @@ export default function QuoteForm() {
           />
         </View>
 
+        {!isScreen && (
         <View className="flex-row gap-2 mt-1">
           <TouchableOpacity
             className="h-10 px-4 rounded-lg items-center justify-center"
@@ -888,6 +935,7 @@ export default function QuoteForm() {
             <Text className="font-semibold text-sm" style={{ color: "white" }}>{isEditing ? t("qot.update") : t("common.save")}</Text>
           </TouchableOpacity>
         </View>
+        )}
       </View>
 
       <Modal visible={customerModalOpen} transparent animationType="fade" onRequestClose={() => setCustomerModalOpen(false)}>

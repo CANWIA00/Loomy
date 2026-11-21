@@ -1131,5 +1131,12 @@
   "unit.addFromSearch": "\"{unit}\" birimini ekle",
   "unit.addError": "Birim eklenemedi. Lütfen tekrar deneyin.",
   "unit.deleteConfirm": "\"{unit}\" birimi listeden kaldırılsın mı? Bu birimi kullanan kayıtlar etkilenmez.",
-  "unit.deleteError": "Birim silinemedi."
+  "unit.deleteError": "Birim silinemedi.",
+  "qot.customerDetails": "Müşteri bilgileri",
+  "qot.customerDetailsFilled": "{n} dolu",
+  "qot.discardTitle": "Kaydedilmemiş değişiklikler",
+  "qot.discardMessage": "Bu teklifteki değişiklikler kaydedilmedi. Çıkarsanız kaybolacak.",
+  "qot.discardConfirm": "Kaydetmeden çık",
+  "qot.backToList": "Tekliflere dön",
+  "qot.grandTotalShort": "Genel toplam"
 }
