@@ -5,8 +5,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
 import QuoteActionsMenu from "./modals/QuoteActionsMenu";
-import { QuoteStatusBadge, QuoteStatusMenu, useStatusColor } from "./QuoteStatus";
-import { QUOTE_STATUSES, type QuoteRecord, type QuoteStatus } from "../../apiclient/quotes";
+import { QuoteStatusInline, QuoteStatusMenu, QuoteStatusFilterSelect } from "./QuoteStatus";
+import type { QuoteRecord } from "../../apiclient/quotes";
 import type { QuoteFilter } from "./types";
 import { getCurrencySymbol, round2, formatMoney } from "./types";
 import { useCurrency } from "../../contexts/CurrencyContext";
@@ -70,12 +70,8 @@ export default function QuoteRecordsSection() {
     handleDuplicate,
     setDeleteAlert,
     statusFilter,
-    setStatusFilter,
-    statusCounts,
   } = useQuotes();
-  const statusColor = useStatusColor();
   const [statusMenuRecord, setStatusMenuRecord] = useState<QuoteRecord | null>(null);
-  const totalCount = statusCounts.PENDING + statusCounts.ACCEPTED + statusCounts.REJECTED;
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
   const pagedRecords = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -110,31 +106,8 @@ export default function QuoteRecordsSection() {
         </View>
       </View>
 
-      {/* Durum filtresi (sayilarla) */}
-      <View className="flex-row flex-wrap gap-2 mb-2">
-        {(["all", ...QUOTE_STATUSES] as (QuoteStatus | "all")[]).map((s) => {
-          const active = statusFilter === s;
-          const tint = s === "all" ? colors.primary : statusColor(s);
-          const count = s === "all" ? totalCount : statusCounts[s];
-          return (
-            <TouchableOpacity
-              key={s}
-              className="px-3 h-8 rounded-lg flex-row items-center justify-center"
-              style={{ backgroundColor: active ? tint : colors.bgCard, borderColor: active ? tint : colors.border, borderWidth: 1 }}
-              onPress={() => setStatusFilter(active && s !== "all" ? "all" : s)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-            >
-              <Text className="text-xs font-medium" style={{ color: active ? "white" : colors.textSecondary }}>
-                {s === "all" ? t("qot.statusAll") : t(`qot.status.${s}`)}
-              </Text>
-              <Text className="text-[11px] font-semibold ml-1.5" style={{ color: active ? "white" : tint }}>{count}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
       <View className="flex-row flex-wrap gap-2 mb-4 items-center">
+        <QuoteStatusFilterSelect />
         {FILTERS.map((f) => (
           <TouchableOpacity
             key={f}
@@ -180,7 +153,6 @@ export default function QuoteRecordsSection() {
           <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
             <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
             <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
-            <Text className="w-32 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colStatus")}</Text>
             <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
             <View className="w-56 ml-6" />
           </View>
@@ -223,17 +195,17 @@ export default function QuoteRecordsSection() {
                       </Text>
                     ) : null}
                     <View className="mt-1">
-                      <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>
-                        {totalLabels}
-                      </Text>
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-sm flex-1 mr-2" style={{ color: colors.text }} numberOfLines={1}>
+                          {totalLabels}
+                        </Text>
+                        <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
+                      </View>
                       {hasForeignCurrency && totalTry > 0 && (
                         <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
                           ≈ {formatMoney(totalTry)} ₺
                         </Text>
                       )}
-                    </View>
-                    <View className="mt-2">
-                      <QuoteStatusBadge status={k.status} onPress={() => setStatusMenuRecord(k)} />
                     </View>
                   </View>
                   <TouchableOpacity
@@ -262,14 +234,14 @@ export default function QuoteRecordsSection() {
                   <Text className="text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
                     {k.customer}
                   </Text>
-                  {k.title ? (
-                    <Text className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                      {k.title}
-                    </Text>
-                  ) : null}
-                </View>
-                <View className="w-32">
-                  <QuoteStatusBadge status={k.status} onPress={() => setStatusMenuRecord(k)} />
+                  <View className="flex-row items-center mt-0.5">
+                    {k.title ? (
+                      <Text className="text-[11px] mr-2" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                        {k.title} ·
+                      </Text>
+                    ) : null}
+                    <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
+                  </View>
                 </View>
                 <View className="w-28 items-end">
                   <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>

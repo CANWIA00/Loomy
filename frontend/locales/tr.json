@@ -1154,5 +1154,10 @@
   "qot.errDateInvalidField": "Geçerli bir tarih girin (GG/AA/YYYY).",
   "qot.errBeforeDocumentField": "Geçerlilik tarihi belge tarihinden önce olamaz.",
   "qot.errQuantityField": "Miktar 0’dan büyük olmalı.",
-  "qot.errUnitPriceField": "Birim fiyat girin."
+  "qot.errUnitPriceField": "Birim fiyat girin.",
+  "qot.statusShort.PENDING": "Bekliyor",
+  "qot.statusShort.ACCEPTED": "Kabul",
+  "qot.statusShort.REJECTED": "Red",
+  "qot.statusFilterLabel": "Durum",
+  "qot.statusFilterAll": "Tümü"
 }

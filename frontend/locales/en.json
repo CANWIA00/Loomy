@@ -1154,5 +1154,10 @@
   "qot.errDateInvalidField": "Enter a valid date (DD/MM/YYYY).",
   "qot.errBeforeDocumentField": "Valid-until date cannot be before the document date.",
   "qot.errQuantityField": "Quantity must be greater than 0.",
-  "qot.errUnitPriceField": "Enter a unit price."
+  "qot.errUnitPriceField": "Enter a unit price.",
+  "qot.statusShort.PENDING": "Pending",
+  "qot.statusShort.ACCEPTED": "Accepted",
+  "qot.statusShort.REJECTED": "Rejected",
+  "qot.statusFilterLabel": "Status",
+  "qot.statusFilterAll": "All"
 }
