@@ -492,8 +492,19 @@ export default function QuoteForm() {
           {form.lines.map((line, idx) => {
             const lineTotal = round2(parseNumericInput(line.quantity) * parseNumericInput(line.unitPrice));
             const nameHasError = requiredErrors.lines.includes(idx);
+            const deleteBtn = (
+              <TouchableOpacity
+                onPress={() => removeLine(idx)}
+                disabled={form.lines.length <= 1}
+                style={{ opacity: form.lines.length <= 1 ? 0.3 : 1, flexShrink: 0 }}
+                className={isTable ? "h-9 w-8 items-center justify-center" : "h-9 w-9 items-center justify-center"}
+              >
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+              </TouchableOpacity>
+            );
+
             const nameBlock = (
-              <View className={isTable ? "" : "flex-1"} style={isTable ? { flex: 1.6, minWidth: 140 } : undefined}>
+              <View className={isTable ? "" : "flex-1"} style={isTable ? { flex: 1.6, minWidth: 140 } : { minWidth: 0 }}>
                 {!isTable && (
                   <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>
                     {t("qot.productName")}
@@ -503,7 +514,8 @@ export default function QuoteForm() {
                 <View className="flex-row items-center">
                       <TextInput
                         className="flex-1 h-9 border rounded-lg px-2.5 text-sm"
-                        style={{ backgroundColor: colors.bgCard2, borderColor: nameHasError ? colors.danger : colors.border, color: colors.text }}
+                        // minWidth 0: web'de input'un varsayilan genisligi dar ekranda satiri tasirmasin
+                        style={{ minWidth: 0, backgroundColor: colors.bgCard2, borderColor: nameHasError ? colors.danger : colors.border, color: colors.text }}
                         placeholder={t("qot.productNamePlaceholder")}
                         placeholderTextColor={colors.textMuted}
                         value={line.name}
@@ -525,23 +537,35 @@ export default function QuoteForm() {
                           <Ionicons name="close-circle" size={16} color={colors.textMuted} />
                         </TouchableOpacity>
                       ) : null}
-                      {line.name ? (
+                      {line.name && isTable ? (
                         <TouchableOpacity
                           onPress={() => saveNameFromLine(idx)}
-                          className={isTable ? "h-9 w-7 items-center justify-center ml-0.5" : "h-9 flex-row items-center justify-center gap-1 border rounded-lg px-2 ml-1"}
-                          style={isTable ? undefined : { borderColor: colors.border, backgroundColor: colors.bgCard2 }}
+                          className="h-9 w-7 items-center justify-center ml-0.5"
                           accessibilityRole="button"
                           accessibilityLabel={t("qot.saveName")}
                         >
                           <Ionicons name="bookmark-outline" size={14} color={colors.purple} />
-                          {!isTable && (
-                            <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
-                              {t("qot.saveName")}
-                            </Text>
-                          )}
                         </TouchableOpacity>
                       ) : null}
+                      {/* Kart gorunumunde sil butonu ad kutusuyla ayni satirda, hizali durur */}
+                      {!isTable && <View style={{ marginLeft: 4 }}>{deleteBtn}</View>}
                     </View>
+                    {/* Kart gorunumunde (telefon/tablet) buton ad kutusunun altinda durur;
+                        ayni satirda kalinca dar ekranda sil butonunun ustune tasiyordu. */}
+                    {line.name && !isTable ? (
+                      <TouchableOpacity
+                        onPress={() => saveNameFromLine(idx)}
+                        className="self-start h-8 flex-row items-center justify-center gap-1 border rounded-lg px-2.5 mt-1.5"
+                        style={{ borderColor: colors.border, backgroundColor: colors.bgCard2 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("qot.saveName")}
+                      >
+                        <Ionicons name="bookmark-outline" size={14} color={colors.purple} />
+                        <Text className="text-xs font-medium" style={{ color: colors.purple }} numberOfLines={1}>
+                          {t("qot.saveName")}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
                     {nameHasError && (
                       <Text className="text-[10px] mt-1" style={{ color: colors.danger }}>
                         {t("qot.requiredLineName", { n: String(idx + 1) })} {t("qot.fieldRequired")}
@@ -586,16 +610,6 @@ export default function QuoteForm() {
                 </View>
             );
 
-            const deleteBtn = (
-              <TouchableOpacity
-                onPress={() => removeLine(idx)}
-                disabled={form.lines.length <= 1}
-                style={{ opacity: form.lines.length <= 1 ? 0.3 : 1 }}
-                className={isTable ? "h-9 w-8 items-center justify-center" : "h-9 w-9 items-center justify-center"}
-              >
-                <Ionicons name="trash-outline" size={18} color={colors.danger} />
-              </TouchableOpacity>
-            );
 
             if (isTable) {
               return (
@@ -667,9 +681,8 @@ export default function QuoteForm() {
 
             return (
               <View key={idx} className="rounded-xl border p-2.5 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.borderAlt }}>
-                <View className="flex-row items-center gap-2 mb-2">
+                <View className="flex-row mb-2">
                   {nameBlock}
-                  {deleteBtn}
                 </View>
                 <Text className="text-[10px] font-medium mb-1" style={{ color: colors.textMuted }}>{t("qot.details")}</Text>
                 <TextInput
