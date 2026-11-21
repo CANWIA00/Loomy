@@ -128,8 +128,12 @@ export const quoteApi = {
   delete: (id: number) =>
     apiClient.delete(`/quotes/${id}`),
 
+  /** Durumu degistirir; kabulde planlamada olusan/etkilenen isi de doner. */
   setStatus: async (id: number, status: QuoteStatus) => {
-    const res = await apiClient.patch<QuoteRecordBackend>(`/quotes/${id}/status`, { status });
-    return { ...res, data: toFrontend(res.data) };
+    const res = await apiClient.patch<QuoteRecordBackend & {
+      job?: { id: number; status: string } | null;
+      jobWarning?: "scheduled" | "done" | null;
+    }>(`/quotes/${id}/status`, { status });
+    return { ...res, data: toFrontend(res.data), job: res.data.job ?? null, jobWarning: res.data.jobWarning ?? null };
   },
 };

@@ -463,7 +463,14 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     if (previous === status) return;
     setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, status } : r)));
     try {
-      await quoteApi.setStatus(record.id, status);
+      const res = await quoteApi.setStatus(record.id, status);
+      if (status === "ACCEPTED" && res.job?.status === "AWAITING") {
+        setResultAlert({ visible: true, type: "success", title: t("qot.jobCreatedTitle"), message: t("qot.jobCreatedMessage") });
+      } else if (res.jobWarning === "scheduled") {
+        setResultAlert({ visible: true, type: "warning", title: t("qot.warning"), message: t("qot.jobScheduledWarning") });
+      } else if (res.jobWarning === "done") {
+        setResultAlert({ visible: true, type: "warning", title: t("qot.warning"), message: t("qot.jobDoneWarning") });
+      }
     } catch {
       setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, status: previous } : r)));
       setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorStatus") });

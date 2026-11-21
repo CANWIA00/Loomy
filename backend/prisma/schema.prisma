@@ -110,7 +110,8 @@ model ServiceRecord {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  company Company @relation(fields: [companyId], references: [id])
+  company     Company      @relation(fields: [companyId], references: [id])
+  appointment Appointment?
 
   @@index([companyId])
   @@index([customerId])
@@ -202,26 +203,34 @@ model Team {
   @@index([companyId])
 }
 
+// Planlama isi. AWAITING (atama bekliyor: ekip/tarih bos) -> SCHEDULED (takvimde)
+// -> DONE (servis kaydi olusturuldu) | CANCELLED. Kabul edilen tekliften otomatik olusur.
 model Appointment {
   id           Int      @id @default(autoincrement())
   customerName String
   customerId   String?
-  teamName     String
-  teamId       Int
-  date         String
-  startTime    String
-  duration     String
+  teamName     String   @default("")
+  teamId       Int?
+  date         String   @default("")
+  startTime    String   @default("")
+  duration     String   @default("")
   serviceType  String
   notes        String   @default("")
+  status          String  @default("SCHEDULED")
+  quoteId         Int?    @unique
+  serviceRecordId Int?    @unique
   companyId    String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  company Company @relation(fields: [companyId], references: [id])
-  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id])
+  team          Team?          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  quote         QuoteRecord?   @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  serviceRecord ServiceRecord? @relation(fields: [serviceRecordId], references: [id], onDelete: SetNull)
 
   @@index([companyId])
   @@index([teamId])
+  @@index([companyId, status])
 }
 
 model QuoteRecord {
@@ -248,7 +257,8 @@ model QuoteRecord {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  company Company @relation(fields: [companyId], references: [id])
+  company     Company      @relation(fields: [companyId], references: [id])
+  appointment Appointment?
 
   @@index([companyId])
   @@index([customerId])

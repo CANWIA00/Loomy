@@ -6,6 +6,7 @@ import {
   updateQuoteRecord,
   deleteQuoteRecord,
   updateQuoteStatus,
+  getQuoteRecord,
 } from "../controllers/quoteController";
 import { validateBody } from "../middleware/validate";
 import { quoteStatusSchema, quoteBodySchema } from "../schemas/quote";
@@ -14,6 +15,7 @@ import { authenticate, requirePanelAccess } from "../middleware/auth";
 const router = Router();
 
 router.get("/", authenticate, requirePanelAccess("quotes", "view"), asyncHandler(getQuoteRecords));
+router.get("/:id", authenticate, requirePanelAccess("quotes", "view"), asyncHandler(getQuoteRecord));
 router.post("/", authenticate, requirePanelAccess("quotes", "manage"), validateBody(quoteBodySchema, "Teklifin zorunlu alanları eksik."), asyncHandler(createQuoteRecord));
 router.put("/:id", authenticate, requirePanelAccess("quotes", "manage"), validateBody(quoteBodySchema, "Teklifin zorunlu alanları eksik."), asyncHandler(updateQuoteRecord));
 router.patch("/:id/status", authenticate, requirePanelAccess("quotes", "manage"), validateBody(quoteStatusSchema, "Teklif durumu zorunludur."), asyncHandler(updateQuoteStatus));

@@ -34,6 +34,7 @@ export default function AppointmentModal() {
     saveAppointment,
     requestDeleteEditing,
     editingAppointmentId,
+    assigningJob,
     dateInputText,
     setDateInputText,
     setSelectedDate,
@@ -89,7 +90,7 @@ export default function AppointmentModal() {
   return (
     <ModalShell visible={appointmentModalVisible} onRequestClose={closeAppointmentModal}>
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-lg font-bold" style={{ color: colors.text }}>{editingAppointmentId ? t("sch.updateAppointment") : t("sch.newAppointment")}</Text>
+        <Text className="text-lg font-bold" style={{ color: colors.text }}>{assigningJob ? t("sch.assignJobTitle") : editingAppointmentId ? t("sch.updateAppointment") : t("sch.newAppointment")}</Text>
         <TouchableOpacity onPress={closeAppointmentModal}>
           <Ionicons name="close" size={24} color={colors.textMuted} />
         </TouchableOpacity>
@@ -225,7 +226,7 @@ export default function AppointmentModal() {
       </ScrollView>
 
       <View className="flex-row gap-3 mt-4">
-        {editingAppointmentId ? (
+        {editingAppointmentId && !assigningJob ? (
           <TouchableOpacity onPress={requestDeleteEditing}>
             <Ionicons name="trash-outline" size={18} color={colors.danger} />
           </TouchableOpacity>
@@ -247,7 +248,7 @@ export default function AppointmentModal() {
           {appointmentSaving ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="font-medium" style={{ color: "white" }}>{editingAppointmentId ? t("sch.update") : t("sch.assign")}</Text>
+            <Text className="font-medium" style={{ color: "white" }}>{editingAppointmentId && !assigningJob ? t("sch.update") : t("sch.assign")}</Text>
           )}
         </TouchableOpacity>
       </View>

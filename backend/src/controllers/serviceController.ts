@@ -42,7 +42,7 @@ export async function createServiceRecord(
     documentDate, customerName, customerId, serviceType, address,
     startTime, endTime, phone, internalIp, externalIp, details,
     fee, feeCurrency, labor, laborCurrency, kdvRate, technician, technicianPhone, services, technical, customChips, customValues, signed, signature, technicianSignature, paid,
-    templateName, templateConfig, usedProducts, productsMode, deductStock, tryRates,
+    templateName, templateConfig, usedProducts, productsMode, deductStock, tryRates, appointmentId,
   } = req.body;
   const companyId = req.user!.companyId!;
 
@@ -109,6 +109,14 @@ export async function createServiceRecord(
     }
     if (Object.keys(patch).length) {
       await tx.serviceRecord.update({ where: { id: record.id }, data: patch });
+    }
+    // Planlama isinden acildiysa is tamamlandi olarak isaretlenir ve kayda baglanir.
+    const jobId = Number(appointmentId);
+    if (Number.isInteger(jobId) && jobId > 0) {
+      await tx.appointment.updateMany({
+        where: { id: jobId, companyId, status: { in: ["AWAITING", "SCHEDULED"] } },
+        data: { status: "DONE", serviceRecordId: record.id },
+      });
     }
   });
 

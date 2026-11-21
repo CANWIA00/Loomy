@@ -12,6 +12,7 @@ import { profileApi } from "../../apiclient/profile";
 import { serviceApi, ServiceRecord } from "../../apiclient/services";
 import { customerApi, Customer } from "../../apiclient/customers";
 import { templateApi, ServiceTemplate } from "../../apiclient/templates";
+import { appointmentApi } from "../../apiclient/appointments";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField, type UsedProductFormItem } from "./types";
@@ -50,6 +51,8 @@ interface ServicesContextValue {
   setSaveAlertVisible: (v: boolean) => void;
   confirmSave: () => void;
   customerList: Customer[];
+  /** Form planlama isinden acildiysa gosterilecek etiket */
+  fromJobLabel: string | null;
   selectedCustomerId: string | null;
   clearCustomerSelection: () => void;
   selectCustomer: (id: string, name: string, address: string, phone: string) => void;
@@ -205,6 +208,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     taxNumber: "",
   });
   const [templates, setTemplates] = useState<ServiceTemplate[]>([]);
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
+  /** Form planlama isinden acildiysa o isin numarasi; kayitla birlikte is tamamlanir. */
+  const jobIdRef = useRef<number | null>(null);
+  const handledJobIdRef = useRef<string>("");
+  const [fromJobLabel, setFromJobLabel] = useState<string | null>(null);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
 
   const fetchRecords = useCallback(async () => {
@@ -253,6 +261,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       });
     } catch (e: any) {
       console.warn("fetchTemplates failed:", e?.message || e);
+    } finally {
+      setTemplatesLoaded(true);
     }
   }, []);
 
@@ -702,7 +712,13 @@ ucret: form.fee || "0.00",
     setIsEditing(false);
   };
 
+  const clearJobLink = () => {
+    jobIdRef.current = null;
+    setFromJobLabel(null);
+  };
+
   const openNewRecord = () => {
+    clearJobLink();
     setIsEditing(false);
     setEditingId(null);
     originalFormRef.current = null;
@@ -714,6 +730,7 @@ ucret: form.fee || "0.00",
   };
 
   const closeFormScreen = () => {
+    clearJobLink();
     setIsEditing(false);
     setEditingId(null);
     originalFormRef.current = null;
@@ -728,7 +745,64 @@ ucret: form.fee || "0.00",
     return JSON.stringify(form) !== JSON.stringify(base);
   };
 
-  const searchParams = useLocalSearchParams<{ edit?: string }>();
+  const searchParams = useLocalSearchParams<{ edit?: string; fromJob?: string }>();
+  const fromJobParam = typeof searchParams.fromJob === "string" ? searchParams.fromJob : "";
+  useEffect(() => {
+    if (!fromJobParam || !templatesLoaded || handledJobIdRef.current === fromJobParam) return;
+    handledJobIdRef.current = fromJobParam;
+    (async () => {
+      try {
+        const { data: job } = await appointmentApi.getById(Number(fromJobParam));
+        if (job.status === "DONE" || job.status === "CANCELLED") {
+          setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.jobAlreadyClosed") });
+          return;
+        }
+        const lines = job.quoteLines || [];
+        // Kalemler kullanilan urun olarak gelir; aktif sablon urun desteklemiyorsa
+        // urunlu bir sablona gecilir, hic yoksa kalemler detaylara yazilir.
+        let useProducts = !!activeTemplate?.useProducts;
+        if (lines.length && !useProducts) {
+          const tpl = templates.find((x) => x.useProducts);
+          if (tpl) { setActiveTemplateId(tpl.id); useProducts = true; }
+        }
+        const cust = customerList.find((c) => (job.customerId && c.id === job.customerId) || c.companyName === job.customerName);
+        const products: UsedProductFormItem[] = useProducts
+          ? lines.map((l) => ({
+              name: l.name,
+              quantity: String(l.quantity ?? ""),
+              unit: l.unit || "Adet",
+              unitPrice: l.unitPrice != null ? String(l.unitPrice) : "",
+              currency: l.currency || "TRY",
+            }))
+          : [];
+        const header = job.quoteId ? `${job.tur} (${t("svc.fromQuoteRef", { id: String(job.quoteId) })})` : job.tur;
+        const noteBody = (job.notes || "").split("\n").filter((x) => x && !x.startsWith("Teklif #"));
+        const details = [header, ...(useProducts ? noteBody.filter((x) => !x.startsWith("• ")) : noteBody)].filter(Boolean).join("\n");
+        setIsEditing(false);
+        setEditingId(null);
+        originalFormRef.current = null;
+        setForm({
+          ...freshForm(),
+          customerName: job.customerName,
+          serviceAddress: cust?.address || "",
+          phone: cust?.phone || "",
+          details,
+          usedProducts: products,
+          productsMode: useProducts,
+        });
+        setSelectedCustomerId(cust?.id || job.customerId || null);
+        setMissingKeys([]);
+        jobIdRef.current = job.id;
+        setFromJobLabel(`${job.customerName} · ${job.tur}`);
+        setShowForm(true);
+        scrollToForm();
+      } catch {
+        setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorJobLoad") });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromJobParam, templatesLoaded]);
+
   const editParamId = typeof searchParams.edit === "string" ? searchParams.edit : "";
   useEffect(() => {
     if (!editParamId || handledEditIdRef.current === editParamId) return;
@@ -790,8 +864,12 @@ ucret: form.fee || "0.00",
         templateName: activeTemplate?.name || undefined,
         templateConfig: templateSnapshot(templateConfig),
         tryRates,
+      }, { appointmentId: jobIdRef.current });
+      setResultAlert({
+        visible: true, type: "success", title: t("svc.success"),
+        message: jobIdRef.current ? t("svc.successCreatedJob") : t("svc.successCreated"),
       });
-      setResultAlert({ visible: true, type: "success", title: t("svc.success"), message: t("svc.successCreated") });
+      clearJobLink();
       // Form yalnizca basarili kayittan sonra temizlenir; hata olursa kullanicinin
       // girdigi bilgiler kaybolmaz.
       setForm(freshForm());
@@ -1070,6 +1148,7 @@ ucret: form.fee || "0.00",
     JSON.parse(JSON.stringify(config)) as ServiceTemplateConfig;
 
   const value: ServicesContextValue = {
+    fromJobLabel,
     loading,
     refreshRecords: fetchRecords,
     companyLogo,

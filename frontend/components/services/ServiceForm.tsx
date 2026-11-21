@@ -1396,6 +1396,7 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
     hasSignature,
     setTechSignatureModal,
     setResultAlert,
+    fromJobLabel,
   } = useServices();
 
   const isAdmin = user?.role === "ADMIN";
@@ -1478,6 +1479,14 @@ export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
           </View>
         )}
 
+        {fromJobLabel && !isEditing ? (
+          <View className="flex-row items-center rounded-lg px-3 py-2 mb-3" style={{ backgroundColor: colors.success + "14", borderWidth: 1, borderColor: colors.success + "44" }}>
+            <Ionicons name="link-outline" size={14} color={colors.success} />
+            <Text className="text-xs ml-2 flex-1" style={{ color: colors.text }} numberOfLines={2}>
+              {t("svc.fromJobBanner", { job: fromJobLabel })}
+            </Text>
+          </View>
+        ) : null}
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center flex-1">
             {companyLogo && (

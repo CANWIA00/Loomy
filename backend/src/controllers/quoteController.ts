@@ -1,5 +1,6 @@
 import { Response } from "express";
 import prisma from "../prisma";
+import { syncQuoteJob } from "../services/quoteJobs";
 import { AuthRequest } from "../middleware/auth";
 import { parsePagination } from "../utils/pagination";
 import { customerWhere } from "../utils/customerFilter";
@@ -130,7 +131,11 @@ export async function deleteQuoteRecord(
     return;
   }
 
-  await prisma.quoteRecord.delete({ where: { id } });
+  // Teklif silinince henuz atanmamis isi de iptal edilir; planlanmis/tamamlanmis is kalir.
+  await prisma.$transaction([
+    prisma.appointment.updateMany({ where: { quoteId: id, companyId, status: "AWAITING" }, data: { status: "CANCELLED" } }),
+    prisma.quoteRecord.delete({ where: { id } }),
+  ]);
   res.json({ message: "Teklif kaydı silindi." });
 }
 
@@ -148,16 +153,34 @@ export async function updateQuoteStatus(
     return;
   }
 
-  const { count } = await prisma.quoteRecord.updateMany({
-    where: { id, companyId },
-    data: { status, statusUpdatedAt: new Date() },
+  // Durum degisikligi ve planlama isi ayni islemde: biri basarisiz olursa ikisi de geri alinir.
+  const result = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.quoteRecord.updateMany({
+      where: { id, companyId },
+      data: { status, statusUpdatedAt: new Date() },
+    });
+    if (count === 0) return null;
+    const sync = await syncQuoteJob(tx, companyId, id, status);
+    const record = await tx.quoteRecord.findFirst({ where: { id, companyId } });
+    return { record, sync };
   });
 
-  if (count === 0) {
+  if (!result) {
     res.status(404).json({ message: "Teklif kaydı bulunamadı." });
     return;
   }
 
+  res.json({ ...result.record, job: result.sync.job, jobWarning: result.sync.warning });
+}
+
+/** Tek teklif (servis formuna teklif kalemlerini aktarmak icin). */
+export async function getQuoteRecord(req: AuthRequest, res: Response): Promise<void> {
+  const id = parseInt(String(req.params.id));
+  const companyId = req.user!.companyId!;
   const record = await prisma.quoteRecord.findFirst({ where: { id, companyId } });
+  if (!record) {
+    res.status(404).json({ message: "Teklif kaydı bulunamadı." });
+    return;
+  }
   res.json(record);
 }

@@ -215,8 +215,10 @@ export const serviceApi = {
     };
   },
 
-  create: async (data: Omit<ServiceRecord, "id">) => {
-    const res = await apiClient.post<ServiceRecordBackend>("/services", toBackend(data));
+  /** appointmentId: planlama isinden olusturulduysa; is "tamamlandi" olarak isaretlenir. */
+  create: async (data: Omit<ServiceRecord, "id">, opts?: { appointmentId?: number | null }) => {
+    const body = { ...toBackend(data), ...(opts?.appointmentId ? { appointmentId: opts.appointmentId } : {}) };
+    const res = await apiClient.post<ServiceRecordBackend>("/services", body);
     return { ...res, data: toFrontend(res.data) };
   },
 

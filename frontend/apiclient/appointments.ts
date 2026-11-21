@@ -1,5 +1,8 @@
 import apiClient from "./client";
 
+/** AWAITING: atama bekliyor · SCHEDULED: takvimde · DONE: servis kaydi olusturuldu · CANCELLED */
+export type JobStatus = "AWAITING" | "SCHEDULED" | "DONE" | "CANCELLED";
+
 export interface Appointment {
   id: number;
   customerName: string;
@@ -11,6 +14,16 @@ export interface Appointment {
   duration: string;
   tur: string;
   notes: string;
+  status?: JobStatus;
+  quoteId?: number | null;
+  serviceRecordId?: number | null;
+  createdAt?: string;
+}
+
+/** Is detayi: kabul edilen tekliften geldiyse teklif kalemleriyle */
+export interface JobDetail extends Appointment {
+  quoteTitle?: string | null;
+  quoteLines?: { name: string; details?: string; quantity: number; unitPrice: number; currency: string; unit: string }[];
 }
 
 export const appointmentApi = {
@@ -34,4 +47,18 @@ export const appointmentApi = {
 
   delete: (id: number) =>
     apiClient.delete(`/appointments/${id}`),
+
+  /** Atama bekleyen isler (takvimde olmayanlar) */
+  getAwaiting: () =>
+    apiClient.get<Appointment[]>("/appointments", { params: { status: "AWAITING" } }),
+
+  getById: (id: number) =>
+    apiClient.get<JobDetail>(`/appointments/${id}`),
+
+  /** Elle atama bekleyen is (ekip/tarih sonra atanir) */
+  createAwaiting: (data: { customerName: string; customerId?: string; tur: string; notes: string }) =>
+    apiClient.post<Appointment>("/appointments", { ...data, awaiting: true }),
+
+  cancel: (id: number) =>
+    apiClient.patch<Appointment>(`/appointments/${id}/cancel`),
 };

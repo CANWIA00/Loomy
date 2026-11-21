@@ -4,13 +4,15 @@ import prisma from "../prisma";
 import { verifyToken } from "../services/jwt";
 
 jest.mock("../services/jwt");
-jest.mock("../prisma", () => ({
-  __esModule: true,
-  default: {
+jest.mock("../prisma", () => {
+  const db: any = {
     user: { findUnique: jest.fn() },
     quoteRecord: { updateMany: jest.fn(), findFirst: jest.fn() },
-  },
-}));
+    appointment: { findFirst: jest.fn(), create: jest.fn(), update: jest.fn() },
+  };
+  db.$transaction = jest.fn((cb: (tx: any) => unknown) => cb(db));
+  return { __esModule: true, default: db };
+});
 
 function loginAs(role: "ADMIN" | "USER", panelAccess: string | null = null) {
   (verifyToken as jest.Mock).mockReturnValue({ id: "u1" });
@@ -31,12 +33,16 @@ describe("PATCH /api/quotes/:id/status", () => {
   it("durumu kullanicinin sirketindeki teklif icin gunceller", async () => {
     loginAs("ADMIN");
     (prisma.quoteRecord.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
-    (prisma.quoteRecord.findFirst as jest.Mock).mockResolvedValue({ id: 7, status: "ACCEPTED" });
+    (prisma.quoteRecord.findFirst as jest.Mock).mockResolvedValue({ id: 7, status: "ACCEPTED", customerName: "Acme", lines: "[]" });
+    (prisma.appointment.findFirst as jest.Mock).mockResolvedValue(null);
+    (prisma.appointment.create as jest.Mock).mockImplementation(({ data }) => Promise.resolve({ id: 55, ...data }));
 
     const res = await request(app).patch("/api/quotes/7/status").set("Authorization", "Bearer t").send({ status: "ACCEPTED" });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("ACCEPTED");
+    // Kabul edilen teklif planlamaya atama bekleyen is olarak duser
+    expect(res.body.job).toEqual({ id: 55, status: "AWAITING" });
     const args = (prisma.quoteRecord.updateMany as jest.Mock).mock.calls[0][0];
     expect(args.where).toEqual({ id: 7, companyId: "c1" });
     expect(args.data.status).toBe("ACCEPTED");

@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -9,7 +10,21 @@ import ModalShell from "../ModalShell";
 export default function AppointmentDetailModal() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const router = useRouter();
   const { detailVisible, detailAppointment, teams, closeDetail, editDetail, requestDeleteDetail } = useSchedule();
+  const isDone = detailAppointment?.status === "DONE";
+
+  // Is tamamlaninca servis formu planli isten acilir: musteri ve teklif kalemleri dolu gelir.
+  const openServiceForm = () => {
+    if (!detailAppointment) return;
+    closeDetail();
+    router.push({ pathname: "/services", params: { fromJob: String(detailAppointment.id) } });
+  };
+  const openServiceRecord = () => {
+    if (!detailAppointment?.serviceRecordId) return;
+    closeDetail();
+    router.push({ pathname: "/services", params: { edit: String(detailAppointment.serviceRecordId) } });
+  };
 
   return (
     <ModalShell visible={detailVisible} onRequestClose={closeDetail}>
@@ -35,6 +50,16 @@ export default function AppointmentDetailModal() {
                   <Text className="font-semibold text-sm" style={{ color: colors.text }}>{detailAppointment.customerName}</Text>
                   <Text className="text-xs" style={{ color: colors.textSecondary }}>{detailAppointment.tur}</Text>
                 </View>
+                {isDone ? (
+                  <View className="flex-row items-center px-2 py-1 rounded-full" style={{ backgroundColor: colors.success + "22" }}>
+                    <Ionicons name="checkmark-circle" size={12} color={colors.success} />
+                    <Text className="text-[11px] font-semibold ml-1" style={{ color: colors.success }}>{t("sch.jobDone")}</Text>
+                  </View>
+                ) : detailAppointment.quoteId ? (
+                  <View className="px-2 py-1 rounded-full" style={{ backgroundColor: colors.primary + "1A" }}>
+                    <Text className="text-[11px] font-semibold" style={{ color: colors.primary }}>{t("sch.fromQuote")}</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
 
@@ -74,6 +99,27 @@ export default function AppointmentDetailModal() {
               ) : null}
             </View>
 
+            {isDone ? (
+              <TouchableOpacity
+                className="h-10 rounded-lg items-center justify-center flex-row gap-2 mb-3"
+                style={{ backgroundColor: colors.success + "18", borderWidth: 1, borderColor: colors.success + "55" }}
+                onPress={openServiceRecord}
+                disabled={!detailAppointment.serviceRecordId}
+              >
+                <Ionicons name="document-text-outline" size={16} color={colors.success} />
+                <Text className="text-xs font-semibold" style={{ color: colors.success }}>{t("sch.openServiceRecord")}</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                className="h-10 rounded-lg items-center justify-center flex-row gap-2 mb-3"
+                style={{ backgroundColor: colors.success }}
+                onPress={openServiceForm}
+              >
+                <Ionicons name="construct-outline" size={16} color="white" />
+                <Text className="text-xs font-semibold" style={{ color: "white" }}>{t("sch.createServiceForm")}</Text>
+              </TouchableOpacity>
+            )}
+
             <View className="flex-row gap-3">
               <TouchableOpacity
                 className="flex-1 h-10 rounded-lg items-center justify-center flex-row gap-2"
@@ -85,11 +131,12 @@ export default function AppointmentDetailModal() {
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 h-10 rounded-lg items-center justify-center flex-row gap-2"
-                style={{ backgroundColor: colors.primary }}
+                style={{ backgroundColor: isDone ? colors.bgInput : colors.primary, opacity: isDone ? 0.5 : 1 }}
                 onPress={editDetail}
+                disabled={isDone}
               >
-                <Ionicons name="create-outline" size={16} color="white" />
-                <Text className="text-xs font-medium" style={{ color: "white" }}>{t("common.edit")}</Text>
+                <Ionicons name="create-outline" size={16} color={isDone ? colors.textMuted : "white"} />
+                <Text className="text-xs font-medium" style={{ color: isDone ? colors.textMuted : "white" }}>{t("common.edit")}</Text>
               </TouchableOpacity>
             </View>
           </View>

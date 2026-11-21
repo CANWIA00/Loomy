@@ -19,6 +19,8 @@ jest.mock("../prisma", () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
+    appointment: { updateMany: jest.fn() },
+    $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
   },
 }));
 
@@ -150,6 +152,11 @@ describe("quote controller", () => {
 
       expect(prisma.quoteRecord.delete).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(res.json).toHaveBeenCalledWith({ message: "Teklif kaydı silindi." });
+      // atama bekleyen is varsa iptal edilir
+      expect(prisma.appointment.updateMany).toHaveBeenCalledWith({
+        where: { quoteId: 1, companyId: "c1", status: "AWAITING" },
+        data: { status: "CANCELLED" },
+      });
     });
   });
 });

@@ -140,6 +140,20 @@ interface ScheduleContextValue {
   addPlanFromDayList: () => void;
 
   handleDragEnd: (eventId: number, newStartTime: string, newDate: string) => Promise<void>;
+
+  // --- Atama bekleyen isler (kabul edilen teklifler + elle eklenenler) ---
+  awaitingJobs: Appointment[];
+  /** Ata: randevu penceresini isin bilgileriyle acar; kaydedince takvime gecer */
+  openAssignJob: (job: Appointment) => void;
+  assigningJob: boolean;
+  cancelJobTarget: Appointment | null;
+  requestCancelJob: (job: Appointment) => void;
+  closeCancelJob: () => void;
+  confirmCancelJob: () => Promise<void>;
+  manualJobVisible: boolean;
+  openManualJob: () => void;
+  closeManualJob: () => void;
+  saveManualJob: (data: { customerName: string; customerId?: string; tur: string; notes: string }) => Promise<boolean>;
 }
 
 const ScheduleContext = createContext<ScheduleContextValue | null>(null);
@@ -155,6 +169,10 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [awaitingJobs, setAwaitingJobs] = useState<Appointment[]>([]);
+  const [assigningJob, setAssigningJob] = useState(false);
+  const [cancelJobTarget, setCancelJobTarget] = useState<Appointment | null>(null);
+  const [manualJobVisible, setManualJobVisible] = useState(false);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -230,14 +248,16 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     try {
       if (!silent) setLoading(true);
       const win = getWindow(seed || new Date());
-      const [teamsRes, appointmentsRes, customersRes, usersRes] = await Promise.all([
+      const [teamsRes, appointmentsRes, customersRes, usersRes, awaitingRes] = await Promise.all([
         teamApi.getAll(),
         appointmentApi.getAll({ from: win.from, to: win.to }),
         customerApi.getAllSimple(),
         teamApi.getCompanyUsers(),
+        appointmentApi.getAwaiting().catch(() => ({ data: [] as Appointment[] })),
       ]);
       setTeams(teamsRes.data);
       setAppointments(appointmentsRes.data);
+      setAwaitingJobs(awaitingRes.data);
       setCustomers(customersRes.data);
       setCompanyUsers(usersRes.data);
     } catch (error: any) {
@@ -268,7 +288,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     const end = new Date(start.getTime() + durationToMs(a.duration));
     const team = teams.find((t) => t.id === a.ekipId);
     return {
-      title: `${a.customerName} - ${a.tur}`,
+      title: `${a.status === "DONE" ? "✓ " : ""}${a.customerName} - ${a.tur}`,
       ekipAdi: a.ekip,
       start,
       end,
@@ -360,6 +380,61 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const closeAppointmentModal = () => {
     setAppointmentModalVisible(false);
     setEditingAppointmentId(null);
+    setAssigningJob(false);
+  };
+
+  // Atama bekleyen isi randevu penceresiyle atar (ekip, tarih, saat secilir).
+  const openAssignJob = (job: Appointment) => {
+    const d = new Date();
+    setSelectedDate(d);
+    setDateInputText(`${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`);
+    const found = customers.find((c) => (job.customerId && c.id === job.customerId) || c.companyName === job.customerName);
+    setSelectedCustomer(found || (job.customerId ? { id: job.customerId, companyName: job.customerName, contactPerson: "" } : null));
+    setCustomerSearch(found ? "" : job.customerName);
+    setTimeInput("09:00");
+    setSelectedDuration("1saat");
+    setCustomDurationText("");
+    setSelectedService(job.tur);
+    setSelectedTeamId(teams[0]?.id || 0);
+    setNotlar(job.notes || "");
+    setEditingAppointmentId(job.id);
+    setAssigningJob(true);
+    setAppointmentModalVisible(true);
+  };
+
+  const requestCancelJob = (job: Appointment) => setCancelJobTarget(job);
+  const closeCancelJob = () => setCancelJobTarget(null);
+  const confirmCancelJob = async () => {
+    const job = cancelJobTarget;
+    if (!job) return;
+    try {
+      await appointmentApi.cancel(job.id);
+      setAwaitingJobs((prev) => prev.filter((j) => j.id !== job.id));
+      setAppointments((prev) => prev.filter((a) => a.id !== job.id));
+      setCancelJobTarget(null);
+      setDetailVisible(false);
+    } catch (error: any) {
+      setCancelJobTarget(null);
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorJobCancel"));
+    }
+  };
+
+  const openManualJob = () => setManualJobVisible(true);
+  const closeManualJob = () => setManualJobVisible(false);
+  const saveManualJob = async (data: { customerName: string; customerId?: string; tur: string; notes: string }): Promise<boolean> => {
+    if (!data.customerName.trim() || !data.tur.trim()) {
+      showAlert("error", t("common.warning"), t("sch.errorJobRequired"));
+      return false;
+    }
+    try {
+      const res = await appointmentApi.createAwaiting(data);
+      setAwaitingJobs((prev) => [...prev, res.data]);
+      setManualJobVisible(false);
+      return true;
+    } catch (error: any) {
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorSave"));
+      return false;
+    }
   };
 
   const openDetail = (a: Appointment) => {
@@ -368,9 +443,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   };
 
   const openDetailFromEvent = (event: ScheduleEvent) => {
-    const atama = appointments.find(
-      (a) => event.title.startsWith(`${a.customerName} - ${a.tur}`)
-    );
+    // Ayni musteri/turde birden fazla is olabilir; baslik yerine is numarasiyla eslestir.
+    const atama = appointments.find((a) => a.id === event.eventId);
     if (atama) openDetail(atama);
   };
 
@@ -442,7 +516,12 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         tur: selectedService,
         notes: notlar,
       };
-      if (editingAppointmentId) {
+      if (editingAppointmentId && assigningJob) {
+        const res = await appointmentApi.update(editingAppointmentId, payload);
+        setAwaitingJobs((prev) => prev.filter((j) => j.id !== editingAppointmentId));
+        setAppointments((prev) => [...prev, res.data]);
+        setAssigningJob(false);
+      } else if (editingAppointmentId) {
         const res = await appointmentApi.update(editingAppointmentId, payload);
         setAppointments((prev) => prev.map((a) => a.id === editingAppointmentId ? res.data : a));
       } else {
@@ -563,6 +642,17 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   };
 
   const value: ScheduleContextValue = {
+    awaitingJobs,
+    openAssignJob,
+    assigningJob,
+    cancelJobTarget,
+    requestCancelJob,
+    closeCancelJob,
+    confirmCancelJob,
+    manualJobVisible,
+    openManualJob,
+    closeManualJob,
+    saveManualJob,
     loading,
     teams,
     appointments,

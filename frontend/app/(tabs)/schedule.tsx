@@ -9,6 +9,8 @@ import CalendarToolbar from "../../components/schedule/CalendarToolbar";
 import CalendarNavigator from "../../components/schedule/CalendarNavigator";
 import MonthGrid from "../../components/schedule/MonthGrid";
 import PlanList from "../../components/schedule/PlanList";
+import AwaitingJobsSection from "../../components/schedule/AwaitingJobsSection";
+import ManualJobModal from "../../components/schedule/modals/ManualJobModal";
 import ScheduleEventCard from "../../components/schedule/ScheduleEventCard";
 import TrWeekHeader from "../../components/schedule/TrWeekHeader";
 import ConfirmModal from "../../components/schedule/ConfirmModal";
@@ -46,6 +48,9 @@ function ScheduleScreenInner() {
     closeAppointmentDeleteConfirm,
     confirmDeleteAppointment,
     deleteLoading,
+    cancelJobTarget,
+    closeCancelJob,
+    confirmCancelJob,
   } = useSchedule();
 
   const now = new Date();
@@ -73,6 +78,7 @@ function ScheduleScreenInner() {
       <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
         <ScreenHeader title={t("sch.title")} subtitle={t("sch.subtitle")} />
         <TeamsSection />
+        <AwaitingJobsSection />
         <CalendarToolbar />
         <CalendarNavigator />
 
@@ -140,6 +146,17 @@ function ScheduleScreenInner() {
         <TeamDetailModal />
         <DayListModal />
         <AppointmentDetailModal />
+        <ManualJobModal />
+        <ConfirmModal
+          visible={!!cancelJobTarget}
+          title={t("sch.cancelJobTitle")}
+          message={t("sch.cancelJobMsg", { name: cancelJobTarget?.customerName || "" })}
+          confirmLabel={t("sch.cancelJobConfirm")}
+          cancelLabel={t("sch.cancel")}
+          loading={false}
+          onCancel={closeCancelJob}
+          onConfirm={confirmCancelJob}
+        />
 
         <ConfirmModal
           visible={deleteTeamConfirmVisible}
