@@ -259,7 +259,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
       margin-bottom: 12px;
     }
     .logo-area {
-      min-width: 90px;
+      flex: 0 0 200px;
       display: flex;
       align-items: center;
     }
@@ -272,7 +272,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
     .date-area {
       font-size: 10px;
       text-align: right;
-      min-width: 90px;
+      flex: 0 0 200px;
     }
     .section {
       margin-bottom: 8px;
@@ -506,7 +506,7 @@ export function generateServicePDFHtml(data: any, t: (key: string, params?: Reco
   <div id="scale-wrapper">
   <div class="content-wrapper">
     <div class="header">
-      <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" onerror="this.style.display='none'" style="display:block;max-height:42px;max-width:150px;object-fit:contain;" />` : ''}</div>
+      <div class="logo-area">${data.companyLogo ? `<img src="${data.companyLogo}" onerror="this.style.display='none'" style="display:block;max-height:60px;max-width:200px;object-fit:contain;" />` : ''}</div>
       <div class="title">${t("pdf.title")}</div>
       <div class="date-area">${t("pdf.date")} ${escapeHtml(data.documentDate) || ''}</div>
     </div>

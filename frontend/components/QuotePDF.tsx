@@ -177,8 +177,8 @@ export function generateQuotePDFHtml(
       align-items: center;
     }
     .company-logo {
-      max-height: 48px;
-      max-width: 140px;
+      max-height: 66px;
+      max-width: 190px;
       object-fit: contain;
     }
     .header-title {
