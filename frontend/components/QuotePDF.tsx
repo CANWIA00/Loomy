@@ -322,9 +322,11 @@ export function generateQuotePDFHtml(
       color: #222238;
     }
     .notes-content {
-      font-size: 6.5px;
+      font-size: 9px;
+      font-weight: bold;
+      line-height: 1.4;
       white-space: pre-wrap;
-      color: #444;
+      color: #222238;
       break-inside: avoid;
       page-break-inside: avoid;
     }
