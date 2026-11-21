@@ -7,6 +7,8 @@ import {
   ensureFresh,
   scheduleRecomputeForRecord,
 } from "../services/monthlySummaries";
+import { parsePagination } from "../utils/pagination";
+import { customerWhere } from "../utils/customerFilter";
 
 const PAYMENT_SELECT = {
   id: true,
@@ -45,124 +47,109 @@ export async function getPayments(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const page = parseInt(req.query.page as string) || 0;
-    const size = parseInt(req.query.size as string) || 50;
-    const companyId = req.user!.companyId!;
+  const { page, size } = parsePagination(req.query, 50);
+  const companyId = req.user!.companyId!;
+  const where = { companyId, ...customerWhere(req.query) };
 
-    const [content, totalElements] = await Promise.all([
-      prisma.serviceRecord.findMany({
-        where: { companyId },
-        orderBy: { createdAt: "desc" },
-        skip: page * size,
-        take: size,
-        select: PAYMENT_SELECT,
-      }),
-      prisma.serviceRecord.count({ where: { companyId } }),
-    ]);
+  const [content, totalElements] = await Promise.all([
+    prisma.serviceRecord.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: page * size,
+      take: size,
+      select: PAYMENT_SELECT,
+    }),
+    prisma.serviceRecord.count({ where }),
+  ]);
 
-    const mapped = content.map(toPaymentDto);
+  const mapped = content.map(toPaymentDto);
 
-    res.json({
-      content: mapped,
-      totalElements,
-      totalPages: Math.ceil(totalElements / size),
-      number: page,
-      size,
-    });
-  } catch (error: any) {
-    console.error("GetPayments error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
-  }
+  res.json({
+    content: mapped,
+    totalElements,
+    totalPages: Math.ceil(totalElements / size),
+    number: page,
+    size,
+  });
 }
 
 export async function getPaymentSummary(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const companyId = req.user!.companyId!;
+  const companyId = req.user!.companyId!;
 
-    await ensureBackfill(companyId);
-    const now = new Date();
-    await ensureFresh(companyId, [
-      periodKey(now),
-      periodKey(new Date(now.getFullYear(), now.getMonth() - 1, 1)),
-    ]);
+  await ensureBackfill(companyId);
+  const now = new Date();
+  await ensureFresh(companyId, [
+    periodKey(now),
+    periodKey(new Date(now.getFullYear(), now.getMonth() - 1, 1)),
+  ]);
 
-    const rows = await prisma.monthlyFinanceSummary.findMany({
-      where: { companyId },
-      select: {
-        receivedTotal: true,
-        pendingTotal: true,
-        receivedCount: true,
-        pendingCount: true,
-      },
-    });
+  const rows = await prisma.monthlyFinanceSummary.findMany({
+    where: { companyId },
+    select: {
+      receivedTotal: true,
+      pendingTotal: true,
+      receivedCount: true,
+      pendingCount: true,
+    },
+  });
 
-    let paidTotal = 0;
-    let pendingTotal = 0;
-    let paidCount = 0;
-    let pendingCount = 0;
-    rows.forEach((r) => {
-      paidTotal += r.receivedTotal || 0;
-      pendingTotal += r.pendingTotal || 0;
-      paidCount += r.receivedCount || 0;
-      pendingCount += r.pendingCount || 0;
-    });
+  let paidTotal = 0;
+  let pendingTotal = 0;
+  let paidCount = 0;
+  let pendingCount = 0;
+  rows.forEach((r) => {
+    paidTotal += r.receivedTotal || 0;
+    pendingTotal += r.pendingTotal || 0;
+    paidCount += r.receivedCount || 0;
+    pendingCount += r.pendingCount || 0;
+  });
 
-    res.json({
-      paidTotal: Number(paidTotal) || 0,
-      pendingTotal: Number(pendingTotal) || 0,
-      total: (Number(paidTotal) || 0) + (Number(pendingTotal) || 0),
-      paidCount: paidCount || 0,
-      pendingCount: pendingCount || 0,
-      totalCount: (paidCount || 0) + (pendingCount || 0),
-    });
-  } catch (error: any) {
-    console.error("GetPaymentSummary error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
-  }
+  res.json({
+    paidTotal: Number(paidTotal) || 0,
+    pendingTotal: Number(pendingTotal) || 0,
+    total: (Number(paidTotal) || 0) + (Number(pendingTotal) || 0),
+    paidCount: paidCount || 0,
+    pendingCount: pendingCount || 0,
+    totalCount: (paidCount || 0) + (pendingCount || 0),
+  });
 }
 
 export async function updatePaymentStatus(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = parseInt(String(req.params.id));
-    const companyId = req.user!.companyId!;
-    const { paid, invoiced } = req.body;
+  const id = parseInt(String(req.params.id));
+  const companyId = req.user!.companyId!;
+  const { paid, invoiced } = req.body;
 
-    const existing = await prisma.serviceRecord.findFirst({
-      where: { id, companyId },
-    });
+  const existing = await prisma.serviceRecord.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!existing) {
-      res.status(404).json({ message: "Servis kaydı bulunamadı." });
-      return;
-    }
-
-    const data: { paid?: boolean; invoiced?: boolean } = {};
-    if (typeof paid === "boolean") data.paid = paid;
-    if (typeof invoiced === "boolean") data.invoiced = invoiced;
-    if (data.paid === undefined && data.invoiced === undefined) {
-      data.paid = !existing.paid;
-    }
-
-    const record = await prisma.serviceRecord.update({
-      where: { id },
-      data,
-      select: PAYMENT_SELECT,
-    });
-
-    if (data.paid !== undefined) {
-      await scheduleRecomputeForRecord(companyId, existing.documentDate, existing.createdAt as any);
-    }
-
-    res.json(toPaymentDto(record));
-  } catch (error: any) {
-    console.error("UpdatePaymentStatus error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  if (!existing) {
+    res.status(404).json({ message: "Servis kaydı bulunamadı." });
+    return;
   }
+
+  const data: { paid?: boolean; invoiced?: boolean } = {};
+  if (typeof paid === "boolean") data.paid = paid;
+  if (typeof invoiced === "boolean") data.invoiced = invoiced;
+  if (data.paid === undefined && data.invoiced === undefined) {
+    data.paid = !existing.paid;
+  }
+
+  const record = await prisma.serviceRecord.update({
+    where: { id },
+    data,
+    select: PAYMENT_SELECT,
+  });
+
+  if (data.paid !== undefined) {
+    await scheduleRecomputeForRecord(companyId, existing.documentDate, existing.createdAt as any);
+  }
+
+  res.json(toPaymentDto(record));
 }

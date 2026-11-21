@@ -17,14 +17,22 @@ function cleanup(): void {
   }
 }
 
+// IP'yi istemcinin gonderdigi x-forwarded-for basligindan okumak yerine Express'in
+// "trust proxy" ayarina gore hesapladigi req.ip kullanilir; aksi halde baslik
+// her istekte degistirilerek limit atlatilabilir.
 function clientIp(req: Request): string {
-  const forwarded = req.headers?.["x-forwarded-for"]?.toString().split(",")[0].trim();
-  return forwarded || req.socket?.remoteAddress || "unknown";
+  return req.ip || req.socket?.remoteAddress || "unknown";
 }
 
 export function attemptKey(req: Request, email: string, prefix: string): string {
   const normalized = email.trim().toLowerCase();
   return `${prefix}:${normalized}:${clientIp(req)}`;
+}
+
+// IP'den bagimsiz, hesap bazli anahtar: dogrulama/sifirlama kodu denemelerinde
+// saldirgan IP degistirse de ayni hesap icin sayac ortak kalir.
+export function accountKey(email: string, prefix: string): string {
+  return `${prefix}:${email.trim().toLowerCase()}`;
 }
 
 export function isBlocked(key: string): boolean {

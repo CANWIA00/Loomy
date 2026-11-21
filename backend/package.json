@@ -8,6 +8,9 @@
     "build": "tsc",
     "start": "npx prisma migrate deploy && node dist/index.js",
     "test": "jest",
+    "e2e:up": "docker compose -f e2e/docker-compose.e2e.yml up -d --build --wait",
+    "e2e:down": "docker compose -f e2e/docker-compose.e2e.yml down -v",
+    "test:e2e": "npm run e2e:up && jest -c jest.e2e.config.js --runInBand",
     "seed": "ts-node src/seed.ts",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
@@ -26,7 +29,8 @@
     "imagetracerjs": "^1.2.6",
     "jimp": "^1.6.1",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^9.0.5"
+    "nodemailer": "^9.0.5",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

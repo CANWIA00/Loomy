@@ -99,226 +99,201 @@ export async function listServiceTemplates(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const companyId = req.user!.companyId!;
+  const companyId = req.user!.companyId!;
 
-    let templates = await prisma.serviceFormTemplate.findMany({
-      where: { companyId },
-      orderBy: { createdAt: "asc" },
+  let templates = await prisma.serviceFormTemplate.findMany({
+    where: { companyId },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (templates.length === 0) {
+    const created = await prisma.serviceFormTemplate.create({
+      data: {
+        companyId,
+        name: "Varsayılan",
+        fields: JSON.stringify(defaultTemplateConfig().fields),
+        chipGroups: JSON.stringify(defaultTemplateConfig().chipGroups),
+        isDefault: true,
+      },
     });
-
-    if (templates.length === 0) {
-      const created = await prisma.serviceFormTemplate.create({
-        data: {
-          companyId,
-          name: "Varsayılan",
-          fields: JSON.stringify(defaultTemplateConfig().fields),
-          chipGroups: JSON.stringify(defaultTemplateConfig().chipGroups),
-          isDefault: true,
-        },
-      });
-      templates = [created];
-    }
-
-    res.json(
-      templates.map((t) => ({
-        id: t.id,
-        name: t.name,
-        isDefault: t.isDefault,
-        useProducts: t.useProducts ?? false,
-        deductStock: t.deductStock ?? true,
-        fields: JSON.parse(t.fields),
-        chipGroups: JSON.parse(t.chipGroups),
-      }))
-    );
-  } catch (error: any) {
-    console.error("ListServiceTemplates error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+    templates = [created];
   }
+
+  res.json(
+    templates.map((t) => ({
+      id: t.id,
+      name: t.name,
+      isDefault: t.isDefault,
+      useProducts: t.useProducts ?? false,
+      deductStock: t.deductStock ?? true,
+      fields: JSON.parse(t.fields),
+      chipGroups: JSON.parse(t.chipGroups),
+    }))
+  );
 }
 
 export async function createServiceTemplate(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const companyId = req.user!.companyId!;
-    const { name, fields, chipGroups, isDefault, useProducts, deductStock } = req.body;
+  const companyId = req.user!.companyId!;
+  const { name, fields, chipGroups, isDefault, useProducts, deductStock } = req.body;
 
-    if (!name?.trim()) {
-      res.status(400).json({ message: "Şablon adı zorunludur." });
-      return;
-    }
-
-    const existing = await prisma.serviceFormTemplate.count({ where: { companyId } });
-
-    const template = await prisma.serviceFormTemplate.create({
-      data: {
-        companyId,
-        name: name.trim(),
-        fields: JSON.stringify(fields || defaultTemplateConfig().fields),
-        chipGroups: JSON.stringify(chipGroups || defaultTemplateConfig().chipGroups),
-        useProducts: useProducts !== undefined ? !!useProducts : false,
-        deductStock: deductStock !== undefined ? !!deductStock : true,
-        isDefault: existing === 0 ? true : !!isDefault,
-      },
-    });
-
-    if (template.isDefault) {
-      await prisma.serviceFormTemplate.updateMany({
-        where: { companyId, id: { not: template.id } },
-        data: { isDefault: false },
-      });
-    }
-
-    res.status(201).json({
-      id: template.id,
-      name: template.name,
-      isDefault: template.isDefault,
-      useProducts: template.useProducts ?? false,
-      deductStock: template.deductStock ?? true,
-      fields: JSON.parse(template.fields),
-      chipGroups: JSON.parse(template.chipGroups),
-    });
-  } catch (error: any) {
-    console.error("CreateServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  if (!name?.trim()) {
+    res.status(400).json({ message: "Şablon adı zorunludur." });
+    return;
   }
+
+  const existing = await prisma.serviceFormTemplate.count({ where: { companyId } });
+
+  const template = await prisma.serviceFormTemplate.create({
+    data: {
+      companyId,
+      name: name.trim(),
+      fields: JSON.stringify(fields || defaultTemplateConfig().fields),
+      chipGroups: JSON.stringify(chipGroups || defaultTemplateConfig().chipGroups),
+      useProducts: useProducts !== undefined ? !!useProducts : false,
+      deductStock: deductStock !== undefined ? !!deductStock : true,
+      isDefault: existing === 0 ? true : !!isDefault,
+    },
+  });
+
+  if (template.isDefault) {
+    await prisma.serviceFormTemplate.updateMany({
+      where: { companyId, id: { not: template.id } },
+      data: { isDefault: false },
+    });
+  }
+
+  res.status(201).json({
+    id: template.id,
+    name: template.name,
+    isDefault: template.isDefault,
+    useProducts: template.useProducts ?? false,
+    deductStock: template.deductStock ?? true,
+    fields: JSON.parse(template.fields),
+    chipGroups: JSON.parse(template.chipGroups),
+  });
 }
 
 export async function updateServiceTemplate(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const companyId = req.user!.companyId!;
-    const { name, fields, chipGroups, isDefault, useProducts, deductStock } = req.body;
+  const id = String(req.params.id);
+  const companyId = req.user!.companyId!;
+  const { name, fields, chipGroups, isDefault, useProducts, deductStock } = req.body;
 
-    const existing = await prisma.serviceFormTemplate.findFirst({
-      where: { id, companyId },
-    });
+  const existing = await prisma.serviceFormTemplate.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!existing) {
-      res.status(404).json({ message: "Şablon bulunamadı." });
-      return;
-    }
-
-    const template = await prisma.serviceFormTemplate.update({
-      where: { id },
-      data: {
-        name: name?.trim() ?? existing.name,
-        fields: fields ? JSON.stringify(fields) : existing.fields,
-        chipGroups: chipGroups ? JSON.stringify(chipGroups) : existing.chipGroups,
-        useProducts: useProducts !== undefined ? !!useProducts : existing.useProducts,
-        deductStock: deductStock !== undefined ? !!deductStock : existing.deductStock,
-        isDefault: isDefault !== undefined ? !!isDefault : existing.isDefault,
-      },
-    });
-
-    if (template.isDefault) {
-      await prisma.serviceFormTemplate.updateMany({
-        where: { companyId, id: { not: template.id } },
-        data: { isDefault: false },
-      });
-    }
-
-    res.json({
-      id: template.id,
-      name: template.name,
-      isDefault: template.isDefault,
-      useProducts: template.useProducts ?? false,
-      deductStock: template.deductStock ?? true,
-      fields: JSON.parse(template.fields),
-      chipGroups: JSON.parse(template.chipGroups),
-    });
-  } catch (error: any) {
-    console.error("UpdateServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  if (!existing) {
+    res.status(404).json({ message: "Şablon bulunamadı." });
+    return;
   }
+
+  const template = await prisma.serviceFormTemplate.update({
+    where: { id },
+    data: {
+      name: name?.trim() ?? existing.name,
+      fields: fields ? JSON.stringify(fields) : existing.fields,
+      chipGroups: chipGroups ? JSON.stringify(chipGroups) : existing.chipGroups,
+      useProducts: useProducts !== undefined ? !!useProducts : existing.useProducts,
+      deductStock: deductStock !== undefined ? !!deductStock : existing.deductStock,
+      isDefault: isDefault !== undefined ? !!isDefault : existing.isDefault,
+    },
+  });
+
+  if (template.isDefault) {
+    await prisma.serviceFormTemplate.updateMany({
+      where: { companyId, id: { not: template.id } },
+      data: { isDefault: false },
+    });
+  }
+
+  res.json({
+    id: template.id,
+    name: template.name,
+    isDefault: template.isDefault,
+    useProducts: template.useProducts ?? false,
+    deductStock: template.deductStock ?? true,
+    fields: JSON.parse(template.fields),
+    chipGroups: JSON.parse(template.chipGroups),
+  });
 }
 
 export async function setDefaultServiceTemplate(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const companyId = req.user!.companyId!;
+  const id = String(req.params.id);
+  const companyId = req.user!.companyId!;
 
-    const existing = await prisma.serviceFormTemplate.findFirst({
-      where: { id, companyId },
-    });
+  const existing = await prisma.serviceFormTemplate.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!existing) {
-      res.status(404).json({ message: "Şablon bulunamadı." });
-      return;
-    }
-
-    await prisma.serviceFormTemplate.updateMany({
-      where: { companyId },
-      data: { isDefault: false },
-    });
-
-    const template = await prisma.serviceFormTemplate.update({
-      where: { id },
-      data: { isDefault: true },
-    });
-
-    res.json({
-      id: template.id,
-      name: template.name,
-      isDefault: template.isDefault,
-      useProducts: template.useProducts ?? false,
-      deductStock: template.deductStock ?? true,
-      fields: JSON.parse(template.fields),
-      chipGroups: JSON.parse(template.chipGroups),
-    });
-  } catch (error: any) {
-    console.error("SetDefaultServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  if (!existing) {
+    res.status(404).json({ message: "Şablon bulunamadı." });
+    return;
   }
+
+  await prisma.serviceFormTemplate.updateMany({
+    where: { companyId },
+    data: { isDefault: false },
+  });
+
+  const template = await prisma.serviceFormTemplate.update({
+    where: { id },
+    data: { isDefault: true },
+  });
+
+  res.json({
+    id: template.id,
+    name: template.name,
+    isDefault: template.isDefault,
+    useProducts: template.useProducts ?? false,
+    deductStock: template.deductStock ?? true,
+    fields: JSON.parse(template.fields),
+    chipGroups: JSON.parse(template.chipGroups),
+  });
 }
 
 export async function deleteServiceTemplate(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const companyId = req.user!.companyId!;
+  const id = String(req.params.id);
+  const companyId = req.user!.companyId!;
 
-    const existing = await prisma.serviceFormTemplate.findFirst({
-      where: { id, companyId },
-    });
+  const existing = await prisma.serviceFormTemplate.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!existing) {
-      res.status(404).json({ message: "Şablon bulunamadı." });
-      return;
-    }
-
-    const count = await prisma.serviceFormTemplate.count({ where: { companyId } });
-
-    if (count === 1) {
-      res.status(400).json({ message: "En az bir şablon olmalıdır." });
-      return;
-    }
-
-    await prisma.serviceFormTemplate.delete({ where: { id } });
-
-    if (existing.isDefault) {
-      const next = await prisma.serviceFormTemplate.findFirst({ where: { companyId } });
-      if (next) {
-        await prisma.serviceFormTemplate.update({
-          where: { id: next.id },
-          data: { isDefault: true },
-        });
-      }
-    }
-
-    res.json({ message: "Şablon silindi." });
-  } catch (error: any) {
-    console.error("DeleteServiceTemplate error:", error);
-    res.status(500).json({ message: "Sunucu hatası: " + error.message });
+  if (!existing) {
+    res.status(404).json({ message: "Şablon bulunamadı." });
+    return;
   }
+
+  const count = await prisma.serviceFormTemplate.count({ where: { companyId } });
+
+  if (count === 1) {
+    res.status(400).json({ message: "En az bir şablon olmalıdır." });
+    return;
+  }
+
+  await prisma.serviceFormTemplate.delete({ where: { id } });
+
+  if (existing.isDefault) {
+    const next = await prisma.serviceFormTemplate.findFirst({ where: { companyId } });
+    if (next) {
+      await prisma.serviceFormTemplate.update({
+        where: { id: next.id },
+        data: { isDefault: true },
+      });
+    }
+  }
+
+  res.json({ message: "Şablon silindi." });
 }

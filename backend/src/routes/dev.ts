@@ -1,3 +1,4 @@
+import { asyncHandler } from "../middleware/errorHandler";
 import { Router } from "express";
 import {
   devLogin,
@@ -17,20 +18,20 @@ import { devAuth } from "../middleware/devAuth";
 
 const router = Router();
 
-router.post("/login", devLogin);
+router.post("/login", asyncHandler(devLogin));
 
 router.use(devAuth);
 
-router.get("/stats", getStats);
-router.get("/admin-keys", listAdminKeys);
-router.post("/admin-keys", createAdminKey);
-router.put("/admin-keys/:id", updateAdminKey);
-router.delete("/admin-keys/:id", deleteAdminKey);
-router.get("/users", listUsers);
-router.put("/users/:id", updateUser);
-router.delete("/users/:id", deleteUser);
-router.get("/companies", listCompanies);
-router.get("/companies/:id", getCompany);
-router.put("/companies/:id", updateCompany);
+router.get("/stats", asyncHandler(getStats));
+router.get("/admin-keys", asyncHandler(listAdminKeys));
+router.post("/admin-keys", asyncHandler(createAdminKey));
+router.put("/admin-keys/:id", asyncHandler(updateAdminKey));
+router.delete("/admin-keys/:id", asyncHandler(deleteAdminKey));
+router.get("/users", asyncHandler(listUsers));
+router.put("/users/:id", asyncHandler(updateUser));
+router.delete("/users/:id", asyncHandler(deleteUser));
+router.get("/companies", asyncHandler(listCompanies));
+router.get("/companies/:id", asyncHandler(getCompany));
+router.put("/companies/:id", asyncHandler(updateCompany));
 
 export default router;

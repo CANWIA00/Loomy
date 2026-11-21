@@ -1,3 +1,4 @@
+import { asyncHandler } from "../middleware/errorHandler";
 import { Router } from "express";
 import {
   getQuoteRecords,
@@ -9,9 +10,9 @@ import { authenticate, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, requirePanelAccess("quotes", "view"), getQuoteRecords);
-router.post("/", authenticate, requirePanelAccess("quotes", "manage"), createQuoteRecord);
-router.put("/:id", authenticate, requirePanelAccess("quotes", "manage"), updateQuoteRecord);
-router.delete("/:id", authenticate, requirePanelAccess("quotes", "manage"), deleteQuoteRecord);
+router.get("/", authenticate, requirePanelAccess("quotes", "view"), asyncHandler(getQuoteRecords));
+router.post("/", authenticate, requirePanelAccess("quotes", "manage"), asyncHandler(createQuoteRecord));
+router.put("/:id", authenticate, requirePanelAccess("quotes", "manage"), asyncHandler(updateQuoteRecord));
+router.delete("/:id", authenticate, requirePanelAccess("quotes", "manage"), asyncHandler(deleteQuoteRecord));
 
 export default router;

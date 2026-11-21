@@ -1,5 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { secureStorage } from "../utils/secureStorage";
 import { router } from "expo-router";
 import { BASE_URL } from "./client";
 
@@ -7,18 +8,17 @@ export const DEV_TOKEN_KEY = "devToken";
 export const DEV_EMAIL_KEY = "devEmail";
 
 export async function getDevToken(): Promise<string | null> {
-  return AsyncStorage.getItem(DEV_TOKEN_KEY);
+  return secureStorage.getItem(DEV_TOKEN_KEY);
 }
 
 export async function setDevSession(token: string, email: string): Promise<void> {
-  await AsyncStorage.multiSet([
-    [DEV_TOKEN_KEY, token],
-    [DEV_EMAIL_KEY, email],
-  ]);
+  await secureStorage.setItem(DEV_TOKEN_KEY, token);
+  await AsyncStorage.setItem(DEV_EMAIL_KEY, email);
 }
 
 export async function clearDevSession(): Promise<void> {
-  await AsyncStorage.multiRemove([DEV_TOKEN_KEY, DEV_EMAIL_KEY]);
+  await secureStorage.removeItem(DEV_TOKEN_KEY);
+  await AsyncStorage.removeItem(DEV_EMAIL_KEY);
 }
 
 const devClient = axios.create({
@@ -30,7 +30,7 @@ const devClient = axios.create({
 
 devClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem(DEV_TOKEN_KEY);
+    const token = await secureStorage.getItem(DEV_TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

@@ -17,6 +17,7 @@ import devRoutes from "./routes/dev";
 import translateRoutes from "./routes/translate";
 import currencyRatesRoutes from "./routes/currencyRates";
 import applyRoutes from "./routes/apply";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 const ALLOWED_ORIGINS = (
   process.env.ALLOWED_ORIGINS
@@ -46,6 +47,10 @@ function isOriginAllowed(origin: string | undefined): boolean {
 
 const app = express();
 
+// Railway gibi tek bir reverse proxy arkasinda calisiyoruz; req.ip bu sayede
+// gercek istemci IP'sini verir ve x-forwarded-for sahteciligine kapali olur.
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? 1));
+
 app.use(compression());
 
 app.use(cors({
@@ -60,6 +65,11 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"],
 }));
 
+// Giris gerektirmeyen endpointler yalnizca kucuk JSON alir; boylece anonim
+// istemciler 15mb'lik govdelerle sunucuyu yoramaz. Ilk eslesen parser govdeyi
+// okur, sonraki parser zaten okunmus govdeyi atlar.
+app.use(["/api/auth", "/api/apply", "/api/translate"], express.json({ limit: "100kb" }));
+// Imza, logo ve kase base64 olarak geldigi icin giris yapilmis istekler buyuk olabilir.
 app.use(express.json({ limit: "15mb" }));
 
 app.get("/api/health", (_req, res) => {
@@ -82,5 +92,8 @@ app.use("/api/dev", devRoutes);
 app.use("/api", translateRoutes);
 app.use("/api/rates", currencyRatesRoutes);
 app.use("/api/apply", applyRoutes);
+
+app.use("/api", notFoundHandler);
+app.use(errorHandler);
 
 export default app;

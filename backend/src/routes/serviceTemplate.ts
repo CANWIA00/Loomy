@@ -1,3 +1,4 @@
+import { asyncHandler } from "../middleware/errorHandler";
 import { Router } from "express";
 import {
   listServiceTemplates,
@@ -10,10 +11,10 @@ import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", authenticate, requirePanelAccess("services", "view"), listServiceTemplates);
-router.post("/", authenticate, isAdmin, createServiceTemplate);
-router.post("/:id/set-default", authenticate, isAdmin, setDefaultServiceTemplate);
-router.put("/:id", authenticate, isAdmin, updateServiceTemplate);
-router.delete("/:id", authenticate, isAdmin, deleteServiceTemplate);
+router.get("/", authenticate, requirePanelAccess("services", "view"), asyncHandler(listServiceTemplates));
+router.post("/", authenticate, isAdmin, asyncHandler(createServiceTemplate));
+router.post("/:id/set-default", authenticate, isAdmin, asyncHandler(setDefaultServiceTemplate));
+router.put("/:id", authenticate, isAdmin, asyncHandler(updateServiceTemplate));
+router.delete("/:id", authenticate, isAdmin, asyncHandler(deleteServiceTemplate));
 
 export default router;

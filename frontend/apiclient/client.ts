@@ -1,5 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { secureStorage } from "../utils/secureStorage";
 import { Platform } from "react-native";
 import { router } from "expo-router";
 
@@ -26,7 +27,7 @@ export const setOnUnauthorized = (callback: (() => void) | null) => {
 
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("token");
+    const token = await secureStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -43,7 +44,7 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     if (error.response?.status === 403 && error.response?.data?.frozen) {
-      await AsyncStorage.removeItem("token");
+      await secureStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
       await AsyncStorage.setItem("frozenNotice", "1");
       if (onUnauthorized) {
@@ -52,7 +53,7 @@ apiClient.interceptors.response.use(
         router.replace("/(auth)/login");
       }
     } else if (error.response?.status === 401) {
-      await AsyncStorage.removeItem("token");
+      await secureStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
       if (onUnauthorized) {
         onUnauthorized();

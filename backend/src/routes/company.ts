@@ -1,3 +1,4 @@
+import { asyncHandler } from "../middleware/errorHandler";
 import { Router } from "express";
 import {
   getCompanyManagement,
@@ -10,8 +11,8 @@ const router = Router();
 
 router.use(authenticate, isAdmin);
 
-router.get("/users", getCompanyManagement);
-router.patch("/users/:id/access", updateUserPanelAccess);
-router.patch("/access", applyPanelAccessToAll);
+router.get("/users", asyncHandler(getCompanyManagement));
+router.patch("/users/:id/access", asyncHandler(updateUserPanelAccess));
+router.patch("/access", asyncHandler(applyPanelAccessToAll));
 
 export default router;

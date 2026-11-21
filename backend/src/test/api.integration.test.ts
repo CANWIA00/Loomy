@@ -4,6 +4,11 @@ import prisma from "../prisma";
 import { verifyToken, generateToken } from "../services/jwt";
 
 jest.mock("../services/jwt");
+jest.mock("../services/email", () => ({
+  ...jest.requireActual("../services/email"),
+  sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+}));
 (generateToken as jest.Mock).mockReturnValue("test-token-value");
 
 jest.mock("../prisma", () => {
@@ -349,7 +354,7 @@ describe("auth API routes", () => {
         .get("/api/health")
         .set("Origin", "https://loomy-abc123.vercel.app");
 
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(403);
     });
 
     it("matches wildcard patterns from ALLOWED_ORIGINS", async () => {
@@ -370,12 +375,12 @@ describe("auth API routes", () => {
         const rejected = await request(freshApp)
           .get("/api/health")
           .set("Origin", "https://evil.example.com");
-        expect(rejected.status).toBe(500);
+        expect(rejected.status).toBe(403);
 
         const notVercel = await request(freshApp)
           .get("/api/health")
           .set("Origin", "https://loomy-abc123.vercel.app.evil.com");
-        expect(notVercel.status).toBe(500);
+        expect(notVercel.status).toBe(403);
       } finally {
         if (original === undefined) delete process.env.ALLOWED_ORIGINS;
         else process.env.ALLOWED_ORIGINS = original;

@@ -1,3 +1,4 @@
+import type { CustomerListFilter } from "./services";
 import apiClient from "./client";
 
 export interface PaymentRecord {
@@ -29,8 +30,8 @@ export interface PaymentPageResponse {
 }
 
 export const paymentApi = {
-  getAll: (page: number = 0, size: number = 50) =>
-    apiClient.get<PaymentPageResponse>("/payments", { params: { page, size } }),
+  getAll: (page: number = 0, size: number = 50, filter?: CustomerListFilter) =>
+    apiClient.get<PaymentPageResponse>("/payments", { params: { page, size, ...filter } }),
 
   getSummary: () =>
     apiClient.get<PaymentSummary>("/payments/summary"),

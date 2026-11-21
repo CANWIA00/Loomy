@@ -1,0 +1,58 @@
+# Uctan uca (E2E) test ortami: gercek PostgreSQL + test mail sunucusu (Mailpit)
+# + production ile ayni Dockerfile'dan build edilen backend.
+#
+#   npm run test:e2e
+#
+# Canli ortamla hicbir baglantisi yoktur; tum portlar yalnizca localhost'a acilir.
+name: loomy-e2e
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: loomy_e2e
+    ports:
+      - "127.0.0.1:55432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:latest
+    environment:
+      # Backend STARTTLS zorunlu tutuyor; Mailpit kendinden imzali sertifika uretir.
+      MP_SMTP_TLS_CERT: "sans:mailpit"
+      MP_SMTP_TLS_KEY: "sans:mailpit"
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+    ports:
+      - "127.0.0.1:58025:8025"
+
+  backend:
+    image: loomy-backend:e2e
+    build:
+      context: ../..
+      dockerfile: dockerfile
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/loomy_e2e?schema=public"
+      JWT_SECRET: "e2e-only-secret-not-used-anywhere-else"
+      PORT: "8080"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: "e2e"
+      SMTP_PASS: "e2e"
+      SMTP_FROM: "Loomy E2E <e2e@loomy.test>"
+      # Yalnizca bu test ortaminda: Mailpit'in kendinden imzali sertifikasini kabul et.
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+    ports:
+      - "127.0.0.1:58080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_started

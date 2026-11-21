@@ -198,9 +198,14 @@ function toBackend(f: Partial<ServiceRecord>): Record<string, any> {
   return data;
 }
 
+export interface CustomerListFilter {
+  customerId?: string;
+  customerName?: string;
+}
+
 export const serviceApi = {
-  getAll: async (page: number = 0, size: number = 50) => {
-    const res = await apiClient.get<{ content: ServiceRecordBackend[]; totalElements: number; totalPages: number; number: number; size: number }>("/services", { params: { page, size } });
+  getAll: async (page: number = 0, size: number = 50, filter?: CustomerListFilter) => {
+    const res = await apiClient.get<{ content: ServiceRecordBackend[]; totalElements: number; totalPages: number; number: number; size: number }>("/services", { params: { page, size, ...filter } });
     return {
       ...res,
       data: {
