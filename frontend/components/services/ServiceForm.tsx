@@ -243,11 +243,12 @@ function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
   );
 }
 
-function FieldCell({ field }: { field: TemplateField }) {
+function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
   const { form, updateForm, updateCustomField } = useServices();
   const label = labelOf(field, lang);
+  const cellClass = compact ? "flex-1" : "flex-1 mb-3";
 
   const inputProps = {
     className: "w-full h-10 border rounded-lg px-3 text-sm",
@@ -257,7 +258,7 @@ function FieldCell({ field }: { field: TemplateField }) {
 
   if (field.key === "technician") {
     return (
-      <View className="flex-1 mb-3">
+      <View className={cellClass}>
         <FieldLabel>{label}</FieldLabel>
         <View className="w-full h-10 border rounded-lg px-3 items-center justify-center flex-row" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
           <Ionicons name="person-outline" size={14} color={colors.primary} />
@@ -269,7 +270,7 @@ function FieldCell({ field }: { field: TemplateField }) {
 
   if (field.key === "fee") {
     return (
-      <View className="flex-1 mb-3">
+      <View className={cellClass}>
         <FieldLabel>{label}</FieldLabel>
         <FeeInput
           value={form.fee}
@@ -283,7 +284,7 @@ function FieldCell({ field }: { field: TemplateField }) {
 
   if (field.key === "labor") {
     return (
-      <View className="flex-1 mb-3">
+      <View className={cellClass}>
         <FieldLabel>{label}</FieldLabel>
         <FeeInput
           value={form.labor}
@@ -297,7 +298,7 @@ function FieldCell({ field }: { field: TemplateField }) {
 
   if (field.key === "kdv") {
     return (
-      <View className="flex-1 mb-3">
+      <View className={cellClass}>
         <FieldLabel>{label}</FieldLabel>
         <TextInput
           {...inputProps}
@@ -312,7 +313,7 @@ function FieldCell({ field }: { field: TemplateField }) {
 
   if (field.key === "phone") {
     return (
-      <View className="flex-1 mb-3">
+      <View className={cellClass}>
         <FieldLabel>{label}</FieldLabel>
         <TextInput
           {...inputProps}
@@ -342,7 +343,7 @@ function FieldCell({ field }: { field: TemplateField }) {
   };
 
   return (
-    <View className="flex-1 mb-3">
+    <View className={cellClass}>
       <FieldLabel>{label}</FieldLabel>
       <TextInput
         {...inputProps}
@@ -372,14 +373,14 @@ function FieldPairRow({ fields }: { fields: TemplateField[] }) {
   );
 }
 
-function DocumentDateField({ field }: { field: TemplateField }) {
+function DocumentDateField({ field, compact }: { field: TemplateField; compact?: boolean }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
   const { form, updateForm } = useServices();
   const label = labelOf(field, lang);
 
   return (
-    <View className="mb-3">
+    <View className={compact ? "" : "mb-3"}>
       <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
       <View className="flex-row items-center">
         <TextInput
@@ -405,58 +406,69 @@ function DocumentDateField({ field }: { field: TemplateField }) {
   );
 }
 
-function CustomerRow({ customerName, address }: { customerName?: TemplateField; address?: TemplateField }) {
+function CustomerNameField({ field }: { field: TemplateField }) {
+  const { colors } = useTheme();
+  const { lang, t } = useLanguage();
+  const { form, updateForm } = useServices();
+
+  return (
+    <View className="flex-1">
+      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
+      <TextInput
+        className="w-full h-10 border rounded-lg px-3 text-sm"
+        style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+        placeholder={t("svc.customerNamePlaceholder")}
+        placeholderTextColor={colors.textMuted}
+        value={form.customerName}
+        onChangeText={(v) => updateForm("customerName", v)}
+      />
+    </View>
+  );
+}
+
+function ServiceAddressField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
   const { form, updateForm, setMapSelectorVisible } = useServices();
 
-  const cols: ReactNode[] = [];
-  if (customerName) {
-    cols.push(
-      <View key="name" className="flex-1">
-        <FieldLabel>{labelOf(customerName, lang)}</FieldLabel>
+  return (
+    <View className="flex-1">
+      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
+      <View className="relative flex-1">
         <TextInput
-          className="w-full h-10 border rounded-lg px-3 text-sm"
+          className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
           style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder={t("svc.customerNamePlaceholder")}
+          placeholder={t("svc.serviceAddressPlaceholder")}
           placeholderTextColor={colors.textMuted}
-          value={form.customerName}
-          onChangeText={(v) => updateForm("customerName", v)}
+          value={form.serviceAddress}
+          onChangeText={(v) => updateForm("serviceAddress", v)}
         />
+        <TouchableOpacity className="absolute right-2 top-1/2 -translate-y-1/2" onPress={() => setMapSelectorVisible(true)}>
+          <Ionicons name="locate-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
       </View>
-    );
-  }
-  if (address) {
-    cols.push(
-      <View key="address" className="flex-1">
-        <FieldLabel>{labelOf(address, lang)}</FieldLabel>
-        <View className="relative flex-1">
-          <TextInput
-            className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-            placeholder={t("svc.serviceAddressPlaceholder")}
-            placeholderTextColor={colors.textMuted}
-            value={form.serviceAddress}
-            onChangeText={(v) => updateForm("serviceAddress", v)}
-          />
-          <TouchableOpacity className="absolute right-2 top-1/2 -translate-y-1/2" onPress={() => setMapSelectorVisible(true)}>
-            <Ionicons name="locate-outline" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-  if (!cols.length) return null;
-  return <View className="flex-row gap-3 mb-3">{cols}</View>;
+    </View>
+  );
 }
 
-function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
+function CustomerRow({ customerName, address }: { customerName?: TemplateField; address?: TemplateField }) {
+  if (!customerName && !address) return null;
+  return (
+    <View className="flex-row gap-3 mb-3">
+      {customerName ? <CustomerNameField field={customerName} /> : null}
+      {address ? <ServiceAddressField field={address} /> : null}
+    </View>
+  );
+}
+
+function TimeField({ field, isEnd }: { field: TemplateField; isEnd: boolean }) {
   const { colors } = useTheme();
   const { lang } = useLanguage();
   const { form, updateForm } = useServices();
+  const value = isEnd ? form.endTime : form.startTime;
 
-  const renderTimeField = (field: TemplateField, value: string, isEnd: boolean) => (
-    <View key={field.key} className="flex-1">
+  return (
+    <View className="flex-1">
       <FieldLabel>{labelOf(field, lang)}</FieldLabel>
       <View className="relative flex-1">
         <TextInput
@@ -492,12 +504,50 @@ function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField })
       </View>
     </View>
   );
+}
 
-  const cols: ReactNode[] = [];
-  if (start) cols.push(renderTimeField(start, form.startTime, false));
-  if (end) cols.push(renderTimeField(end, form.endTime, true));
-  if (!cols.length) return null;
-  return <View className="flex-row gap-3 mb-3">{cols}</View>;
+function TimeRow({ start, end }: { start?: TemplateField; end?: TemplateField }) {
+  if (!start && !end) return null;
+  return (
+    <View className="flex-row gap-3 mb-3">
+      {start ? <TimeField field={start} isEnd={false} /> : null}
+      {end ? <TimeField field={end} isEnd /> : null}
+    </View>
+  );
+}
+
+function CustomerSelectField() {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+  const {
+    customerList,
+    selectedCustomerId,
+    clearCustomerSelection,
+    setCustomerSelectModal,
+    setCustomerSearch,
+  } = useServices();
+
+  return (
+    <View className="flex-1">
+      <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.selectCustomer")}</Text>
+      <TouchableOpacity
+        className="flex-row items-center h-10 border rounded-lg px-3"
+        style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+        onPress={() => { setCustomerSearch(""); setCustomerSelectModal(true); }}
+      >
+        <Ionicons name="person-outline" size={18} color={colors.textMuted} />
+        <Text className="text-sm ml-2 flex-1" style={{ color: selectedCustomerId ? colors.text : colors.textMuted }}>
+          {selectedCustomerId ? customerList.find((m) => m.id === selectedCustomerId)?.companyName : t("svc.searchCustomer")}
+        </Text>
+        {selectedCustomerId && (
+          <TouchableOpacity onPress={clearCustomerSelection}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+        {!selectedCustomerId && <Ionicons name="chevron-down" size={16} color={colors.textMuted} />}
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 function SingleField({ field }: { field: TemplateField }) {
@@ -1267,6 +1317,9 @@ function UsedProductsSection() {
 }
 
 export default function ServiceForm() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+  const isWide = width >= 1100;
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -1344,6 +1397,15 @@ export default function ServiceForm() {
 
   const orderedGroups = [...groups].sort((a, b) => a.order - b.order);
 
+  // Masaüstünde üst alanı 3-4 kolona yay; mobilde mevcut düzeni koru.
+  const cell = (mobileSpan: 1 | 2, desktopSpan: 1 | 2, wideSpan: 1 | 2 | 3 = desktopSpan) => ({
+    width: (!isDesktop
+      ? mobileSpan === 2 ? "100%" : "47%"
+      : isWide
+        ? wideSpan === 3 ? "71%" : wideSpan === 2 ? "47%" : "23%"
+        : desktopSpan === 2 ? "63%" : "31%") as `${number}%`,
+  });
+
   return (
     <>
       <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
@@ -1408,28 +1470,6 @@ export default function ServiceForm() {
             </ScrollView>
           </View>
         )}
-
-        <View className="flex-row gap-3 mb-3">
-          <View className="flex-1">
-            <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("svc.selectCustomer")}</Text>
-            <TouchableOpacity
-              className="flex-row items-center h-10 border rounded-lg px-3"
-              style={{ backgroundColor: colors.bg, borderColor: colors.border }}
-              onPress={() => { setCustomerSearch(""); setCustomerSelectModal(true); }}
-            >
-              <Ionicons name="person-outline" size={18} color={colors.textMuted} />
-              <Text className="text-sm ml-2 flex-1" style={{ color: selectedCustomerId ? colors.text : colors.textMuted }}>
-                {selectedCustomerId ? customerList.find((m) => m.id === selectedCustomerId)?.companyName : t("svc.searchCustomer")}
-              </Text>
-              {selectedCustomerId && (
-                <TouchableOpacity onPress={clearCustomerSelection}>
-                  <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-              {!selectedCustomerId && <Ionicons name="chevron-down" size={16} color={colors.textMuted} />}
-            </TouchableOpacity>
-          </View>
-        </View>
 
         <Modal visible={customerSelectModal} transparent animationType="fade" onRequestClose={() => setCustomerSelectModal(false)}>
           <View className="flex-1 justify-center items-center bg-black/60">
@@ -1609,11 +1649,34 @@ export default function ServiceForm() {
           </View>
         </Modal>
 
-        <CustomerRow customerName={customerNameField} address={addressField} />
+        {isDesktop ? (
+          <View className="flex-row flex-wrap gap-3 mb-3">
+            <View style={cell(2, 1, 1)}><CustomerSelectField /></View>
+            {customerNameField && <View style={cell(1, 1, 1)}><CustomerNameField field={customerNameField} /></View>}
+            {addressField && <View style={cell(2, 2, 2)}><ServiceAddressField field={addressField} /></View>}
+            {phoneField && <View style={cell(1, 1, 1)}><FieldCell compact field={phoneField} /></View>}
+            {startTimeField && <View style={cell(1, 1, 1)}><TimeField field={startTimeField} isEnd={false} /></View>}
+            {endTimeField && <View style={cell(1, 1, 1)}><TimeField field={endTimeField} isEnd /></View>}
+            {technicianField && <View style={cell(1, 1, 1)}><FieldCell compact field={technicianField} /></View>}
+            {documentDateField && <View style={cell(1, 1, 1)}><DocumentDateField compact field={documentDateField} /></View>}
+            {!form.productsMode && feeField && <View style={cell(1, 1, 1)}><FieldCell compact field={feeField} /></View>}
+            {customFields.map((f) => (
+              <View key={f.key} style={cell(1, 1, 1)}><FieldCell compact field={f} /></View>
+            ))}
+          </View>
+        ) : (
+          <>
+            <View className="flex-row gap-3 mb-3">
+              <CustomerSelectField />
+            </View>
 
-        <TimeRow start={startTimeField} end={endTimeField} />
+            <CustomerRow customerName={customerNameField} address={addressField} />
 
-        <FieldPairRow fields={[phoneField, ...customFields].filter((f): f is TemplateField => !!f)} />
+            <TimeRow start={startTimeField} end={endTimeField} />
+
+            <FieldPairRow fields={[phoneField, ...customFields].filter((f): f is TemplateField => !!f)} />
+          </>
+        )}
 
         {orderedGroups.map((g) => (
           <ChipGroupSection key={g.key} group={g} />
@@ -1621,9 +1684,11 @@ export default function ServiceForm() {
 
         {detailsField && <SingleField field={detailsField} />}
 
-        <FieldPairRow fields={[form.productsMode ? null : feeField, technicianField].filter((f): f is TemplateField => !!f)} />
+        {isDesktop ? null : (
+          <FieldPairRow fields={[form.productsMode ? null : feeField, technicianField].filter((f): f is TemplateField => !!f)} />
+        )}
 
-        {documentDateField && <DocumentDateField field={documentDateField} />}
+        {isDesktop ? null : documentDateField ? <DocumentDateField field={documentDateField} /> : null}
 
         <UsedProductsSection />
 
