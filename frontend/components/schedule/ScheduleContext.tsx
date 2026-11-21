@@ -274,7 +274,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calendarMonth, loadData]);
 
-  useFocusedPolling(() => loadData(calendarDate, true));
+  useFocusedPolling(() => loadData(calendarDate, true), 30000, { refetchOnFocus: true });
 
   const filteredAppointments = selectedTeamFilter === t("sch.allTeams")
     ? appointments
