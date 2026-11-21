@@ -17,6 +17,7 @@ import devRoutes from "./routes/dev";
 import translateRoutes from "./routes/translate";
 import currencyRatesRoutes from "./routes/currencyRates";
 import applyRoutes from "./routes/apply";
+import unitRoutes from "./routes/unit";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 const ALLOWED_ORIGINS = (
@@ -92,6 +93,7 @@ app.use("/api/dev", devRoutes);
 app.use("/api", translateRoutes);
 app.use("/api/rates", currencyRatesRoutes);
 app.use("/api/apply", applyRoutes);
+app.use("/api/units", unitRoutes);
 
 app.use("/api", notFoundHandler);
 app.use(errorHandler);

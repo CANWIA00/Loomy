@@ -66,6 +66,7 @@ model Company {
   quoteRecords   QuoteRecord[]
   stockItems     StockItem[]
   savedProductNames SavedProductName[]
+  customUnits    CustomUnit[]
   invoices       Invoice[]
   invoiceLines   InvoiceLine[]
   stockTransactions StockTransaction[]
@@ -287,6 +288,18 @@ model SavedProductName {
 
   @@unique([companyId, name])
   @@index([companyId, name])
+}
+
+// Sirketin ekledigi olcu birimleri (teklif/servis/stok birim secicisinde gorunur).
+model CustomUnit {
+  id        Int      @id @default(autoincrement())
+  name      String
+  companyId String
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, name])
 }
 
 model StockTransaction {
