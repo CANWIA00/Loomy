@@ -1,14 +1,14 @@
 import { Response } from "express";
 import prisma from "../prisma";
 import { AuthRequest } from "../middleware/auth";
+import { parsePagination } from "../utils/pagination";
 
 export async function getQuoteRecords(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
   try {
-    const page = parseInt(req.query.page as string) || 0;
-    const size = parseInt(req.query.size as string) || 20;
+    const { page, size } = parsePagination(req.query, 20);
     const companyId = req.user!.companyId!;
 
     const [content, totalElements] = await Promise.all([

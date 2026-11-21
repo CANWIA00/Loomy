@@ -7,6 +7,7 @@ import {
   ensureFresh,
   scheduleRecomputeForRecord,
 } from "../services/monthlySummaries";
+import { parsePagination } from "../utils/pagination";
 
 const PAYMENT_SELECT = {
   id: true,
@@ -46,8 +47,7 @@ export async function getPayments(
   res: Response
 ): Promise<void> {
   try {
-    const page = parseInt(req.query.page as string) || 0;
-    const size = parseInt(req.query.size as string) || 50;
+    const { page, size } = parsePagination(req.query, 50);
     const companyId = req.user!.companyId!;
 
     const [content, totalElements] = await Promise.all([

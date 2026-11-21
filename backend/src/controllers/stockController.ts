@@ -9,6 +9,7 @@ import {
   scheduleRecomputeMonth,
   scheduleRecomputePeriods,
 } from "../services/monthlySummaries";
+import { parsePagination } from "../utils/pagination";
 
 const REASON_INITIAL = "INITIAL";
 const REASON_MANUAL = "MANUAL";
@@ -372,8 +373,7 @@ export async function listInvoices(
   res: Response
 ): Promise<void> {
   try {
-    const page = parseInt(req.query.page as string) || 0;
-    const size = parseInt(req.query.size as string) || 20;
+    const { page, size } = parsePagination(req.query, 20);
     const companyId = req.user!.companyId!;
 
     const [content, totalElements] = await Promise.all([

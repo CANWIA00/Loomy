@@ -1,5 +1,9 @@
 import "dotenv/config";
 
+// Testler gelistiricinin lokal .env ayarlarina bagli olmamali; CORS testleri
+// koddaki varsayilan izinli origin listesini dogrular.
+delete process.env.ALLOWED_ORIGINS;
+
 jest.mock("../prisma", () => {
   return {
     __esModule: true,
