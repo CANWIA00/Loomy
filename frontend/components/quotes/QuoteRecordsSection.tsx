@@ -154,7 +154,8 @@ export default function QuoteRecordsSection() {
             <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
             <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
             <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
-            <View className="w-56 ml-6" />
+            <Text className="w-28 ml-6 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colStatus")}</Text>
+            <View className="w-56 ml-2" />
           </View>
         )}
 
@@ -181,7 +182,7 @@ export default function QuoteRecordsSection() {
                 className="px-3 py-3 border-b"
                 style={{ borderColor: colors.borderAlt }}
               >
-                <View className="flex-row items-start justify-between">
+                <View className="flex-row items-center justify-between">
                   <View className="flex-1 pr-2">
                     <View className="flex-row items-baseline flex-wrap gap-x-2">
                       <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
@@ -195,12 +196,9 @@ export default function QuoteRecordsSection() {
                       </Text>
                     ) : null}
                     <View className="mt-1">
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-sm flex-1 mr-2" style={{ color: colors.text }} numberOfLines={1}>
-                          {totalLabels}
-                        </Text>
-                        <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
-                      </View>
+                      <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>
+                        {totalLabels}
+                      </Text>
                       {hasForeignCurrency && totalTry > 0 && (
                         <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
                           ≈ {formatMoney(totalTry)} ₺
@@ -208,6 +206,9 @@ export default function QuoteRecordsSection() {
                       )}
                     </View>
                   </View>
+                  {/* Durum ve ⋮ ayni yatay hizada, kartin dikey ortasinda */}
+                  <View className="flex-row items-center gap-3">
+                  <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
                   <TouchableOpacity
                     className="w-9 h-9 rounded-lg items-center justify-center"
                     style={{ backgroundColor: colors.bgInput }}
@@ -221,6 +222,7 @@ export default function QuoteRecordsSection() {
                   >
                     <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
                   </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ) : (
@@ -234,14 +236,11 @@ export default function QuoteRecordsSection() {
                   <Text className="text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
                     {k.customer}
                   </Text>
-                  <View className="flex-row items-center mt-0.5">
-                    {k.title ? (
-                      <Text className="text-[11px] mr-2" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                        {k.title} ·
-                      </Text>
-                    ) : null}
-                    <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
-                  </View>
+                  {k.title ? (
+                    <Text className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                      {k.title}
+                    </Text>
+                  ) : null}
                 </View>
                 <View className="w-28 items-end">
                   <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
@@ -253,8 +252,11 @@ export default function QuoteRecordsSection() {
                     </Text>
                   )}
                 </View>
+                <View className="w-28 ml-6">
+                  <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
+                </View>
                 {/* Tum islemler gorunur; Sil yanlislikla tiklanmasin diye en sonda, ayirici cizgiyle ayri (onay da sorar). */}
-                <View className="w-56 ml-6 flex-row items-center justify-end gap-1">
+                <View className="w-56 ml-2 flex-row items-center justify-end gap-1">
                   <RowAction icon="eye-outline" color={colors.primary} label={t("qot.preview")} onPress={() => handleView(k)} />
                   <RowAction icon="create-outline" color={colors.teal} label={t("common.edit")} onPress={() => handleEdit(k)} />
                   <RowAction icon="copy-outline" color={colors.textSecondary} label={t("qot.copy")} onPress={() => handleDuplicate(k)} />
