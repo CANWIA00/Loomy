@@ -1,5 +1,4 @@
 import { View, Text, TouchableOpacity, Modal } from "react-native";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -15,14 +14,13 @@ interface Props {
 export default function QuoteActionsMenu({ record, visible, onClose }: Props) {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const router = useRouter();
-  const { handleShare, handleView, openQuotePDF, handleEdit, handleDuplicate, setDeleteAlert } = useQuotes();
+  const { handleShare, handleView, openQuotePDF, handleEdit, handleDuplicate, setDeleteAlert, createServiceFromQuote } = useQuotes();
 
   const actions: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }[] = record
     ? [
         { key: "preview", label: t("qot.preview"), icon: "eye-outline", color: colors.primary, onPress: () => { onClose(); handleView(record); } },
         { key: "edit", label: t("common.edit"), icon: "create-outline", color: colors.teal, onPress: () => { onClose(); handleEdit(record); } },
-        { key: "service", label: t("qot.createServiceForm"), icon: "construct-outline", color: colors.success, onPress: () => { onClose(); router.push({ pathname: "/services", params: { fromQuote: String(record.id) } }); } },
+        { key: "service", label: t("qot.createServiceForm"), icon: "construct-outline", color: colors.success, onPress: () => { onClose(); createServiceFromQuote(record); } },
         { key: "duplicate", label: t("qot.copy"), icon: "copy-outline", color: colors.textSecondary, onPress: () => { onClose(); handleDuplicate(record); } },
         { key: "share", label: t("qot.share"), icon: "share-social-outline", color: colors.purple, onPress: () => { onClose(); handleShare(record); } },
         { key: "download", label: t("qot.downloadPdf"), icon: "download-outline", color: colors.warning, onPress: () => { onClose(); openQuotePDF(record); } },

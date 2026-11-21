@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Dimensions, Platform, type ScrollView } from "react-native";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as Print from "expo-print";
 
 import { generateQuotePDFHtml } from "../QuotePDF";
@@ -73,6 +73,8 @@ interface QuoteContextValue {
   setStatusFilter: (s: QuoteStatus | "all") => void;
   statusCounts: Record<QuoteStatus, number>;
   setQuoteStatus: (record: QuoteRecord, status: QuoteStatus) => Promise<void>;
+  /** Tekliften servis formu: teklif kabul edilir (is planlamaya duser) ve form o ise bagli acilir. */
+  createServiceFromQuote: (record: QuoteRecord) => Promise<void>;
   filter: QuoteFilter;
   setFilter: (f: QuoteFilter) => void;
   filterDate: string;
@@ -477,6 +479,25 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const router = useRouter();
+  const createServiceFromQuote = async (record: QuoteRecord) => {
+    // Servis formu olusturmak = musteri teklifi kabul etti. Teklif hemen kabul edilir;
+    // atama bekleyen is olusur ve form o ise bagli acilir. Form kaydedilmezse is
+    // bekleyenlerde kalir, kaydedilirse tamamlanir.
+    if ((record.status || "PENDING") !== "ACCEPTED") {
+      const previous = record.status || "PENDING";
+      setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, status: "ACCEPTED" } : r)));
+      try {
+        await quoteApi.setStatus(record.id, "ACCEPTED");
+      } catch {
+        setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, status: previous } : r)));
+        setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorStatus") });
+        return;
+      }
+    }
+    router.push({ pathname: "/services", params: { fromQuote: String(record.id) } });
+  };
+
   const filteredRecords = records.filter((k) => {
     if (statusFilter !== "all" && (k.status || "PENDING") !== statusFilter) return false;
     if (filterDate && k.tarih !== filterDate) return false;
@@ -724,6 +745,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setStatusFilter,
     statusCounts,
     setQuoteStatus,
+    createServiceFromQuote,
     filter,
     setFilter,
     filterDate,
