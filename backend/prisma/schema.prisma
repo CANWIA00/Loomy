@@ -241,6 +241,9 @@ model QuoteRecord {
   lines         String   @default("[]") // JSON string: [{name, details, quantity, unitPrice, currency, unit}]
   validUntil    String?
   tryRates      String? // JSON string: TCMB rate snapshot at creation time
+  // Teklif durumu: PENDING (bekliyor) | ACCEPTED (kabul) | REJECTED (red)
+  status          String    @default("PENDING")
+  statusUpdatedAt DateTime?
   companyId     String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

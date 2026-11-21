@@ -133,3 +133,31 @@ export async function deleteQuoteRecord(
   await prisma.quoteRecord.delete({ where: { id } });
   res.json({ message: "Teklif kaydı silindi." });
 }
+
+/** Teklif durumunu degistirir (Bekliyor / Kabul / Red). */
+export async function updateQuoteStatus(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  const id = parseInt(String(req.params.id));
+  const companyId = req.user!.companyId!;
+  const { status } = req.body as { status: string };
+
+  if (!Number.isInteger(id)) {
+    res.status(400).json({ message: "Geçersiz teklif." });
+    return;
+  }
+
+  const { count } = await prisma.quoteRecord.updateMany({
+    where: { id, companyId },
+    data: { status, statusUpdatedAt: new Date() },
+  });
+
+  if (count === 0) {
+    res.status(404).json({ message: "Teklif kaydı bulunamadı." });
+    return;
+  }
+
+  const record = await prisma.quoteRecord.findFirst({ where: { id, companyId } });
+  res.json(record);
+}

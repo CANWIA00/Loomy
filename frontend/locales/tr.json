@@ -1138,5 +1138,13 @@
   "qot.discardMessage": "Bu teklifteki değişiklikler kaydedilmedi. Çıkarsanız kaybolacak.",
   "qot.discardConfirm": "Kaydetmeden çık",
   "qot.backToList": "Tekliflere dön",
-  "qot.grandTotalShort": "Genel toplam"
+  "qot.grandTotalShort": "Genel toplam",
+  "qot.status.PENDING": "Bekliyor",
+  "qot.status.ACCEPTED": "Kabul edildi",
+  "qot.status.REJECTED": "Reddedildi",
+  "qot.statusAll": "Tüm durumlar",
+  "qot.colStatus": "Durum",
+  "qot.changeStatus": "Teklif durumu",
+  "qot.changeStatusHint": "Müşterinin bu teklife yanıtı",
+  "qot.errorStatus": "Teklif durumu güncellenemedi. Lütfen tekrar deneyin."
 }

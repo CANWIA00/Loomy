@@ -5,7 +5,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
 import QuoteActionsMenu from "./modals/QuoteActionsMenu";
-import type { QuoteRecord } from "../../apiclient/quotes";
+import { QuoteStatusBadge, QuoteStatusMenu, useStatusColor } from "./QuoteStatus";
+import { QUOTE_STATUSES, type QuoteRecord, type QuoteStatus } from "../../apiclient/quotes";
 import type { QuoteFilter } from "./types";
 import { getCurrencySymbol, round2, formatMoney } from "./types";
 import { useCurrency } from "../../contexts/CurrencyContext";
@@ -68,14 +69,20 @@ export default function QuoteRecordsSection() {
     handleEdit,
     handleDuplicate,
     setDeleteAlert,
+    statusFilter,
+    setStatusFilter,
+    statusCounts,
   } = useQuotes();
+  const statusColor = useStatusColor();
+  const [statusMenuRecord, setStatusMenuRecord] = useState<QuoteRecord | null>(null);
+  const totalCount = statusCounts.PENDING + statusCounts.ACCEPTED + statusCounts.REJECTED;
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
   const pagedRecords = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   useEffect(() => {
     setPage(0);
-  }, [filter, filterDate, filterCustomer]);
+  }, [filter, filterDate, filterCustomer, statusFilter]);
 
   const changePage = (delta: number) => {
     setPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
@@ -101,6 +108,30 @@ export default function QuoteRecordsSection() {
           </TouchableOpacity>
           <Text className="text-xs" style={{ color: colors.textMuted }}>{filteredRecords.length} {t("qot.showing")}</Text>
         </View>
+      </View>
+
+      {/* Durum filtresi (sayilarla) */}
+      <View className="flex-row flex-wrap gap-2 mb-2">
+        {(["all", ...QUOTE_STATUSES] as (QuoteStatus | "all")[]).map((s) => {
+          const active = statusFilter === s;
+          const tint = s === "all" ? colors.primary : statusColor(s);
+          const count = s === "all" ? totalCount : statusCounts[s];
+          return (
+            <TouchableOpacity
+              key={s}
+              className="px-3 h-8 rounded-lg flex-row items-center justify-center"
+              style={{ backgroundColor: active ? tint : colors.bgCard, borderColor: active ? tint : colors.border, borderWidth: 1 }}
+              onPress={() => setStatusFilter(active && s !== "all" ? "all" : s)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+            >
+              <Text className="text-xs font-medium" style={{ color: active ? "white" : colors.textSecondary }}>
+                {s === "all" ? t("qot.statusAll") : t(`qot.status.${s}`)}
+              </Text>
+              <Text className="text-[11px] font-semibold ml-1.5" style={{ color: active ? "white" : tint }}>{count}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <View className="flex-row flex-wrap gap-2 mb-4 items-center">
@@ -149,8 +180,9 @@ export default function QuoteRecordsSection() {
           <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
             <Text className="w-24 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colDate")}</Text>
             <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
+            <Text className="w-32 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colStatus")}</Text>
             <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
-            <View className="w-44 ml-6" />
+            <View className="w-56 ml-6" />
           </View>
         )}
 
@@ -200,6 +232,9 @@ export default function QuoteRecordsSection() {
                         </Text>
                       )}
                     </View>
+                    <View className="mt-2">
+                      <QuoteStatusBadge status={k.status} onPress={() => setStatusMenuRecord(k)} />
+                    </View>
                   </View>
                   <TouchableOpacity
                     className="w-9 h-9 rounded-lg items-center justify-center"
@@ -233,6 +268,9 @@ export default function QuoteRecordsSection() {
                     </Text>
                   ) : null}
                 </View>
+                <View className="w-32">
+                  <QuoteStatusBadge status={k.status} onPress={() => setStatusMenuRecord(k)} />
+                </View>
                 <View className="w-28 items-end">
                   <Text className="text-xs text-right" style={{ color: colors.text }} numberOfLines={1}>
                     {totalLabels}
@@ -244,7 +282,7 @@ export default function QuoteRecordsSection() {
                   )}
                 </View>
                 {/* Tum islemler gorunur; Sil yanlislikla tiklanmasin diye en sonda, ayirici cizgiyle ayri (onay da sorar). */}
-                <View className="ml-6 flex-row items-center justify-end gap-1">
+                <View className="w-56 ml-6 flex-row items-center justify-end gap-1">
                   <RowAction icon="eye-outline" color={colors.primary} label={t("qot.preview")} onPress={() => handleView(k)} />
                   <RowAction icon="create-outline" color={colors.teal} label={t("common.edit")} onPress={() => handleEdit(k)} />
                   <RowAction icon="copy-outline" color={colors.textSecondary} label={t("qot.copy")} onPress={() => handleDuplicate(k)} />
@@ -282,6 +320,12 @@ export default function QuoteRecordsSection() {
           </TouchableOpacity>
         </View>
       ) : null}
+
+      <QuoteStatusMenu
+        record={statusMenuRecord}
+        visible={statusMenuRecord !== null}
+        onClose={() => setStatusMenuRecord(null)}
+      />
 
       <QuoteActionsMenu
         record={actionsRecord}

@@ -8,7 +8,7 @@ import { shareWebPdf, downloadWebPdf } from "../../utils/webPdf";
 import { embedImage } from "../../utils/pdfAssets";
 import { sharePdfFile } from "../../utils/sharePdf";
 import { profileApi } from "../../apiclient/profile";
-import { quoteApi, QuoteRecord } from "../../apiclient/quotes";
+import { quoteApi, QuoteRecord, type QuoteStatus } from "../../apiclient/quotes";
 import { customerApi, Customer } from "../../apiclient/customers";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
@@ -72,6 +72,11 @@ interface QuoteContextValue {
   resetNewCustomerForm: () => void;
   createNewCustomer: () => void;
   filteredRecords: QuoteRecord[];
+  /** Durum filtresi ("all" = hepsi) ve durum basina teklif sayilari. */
+  statusFilter: QuoteStatus | "all";
+  setStatusFilter: (s: QuoteStatus | "all") => void;
+  statusCounts: Record<QuoteStatus, number>;
+  setQuoteStatus: (record: QuoteRecord, status: QuoteStatus) => Promise<void>;
   filter: QuoteFilter;
   setFilter: (f: QuoteFilter) => void;
   filterDate: string;
@@ -126,6 +131,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const [showForm, setShowForm] = useState(() => !isPhoneNow());
   const [filterDate, setFilterDate] = useState("");
   const [filterCustomer, setFilterCustomer] = useState("");
+  const [statusFilter, setStatusFilter] = useState<QuoteStatus | "all">("all");
   const [customerList, setCustomerList] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [customerSelectModal, setCustomerSelectModal] = useState(false);
@@ -421,7 +427,24 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     handleEdit(rec);
   }, [editParamId, records, handleEdit]);
 
+  const statusCounts: Record<QuoteStatus, number> = { PENDING: 0, ACCEPTED: 0, REJECTED: 0 };
+  records.forEach((r) => { statusCounts[r.status || "PENDING"] += 1; });
+
+  // Durum degisikligi ekranda hemen gorunur; sunucu hata verirse eski haline doner.
+  const setQuoteStatus = async (record: QuoteRecord, status: QuoteStatus) => {
+    const previous = record.status || "PENDING";
+    if (previous === status) return;
+    setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, status } : r)));
+    try {
+      await quoteApi.setStatus(record.id, status);
+    } catch {
+      setRecords((prev) => prev.map((r) => (r.id === record.id ? { ...r, status: previous } : r)));
+      setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorStatus") });
+    }
+  };
+
   const filteredRecords = records.filter((k) => {
+    if (statusFilter !== "all" && (k.status || "PENDING") !== statusFilter) return false;
     if (filterDate && k.tarih !== filterDate) return false;
     if (filterCustomer && !k.customer.toLowerCase().includes(filterCustomer.toLowerCase())) return false;
     if (filter !== "all") {
@@ -625,6 +648,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     setFilterDate("");
     setFilterCustomer("");
     setFilter("all");
+    setStatusFilter("all");
   };
 
   const value: QuoteContextValue = {
@@ -662,6 +686,10 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     resetNewCustomerForm,
     createNewCustomer,
     filteredRecords,
+    statusFilter,
+    setStatusFilter,
+    statusCounts,
+    setQuoteStatus,
     filter,
     setFilter,
     filterDate,

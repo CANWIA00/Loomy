@@ -1138,5 +1138,13 @@
   "qot.discardMessage": "Changes to this quote have not been saved. They will be lost if you leave.",
   "qot.discardConfirm": "Leave without saving",
   "qot.backToList": "Back to quotes",
-  "qot.grandTotalShort": "Grand total"
+  "qot.grandTotalShort": "Grand total",
+  "qot.status.PENDING": "Pending",
+  "qot.status.ACCEPTED": "Accepted",
+  "qot.status.REJECTED": "Rejected",
+  "qot.statusAll": "All statuses",
+  "qot.colStatus": "Status",
+  "qot.changeStatus": "Quote status",
+  "qot.changeStatusHint": "The customer's response to this quote",
+  "qot.errorStatus": "Could not update the quote status. Please try again."
 }

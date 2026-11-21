@@ -11,8 +11,13 @@ export interface QuoteLine {
   unit: string;
 }
 
+export type QuoteStatus = "PENDING" | "ACCEPTED" | "REJECTED";
+export const QUOTE_STATUSES: QuoteStatus[] = ["PENDING", "ACCEPTED", "REJECTED"];
+
 export interface QuoteRecord {
   id: number;
+  /** Teklif durumu; sunucu tarafinda yonetilir (create/update degistirmez). */
+  status?: QuoteStatus;
   title: string;
   tarih: string;
   customer: string;
@@ -47,6 +52,7 @@ interface QuoteRecordBackend {
   lines: string;
   validUntil?: string;
   tryRates?: string;
+  status?: string;
 }
 
 function toFrontend(b: QuoteRecordBackend): QuoteRecord {
@@ -73,6 +79,7 @@ function toFrontend(b: QuoteRecordBackend): QuoteRecord {
     lines,
     validUntil: b.validUntil || "",
     tryRates,
+    status: (QUOTE_STATUSES as string[]).includes(b.status || "") ? (b.status as QuoteStatus) : "PENDING",
   };
 }
 
@@ -120,4 +127,9 @@ export const quoteApi = {
 
   delete: (id: number) =>
     apiClient.delete(`/quotes/${id}`),
+
+  setStatus: async (id: number, status: QuoteStatus) => {
+    const res = await apiClient.patch<QuoteRecordBackend>(`/quotes/${id}/status`, { status });
+    return { ...res, data: toFrontend(res.data) };
+  },
 };
