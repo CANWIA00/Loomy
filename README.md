@@ -63,9 +63,17 @@ Frontend: `EXPO_PUBLIC_API_URL` (örn. `https://.../api`). Web sitesi: `VITE_API
 
 ```bash
 cd backend
-npm test             # jest; veritabanı gerektirmez (Prisma mock'lanır)
+npm test             # birim/entegrasyon; veritabanı gerektirmez (Prisma mock'lanır)
 npx tsc --noEmit     # tip kontrolü
+
+# Uçtan uca (Docker gerekir): production Dockerfile'ından build edilen backend +
+# gerçek PostgreSQL + Mailpit (test mail sunucusu) ile giriş, kayıt, şifre
+# sıfırlama ve müşteri geçmişi akışlarını test eder. Canlı ortama dokunmaz.
+npm run test:e2e     # ortamı kurar ve testleri çalıştırır
+npm run e2e:down     # ortamı kapatır
 ```
+
+Mailpit arayüzü E2E çalışırken http://127.0.0.1:58025 adresindedir.
 
 ## Deploy
 

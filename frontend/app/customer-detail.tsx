@@ -26,6 +26,7 @@ import { embedImage } from "../utils/pdfAssets";
 import type { PdfData } from "../components/services/types";
 import type { QuotePdfData } from "../components/quotes/types";
 import { getCurrencySymbol, round2 } from "../components/quotes/types";
+import { fetchAllPages } from "../utils/fetchAllPages";
 
 const AVATAR_COLORS = ["#7A6CFD", "#6080FF", "#10B981", "#F59E0B", "#EC4899", "#06B6D4", "#8B5CF6", "#EF4444"];
 
@@ -567,18 +568,6 @@ export default function CustomerDetailScreen() {
       const targetName = c?.companyName && c.companyName !== "?" ? c.companyName : undefined;
       const filter = { customerId: id || undefined, customerName: targetName };
       const PAGE_SIZE = 200;
-      const MAX_PAGES = 25;
-      const fetchAllPages = async <T,>(
-        fetchPage: (page: number) => Promise<{ data: { content: T[]; totalPages: number } }>
-      ): Promise<T[]> => {
-        const all: T[] = [];
-        for (let page = 0; page < MAX_PAGES; page++) {
-          const res = await fetchPage(page);
-          all.push(...res.data.content);
-          if (page + 1 >= res.data.totalPages) break;
-        }
-        return all;
-      };
 
       const [svcAll, qAll, payAll] = await Promise.all([
         fetchAllPages((p) => serviceApi.getAll(p, PAGE_SIZE, filter)),
