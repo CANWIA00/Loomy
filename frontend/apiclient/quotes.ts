@@ -128,6 +128,14 @@ export const quoteApi = {
   delete: (id: number) =>
     apiClient.delete(`/quotes/${id}`),
 
+  /** Tek teklif ve (varsa) planlamadaki isi */
+  getById: async (id: number) => {
+    const res = await apiClient.get<QuoteRecordBackend & {
+      job?: { id: number; status: string; serviceRecordId: number | null } | null;
+    }>(`/quotes/${id}`);
+    return { ...res, data: toFrontend(res.data), job: res.data.job ?? null };
+  },
+
   /** Durumu degistirir; kabulde planlamada olusan/etkilenen isi de doner. */
   setStatus: async (id: number, status: QuoteStatus) => {
     const res = await apiClient.patch<QuoteRecordBackend & {

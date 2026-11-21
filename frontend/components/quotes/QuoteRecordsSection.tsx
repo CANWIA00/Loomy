@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "expo-router";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -42,6 +43,9 @@ export default function QuoteRecordsSection() {
     statusFilter,
   } = useQuotes();
   const [statusMenuRecord, setStatusMenuRecord] = useState<QuoteRecord | null>(null);
+  const router = useRouter();
+  // Tekliften servis formu: musteri + kalemler dolu gelir; acik isi varsa kayitla tamamlanir.
+  const openServiceForm = (k: QuoteRecord) => router.push({ pathname: "/services", params: { fromQuote: String(k.id) } });
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
   const pagedRecords = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -125,7 +129,7 @@ export default function QuoteRecordsSection() {
             <Text className="flex-1 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colCustomer")}</Text>
             <Text className="w-28 text-xs font-semibold text-right" style={{ color: colors.textSecondary }}>{t("qot.colTotal")}</Text>
             <Text className="w-28 ml-6 text-xs font-semibold" style={{ color: colors.textSecondary }}>{t("qot.colStatus")}</Text>
-            <View className="w-56 ml-2" />
+            <View className="w-64 ml-2" />
           </View>
         )}
 
@@ -226,9 +230,10 @@ export default function QuoteRecordsSection() {
                   <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
                 </View>
                 {/* Tum islemler gorunur; Sil yanlislikla tiklanmasin diye en sonda, ayirici cizgiyle ayri (onay da sorar). */}
-                <View className="w-56 ml-2 flex-row items-center justify-end gap-1">
+                <View className="w-64 ml-2 flex-row items-center justify-end gap-1">
                   <RowAction icon="eye-outline" color={colors.primary} label={t("qot.preview")} onPress={() => handleView(k)} />
                   <RowAction icon="create-outline" color={colors.teal} label={t("common.edit")} onPress={() => handleEdit(k)} />
+                  <RowAction icon="construct-outline" color={colors.success} label={t("qot.createServiceForm")} onPress={() => openServiceForm(k)} />
                   <RowAction icon="copy-outline" color={colors.textSecondary} label={t("qot.copy")} onPress={() => handleDuplicate(k)} />
                   <RowAction icon="download-outline" color={colors.warning} label={t("qot.downloadPdf")} onPress={() => openQuotePDF(k)} />
                   <RowAction icon="share-social-outline" color={colors.purple} label={t("qot.share")} onPress={() => handleShare(k)} />

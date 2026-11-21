@@ -1210,5 +1210,9 @@
   "svc.fromQuoteRef": "Teklif #{id}",
   "svc.successCreatedJob": "Servis kaydı oluşturuldu ve planlı iş tamamlandı olarak işaretlendi.",
   "svc.jobAlreadyClosed": "Bu iş zaten tamamlanmış veya iptal edilmiş.",
-  "svc.errorJobLoad": "Planlı iş bilgileri yüklenemedi."
+  "svc.errorJobLoad": "Planlı iş bilgileri yüklenemedi.",
+  "qot.createServiceForm": "Servis formu oluştur",
+  "svc.fromQuoteBanner": "Tekliften oluşturuluyor: {quote}. Müşteri ve teklif kalemleri forma aktarıldı.",
+  "svc.quoteDefaultTitle": "Teklif",
+  "svc.errorQuoteLoad": "Teklif bilgileri yüklenemedi."
 }

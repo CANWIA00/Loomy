@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -14,7 +15,10 @@ export default function AwaitingJobsSection() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
+  const router = useRouter();
   const { awaitingJobs, openAssignJob, requestCancelJob, openManualJob } = useSchedule();
+  // Planlamadan gecmeden (orn. ayni gun yapilan is) servis formu: kayitla is tamamlanir.
+  const openServiceForm = (id: number) => router.push({ pathname: "/services", params: { fromJob: String(id) } });
 
   return (
     <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: awaitingJobs.length ? colors.warning + "66" : colors.borderAlt }}>
@@ -74,6 +78,16 @@ export default function AwaitingJobsSection() {
                         accessibilityLabel={t("sch.cancelJob")}
                       >
                         <Ionicons name="close" size={16} color={colors.danger} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        className="h-9 px-2.5 rounded-lg items-center justify-center"
+                        style={{ backgroundColor: colors.success + "1F" }}
+                        onPress={() => openServiceForm(job.id)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("sch.createServiceForm")}
+                        {...({ title: t("sch.createServiceForm") } as any)}
+                      >
+                        <Ionicons name="construct-outline" size={16} color={colors.success} />
                       </TouchableOpacity>
                       <TouchableOpacity
                         className="h-9 px-3 rounded-lg flex-row items-center justify-center"

@@ -104,6 +104,23 @@ describe("teklif -> planlama -> servis akisi", () => {
     expect((await api("PATCH", `/appointments/${created.body.id}/cancel`, { token })).status).toBe(404);
   });
 
+  it("teklif detayi bagli isi doner (tekliften servis formu icin)", async () => {
+    const { token, quoteId } = await setup();
+    expect((await api("GET", `/quotes/${quoteId}`, { token })).body.job).toBeNull();
+    const acc = await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });
+    const detail = await api("GET", `/quotes/${quoteId}`, { token });
+    expect(detail.status).toBe(200);
+    expect(detail.body.job).toEqual({ id: acc.body.job.id, status: "AWAITING", serviceRecordId: null });
+
+    // atama beklerken servis kaydi olusturulursa is dogrudan tamamlanir
+    const svc = await api("POST", "/services", {
+      token,
+      body: { customerName: "Akış Test A.Ş.", documentDate: "26/11/2026", serviceType: "Kurulum", appointmentId: acc.body.job.id },
+    });
+    expect(svc.status).toBe(201);
+    expect((await api("GET", `/quotes/${quoteId}`, { token })).body.job).toMatchObject({ status: "DONE", serviceRecordId: svc.body.id });
+  });
+
   it("teklif silinince atanmamis is iptal olur", async () => {
     const { token, quoteId } = await setup();
     const acc = await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });

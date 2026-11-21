@@ -1210,5 +1210,9 @@
   "svc.fromQuoteRef": "Quote #{id}",
   "svc.successCreatedJob": "Service record created and the planned job marked completed.",
   "svc.jobAlreadyClosed": "This job is already completed or cancelled.",
-  "svc.errorJobLoad": "Could not load the planned job."
+  "svc.errorJobLoad": "Could not load the planned job.",
+  "qot.createServiceForm": "Create service form",
+  "svc.fromQuoteBanner": "Creating from a quote: {quote}. Customer and quote lines were copied into the form.",
+  "svc.quoteDefaultTitle": "Quote",
+  "svc.errorQuoteLoad": "Could not load the quote."
 }

@@ -13,6 +13,7 @@ import { serviceApi, ServiceRecord } from "../../apiclient/services";
 import { customerApi, Customer } from "../../apiclient/customers";
 import { templateApi, ServiceTemplate } from "../../apiclient/templates";
 import { appointmentApi } from "../../apiclient/appointments";
+import { quoteApi } from "../../apiclient/quotes";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFocusedPolling } from "../../hooks/useFocusedPolling";
 import { initialForm, initialNewCustomerForm, defaultTemplateConfig, effectiveFields, type ServiceFormData, type NewCustomerFormData, type PdfData, type RecordFilter, type ServiceTemplateConfig, type TemplateField, type UsedProductFormItem } from "./types";
@@ -745,11 +746,67 @@ ucret: form.fee || "0.00",
     return JSON.stringify(form) !== JSON.stringify(base);
   };
 
-  const searchParams = useLocalSearchParams<{ edit?: string; fromJob?: string }>();
+  const searchParams = useLocalSearchParams<{ edit?: string; fromJob?: string; fromQuote?: string }>();
+
+  /**
+   * Formu planli is ya da tekliften doldurur: musteri bilgileri ve teklif kalemleri.
+   * Kalemler kullanilan urun olarak gelir; aktif sablon urun desteklemiyorsa urunlu
+   * bir sablona gecilir, hic yoksa kalemler detaylara yazilir. jobId verilirse
+   * kayitla birlikte is tamamlandi olarak isaretlenir.
+   */
+  const prefillForm = (src: {
+    customerName: string;
+    customerId?: string | null;
+    header: string;
+    notes: string[];
+    lines: { name: string; quantity?: number; unit?: string; unitPrice?: number; currency?: string }[];
+    address?: string;
+    phone?: string;
+    jobId: number | null;
+    banner: string;
+  }) => {
+    let useProducts = !!activeTemplate?.useProducts;
+    if (src.lines.length && !useProducts) {
+      const tpl = templates.find((x) => x.useProducts);
+      if (tpl) { setActiveTemplateId(tpl.id); useProducts = true; }
+    }
+    const cust = customerList.find((c) => (src.customerId && c.id === src.customerId) || c.companyName === src.customerName);
+    const products: UsedProductFormItem[] = useProducts
+      ? src.lines.map((l) => ({
+          name: l.name,
+          quantity: String(l.quantity ?? ""),
+          unit: l.unit || "Adet",
+          unitPrice: l.unitPrice != null ? String(l.unitPrice) : "",
+          currency: l.currency || "TRY",
+        }))
+      : [];
+    const lineText = useProducts
+      ? []
+      : src.lines.map((l) => `• ${l.name}${l.quantity ? ` x${l.quantity}${l.unit ? ` ${l.unit}` : ""}` : ""}`);
+    setIsEditing(false);
+    setEditingId(null);
+    originalFormRef.current = null;
+    setForm({
+      ...freshForm(),
+      customerName: src.customerName,
+      serviceAddress: cust?.address || src.address || "",
+      phone: cust?.phone || src.phone || "",
+      details: [src.header, ...src.notes, ...lineText].filter(Boolean).join("\n"),
+      usedProducts: products,
+      productsMode: useProducts,
+    });
+    setSelectedCustomerId(cust?.id || src.customerId || null);
+    setMissingKeys([]);
+    jobIdRef.current = src.jobId;
+    setFromJobLabel(src.banner);
+    setShowForm(true);
+    scrollToForm();
+  };
+
   const fromJobParam = typeof searchParams.fromJob === "string" ? searchParams.fromJob : "";
   useEffect(() => {
-    if (!fromJobParam || !templatesLoaded || handledJobIdRef.current === fromJobParam) return;
-    handledJobIdRef.current = fromJobParam;
+    if (!fromJobParam || !templatesLoaded || handledJobIdRef.current === `job:${fromJobParam}`) return;
+    handledJobIdRef.current = `job:${fromJobParam}`;
     (async () => {
       try {
         const { data: job } = await appointmentApi.getById(Number(fromJobParam));
@@ -757,51 +814,53 @@ ucret: form.fee || "0.00",
           setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.jobAlreadyClosed") });
           return;
         }
-        const lines = job.quoteLines || [];
-        // Kalemler kullanilan urun olarak gelir; aktif sablon urun desteklemiyorsa
-        // urunlu bir sablona gecilir, hic yoksa kalemler detaylara yazilir.
-        let useProducts = !!activeTemplate?.useProducts;
-        if (lines.length && !useProducts) {
-          const tpl = templates.find((x) => x.useProducts);
-          if (tpl) { setActiveTemplateId(tpl.id); useProducts = true; }
-        }
-        const cust = customerList.find((c) => (job.customerId && c.id === job.customerId) || c.companyName === job.customerName);
-        const products: UsedProductFormItem[] = useProducts
-          ? lines.map((l) => ({
-              name: l.name,
-              quantity: String(l.quantity ?? ""),
-              unit: l.unit || "Adet",
-              unitPrice: l.unitPrice != null ? String(l.unitPrice) : "",
-              currency: l.currency || "TRY",
-            }))
-          : [];
-        const header = job.quoteId ? `${job.tur} (${t("svc.fromQuoteRef", { id: String(job.quoteId) })})` : job.tur;
-        const noteBody = (job.notes || "").split("\n").filter((x) => x && !x.startsWith("Teklif #"));
-        const details = [header, ...(useProducts ? noteBody.filter((x) => !x.startsWith("• ")) : noteBody)].filter(Boolean).join("\n");
-        setIsEditing(false);
-        setEditingId(null);
-        originalFormRef.current = null;
-        setForm({
-          ...freshForm(),
+        // Tekliften gelen isin notlarindaki "Teklif #.." ve kalem ozeti zaten kalemlerden uretilir.
+        const notes = (job.notes || "").split("\n").filter((x) => x && !(job.quoteId && (x.startsWith("Teklif #") || x.startsWith("• "))));
+        prefillForm({
           customerName: job.customerName,
-          serviceAddress: cust?.address || "",
-          phone: cust?.phone || "",
-          details,
-          usedProducts: products,
-          productsMode: useProducts,
+          customerId: job.customerId,
+          header: job.quoteId ? `${job.tur} (${t("svc.fromQuoteRef", { id: String(job.quoteId) })})` : job.tur,
+          notes,
+          lines: job.quoteLines || [],
+          jobId: job.id,
+          banner: t("svc.fromJobBanner", { job: `${job.customerName} · ${job.tur}` }),
         });
-        setSelectedCustomerId(cust?.id || job.customerId || null);
-        setMissingKeys([]);
-        jobIdRef.current = job.id;
-        setFromJobLabel(`${job.customerName} · ${job.tur}`);
-        setShowForm(true);
-        scrollToForm();
       } catch {
         setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorJobLoad") });
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromJobParam, templatesLoaded]);
+
+  const fromQuoteParam = typeof searchParams.fromQuote === "string" ? searchParams.fromQuote : "";
+  useEffect(() => {
+    if (!fromQuoteParam || !templatesLoaded || handledJobIdRef.current === `quote:${fromQuoteParam}`) return;
+    handledJobIdRef.current = `quote:${fromQuoteParam}`;
+    (async () => {
+      try {
+        const { data: quote, job } = await quoteApi.getById(Number(fromQuoteParam));
+        // Teklifin acik bir isi varsa (atama bekliyor/planli) servis kaydi o isi tamamlar.
+        const openJob = job && (job.status === "AWAITING" || job.status === "SCHEDULED") ? job : null;
+        const title = quote.title || t("svc.quoteDefaultTitle");
+        prefillForm({
+          customerName: quote.customer,
+          customerId: quote.customerId,
+          header: `${title} (${t("svc.fromQuoteRef", { id: String(quote.id) })})`,
+          notes: [],
+          lines: quote.lines || [],
+          address: quote.adres,
+          phone: quote.telefon,
+          jobId: openJob ? openJob.id : null,
+          banner: openJob
+            ? t("svc.fromJobBanner", { job: `${quote.customer} · ${title}` })
+            : t("svc.fromQuoteBanner", { quote: `${quote.customer} · ${title}` }),
+        });
+      } catch {
+        setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorQuoteLoad") });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromQuoteParam, templatesLoaded]);
 
   const editParamId = typeof searchParams.edit === "string" ? searchParams.edit : "";
   useEffect(() => {

@@ -182,5 +182,9 @@ export async function getQuoteRecord(req: AuthRequest, res: Response): Promise<v
     res.status(404).json({ message: "Teklif kaydı bulunamadı." });
     return;
   }
-  res.json(record);
+  const job = await prisma.appointment.findFirst({
+    where: { quoteId: id, companyId },
+    select: { id: true, status: true, serviceRecordId: true },
+  });
+  res.json({ ...record, job });
 }
