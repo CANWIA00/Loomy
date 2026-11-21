@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator, useWindowDimensions } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, ActivityIndicator, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useServices } from "./ServicesContext";
-import { type TemplateField, type TemplateChipGroup, effectiveFields, type UsedProductFormItem } from "./types";import SvgAwareImage from "../SvgAwareImage";
+import { type TemplateField, type TemplateChipGroup, effectiveFields, type UsedProductFormItem } from "./types";
+import SvgAwareImage from "../SvgAwareImage";
 import { getCurrentAddress } from "../../utils/location";
 import { stockApi, type StockItem } from "../../apiclient/stock";
 import UnitPickerModal from "../UnitPickerModal";
@@ -40,16 +41,38 @@ const adjustTime = (value: string, deltaMinutes: number) => {
 
 const labelOf = (field: TemplateField, lang: string) => (lang === "tr" ? field.labelTr : field.labelEn);
 
-function FieldLabel({ children }: { children: ReactNode }) {
+/**
+ * Alan etiketi. `field` verilirse zorunlu alanlarda * gosterir, eksikse kirmizi
+ * olur ve "Bu alan zorunludur" yazar; konumunu kaydeder (eksik alana kaydirma).
+ */
+function FieldLabel({ children, field }: { children: ReactNode; field?: TemplateField }) {
   const { colors } = useTheme();
-  return <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{children}</Text>;
+  const { t } = useLanguage();
+  const { isRequiredKey, isMissing, registerFieldLabel } = useServices();
+  const required = field ? isRequiredKey(field.key) : false;
+  const missing = field ? isMissing(field.key) : false;
+  return (
+    // Tek satir: yan yana alanlarda (ornegin saatler) etiket yuksekligi degisip kutular kaymasin
+    <View ref={field ? registerFieldLabel(field.key) : undefined} className="flex-row items-center mb-1" style={{ minWidth: 0 }}>
+      <Text className="text-xs font-medium" style={{ color: missing ? colors.danger : colors.textSecondary, flexShrink: 0 }} numberOfLines={1}>
+        {children}
+        {required ? <Text style={{ color: colors.danger }}> *</Text> : null}
+      </Text>
+      {missing ? (
+        <Text className="text-[10px] ml-1.5" style={{ color: colors.danger, flexShrink: 1, minWidth: 0 }} numberOfLines={1}>
+          {t("svc.fieldRequired")}
+        </Text>
+      ) : null}
+    </View>
+  );
 }
 
-function FeeInput({ value, currency, onChangeFee, onChangeCurrency }: {
+function FeeInput({ value, currency, onChangeFee, onChangeCurrency, invalid = false }: {
   value: string;
   currency: string;
   onChangeFee: (v: string) => void;
   onChangeCurrency: (c: string) => void;
+  invalid?: boolean;
 }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
@@ -59,7 +82,8 @@ function FeeInput({ value, currency, onChangeFee, onChangeCurrency }: {
       <View className="flex-row gap-2">
         <TextInput
           className="flex-1 h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          // minWidth 0: masaustu izgarasinda input'un varsayilan genisligi TRY secicisini tasirmasin
+          style={{ backgroundColor: colors.bg, borderColor: invalid ? colors.danger : colors.border, color: colors.text, minWidth: 0 }}
           placeholder="0.00"
           placeholderTextColor={colors.textMuted}
           keyboardType="decimal-pad"
@@ -246,20 +270,21 @@ function ChipGroupSection({ group }: { group: TemplateChipGroup }) {
 function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm, updateCustomField } = useServices();
+  const { form, updateForm, updateCustomField, isMissing } = useServices();
+  const missing = isMissing(field.key);
   const label = labelOf(field, lang);
   const cellClass = compact ? "flex-1" : "flex-1 mb-3";
 
   const inputProps = {
     className: "w-full h-10 border rounded-lg px-3 text-sm",
-    style: { backgroundColor: colors.bg, borderColor: colors.border, color: colors.text },
+    style: { backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text },
     placeholderTextColor: colors.textMuted,
   };
 
   if (field.key === "technician") {
     return (
       <View className={cellClass}>
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <View className="w-full h-10 border rounded-lg px-3 items-center justify-center flex-row" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
           <Ionicons name="person-outline" size={14} color={colors.primary} />
           <Text className="text-sm ml-1.5 flex-1" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>{form.technician || "-"}</Text>
@@ -271,10 +296,11 @@ function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean
   if (field.key === "fee") {
     return (
       <View className={cellClass}>
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <FeeInput
           value={form.fee}
           currency={form.feeCurrency || "TRY"}
+          invalid={missing}
           onChangeFee={(v) => updateForm("fee", v)}
           onChangeCurrency={(c) => updateForm("feeCurrency", c)}
         />
@@ -285,10 +311,11 @@ function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean
   if (field.key === "labor") {
     return (
       <View className={cellClass}>
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <FeeInput
           value={form.labor}
           currency={form.laborCurrency || "TRY"}
+          invalid={missing}
           onChangeFee={(v) => updateForm("labor", v)}
           onChangeCurrency={(c) => updateForm("laborCurrency", c)}
         />
@@ -299,7 +326,7 @@ function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean
   if (field.key === "kdv") {
     return (
       <View className={cellClass}>
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TextInput
           {...inputProps}
           placeholder={t("svc.kdvPlaceholder")}
@@ -314,7 +341,7 @@ function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean
   if (field.key === "phone") {
     return (
       <View className={cellClass}>
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TextInput
           {...inputProps}
           placeholder={t("svc.phonePlaceholder")}
@@ -344,7 +371,7 @@ function FieldCell({ field, compact }: { field: TemplateField; compact?: boolean
 
   return (
     <View className={cellClass}>
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel field={field}>{label}</FieldLabel>
       <TextInput
         {...inputProps}
         placeholder={label}
@@ -376,17 +403,18 @@ function FieldPairRow({ fields }: { fields: TemplateField[] }) {
 function DocumentDateField({ field, compact }: { field: TemplateField; compact?: boolean }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm } = useServices();
+  const { form, updateForm, isMissing } = useServices();
+  const missing = isMissing(field.key);
   const label = labelOf(field, lang);
 
   return (
     <View className={compact ? "" : "mb-3"}>
-      <Text className="text-xs font-medium mb-1.5" style={{ color: colors.textSecondary }}>{label}</Text>
+      <FieldLabel field={field}>{label}</FieldLabel>
       <View className="flex-row items-center">
         <TextInput
           className="flex-1 h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
-          placeholder={t("svc.datePlaceholder")}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
+          placeholder="GG/AA/YYYY"
           placeholderTextColor={colors.textMuted}
           value={form.documentDate}
           onChangeText={(v) => updateForm("documentDate", formatDateInput(v))}
@@ -409,14 +437,15 @@ function DocumentDateField({ field, compact }: { field: TemplateField; compact?:
 function CustomerNameField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm } = useServices();
+  const { form, updateForm, isMissing } = useServices();
+  const missing = isMissing(field.key);
 
   return (
     <View className="flex-1">
-      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
+      <FieldLabel field={field}>{labelOf(field, lang)}</FieldLabel>
       <TextInput
         className="w-full h-10 border rounded-lg px-3 text-sm"
-        style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+        style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
         placeholder={t("svc.customerNamePlaceholder")}
         placeholderTextColor={colors.textMuted}
         value={form.customerName}
@@ -429,15 +458,16 @@ function CustomerNameField({ field }: { field: TemplateField }) {
 function ServiceAddressField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm, setMapSelectorVisible } = useServices();
+  const { form, updateForm, setMapSelectorVisible, isMissing } = useServices();
+  const missing = isMissing(field.key);
 
   return (
     <View className="flex-1">
-      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
+      <FieldLabel field={field}>{labelOf(field, lang)}</FieldLabel>
       <View className="relative flex-1">
         <TextInput
           className="w-full h-10 border rounded-lg px-3 pr-10 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
           placeholder={t("svc.serviceAddressPlaceholder")}
           placeholderTextColor={colors.textMuted}
           value={form.serviceAddress}
@@ -463,17 +493,20 @@ function CustomerRow({ customerName, address }: { customerName?: TemplateField; 
 
 function TimeField({ field, isEnd }: { field: TemplateField; isEnd: boolean }) {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const compactTime = width < 768;
   const { lang } = useLanguage();
-  const { form, updateForm } = useServices();
+  const { form, updateForm, isMissing } = useServices();
+  const missing = isMissing(field.key);
   const value = isEnd ? form.endTime : form.startTime;
 
   return (
     <View className="flex-1">
-      <FieldLabel>{labelOf(field, lang)}</FieldLabel>
+      <FieldLabel field={field}>{labelOf(field, lang)}</FieldLabel>
       <View className="relative flex-1">
         <TextInput
-          className="w-full h-10 border rounded-lg px-3 pr-28 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          className={`w-full h-10 border rounded-lg px-3 text-sm ${compactTime ? "pr-10" : "pr-28"}`}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
           placeholder="HH:MM"
           placeholderTextColor={colors.textMuted}
           keyboardType="number-pad"
@@ -488,6 +521,7 @@ function TimeField({ field, isEnd }: { field: TemplateField; isEnd: boolean }) {
           >
             <Ionicons name="time-outline" size={16} color={colors.primary} />
           </TouchableOpacity>
+          {!compactTime && (<>
           <TouchableOpacity
             className="h-10 w-8 items-center justify-center"
             onPress={() => updateForm(isEnd ? "endTime" : "startTime", adjustTime(value, 10))}
@@ -500,6 +534,7 @@ function TimeField({ field, isEnd }: { field: TemplateField; isEnd: boolean }) {
           >
             <Ionicons name="chevron-down" size={18} color={colors.primary} />
           </TouchableOpacity>
+          </>)}
         </View>
       </View>
     </View>
@@ -553,7 +588,8 @@ function CustomerSelectField() {
 function SingleField({ field }: { field: TemplateField }) {
   const { colors } = useTheme();
   const { lang, t } = useLanguage();
-  const { form, updateForm, updateCustomField } = useServices();
+  const { form, updateForm, updateCustomField, isMissing } = useServices();
+  const missing = isMissing(field.key);
   const [selectOpen, setSelectOpen] = useState(false);
   const label = labelOf(field, lang);
   const inputType = field.inputType || "text";
@@ -570,10 +606,10 @@ function SingleField({ field }: { field: TemplateField }) {
   if (field.key === "externalIp") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TextInput
           className="w-full h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
           value={form.externalIp}
           onChangeText={(v) => updateForm("externalIp", v)}
         />
@@ -584,10 +620,10 @@ function SingleField({ field }: { field: TemplateField }) {
   if (field.key === "details") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TextInput
           className="w-full min-h-[64px] border rounded-lg px-3 py-2 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
           placeholder={t("svc.detailsPlaceholder")}
           placeholderTextColor={colors.textMuted}
           multiline
@@ -602,10 +638,11 @@ function SingleField({ field }: { field: TemplateField }) {
   if (field.key === "fee") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <FeeInput
           value={form.fee}
           currency={form.feeCurrency || "TRY"}
+          invalid={missing}
           onChangeFee={(v) => updateForm("fee", v)}
           onChangeCurrency={(c) => updateForm("feeCurrency", c)}
         />
@@ -616,10 +653,11 @@ function SingleField({ field }: { field: TemplateField }) {
   if (field.key === "labor") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <FeeInput
           value={form.labor}
           currency={form.laborCurrency || "TRY"}
+          invalid={missing}
           onChangeFee={(v) => updateForm("labor", v)}
           onChangeCurrency={(c) => updateForm("laborCurrency", c)}
         />
@@ -630,10 +668,10 @@ function SingleField({ field }: { field: TemplateField }) {
   if (field.key === "kdv") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TextInput
           className="w-full h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
           placeholder={t("svc.kdvPlaceholder")}
           placeholderTextColor={colors.textMuted}
           keyboardType="decimal-pad"
@@ -651,10 +689,10 @@ function SingleField({ field }: { field: TemplateField }) {
   if (inputType === "number") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TextInput
           className="w-full h-10 border rounded-lg px-3 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
           placeholder={label}
           placeholderTextColor={colors.textMuted}
           keyboardType="decimal-pad"
@@ -668,10 +706,10 @@ function SingleField({ field }: { field: TemplateField }) {
   if (inputType === "textarea") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TextInput
           className="w-full min-h-[64px] border rounded-lg px-3 py-2 text-sm"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+          style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
           placeholder={label}
           placeholderTextColor={colors.textMuted}
           multiline
@@ -686,7 +724,7 @@ function SingleField({ field }: { field: TemplateField }) {
   if (inputType === "radio") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <View className="flex-row flex-wrap gap-1.5">
           {options.map((o) => {
             const oLabel = lang === "tr" ? o.labelTr : o.labelEn;
@@ -714,7 +752,7 @@ function SingleField({ field }: { field: TemplateField }) {
   if (inputType === "multi") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <View className="flex-row flex-wrap gap-1.5">
           {options.map((o) => {
             const oLabel = lang === "tr" ? o.labelTr : o.labelEn;
@@ -742,7 +780,7 @@ function SingleField({ field }: { field: TemplateField }) {
   if (inputType === "select") {
     return (
       <View className="mb-3">
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel field={field}>{label}</FieldLabel>
         <TouchableOpacity
           className="w-full h-10 border rounded-lg px-3 flex-row items-center justify-between"
           style={{ backgroundColor: colors.bg, borderColor: colors.border }}
@@ -787,10 +825,10 @@ function SingleField({ field }: { field: TemplateField }) {
 
   return (
     <View className="mb-3">
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel field={field}>{label}</FieldLabel>
       <TextInput
         className="w-full h-10 border rounded-lg px-3 text-sm"
-        style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
+        style={{ backgroundColor: colors.bg, borderColor: missing ? colors.danger : colors.border, color: colors.text }}
         placeholder={label}
         placeholderTextColor={colors.textMuted}
         value={value}
@@ -1198,7 +1236,7 @@ function UsedProductsSection() {
 
           {laborField && (
             <View className="mb-3">
-              <FieldLabel>{labelOf(laborField, lang)}</FieldLabel>
+              <FieldLabel field={laborField}>{labelOf(laborField, lang)}</FieldLabel>
               <FeeInput
                 value={form.labor}
                 currency={form.laborCurrency || "TRY"}
@@ -1210,7 +1248,7 @@ function UsedProductsSection() {
 
           {kdvField && (
             <View className="mb-3">
-              <FieldLabel>{labelOf(kdvField, lang)}</FieldLabel>
+              <FieldLabel field={kdvField}>{labelOf(kdvField, lang)}</FieldLabel>
               <TextInput
                 className="w-full h-10 border rounded-lg px-3 text-sm"
                 style={{ backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }}
@@ -1316,7 +1354,13 @@ function UsedProductsSection() {
   );
 }
 
-export default function ServiceForm() {
+interface ServiceFormProps {
+  /** "card": sayfa ici kart (masaustu). "screen": telefonda tam ekran; baslik ve Kaydet sayfada. */
+  variant?: "card" | "screen";
+}
+
+export default function ServiceForm({ variant = "card" }: ServiceFormProps) {
+  const isScreen = variant === "screen";
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const isWide = width >= 1100;
@@ -1349,6 +1393,9 @@ export default function ServiceForm() {
     activeTemplate,
     selectTemplate,
     templateConfig,
+    hasSignature,
+    setTechSignatureModal,
+    setResultAlert,
   } = useServices();
 
   const isAdmin = user?.role === "ADMIN";
@@ -1361,9 +1408,9 @@ export default function ServiceForm() {
       updateNewCustomerForm("address", adres);
     } catch (e: any) {
       if (e?.message === "PERMISSION_DENIED") {
-        Alert.alert(t("map.permissionRequired"), t("map.permissionDenied"));
+        setResultAlert({ visible: true, type: "warning", title: t("map.permissionRequired"), message: t("map.permissionDenied") });
       } else {
-        Alert.alert(t("common.error"), t("map.errorLocation"));
+        setResultAlert({ visible: true, type: "error", title: t("common.error"), message: t("map.errorLocation") });
       }
     } finally {
       setLocatingNewAddress(false);
@@ -1408,7 +1455,29 @@ export default function ServiceForm() {
 
   return (
     <>
-      <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
+      <View
+        className={isScreen ? "" : "rounded-2xl border p-4 mb-6"}
+        style={isScreen ? undefined : { backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}
+      >
+        {/* Teknisyen imzasi yoksa en basta uyar; imza sayfadan ayrilmadan atilir */}
+        {!hasSignature && (
+          <View className="flex-row items-center rounded-xl p-3 mb-3" style={{ backgroundColor: colors.warning + "1A", borderColor: colors.warning + "55", borderWidth: 1 }}>
+            <Ionicons name="create-outline" size={20} color={colors.warning} />
+            <View className="flex-1 mx-2.5">
+              <Text className="text-sm font-semibold" style={{ color: colors.text }}>{t("svc.signatureBannerTitle")}</Text>
+              <Text className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>{t("svc.signatureBannerText")}</Text>
+            </View>
+            <TouchableOpacity
+              className="h-9 px-3 rounded-lg items-center justify-center"
+              style={{ backgroundColor: colors.warning }}
+              onPress={() => setTechSignatureModal(true)}
+              accessibilityRole="button"
+            >
+              <Text className="text-xs font-semibold" style={{ color: "#1A1A1A" }}>{t("svc.addSignature")}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center flex-1">
             {companyLogo && (
@@ -1418,9 +1487,12 @@ export default function ServiceForm() {
                 resizeMode="contain"
               />
             )}
-            <Text className="font-semibold text-base ml-2" style={{ color: colors.text }}>
-              {isEditing ? t("svc.editRecord") : t("svc.newRecord")}
-            </Text>
+            {/* Baslik masaustunde ustteki "Yeni Servis Kaydi" ile ayni oldugu icin yalnizca duzenlemede; tam ekranda sayfa cubugunda */}
+            {!isScreen && (isEditing || !isDesktop) ? (
+              <Text className="font-semibold text-base ml-2" style={{ color: colors.text }}>
+                {isEditing ? t("svc.editRecord") : t("svc.newRecord")}
+              </Text>
+            ) : null}
           </View>
           <View className="flex-row items-center gap-2">
             {isAdmin && (
@@ -1429,7 +1501,7 @@ export default function ServiceForm() {
                 <Text className="text-xs font-medium ml-1" style={{ color: colors.primary }}>{t("tpl.manage")}</Text>
               </TouchableOpacity>
             )}
-            {isEditing && (
+            {isEditing && !isScreen && (
               <TouchableOpacity onPress={handleCancelEditing} className="w-7 h-7 rounded-full items-center justify-center" style={{ backgroundColor: colors.bgInput }}>
                 <Ionicons name="close-outline" size={16} color={colors.danger} />
               </TouchableOpacity>
@@ -1692,6 +1764,7 @@ export default function ServiceForm() {
 
         <UsedProductsSection />
 
+        {!isScreen && (
         <View className="flex-row gap-2 mt-1">
           <TouchableOpacity
             className="h-10 px-4 rounded-lg items-center justify-center"
@@ -1711,6 +1784,7 @@ export default function ServiceForm() {
             <Text className="font-semibold text-sm" style={{ color: "white" }}>{isEditing ? t("svc.update") : t("common.save")}</Text>
           </TouchableOpacity>
         </View>
+        )}
       </View>
     </>
   );

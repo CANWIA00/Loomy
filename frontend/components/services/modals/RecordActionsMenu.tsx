@@ -14,12 +14,13 @@ interface Props {
 export default function RecordActionsMenu({ record, visible, onClose }: Props) {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const { handleShare, handleViewService, openServicePDF, handleEdit, setDeleteAlert } = useServices();
+  const { handleShare, handleViewService, openServicePDF, handleEdit, handleDuplicate, setDeleteAlert } = useServices();
 
   const actions: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }[] = record
     ? [
         { key: "preview", label: t("svc.preview"), icon: "eye-outline", color: colors.primary, onPress: () => { onClose(); handleViewService(record); } },
         { key: "edit", label: t("common.edit"), icon: "create-outline", color: colors.teal, onPress: () => { onClose(); handleEdit(record); } },
+        { key: "duplicate", label: t("svc.copy"), icon: "copy-outline", color: colors.textSecondary, onPress: () => { onClose(); handleDuplicate(record); } },
         { key: "share", label: t("svc.share"), icon: "share-social-outline", color: colors.purple, onPress: () => { onClose(); handleShare(record); } },
         { key: "download", label: t("svc.downloadPdf"), icon: "download-outline", color: colors.warning, onPress: () => { onClose(); openServicePDF(record); } },
         { key: "delete", label: t("common.delete"), icon: "trash-outline", color: colors.danger, onPress: () => { onClose(); setDeleteAlert({ visible: true, record }); } },

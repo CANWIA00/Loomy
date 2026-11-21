@@ -5,6 +5,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useServices } from "./ServicesContext";
 import RecordActionsMenu from "./modals/RecordActionsMenu";
+import RowAction from "../RowAction";
+import { formatMoney, parseNumericInput } from "../stock/format";
 import type { ServiceRecord } from "../../apiclient/services";
 import type { RecordFilter } from "./types";
 
@@ -37,9 +39,19 @@ export default function RecordsSection() {
     handleViewService,
     openServicePDF,
     handleEdit,
+    handleDuplicate,
     setDeleteAlert,
     templates,
   } = useServices();
+
+  // Imza / odeme durumu: renkli nokta + kisa etiket
+  const StatusDot = ({ ok, okLabel, noLabel, noColor }: { ok: boolean; okLabel: string; noLabel: string; noColor: string }) => (
+    <View className="flex-row items-center">
+      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: ok ? colors.success : noColor }} />
+      <Text className="text-[11px] font-medium ml-1" style={{ color: ok ? colors.success : noColor }}>{ok ? okLabel : noLabel}</Text>
+    </View>
+  );
+  const amountOf = (k: ServiceRecord) => formatMoney(parseNumericInput(k.ucret || "0"), k.ucretCurrency || "TRY");
 
   useEffect(() => {
     setPage(0);
@@ -59,19 +71,14 @@ export default function RecordsSection() {
   const filterLabel = (f: RecordFilter) =>
     f === "all" ? t("svc.filterAll") : f === "gun" ? t("svc.filterDay") : f === "ay" ? t("svc.filterMonth") : t("svc.filterYear");
 
-  const columns = [t("svc.colDate"), t("svc.colDocName"), t("svc.colCustomer"), t("svc.colService"), t("svc.colTemplate"), ""];
-  const colClass = (col: string) =>
-    col === t("svc.colDate")
-      ? "w-24"
-      : col === t("svc.colDocName")
-        ? "flex-1"
-        : col === t("svc.colCustomer")
-          ? "flex-1"
-          : col === t("svc.colService")
-            ? "flex-1"
-            : col === t("svc.colTemplate")
-              ? "w-32"
-              : "text-right";
+  const columns: { label: string; className: string }[] = [
+    { label: t("svc.colDate"), className: "w-24" },
+    { label: t("svc.colCustomer"), className: "flex-1" },
+    { label: t("svc.colTemplate"), className: "w-32" },
+    { label: t("svc.colAmount"), className: "w-28 text-right" },
+    { label: t("svc.colStatus"), className: "w-28 ml-6" },
+    { label: "", className: "w-60 ml-2" },
+  ];
 
   return (
     <>
@@ -197,13 +204,13 @@ export default function RecordsSection() {
       <View className="rounded-2xl border overflow-hidden" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
         {!compact && (
           <View className="flex-row px-3 py-3 border-b" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-            {columns.map((col) => (
+            {columns.map((col, i) => (
               <Text
-                key={col}
-                className={`text-xs font-semibold ${colClass(col)}`}
+                key={i}
+                className={`text-xs font-semibold ${col.className}`}
                 style={{ color: colors.textSecondary }}
               >
-                {col}
+                {col.label}
               </Text>
             ))}
           </View>
@@ -240,9 +247,12 @@ export default function RecordsSection() {
                         </Text>
                       )}
                     </View>
-                    <View className="mt-1.5">
+                    <Text className="text-sm font-semibold mt-1.5" style={{ color: colors.text }}>{amountOf(k)}</Text>
+                    <View className="flex-row items-center flex-wrap gap-x-3 gap-y-1 mt-1.5">
+                      <StatusDot ok={!!k.imzali} okLabel={t("svc.signed")} noLabel={t("svc.unsigned")} noColor={colors.warning} />
+                      <StatusDot ok={!!k.odendi} okLabel={t("svc.paid")} noLabel={t("svc.unpaid")} noColor={colors.danger} />
                       <View
-                        className="self-start px-1.5 py-0.5 rounded-md"
+                        className="px-1.5 py-0.5 rounded-md"
                         style={{ backgroundColor: k.templateName ? colors.purple + "1A" : colors.bgInput }}
                       >
                         <Text className="text-[10px] font-medium" numberOfLines={1} style={{ color: k.templateName ? colors.purple : colors.textMuted }}>
@@ -273,16 +283,9 @@ export default function RecordsSection() {
                 style={{ borderColor: colors.borderAlt }}
               >
                 <Text className="w-24 text-xs" style={{ color: colors.textSecondary }}>{k.tarih}</Text>
-                <Text className="flex-1 text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>
-                  {k.customer} - {k.tarih}
-                </Text>
-                <Text className="flex-1 text-sm" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                  {k.customer}
-                </Text>
-                <View className="flex-1">
-                  <Text className="text-xs" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                    {k.service}
-                  </Text>
+                <View className="flex-1 pr-3">
+                  <Text className="text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>{k.customer}</Text>
+                  <Text className="text-[11px] mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>{k.service}</Text>
                   {k.usedProducts && k.usedProducts.length > 0 && (
                     <Text className="text-[10px] mt-0.5" numberOfLines={1} style={{ color: colors.teal }}>
                       {k.usedProducts.map((p) => `${p.name} x${p.quantity}`).join(", ")}
@@ -304,24 +307,20 @@ export default function RecordsSection() {
                     </Text>
                   </View>
                 </View>
-                <View className="items-center justify-end">
-                  <View className="flex-row items-center gap-2.5">
-                    <TouchableOpacity onPress={() => handleShare(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="share-social-outline" size={20} color={colors.purple} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleViewService(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="eye-outline" size={20} color={colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleEdit(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="create-outline" size={20} color={colors.teal} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => openServicePDF(k)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="download-outline" size={20} color={colors.warning} />
-                    </TouchableOpacity>
-                  </View>
+                <Text className="w-28 text-xs text-right font-semibold" style={{ color: colors.text }} numberOfLines={1}>{amountOf(k)}</Text>
+                <View className="w-28 ml-6 gap-1">
+                  <StatusDot ok={!!k.imzali} okLabel={t("svc.signed")} noLabel={t("svc.unsigned")} noColor={colors.warning} />
+                  <StatusDot ok={!!k.odendi} okLabel={t("svc.paid")} noLabel={t("svc.unpaid")} noColor={colors.danger} />
+                </View>
+                {/* Tum islemler gorunur; Sil yanlislikla tiklanmasin diye en sonda, ayirici cizgiyle ayri (onay da sorar). */}
+                <View className="w-60 ml-2 flex-row items-center justify-end gap-1">
+                  <RowAction icon="eye-outline" color={colors.primary} label={t("svc.preview")} onPress={() => handleViewService(k)} />
+                  <RowAction icon="create-outline" color={colors.teal} label={t("common.edit")} onPress={() => handleEdit(k)} />
+                  <RowAction icon="copy-outline" color={colors.textSecondary} label={t("svc.copy")} onPress={() => handleDuplicate(k)} />
+                  <RowAction icon="download-outline" color={colors.warning} label={t("svc.downloadPdf")} onPress={() => openServicePDF(k)} />
+                  <RowAction icon="share-social-outline" color={colors.purple} label={t("svc.share")} onPress={() => handleShare(k)} />
+                  <View style={{ width: 1, height: 20, backgroundColor: colors.border, marginHorizontal: 4 }} />
+                  <RowAction icon="trash-outline" color={colors.danger} label={t("common.delete")} onPress={() => setDeleteAlert({ visible: true, record: k })} />
                 </View>
               </View>
             )

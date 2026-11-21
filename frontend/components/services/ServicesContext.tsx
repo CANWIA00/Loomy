@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Platform } from "react-native";
+import { Dimensions, Platform, type ScrollView, type View } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -104,9 +104,33 @@ interface ServicesContextValue {
   activeTemplate: ServiceTemplate | null;
   selectTemplate: (id: string) => void;
   templateConfig: ServiceTemplateConfig;
+  // --- UX iyilestirmeleri ---
+  /** Teknisyenin (giris yapan kullanicinin) profilde kayitli imzasi var mi */
+  hasSignature: boolean;
+  techSignatureModal: boolean;
+  setTechSignatureModal: (v: boolean) => void;
+  /** Teknisyen imzasini sayfadan ayrilmadan profile kaydeder */
+  handleTechnicianSignatureSave: (paths: any[]) => void;
+  /** Zorunlu alan durumu (kirmizi cerceve / * isareti) */
+  isMissing: (key: string) => boolean;
+  isRequiredKey: (key: string) => boolean;
+  /** Alan etiketlerinin konumu: eksik alana kaydirmak icin */
+  registerFieldLabel: (key: string) => (node: View | null) => void;
+  scrollRef: React.RefObject<ScrollView | null>;
+  contentTopRef: React.RefObject<View | null>;
+  handleDuplicate: (record: ServiceRecord) => void;
+  /** Telefonda: yeni kayit icin formu tam ekran acar */
+  openNewRecord: () => void;
+  /** Telefonda: form ekranini kapatip listeye doner */
+  closeFormScreen: () => void;
+  isFormDirty: () => boolean;
 }
 
 const ServicesContext = createContext<ServicesContextValue | undefined>(undefined);
+
+/** Bugunun tarihi, formun kullandigi GG/AA/YYYY biciminde. */
+const todayInput = (now: Date = new Date()) =>
+  `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
 
 const normalizeUsedProducts = (items: UsedProductFormItem[]) =>
   (items || []).map((p) => ({
@@ -123,10 +147,18 @@ export function useServices() {
 
 export function ServicesProvider({ children }: { children: ReactNode }) {
   const { t, lang, locale } = useLanguage();
-  const [form, setForm] = useState<ServiceFormData>({ ...initialForm });
+  // Telefonda (768px alti) liste once gelir; form "Yeni Servis Kaydi" ile tam ekran acilir.
+  const isPhoneNow = () => Dimensions.get("window").width < 768;
+  const [form, setForm] = useState<ServiceFormData>({ ...initialForm, documentDate: todayInput() });
+  const [missingKeys, setMissingKeys] = useState<string[]>([]);
+  const [techSignatureModal, setTechSignatureModal] = useState(false);
+  const pendingSaveRef = useRef(false);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const contentTopRef = useRef<View | null>(null);
+  const fieldLabelRefs = useRef<Record<string, View | null>>({});
   const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [filter, setFilter] = useState<RecordFilter>("all");
-  const [showForm, setShowForm] = useState(true);
+  const [showForm, setShowForm] = useState(() => !isPhoneNow());
   const [signatureModal, setSignatureModal] = useState(false);
   const [filterDate, setFilterDate] = useState("");
   const [filterDocument, setFilterDocument] = useState("");
@@ -317,22 +349,55 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   }, [fetchRecords, fetchCustomers, fetchTemplates]);
   useFocusedPolling(pollRefetch);
 
+  // Teknisyen imzasi yoksa profile yonlendirmek yerine imza penceresi acilir;
+  // imza kaydedilince kaydetme islemi kaldigi yerden devam eder.
   const requireSignature = (): boolean => {
     if (!hasSignature) {
-      setSignatureAlertVisible(true);
+      pendingSaveRef.current = true;
+      setTechSignatureModal(true);
       return false;
     }
     return true;
   };
 
-  const updateForm = (key: keyof ServiceFormData, value: string | boolean) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const handleTechnicianSignatureSave = async (paths: any[]) => {
+    try {
+      await profileApi.updateUser({
+        name: currentUserName.current,
+        phone: currentUserPhone.current,
+        signature: JSON.stringify(paths),
+      });
+      technicianSignatureRef.current = paths;
+      setHasSignature(true);
+      setTechSignatureModal(false);
+      if (pendingSaveRef.current) {
+        pendingSaveRef.current = false;
+        // hasSignature state'i guncellenmeden once calismamasi icin bir sonraki tura birak
+        setTimeout(() => proceedSave(), 0);
+      } else {
+        setResultAlert({ visible: true, type: "success", title: t("svc.success"), message: t("svc.signatureSaved") });
+      }
+    } catch {
+      setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorSignatureSave") });
+    }
+  };
 
-  const updateCustomField = (key: string, value: string) =>
+  const clearMissing = (key: string, value: unknown) => {
+    if (typeof value === "string" && value.trim()) setMissingKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : prev));
+  };
+
+  const updateForm = (key: keyof ServiceFormData, value: string | boolean) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    clearMissing(key === "kdvRate" ? "kdv" : key === "serviceAddress" ? "serviceAddress" : key, value);
+  };
+
+  const updateCustomField = (key: string, value: string) => {
     setForm((prev) => ({
       ...prev,
       customValues: { ...prev.customValues, [key]: value },
     }));
+    clearMissing(key, value);
+  };
 
   const toggleChip = (groupKey: string, item: string) =>
     setForm((prev) => {
@@ -414,9 +479,47 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       .filter((f) => !fieldValueByKey(f.key).trim());
   };
 
+  const requiredKeysNow = (): string[] =>
+    effectiveFields(templateConfig)
+      .filter((f) => f.required === true)
+      .filter((f) => !((f.key === "fee") && form.productsMode))
+      .filter((f) => !((f.key === "labor" || f.key === "kdv") && !form.productsMode))
+      .map((f) => f.key);
+
+  const isMissing = (key: string) => missingKeys.includes(key);
+  const isRequiredKey = (key: string) => requiredKeysNow().includes(key);
+  const registerFieldLabel = (key: string) => (node: View | null) => {
+    fieldLabelRefs.current[key] = node;
+  };
+
+  // Eksik alanlar arasindan ekranda en ustte olana kaydirir (sablonun alan sirasi
+  // ekran sirasindan farkli olabildigi icin konumlar olculur).
+  const scrollToFirstMissing = (keys: string[]) => {
+    setTimeout(() => {
+      const top = contentTopRef.current as any;
+      if (!top?.measureInWindow) return;
+      top.measureInWindow((_tx: number, topY: number) => {
+        let pending = keys.length;
+        let best: number | null = null;
+        keys.forEach((k) => {
+          const node = fieldLabelRefs.current[k] as any;
+          if (!node?.measureInWindow) { pending -= 1; return; }
+          node.measureInWindow((_x: number, y: number) => {
+            if (best === null || y < best) best = y;
+            pending -= 1;
+            if (pending === 0 && best !== null) scrollRef.current?.scrollTo({ y: Math.max(0, best - topY - 24), animated: true });
+          });
+        });
+      });
+    }, 60);
+  };
+
   const showMissingFieldsWarning = (missing: TemplateField[]) => {
-    const names = missing.map((f: TemplateField) => (lang === "tr" ? f.labelTr : f.labelEn)).join(", ");
-    setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorRequiredFields", { fields: names }) });
+    const keys = missing.map((f) => f.key);
+    setMissingKeys(keys);
+    scrollToFirstMissing(keys);
+    const names = missing.map((f: TemplateField) => `• ${lang === "tr" ? f.labelTr : f.labelEn}`).join("\n");
+    setResultAlert({ visible: true, type: "warning", title: t("svc.requiredTitle"), message: `${t("svc.requiredFieldsMissing")}\n${names}` });
   };
 
   const showTimeEqualWarning = () => {
@@ -425,17 +528,25 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const handleSave = () => {
     if (!requireSignature()) return;
+    proceedSave();
+  };
+
+  // Yeni kayitta "emin misiniz?" onayi sorulmaz (zaten musteri imzasi adimi var);
+  // guncellemede mevcut kaydi degistirdigi icin onay korunur.
+  const proceedSave = () => {
     setSaveAlertVisible(false);
     const missing = missingRequiredFields();
     if (missing.length) {
       showMissingFieldsWarning(missing);
       return;
     }
+    setMissingKeys([]);
     if (form.startTime && form.startTime === form.endTime) {
       showTimeEqualWarning();
       return;
     }
-    setSaveAlertVisible(true);
+    if (isEditing) setSaveAlertVisible(true);
+    else confirmSave();
   };
 
   const confirmSave = async () => {
@@ -492,6 +603,7 @@ ucret: form.fee || "0.00",
         setEditingId(null);
         originalFormRef.current = null;
         setForm(freshForm());
+        if (isPhoneNow()) setShowForm(false);
         fetchRecords();
       } catch {
         setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorUpdate") });
@@ -559,13 +671,61 @@ ucret: form.fee || "0.00",
     if (record.hariciIp && !editForm.customValues.custom_externalIp) editForm.customValues.custom_externalIp = record.hariciIp;
     originalFormRef.current = { ...editForm };
     setForm(editForm);
+    setSelectedCustomerId(record.customerId || null);
+    setMissingKeys([]);
     setEditingId(record.id);
     setIsEditing(true);
     setShowForm(true);
+    scrollToForm();
     if (record.templateName) {
       const tpl = templates.find((t) => t.name === record.templateName);
       if (tpl) setActiveTemplateId(tpl.id);
     }
+  };
+
+  // Duzenle/Kopyala sonrasi form sayfanin ustunde dolar; kullanici listede kalmasin.
+  const scrollToForm = () => {
+    setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 50);
+  };
+
+  // Kopya: ayni musteriye tekrar eden servisler icin; yeni bir kayittir
+  // (bugunun tarihi, imzasiz, stok yeniden dusulur).
+  const handleDuplicate = (record: ServiceRecord) => {
+    handleEdit(record);
+    setForm((prev) => ({
+      ...prev,
+      documentDate: todayInput(),
+      usedProducts: prev.usedProducts.map((p) => ({ ...p, deducted: undefined, transactionId: null })),
+    }));
+    originalFormRef.current = null;
+    setEditingId(null);
+    setIsEditing(false);
+  };
+
+  const openNewRecord = () => {
+    setIsEditing(false);
+    setEditingId(null);
+    originalFormRef.current = null;
+    setForm(freshForm());
+    setSelectedCustomerId(null);
+    setMissingKeys([]);
+    setShowForm(true);
+    scrollToForm();
+  };
+
+  const closeFormScreen = () => {
+    setIsEditing(false);
+    setEditingId(null);
+    originalFormRef.current = null;
+    setForm(freshForm());
+    setSelectedCustomerId(null);
+    setMissingKeys([]);
+    setShowForm(false);
+  };
+
+  const isFormDirty = () => {
+    const base = isEditing && originalFormRef.current ? originalFormRef.current : freshForm();
+    return JSON.stringify(form) !== JSON.stringify(base);
   };
 
   const searchParams = useLocalSearchParams<{ edit?: string }>();
@@ -632,15 +792,18 @@ ucret: form.fee || "0.00",
         tryRates,
       });
       setResultAlert({ visible: true, type: "success", title: t("svc.success"), message: t("svc.successCreated") });
-
+      // Form yalnizca basarili kayittan sonra temizlenir; hata olursa kullanicinin
+      // girdigi bilgiler kaybolmaz.
+      setForm(freshForm());
+      setSelectedCustomerId(null);
+      setEditingId(null);
+      setIsEditing(false);
+      if (isPhoneNow()) setShowForm(false);
       fetchRecords();
     } catch {
       setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorSave") });
     } finally {
       setLoading(false);
-      setForm(freshForm());
-      setEditingId(null);
-      setIsEditing(false);
       setSignatureModal(false);
     }
   };
@@ -651,7 +814,8 @@ ucret: form.fee || "0.00",
     if (filterDocument && !`${k.customer} - ${k.tarih}`.toLowerCase().includes(filterDocument.toLowerCase())) return false;
     if (filterCustomer && !k.customer.toLowerCase().includes(filterCustomer.toLowerCase())) return false;
     if (filter !== "all") {
-      const [g, a, y] = k.tarih.split("/").map(Number);
+      // Kayitlarda hem "GG/AA/YYYY" hem "GG.AA.YYYY" (varsayilan tarih) bicimi var.
+      const [g, a, y] = (k.tarih || "").split(/[./-]/).map(Number);
       const bugun = new Date();
       if (filter === "gun" && (g !== bugun.getDate() || a !== bugun.getMonth() + 1 || y !== bugun.getFullYear())) return false;
       if (filter === "ay" && (a !== bugun.getMonth() + 1 || y !== bugun.getFullYear())) return false;
@@ -730,7 +894,7 @@ ucret: form.fee || "0.00",
     const html = generateServicePDFHtml(pdfData, t, locale.startsWith("tr") ? "tr" : "en");
     setPdfPreviewHtml(html);
     setPdfPreviewData(pdfData);
-    setPdfZoom(50);
+    setPdfZoom(Platform.OS === "web" ? Math.max(30, Math.min(100, Math.floor(((Dimensions.get("window").width - 48) / 794) * 100 / 5) * 5)) : 50);
     setPdfPreviewVisible(true);
   };
 
@@ -753,13 +917,13 @@ ucret: form.fee || "0.00",
         });
       }
     } catch (error) {
-      Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
+      setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorPdfCreate") + (error as any).message });
     }
   };
 
   const handleDownloadPDF = async () => {
     if (!pdfPreviewData) {
-      Alert.alert(t("svc.error"), t("svc.errorPdfData"));
+      setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorPdfData") });
       return;
     }
     await performDownloadPDF(pdfPreviewData);
@@ -770,7 +934,7 @@ ucret: form.fee || "0.00",
       await serviceApi.delete(record.id);
       setRecords((prev) => prev.filter((r) => r.id !== record.id));
     } catch {
-      Alert.alert(t("svc.error"), t("svc.errorDelete"));
+      setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorDelete") });
     }
   };
 
@@ -803,7 +967,7 @@ ucret: form.fee || "0.00",
         await sharePdfFileNative(uri);
       }
     } catch (error) {
-      Alert.alert(t("svc.error"), t("svc.errorPdfCreate") + (error as any).message);
+      setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorPdfCreate") + (error as any).message });
     }
   };
 
@@ -816,6 +980,10 @@ ucret: form.fee || "0.00",
     setSelectedCustomerId(id);
     setCustomerSelectModal(false);
     setForm((prev) => ({ ...prev, customerName: name, serviceAddress: address, phone }));
+    // Musteriden gelen alanlar dolduysa eksik isaretleri kalkar
+    clearMissing("customerName", name);
+    clearMissing("serviceAddress", address);
+    clearMissing("phone", phone);
   };
 
   const updateNewCustomerForm = (key: keyof NewCustomerFormData, value: string) =>
@@ -825,7 +993,7 @@ ucret: form.fee || "0.00",
 
   const createNewCustomer = () => {
     if (!newCustomerForm.companyName) {
-      Alert.alert(t("svc.warning"), t("svc.errorCompanyRequired"));
+      setResultAlert({ visible: true, type: "warning", title: t("svc.warning"), message: t("svc.errorCompanyRequired") });
       return;
     }
     setLoading(true);
@@ -839,10 +1007,13 @@ ucret: form.fee || "0.00",
         serviceAddress: yeni.address || "",
         phone: yeni.phone || "",
       }));
+      clearMissing("customerName", yeni.companyName);
+      clearMissing("serviceAddress", yeni.address || "");
+      clearMissing("phone", yeni.phone || "");
       resetNewCustomerForm();
       setNewCustomerModal(false);
     }).catch(() => {
-      Alert.alert(t("svc.error"), t("svc.errorCustomerAdd"));
+      setResultAlert({ visible: true, type: "error", title: t("svc.error"), message: t("svc.errorCustomerAdd") });
     }).finally(() => setLoading(false));
   };
 
@@ -889,6 +1060,7 @@ ucret: form.fee || "0.00",
 
   const freshForm = (): ServiceFormData => ({
     ...initialForm,
+    documentDate: todayInput(),
     technician: currentUserName.current || "",
     technicianPhone: currentUserPhone.current || "",
     productsMode: activeTemplate ? !!activeTemplate.useProducts : false,
@@ -973,6 +1145,19 @@ ucret: form.fee || "0.00",
     activeTemplate,
     selectTemplate,
     templateConfig,
+    hasSignature,
+    techSignatureModal,
+    setTechSignatureModal,
+    handleTechnicianSignatureSave,
+    isMissing,
+    isRequiredKey,
+    registerFieldLabel,
+    scrollRef,
+    contentTopRef,
+    handleDuplicate,
+    openNewRecord,
+    closeFormScreen,
+    isFormDirty,
   };
 
   return <ServicesContext.Provider value={value}>{children}</ServicesContext.Provider>;

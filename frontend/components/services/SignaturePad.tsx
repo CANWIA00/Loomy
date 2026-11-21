@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import type { ReactElement } from "react";
-import { View, Text, TouchableOpacity, Alert, PanResponder } from "react-native";
+import { View, Text, TouchableOpacity, PanResponder } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -17,6 +17,8 @@ export default function SignaturePad({ onSave }: SignaturePadProps) {
   const currentPointsRef = useRef<any[]>([]);
   const allPathsRef = useRef<any[][]>([]);
   const [, forceRender] = useState(0);
+  // Bos imza uyarisi (Alert.alert web'de gorunmedigi icin ped icinde gosterilir)
+  const [emptyWarning, setEmptyWarning] = useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -60,9 +62,10 @@ export default function SignaturePad({ onSave }: SignaturePadProps) {
 
   const handleSave = () => {
     if (allPathsRef.current.length === 0) {
-      Alert.alert(t("svc.warning"), t("svc.signatureWarning"));
+      setEmptyWarning(true);
       return;
     }
+    setEmptyWarning(false);
     onSave(allPathsRef.current);
   };
 
@@ -116,6 +119,9 @@ export default function SignaturePad({ onSave }: SignaturePadProps) {
             })()}
         </Svg>
       </View>
+      {emptyWarning && (
+        <Text className="text-xs mt-2" style={{ color: colors.danger }}>{t("svc.signatureWarning")}</Text>
+      )}
       <View className="flex-row gap-3 mt-4">
         <TouchableOpacity
           className="flex-1 h-10 rounded-lg items-center justify-center"
