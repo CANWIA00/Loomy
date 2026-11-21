@@ -151,3 +151,12 @@ describe("parsePagination", () => {
     expect(parsePagination({ page: "2", size: "50" }, 20)).toEqual({ page: 2, size: 50 });
   });
 });
+
+describe("body size limits", () => {
+  it("rejects large bodies on public auth endpoints with 413", async () => {
+    const res = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "a@b.com", password: "x".repeat(200 * 1024) });
+    expect(res.status).toBe(413);
+  });
+});

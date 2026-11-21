@@ -65,6 +65,11 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"],
 }));
 
+// Giris gerektirmeyen endpointler yalnizca kucuk JSON alir; boylece anonim
+// istemciler 15mb'lik govdelerle sunucuyu yoramaz. Ilk eslesen parser govdeyi
+// okur, sonraki parser zaten okunmus govdeyi atlar.
+app.use(["/api/auth", "/api/apply", "/api/translate"], express.json({ limit: "100kb" }));
+// Imza, logo ve kase base64 olarak geldigi icin giris yapilmis istekler buyuk olabilir.
 app.use(express.json({ limit: "15mb" }));
 
 app.get("/api/health", (_req, res) => {
