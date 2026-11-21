@@ -19,379 +19,359 @@ const RESEND_REQUESTED_MESSAGE =
   "Bu e-posta adresi dogrulanmayi bekleyen bir hesaba aitse yeni kod gonderildi.";
 
 export async function register(req: Request, res: Response): Promise<void> {
-  try {
-    const { name, email, phone, password, inviteCode, privacyAccepted } = req.body;
+  const { name, email, phone, password, inviteCode, privacyAccepted } = req.body;
 
-    if (!name || !email || !phone || !password || !inviteCode) {
-      res.status(400).json({ message: "Tüm alanlar zorunludur." });
-      return;
-    }
-
-    if (privacyAccepted !== true) {
-      res.status(400).json({
-        message:
-          "KVKK Aydınlatma Metni ile Gizlilik Politikası'nı okuyup kabul etmeniz gerekmektedir.",
-      });
-      return;
-    }
-
-    const existingUser = await prisma.user.findFirst({
-      where: { OR: [{ email }, { phone }] },
-    });
-
-    if (existingUser) {
-      res.status(400).json({
-        message:
-          existingUser.email === email
-            ? "Bu e-posta adresi zaten kullanılıyor."
-            : "Bu telefon numarası zaten kullanılıyor.",
-      });
-      return;
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationCode = generateVerificationCode();
-    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
-
-    if (inviteCode.startsWith("ADMIN-")) {
-      const adminKey = await prisma.adminKey.findUnique({
-        where: { keyValue: inviteCode },
-      });
-
-      if (!adminKey) {
-        res.status(400).json({ message: "Geçersiz admin davet kodu." });
-        return;
-      }
-
-      if (!adminKey.isActive) {
-        res.status(400).json({ message: "Bu admin davet kodu artık aktif değil." });
-        return;
-      }
-
-      if (adminKey.isUsed) {
-        res.status(400).json({ message: "Bu admin davet kodu zaten kullanılmış." });
-        return;
-      }
-
-      const companyCode = `INVITE-${Date.now().toString(36).toUpperCase()}`;
-
-      const company = await prisma.company.create({
-        data: {
-          name: `${name} Şirketi`,
-          invitationCode: companyCode,
-        },
-      });
-
-      const user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          phone,
-          password: hashedPassword,
-          role: "ADMIN",
-          inviteCode,
-          companyId: company.id,
-          verificationCode,
-          verificationExpires,
-          privacyAcceptedAt: new Date(),
-          privacyPolicyVersion: PRIVACY_POLICY_VERSION,
-        },
-      });
-
-      await prisma.adminKey.update({
-        where: { id: adminKey.id },
-        data: {
-          isUsed: true,
-          usedByCompanyId: company.id,
-          usedAt: new Date(),
-        },
-      });
-
-      await sendVerificationEmail(email, verificationCode, name);
-
-      res.status(201).json({
-        requiresVerification: true,
-        email,
-        message: "Dogrulama kodu e-posta adresinize gonderildi.",
-      });
-      return;
-    }
-
-    if (inviteCode.startsWith("INVITE-")) {
-      const company = await prisma.company.findUnique({
-        where: { invitationCode: inviteCode },
-      });
-
-      if (!company) {
-        res.status(400).json({ message: "Geçersiz davet kodu." });
-        return;
-      }
-
-      if (company.isFrozen) {
-        res.status(403).json({
-          message:
-            "Kullanımınız Loomy tarafından donduruldu. Yeni kayıt yapılamaz. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
-          frozen: true,
-        });
-        return;
-      }
-
-      const user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          phone,
-          password: hashedPassword,
-          role: "USER",
-          inviteCode,
-          companyId: company.id,
-          verificationCode,
-          verificationExpires,
-          privacyAcceptedAt: new Date(),
-          privacyPolicyVersion: PRIVACY_POLICY_VERSION,
-        },
-      });
-
-      await sendVerificationEmail(email, verificationCode, name);
-
-      res.status(201).json({
-        requiresVerification: true,
-        email,
-        message: "Dogrulama kodu e-posta adresinize gonderildi.",
-      });
-      return;
-    }
-
-    res.status(400).json({
-      message: "Geçersiz davet kodu formatı. ADMIN- veya INVITE- ile başlamalıdır.",
-    });
-  } catch (error: any) {
-    console.error("Register error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!name || !email || !phone || !password || !inviteCode) {
+    res.status(400).json({ message: "Tüm alanlar zorunludur." });
+    return;
   }
+
+  if (privacyAccepted !== true) {
+    res.status(400).json({
+      message:
+        "KVKK Aydınlatma Metni ile Gizlilik Politikası'nı okuyup kabul etmeniz gerekmektedir.",
+    });
+    return;
+  }
+
+  const existingUser = await prisma.user.findFirst({
+    where: { OR: [{ email }, { phone }] },
+  });
+
+  if (existingUser) {
+    res.status(400).json({
+      message:
+        existingUser.email === email
+          ? "Bu e-posta adresi zaten kullanılıyor."
+          : "Bu telefon numarası zaten kullanılıyor.",
+    });
+    return;
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const verificationCode = generateVerificationCode();
+  const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+  if (inviteCode.startsWith("ADMIN-")) {
+    const adminKey = await prisma.adminKey.findUnique({
+      where: { keyValue: inviteCode },
+    });
+
+    if (!adminKey) {
+      res.status(400).json({ message: "Geçersiz admin davet kodu." });
+      return;
+    }
+
+    if (!adminKey.isActive) {
+      res.status(400).json({ message: "Bu admin davet kodu artık aktif değil." });
+      return;
+    }
+
+    if (adminKey.isUsed) {
+      res.status(400).json({ message: "Bu admin davet kodu zaten kullanılmış." });
+      return;
+    }
+
+    const companyCode = `INVITE-${Date.now().toString(36).toUpperCase()}`;
+
+    const company = await prisma.company.create({
+      data: {
+        name: `${name} Şirketi`,
+        invitationCode: companyCode,
+      },
+    });
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        role: "ADMIN",
+        inviteCode,
+        companyId: company.id,
+        verificationCode,
+        verificationExpires,
+        privacyAcceptedAt: new Date(),
+        privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      },
+    });
+
+    await prisma.adminKey.update({
+      where: { id: adminKey.id },
+      data: {
+        isUsed: true,
+        usedByCompanyId: company.id,
+        usedAt: new Date(),
+      },
+    });
+
+    await sendVerificationEmail(email, verificationCode, name);
+
+    res.status(201).json({
+      requiresVerification: true,
+      email,
+      message: "Dogrulama kodu e-posta adresinize gonderildi.",
+    });
+    return;
+  }
+
+  if (inviteCode.startsWith("INVITE-")) {
+    const company = await prisma.company.findUnique({
+      where: { invitationCode: inviteCode },
+    });
+
+    if (!company) {
+      res.status(400).json({ message: "Geçersiz davet kodu." });
+      return;
+    }
+
+    if (company.isFrozen) {
+      res.status(403).json({
+        message:
+          "Kullanımınız Loomy tarafından donduruldu. Yeni kayıt yapılamaz. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
+        frozen: true,
+      });
+      return;
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        role: "USER",
+        inviteCode,
+        companyId: company.id,
+        verificationCode,
+        verificationExpires,
+        privacyAcceptedAt: new Date(),
+        privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      },
+    });
+
+    await sendVerificationEmail(email, verificationCode, name);
+
+    res.status(201).json({
+      requiresVerification: true,
+      email,
+      message: "Dogrulama kodu e-posta adresinize gonderildi.",
+    });
+    return;
+  }
+
+  res.status(400).json({
+    message: "Geçersiz davet kodu formatı. ADMIN- veya INVITE- ile başlamalıdır.",
+  });
 }
 
 export async function verifyEmail(req: Request, res: Response): Promise<void> {
-  try {
-    const { email, code } = req.body;
+  const { email, code } = req.body;
 
-    if (!email || !code) {
-      res.status(400).json({ message: "E-posta ve dogrulama kodu zorunludur." });
-      return;
-    }
+  if (!email || !code) {
+    res.status(400).json({ message: "E-posta ve dogrulama kodu zorunludur." });
+    return;
+  }
 
-    const limiterKey = accountKey(String(email), "verify-email");
+  const limiterKey = accountKey(String(email), "verify-email");
+  if (isBlocked(limiterKey)) {
+    res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { company: true },
+  });
+
+  if (!user) {
+    recordFailure(limiterKey);
+    res.status(400).json({ message: "Gecersiz dogrulama kodu." });
+    return;
+  }
+
+  if (user.company?.isFrozen) {
+    res.status(403).json({
+      message:
+        "Kullanımınız Loomy tarafından donduruldu. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
+      frozen: true,
+    });
+    return;
+  }
+
+  // Dogrulanmis hesaplar icin kod kontrolu yapilmadan token verilmez; aksi halde
+  // yalnizca e-posta adresini bilen biri hesaba giris yapabilir.
+  if (user.emailVerified) {
+    res.status(400).json({ message: "E-posta adresi zaten dogrulanmis. Lutfen giris yapin." });
+    return;
+  }
+
+  if (!user.verificationCode || !user.verificationExpires) {
+    res.status(400).json({ message: "Dogrulama kodu bulunamadi. Lutfen yeni bir kod isteyin." });
+    return;
+  }
+
+  if (new Date() > user.verificationExpires) {
+    res.status(400).json({ message: "Dogrulama kodunun suresi dolmus. Lutfen yeni bir kod isteyin." });
+    return;
+  }
+
+  if (user.verificationCode !== String(code).trim()) {
+    recordFailure(limiterKey);
     if (isBlocked(limiterKey)) {
+      // Limit dolunca mevcut kod iptal edilir; saldirgan yeni kodu bilemez.
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { verificationCode: null, verificationExpires: null },
+      });
       res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
       return;
     }
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { company: true },
-    });
-
-    if (!user) {
-      recordFailure(limiterKey);
-      res.status(400).json({ message: "Gecersiz dogrulama kodu." });
-      return;
-    }
-
-    if (user.company?.isFrozen) {
-      res.status(403).json({
-        message:
-          "Kullanımınız Loomy tarafından donduruldu. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
-        frozen: true,
-      });
-      return;
-    }
-
-    // Dogrulanmis hesaplar icin kod kontrolu yapilmadan token verilmez; aksi halde
-    // yalnizca e-posta adresini bilen biri hesaba giris yapabilir.
-    if (user.emailVerified) {
-      res.status(400).json({ message: "E-posta adresi zaten dogrulanmis. Lutfen giris yapin." });
-      return;
-    }
-
-    if (!user.verificationCode || !user.verificationExpires) {
-      res.status(400).json({ message: "Dogrulama kodu bulunamadi. Lutfen yeni bir kod isteyin." });
-      return;
-    }
-
-    if (new Date() > user.verificationExpires) {
-      res.status(400).json({ message: "Dogrulama kodunun suresi dolmus. Lutfen yeni bir kod isteyin." });
-      return;
-    }
-
-    if (user.verificationCode !== String(code).trim()) {
-      recordFailure(limiterKey);
-      if (isBlocked(limiterKey)) {
-        // Limit dolunca mevcut kod iptal edilir; saldirgan yeni kodu bilemez.
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { verificationCode: null, verificationExpires: null },
-        });
-        res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
-        return;
-      }
-      res.status(400).json({ message: "Gecersiz dogrulama kodu." });
-      return;
-    }
-
-    clearAttempts(limiterKey);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        verificationCode: null,
-        verificationExpires: null,
-      },
-    });
-
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      companyId: user.companyId ?? undefined,
-    });
-
-    res.json({
-      token,
-      role: user.role,
-      profileCompleted: user.company?.profileCompleted ?? false,
-      panelAccess: parsePanelAccess(user.panelAccess),
-    });
-  } catch (error: any) {
-    console.error("Verify email error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+    res.status(400).json({ message: "Gecersiz dogrulama kodu." });
+    return;
   }
+
+  clearAttempts(limiterKey);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerified: true,
+      verificationCode: null,
+      verificationExpires: null,
+    },
+  });
+
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    companyId: user.companyId ?? undefined,
+  });
+
+  res.json({
+    token,
+    role: user.role,
+    profileCompleted: user.company?.profileCompleted ?? false,
+    panelAccess: parsePanelAccess(user.panelAccess),
+  });
 }
 
 export async function resendVerification(req: Request, res: Response): Promise<void> {
-  try {
-    const { email } = req.body;
+  const { email } = req.body;
 
-    if (!email) {
-      res.status(400).json({ message: "E-posta adresi zorunludur." });
-      return;
-    }
-
-    const sendKey = accountKey(String(email), "resend-verification");
-    if (isBlocked(sendKey)) {
-      res.status(429).json({ message: "Cok fazla kod istegi. Lutfen 15 dakika sonra tekrar deneyin." });
-      return;
-    }
-    recordFailure(sendKey);
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (!user || user.emailVerified) {
-      res.json({ message: RESEND_REQUESTED_MESSAGE });
-      return;
-    }
-
-    const verificationCode = generateVerificationCode();
-    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        verificationCode,
-        verificationExpires,
-      },
-    });
-
-    await sendVerificationEmail(email, verificationCode, user.name);
-
-    res.json({ message: "Yeni dogrulama kodu e-posta adresinize gonderildi." });
-  } catch (error: any) {
-    console.error("Resend verification error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!email) {
+    res.status(400).json({ message: "E-posta adresi zorunludur." });
+    return;
   }
+
+  const sendKey = accountKey(String(email), "resend-verification");
+  if (isBlocked(sendKey)) {
+    res.status(429).json({ message: "Cok fazla kod istegi. Lutfen 15 dakika sonra tekrar deneyin." });
+    return;
+  }
+  recordFailure(sendKey);
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user || user.emailVerified) {
+    res.json({ message: RESEND_REQUESTED_MESSAGE });
+    return;
+  }
+
+  const verificationCode = generateVerificationCode();
+  const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      verificationCode,
+      verificationExpires,
+    },
+  });
+
+  await sendVerificationEmail(email, verificationCode, user.name);
+
+  res.json({ message: "Yeni dogrulama kodu e-posta adresinize gonderildi." });
 }
 
 export async function login(req: Request, res: Response): Promise<void> {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-      res.status(400).json({ message: "E-posta ve şifre zorunludur." });
-      return;
-    }
-
-    const limiterKey = attemptKey(req, email, "login");
-
-    if (isBlocked(limiterKey)) {
-      res.status(429).json({
-        message: "Çok fazla hatalı giriş denemesi. Lütfen 15 dakika sonra tekrar deneyin.",
-      });
-      return;
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { company: true },
-    });
-
-    if (!user) {
-      recordFailure(limiterKey);
-      res.status(401).json({ message: "E-posta veya şifre hatalı." });
-      return;
-    }
-
-    if (!user.isActive) {
-      res.status(403).json({ message: "Hesabınız devre dışı bırakılmıştır." });
-      return;
-    }
-
-    if (user.company?.isFrozen) {
-      res.status(403).json({
-        message:
-          "Kullanımınız Loomy tarafından donduruldu. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
-        frozen: true,
-      });
-      return;
-    }
-
-    if (!user.emailVerified) {
-      res.status(403).json({
-        message: "E-posta adresiniz doğrulanmamış. Lütfen e-posta doğrulamanızı tamamlayın.",
-        requiresVerification: true,
-        email: user.email,
-      });
-      return;
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      recordFailure(limiterKey);
-      res.status(401).json({ message: "E-posta veya şifre hatalı." });
-      return;
-    }
-
-    clearAttempts(limiterKey);
-
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      companyId: user.companyId ?? undefined,
-    });
-
-    res.json({
-      token,
-      role: user.role,
-      profileCompleted: user.company?.profileCompleted ?? false,
-      panelAccess: parsePanelAccess(user.panelAccess),
-    });
-  } catch (error: any) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!email || !password) {
+    res.status(400).json({ message: "E-posta ve şifre zorunludur." });
+    return;
   }
+
+  const limiterKey = attemptKey(req, email, "login");
+
+  if (isBlocked(limiterKey)) {
+    res.status(429).json({
+      message: "Çok fazla hatalı giriş denemesi. Lütfen 15 dakika sonra tekrar deneyin.",
+    });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { company: true },
+  });
+
+  if (!user) {
+    recordFailure(limiterKey);
+    res.status(401).json({ message: "E-posta veya şifre hatalı." });
+    return;
+  }
+
+  if (!user.isActive) {
+    res.status(403).json({ message: "Hesabınız devre dışı bırakılmıştır." });
+    return;
+  }
+
+  if (user.company?.isFrozen) {
+    res.status(403).json({
+      message:
+        "Kullanımınız Loomy tarafından donduruldu. Ödeme durumunuz için lütfen Loomy ile iletişime geçin.",
+      frozen: true,
+    });
+    return;
+  }
+
+  if (!user.emailVerified) {
+    res.status(403).json({
+      message: "E-posta adresiniz doğrulanmamış. Lütfen e-posta doğrulamanızı tamamlayın.",
+      requiresVerification: true,
+      email: user.email,
+    });
+    return;
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    recordFailure(limiterKey);
+    res.status(401).json({ message: "E-posta veya şifre hatalı." });
+    return;
+  }
+
+  clearAttempts(limiterKey);
+
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    companyId: user.companyId ?? undefined,
+  });
+
+  res.json({
+    token,
+    role: user.role,
+    profileCompleted: user.company?.profileCompleted ?? false,
+    panelAccess: parsePanelAccess(user.panelAccess),
+  });
 }
 
 export async function logout(_req: Request, res: Response): Promise<void> {
@@ -399,179 +379,159 @@ export async function logout(_req: Request, res: Response): Promise<void> {
 }
 
 export async function validate(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user!.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        companyId: true,
-        panelAccess: true,
-      },
-    });
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      companyId: true,
+      panelAccess: true,
+    },
+  });
 
-    if (!user) {
-      res.status(404).json({ message: "Kullanıcı bulunamadı." });
-      return;
-    }
-
-    res.json({ ...user, panelAccess: parsePanelAccess(user.panelAccess) });
-  } catch (error: any) {
-    console.error("Validate error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!user) {
+    res.status(404).json({ message: "Kullanıcı bulunamadı." });
+    return;
   }
+
+  res.json({ ...user, panelAccess: parsePanelAccess(user.panelAccess) });
 }
 
 export async function deleteAccount(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user!.id },
-      include: { company: true },
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+    include: { company: true },
+  });
+
+  if (!user) {
+    res.status(404).json({ message: "Kullanıcı bulunamadı." });
+    return;
+  }
+
+  await prisma.user.delete({ where: { id: user.id } });
+
+  if (user.companyId) {
+    const remainingUsers = await prisma.user.count({
+      where: { companyId: user.companyId },
     });
 
-    if (!user) {
-      res.status(404).json({ message: "Kullanıcı bulunamadı." });
-      return;
+    if (remainingUsers === 0) {
+      await prisma.company.delete({ where: { id: user.companyId } });
     }
-
-    await prisma.user.delete({ where: { id: user.id } });
-
-    if (user.companyId) {
-      const remainingUsers = await prisma.user.count({
-        where: { companyId: user.companyId },
-      });
-
-      if (remainingUsers === 0) {
-        await prisma.company.delete({ where: { id: user.companyId } });
-      }
-    }
-
-    res.json({ message: "Hesap başarıyla silindi." });
-  } catch (error: any) {
-    console.error("Delete account error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
   }
+
+  res.json({ message: "Hesap başarıyla silindi." });
 }
 
 export async function forgotPassword(req: Request, res: Response): Promise<void> {
-  try {
-    const { email } = req.body;
+  const { email } = req.body;
 
-    if (!email) {
-      res.status(400).json({ message: "E-posta adresi zorunludur." });
-      return;
-    }
-
-    const sendKey = accountKey(String(email), "forgot-password");
-    if (isBlocked(sendKey)) {
-      res.status(429).json({ message: "Cok fazla kod istegi. Lutfen 15 dakika sonra tekrar deneyin." });
-      return;
-    }
-    recordFailure(sendKey);
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (!user || !user.isActive) {
-      res.json({ message: RESET_REQUESTED_MESSAGE });
-      return;
-    }
-
-    const resetCode = generateVerificationCode();
-    const resetCodeExpires = new Date(Date.now() + 15 * 60 * 1000);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        resetCode,
-        resetCodeExpires,
-      },
-    });
-
-    await sendPasswordResetEmail(email, resetCode, user.name);
-
-    res.json({ message: RESET_REQUESTED_MESSAGE });
-  } catch (error: any) {
-    console.error("Forgot password error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!email) {
+    res.status(400).json({ message: "E-posta adresi zorunludur." });
+    return;
   }
+
+  const sendKey = accountKey(String(email), "forgot-password");
+  if (isBlocked(sendKey)) {
+    res.status(429).json({ message: "Cok fazla kod istegi. Lutfen 15 dakika sonra tekrar deneyin." });
+    return;
+  }
+  recordFailure(sendKey);
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user || !user.isActive) {
+    res.json({ message: RESET_REQUESTED_MESSAGE });
+    return;
+  }
+
+  const resetCode = generateVerificationCode();
+  const resetCodeExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      resetCode,
+      resetCodeExpires,
+    },
+  });
+
+  await sendPasswordResetEmail(email, resetCode, user.name);
+
+  res.json({ message: RESET_REQUESTED_MESSAGE });
 }
 
 export async function resetPassword(req: Request, res: Response): Promise<void> {
-  try {
-    const { email, code, newPassword } = req.body;
+  const { email, code, newPassword } = req.body;
 
-    if (!email || !code || !newPassword) {
-      res.status(400).json({ message: "E-posta, kod ve yeni sifre zorunludur." });
-      return;
-    }
+  if (!email || !code || !newPassword) {
+    res.status(400).json({ message: "E-posta, kod ve yeni sifre zorunludur." });
+    return;
+  }
 
-    if (newPassword.length < 6) {
-      res.status(400).json({ message: "Sifre en az 6 karakter olmalidir." });
-      return;
-    }
+  if (newPassword.length < 6) {
+    res.status(400).json({ message: "Sifre en az 6 karakter olmalidir." });
+    return;
+  }
 
-    const limiterKey = accountKey(String(email), "reset-password");
+  const limiterKey = accountKey(String(email), "reset-password");
+  if (isBlocked(limiterKey)) {
+    res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    recordFailure(limiterKey);
+    res.status(400).json({ message: "Gecersiz sifre sifirlama kodu." });
+    return;
+  }
+
+  if (!user.resetCode || !user.resetCodeExpires) {
+    res.status(400).json({ message: "Sifre sifirlama kodu bulunamadi. Lutfen yeni bir kod isteyin." });
+    return;
+  }
+
+  if (new Date() > user.resetCodeExpires) {
+    res.status(400).json({ message: "Sifre sifirlama kodunun suresi dolmus. Lutfen yeni bir kod isteyin." });
+    return;
+  }
+
+  if (user.resetCode !== String(code).trim()) {
+    recordFailure(limiterKey);
     if (isBlocked(limiterKey)) {
+      // Limit dolunca kod iptal edilir; 6 haneli kod brute-force ile bulunamaz.
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { resetCode: null, resetCodeExpires: null },
+      });
       res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
       return;
     }
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (!user) {
-      recordFailure(limiterKey);
-      res.status(400).json({ message: "Gecersiz sifre sifirlama kodu." });
-      return;
-    }
-
-    if (!user.resetCode || !user.resetCodeExpires) {
-      res.status(400).json({ message: "Sifre sifirlama kodu bulunamadi. Lutfen yeni bir kod isteyin." });
-      return;
-    }
-
-    if (new Date() > user.resetCodeExpires) {
-      res.status(400).json({ message: "Sifre sifirlama kodunun suresi dolmus. Lutfen yeni bir kod isteyin." });
-      return;
-    }
-
-    if (user.resetCode !== String(code).trim()) {
-      recordFailure(limiterKey);
-      if (isBlocked(limiterKey)) {
-        // Limit dolunca kod iptal edilir; 6 haneli kod brute-force ile bulunamaz.
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { resetCode: null, resetCodeExpires: null },
-        });
-        res.status(429).json({ message: TOO_MANY_CODE_ATTEMPTS });
-        return;
-      }
-      res.status(400).json({ message: "Gecersiz sifre sifirlama kodu." });
-      return;
-    }
-
-    clearAttempts(limiterKey);
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        resetCode: null,
-        resetCodeExpires: null,
-      },
-    });
-
-    res.json({ message: "Sifreniz basariyla sifirlandi. Artik yeni sifrenizle giris yapabilirsiniz." });
-  } catch (error: any) {
-    console.error("Reset password error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+    res.status(400).json({ message: "Gecersiz sifre sifirlama kodu." });
+    return;
   }
+
+  clearAttempts(limiterKey);
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+      resetCode: null,
+      resetCodeExpires: null,
+    },
+  });
+
+  res.json({ message: "Sifreniz basariyla sifirlandi. Artik yeni sifrenizle giris yapabilirsiniz." });
 }

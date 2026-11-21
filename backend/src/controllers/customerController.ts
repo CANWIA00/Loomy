@@ -7,275 +7,235 @@ export async function getCustomers(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const { page, size } = parsePagination(req.query, 20);
-    const companyId = req.user!.companyId!;
+  const { page, size } = parsePagination(req.query, 20);
+  const companyId = req.user!.companyId!;
 
-    const [content, totalElements] = await Promise.all([
-      prisma.customer.findMany({
-        where: { companyId },
-        orderBy: { createdAt: "desc" },
-        skip: page * size,
-        take: size,
-      }),
-      prisma.customer.count({ where: { companyId } }),
-    ]);
+  const [content, totalElements] = await Promise.all([
+    prisma.customer.findMany({
+      where: { companyId },
+      orderBy: { createdAt: "desc" },
+      skip: page * size,
+      take: size,
+    }),
+    prisma.customer.count({ where: { companyId } }),
+  ]);
 
-    res.json({
-      content,
-      totalElements,
-      totalPages: Math.ceil(totalElements / size),
-      number: page,
-      size,
-    });
-  } catch (error: any) {
-    console.error("GetCustomers error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
-  }
+  res.json({
+    content,
+    totalElements,
+    totalPages: Math.ceil(totalElements / size),
+    number: page,
+    size,
+  });
 }
 
 export async function searchCustomers(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const { page, size } = parsePagination(req.query, 20);
-    const q = String(req.query.q || "");
-    const companyId = req.user!.companyId!;
+  const { page, size } = parsePagination(req.query, 20);
+  const q = String(req.query.q || "");
+  const companyId = req.user!.companyId!;
 
-    const where = {
-      companyId,
-      OR: [
-        { companyName: { contains: q, mode: "insensitive" as const } },
-        { contactPerson: { contains: q, mode: "insensitive" as const } },
-        { subscriberNo: { contains: q } },
-        { email: { contains: q, mode: "insensitive" as const } },
-        { phone: { contains: q } },
-      ],
-    };
+  const where = {
+    companyId,
+    OR: [
+      { companyName: { contains: q, mode: "insensitive" as const } },
+      { contactPerson: { contains: q, mode: "insensitive" as const } },
+      { subscriberNo: { contains: q } },
+      { email: { contains: q, mode: "insensitive" as const } },
+      { phone: { contains: q } },
+    ],
+  };
 
-    const [content, totalElements] = await Promise.all([
-      prisma.customer.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip: page * size,
-        take: size,
-      }),
-      prisma.customer.count({ where }),
-    ]);
+  const [content, totalElements] = await Promise.all([
+    prisma.customer.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: page * size,
+      take: size,
+    }),
+    prisma.customer.count({ where }),
+  ]);
 
-    res.json({
-      content,
-      totalElements,
-      totalPages: Math.ceil(totalElements / size),
-      number: page,
-      size,
-    });
-  } catch (error: any) {
-    console.error("SearchCustomers error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
-  }
+  res.json({
+    content,
+    totalElements,
+    totalPages: Math.ceil(totalElements / size),
+    number: page,
+    size,
+  });
 }
 
 export async function getAllCustomersSimple(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const companyId = req.user!.companyId!;
-    const limit = parseInt(String(req.query.limit || "0")) || 0;
-    const customers = await prisma.customer.findMany({
-      where: { companyId },
-      orderBy: { companyName: "asc" },
-      select: { id: true, companyName: true, subscriberNo: true, contactPerson: true, phone: true, contactPhone: true, fax: true, website: true, address: true, email: true },
-      ...(limit > 0 ? { take: limit } : {}),
-    });
-    res.json(customers);
-  } catch (error: any) {
-    console.error("GetAllCustomersSimple error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
-  }
+  const companyId = req.user!.companyId!;
+  const limit = parseInt(String(req.query.limit || "0")) || 0;
+  const customers = await prisma.customer.findMany({
+    where: { companyId },
+    orderBy: { companyName: "asc" },
+    select: { id: true, companyName: true, subscriberNo: true, contactPerson: true, phone: true, contactPhone: true, fax: true, website: true, address: true, email: true },
+    ...(limit > 0 ? { take: limit } : {}),
+  });
+  res.json(customers);
 }
 
 export async function getCustomerById(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const companyId = req.user!.companyId!;
+  const id = String(req.params.id);
+  const companyId = req.user!.companyId!;
 
-    const customer = await prisma.customer.findFirst({
-      where: { id, companyId },
-    });
+  const customer = await prisma.customer.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!customer) {
-      res.status(404).json({ message: "Müşteri bulunamadı." });
-      return;
-    }
-
-    res.json(customer);
-  } catch (error: any) {
-    console.error("GetCustomerById error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!customer) {
+    res.status(404).json({ message: "Müşteri bulunamadı." });
+    return;
   }
+
+  res.json(customer);
 }
 
 export async function createCustomer(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const {
-      companyName,
-      subscriberNo,
-      address,
-      email,
-      phone,
-      fax,
-      website,
-      contactPerson,
-      contactPhone,
-    } = req.body;
-    const companyId = req.user!.companyId!;
+  const {
+    companyName,
+    subscriberNo,
+    address,
+    email,
+    phone,
+    fax,
+    website,
+    contactPerson,
+    contactPhone,
+  } = req.body;
+  const companyId = req.user!.companyId!;
 
-    if (!companyName?.trim()) {
-      res.status(400).json({ message: "Şirket adı zorunludur." });
-      return;
-    }
-
-    const customer = await prisma.customer.create({
-      data: {
-        companyName: companyName.trim(),
-        subscriberNo: subscriberNo?.trim() || null,
-        address: address?.trim() || null,
-        email: email?.trim() || null,
-        phone: phone?.trim() || null,
-        fax: fax?.trim() || null,
-        website: website?.trim() || null,
-        contactPerson: contactPerson?.trim() || null,
-        contactPhone: contactPhone?.trim() || null,
-        companyId,
-      },
-    });
-
-    res.status(201).json(customer);
-  } catch (error: any) {
-    console.error("CreateCustomer error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!companyName?.trim()) {
+    res.status(400).json({ message: "Şirket adı zorunludur." });
+    return;
   }
+
+  const customer = await prisma.customer.create({
+    data: {
+      companyName: companyName.trim(),
+      subscriberNo: subscriberNo?.trim() || null,
+      address: address?.trim() || null,
+      email: email?.trim() || null,
+      phone: phone?.trim() || null,
+      fax: fax?.trim() || null,
+      website: website?.trim() || null,
+      contactPerson: contactPerson?.trim() || null,
+      contactPhone: contactPhone?.trim() || null,
+      companyId,
+    },
+  });
+
+  res.status(201).json(customer);
 }
 
 export async function updateCustomer(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const companyId = req.user!.companyId!;
-    const {
-      companyName,
-      subscriberNo,
-      address,
-      email,
-      phone,
-      fax,
-      website,
-      contactPerson,
-      contactPhone,
-    } = req.body;
+  const id = String(req.params.id);
+  const companyId = req.user!.companyId!;
+  const {
+    companyName,
+    subscriberNo,
+    address,
+    email,
+    phone,
+    fax,
+    website,
+    contactPerson,
+    contactPhone,
+  } = req.body;
 
-    const existing = await prisma.customer.findFirst({
-      where: { id, companyId },
-    });
+  const existing = await prisma.customer.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!existing) {
-      res.status(404).json({ message: "Müşteri bulunamadı." });
-      return;
-    }
-
-    const customer = await prisma.customer.update({
-      where: { id },
-      data: {
-        companyName: companyName?.trim() || existing.companyName,
-        subscriberNo: subscriberNo?.trim() ?? existing.subscriberNo,
-        address: address?.trim() ?? existing.address,
-        email: email?.trim() ?? existing.email,
-        phone: phone?.trim() ?? existing.phone,
-        fax: fax?.trim() ?? existing.fax,
-        website: website?.trim() ?? existing.website,
-        contactPerson: contactPerson?.trim() ?? existing.contactPerson,
-        contactPhone: contactPhone?.trim() ?? existing.contactPhone,
-      },
-    });
-
-    res.json(customer);
-  } catch (error: any) {
-    console.error("UpdateCustomer error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!existing) {
+    res.status(404).json({ message: "Müşteri bulunamadı." });
+    return;
   }
+
+  const customer = await prisma.customer.update({
+    where: { id },
+    data: {
+      companyName: companyName?.trim() || existing.companyName,
+      subscriberNo: subscriberNo?.trim() ?? existing.subscriberNo,
+      address: address?.trim() ?? existing.address,
+      email: email?.trim() ?? existing.email,
+      phone: phone?.trim() ?? existing.phone,
+      fax: fax?.trim() ?? existing.fax,
+      website: website?.trim() ?? existing.website,
+      contactPerson: contactPerson?.trim() ?? existing.contactPerson,
+      contactPhone: contactPhone?.trim() ?? existing.contactPhone,
+    },
+  });
+
+  res.json(customer);
 }
 
 export async function getCustomerRelatedCounts(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const companyId = req.user!.companyId!;
+  const id = String(req.params.id);
+  const companyId = req.user!.companyId!;
 
-    const existing = await prisma.customer.findFirst({
-      where: { id, companyId },
-    });
+  const existing = await prisma.customer.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!existing) {
-      res.status(404).json({ message: "Müşteri bulunamadı." });
-      return;
-    }
-
-    const [services, quotes, appointments] = await Promise.all([
-      prisma.serviceRecord.count({ where: { customerId: id, companyId } }),
-      prisma.quoteRecord.count({ where: { customerId: id, companyId } }),
-      prisma.appointment.count({ where: { customerId: id, companyId } }),
-    ]);
-
-    res.json({ services, quotes, appointments });
-  } catch (error: any) {
-    console.error("GetCustomerRelatedCounts error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!existing) {
+    res.status(404).json({ message: "Müşteri bulunamadı." });
+    return;
   }
+
+  const [services, quotes, appointments] = await Promise.all([
+    prisma.serviceRecord.count({ where: { customerId: id, companyId } }),
+    prisma.quoteRecord.count({ where: { customerId: id, companyId } }),
+    prisma.appointment.count({ where: { customerId: id, companyId } }),
+  ]);
+
+  res.json({ services, quotes, appointments });
 }
 
 export async function deleteCustomer(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const companyId = req.user!.companyId!;
-    const mode = req.query.mode === "cascade" ? "cascade" : "keep";
+  const id = String(req.params.id);
+  const companyId = req.user!.companyId!;
+  const mode = req.query.mode === "cascade" ? "cascade" : "keep";
 
-    const existing = await prisma.customer.findFirst({
-      where: { id, companyId },
-    });
+  const existing = await prisma.customer.findFirst({
+    where: { id, companyId },
+  });
 
-    if (!existing) {
-      res.status(404).json({ message: "Müşteri bulunamadı." });
-      return;
-    }
-
-    if (mode === "cascade") {
-      await prisma.$transaction([
-        prisma.serviceRecord.deleteMany({ where: { customerId: id, companyId } }),
-        prisma.quoteRecord.deleteMany({ where: { customerId: id, companyId } }),
-        prisma.appointment.deleteMany({ where: { customerId: id, companyId } }),
-      ]);
-    }
-
-    await prisma.customer.delete({ where: { id } });
-    res.json({ message: mode === "cascade" ? "Müşteri ve bağlı kayıtlar silindi." : "Müşteri silindi." });
-  } catch (error: any) {
-    console.error("DeleteCustomer error:", error);
-    res.status(500).json({ message: "Sunucu hatası. Lütfen daha sonra tekrar deneyin." });
+  if (!existing) {
+    res.status(404).json({ message: "Müşteri bulunamadı." });
+    return;
   }
+
+  if (mode === "cascade") {
+    await prisma.$transaction([
+      prisma.serviceRecord.deleteMany({ where: { customerId: id, companyId } }),
+      prisma.quoteRecord.deleteMany({ where: { customerId: id, companyId } }),
+      prisma.appointment.deleteMany({ where: { customerId: id, companyId } }),
+    ]);
+  }
+
+  await prisma.customer.delete({ where: { id } });
+  res.json({ message: mode === "cascade" ? "Müşteri ve bağlı kayıtlar silindi." : "Müşteri silindi." });
 }

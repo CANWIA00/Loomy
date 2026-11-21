@@ -102,14 +102,14 @@ describe("getFinanceOverview", () => {
     expect(body.pendingTotal).toBe(0);
   });
 
-  it("hata durumunda 500 döner", async () => {
+  it("hata durumunda hatayı error handler'a iletir", async () => {
     mockBasics([monthsAgo(0), monthsAgo(1)], []);
     (prisma.$queryRaw as jest.Mock).mockRejectedValue(new Error("db down"));
 
     const res = mockRes();
-    await getFinanceOverview(mockReq(), res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
+    // Hata merkezi errorHandler'a iletilir (500 orada uretilir).
+    await expect(getFinanceOverview(mockReq(), res)).rejects.toThrow("db down");
+    expect(res.json).not.toHaveBeenCalled();
   });
 
   it("month parametresi ile seçilen ayın verisini döndürür", async () => {
@@ -542,13 +542,13 @@ describe("getFinanceTimeline", () => {
     expect(body.pending[11]).toBe(100);
   });
 
-  it("hata durumunda 500 döner", async () => {
+  it("hata durumunda hatayı error handler'a iletir", async () => {
     mockBasics(Array.from({ length: 12 }, (_, i) => monthsAgo(i)), []);
     (prisma.$queryRaw as jest.Mock).mockRejectedValue(new Error("db down"));
 
     const res = mockRes();
-    await getFinanceTimeline(mockReq(), res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
+    // Hata merkezi errorHandler'a iletilir (500 orada uretilir).
+    await expect(getFinanceTimeline(mockReq(), res)).rejects.toThrow("db down");
+    expect(res.json).not.toHaveBeenCalled();
   });
 });

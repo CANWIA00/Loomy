@@ -1,3 +1,4 @@
+import { asyncHandler } from "../middleware/errorHandler";
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
 
@@ -19,7 +20,7 @@ async function googleTranslate(text: string, target: "tr" | "en"): Promise<strin
   }
 }
 
-router.post("/translate", authenticate, async (req, res) => {
+router.post("/translate", authenticate, asyncHandler(async (req, res) => {
   const text = String(req.body?.text || "").trim().slice(0, 500);
   if (!text) {
     res.json({ tr: "", en: "" });
@@ -27,6 +28,6 @@ router.post("/translate", authenticate, async (req, res) => {
   }
   const [tr, en] = await Promise.all([googleTranslate(text, "tr"), googleTranslate(text, "en")]);
   res.json({ tr: tr || text, en: en || text });
-});
+}));
 
 export default router;
