@@ -43,10 +43,6 @@ export interface QuoteFormData {
   lines: QuoteFormLine[];
 }
 
-export const UNIT_OPTIONS = ["Adet", "Kutu", "Koli", "Kg", "Gram", "metre", "cm", "lt", "ml"] as const;
-
-export type UnitOption = (typeof UNIT_OPTIONS)[number];
-
 export const emptyLine = (): QuoteFormLine => ({ name: "", details: "", quantity: "1", unitPrice: "", currency: "TRY", unit: "Adet" });
 
 export interface NewCustomerFormData {

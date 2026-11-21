@@ -1115,5 +1115,16 @@
   "cmp.saveBar": "Save changes ({count})",
   "cmp.legend": "Pick an access level for each panel. View: can see the data. Manage: can add and edit. Admin manages all panels.",
   "cmp.expandAll": "Expand All",
-  "cmp.collapseAll": "Collapse All"
+  "cmp.collapseAll": "Collapse All",
+  "unit.title": "Unit",
+  "unit.search": "Search unit (e.g. kg, meter, hour)",
+  "unit.useCustom": "Use \"{unit}\"",
+  "unit.empty": "No unit found",
+  "unit.group.count": "Count and packaging",
+  "unit.group.weight": "Weight",
+  "unit.group.length": "Length",
+  "unit.group.area": "Area",
+  "unit.group.volume": "Volume",
+  "unit.group.energy": "Energy and power",
+  "unit.group.time": "Time and service"
 }

@@ -9,7 +9,7 @@ import { useServices } from "./ServicesContext";
 import { type TemplateField, type TemplateChipGroup, effectiveFields, type UsedProductFormItem } from "./types";import SvgAwareImage from "../SvgAwareImage";
 import { getCurrentAddress } from "../../utils/location";
 import { stockApi, type StockItem } from "../../apiclient/stock";
-import { UNIT_OPTIONS } from "../quotes/types";
+import UnitPickerModal from "../UnitPickerModal";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { formatMoney, getCurrencySymbol, parseNumericInput, CURRENCIES } from "../stock/format";
 
@@ -765,8 +765,6 @@ function UsedProductsSection() {
   const [totalCurrency, setTotalCurrency] = useState("TRY");
   const [totalCurrencyModal, setTotalCurrencyModal] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchInSuggestions = useRef(false);
 
   const { templateConfig } = useServices();
   const fields = effectiveFields(templateConfig);
@@ -797,8 +795,6 @@ function UsedProductsSection() {
   };
 
   const pickSavedName = (index: number, name: string) => {
-    touchInSuggestions.current = false;
-    if (blurTimer.current) clearTimeout(blurTimer.current);
     updateUsedProduct(index, {
       name,
       unitPrice: "",
@@ -819,12 +815,17 @@ function UsedProductsSection() {
 
   useEffect(() => () => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (blurTimer.current) clearTimeout(blurTimer.current);
+  }, []);
+
+  // Baska bir alana gecilince oneri listesi kapanir (blur zamanlayicisi yerine).
+  const closeSuggestions = useCallback(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    setActiveRow(null);
+    setSuggestions([]);
+    setSavedNameSuggestions([]);
   }, []);
 
   const pick = (index: number, item: StockItem) => {
-    touchInSuggestions.current = false;
-    if (blurTimer.current) clearTimeout(blurTimer.current);
     updateUsedProduct(index, {
       name: item.name,
       unit: item.unit,
@@ -935,9 +936,9 @@ function UsedProductsSection() {
           {isTable && (
             <View className="flex-row items-center gap-1.5 mb-1 px-0.5">
               <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { flex: 1.6, minWidth: 140 }]}>{t("svc.productName")}</Text>
-              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 68 }]}>{t("svc.qty")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 96 }]}>{t("svc.qty")}</Text>
               <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 76 }]}>{t("svc.unit")}</Text>
-              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("svc.price")}</Text>
+              <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 124 }]}>{t("svc.price")}</Text>
               <Text className="text-[10px] font-medium" style={[{ color: colors.textMuted }, { width: 78 }]}>{t("svc.currency")}</Text>
               <Text className="text-[10px] font-medium text-right" style={[{ color: colors.textMuted }, { width: 100 }]}>{t("svc.total")}</Text>
               <View style={{ width: 32 }} />
@@ -949,7 +950,7 @@ function UsedProductsSection() {
             const convertedLineTotal = p.currency !== "TRY" ? convert(lineTotalValue, p.currency || "TRY") : null;
             const nameCell = (
               <View className={isTable ? "" : "flex-1"} style={isTable ? { flex: 1.6, minWidth: 140 } : undefined}>
-                <View style={{ position: "relative", zIndex: activeRow === i ? 1000 : undefined }}>
+                <View>
                   <View className="flex-row items-center">
                     <TextInput
                       className="flex-1 h-9 border rounded-lg px-3 text-sm"
@@ -959,12 +960,6 @@ function UsedProductsSection() {
                       value={p.name}
                       onChangeText={(v) => onNameChange(i, v)}
                       onFocus={() => { setActiveRow(i); if (p.name.trim()) runSearch(p.name, i); }}
-                      onBlur={() => {
-                        if (blurTimer.current) clearTimeout(blurTimer.current);
-                        blurTimer.current = setTimeout(() => {
-                          if (!touchInSuggestions.current) setSuggestions([]);
-                        }, 250);
-                      }}
                     />
                     {p.name.trim() ? (
                       <TouchableOpacity
@@ -983,12 +978,10 @@ function UsedProductsSection() {
                       </TouchableOpacity>
                     ) : null}
                   </View>
+                  {/* Oneriler akista (absolute degil) gosterilir: altindaki miktar/fiyat
+                      alanlarinin ustune binmez ve dokunuslar alttaki alanlara kacmaz. */}
                   {activeRow === i && (suggestions.length > 0 || savedNameSuggestions.length > 0) && (
-                    <View className="overflow-hidden" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8, position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, zIndex: 1000, elevation: 10, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
-                      onTouchStart={() => { touchInSuggestions.current = true; }}
-                      onTouchEnd={() => { touchInSuggestions.current = false; }}
-                      onTouchCancel={() => { touchInSuggestions.current = false; }}
-                    >
+                    <View className="overflow-hidden mt-1" style={{ backgroundColor: colors.bgCard, borderColor: colors.border, borderWidth: 1, borderRadius: 8 }}>
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="always" className="max-h-56">
                         {suggestions.map((s, si, arr) => (
                           <TouchableOpacity key={s.id} className="px-3 py-2" style={{ backgroundColor: colors.bgCard, ...(si < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}) }} onPress={() => pick(i, s)}>
@@ -1017,15 +1010,16 @@ function UsedProductsSection() {
 
             if (isTable) {
               return (
-                <View key={i} className="flex-row items-start gap-1.5 mb-2" style={{ zIndex: activeRow === i ? 100 : 0 }}>
+                <View key={i} className="flex-row items-start gap-1.5 mb-2">
                   {nameCell}
-                  <View style={{ width: 68 }}>
+                  <View style={{ width: 96 }}>
                     <TextInput
                       className="w-full h-9 border rounded-lg px-2 text-sm text-right"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                       placeholder="0"
                       placeholderTextColor={colors.textMuted}
                       keyboardType="decimal-pad"
+                      onFocus={closeSuggestions}
                       value={p.quantity}
                       onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.,]/g, "") })}
                     />
@@ -1034,19 +1028,20 @@ function UsedProductsSection() {
                     <TouchableOpacity
                       className="h-9 border rounded-lg px-1.5 flex-row items-center justify-center"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
-                      onPress={() => setUnitModalIdx(i)}
+                      onPress={() => { closeSuggestions(); setUnitModalIdx(i); }}
                     >
                       <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.unit || "Adet"}</Text>
                       <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
                     </TouchableOpacity>
                   </View>
-                  <View style={{ width: 100 }}>
+                  <View style={{ width: 124 }}>
                     <TextInput
-                      className="w-full h-9 border rounded-lg px-2 text-sm"
+                      className="w-full h-9 border rounded-lg px-2 text-sm text-right"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }}
                       placeholder="0.00"
                       placeholderTextColor={colors.textMuted}
                       keyboardType="decimal-pad"
+                      onFocus={closeSuggestions}
                       value={p.unitPrice}
                       onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.,]/g, "") })}
                     />
@@ -1060,7 +1055,7 @@ function UsedProductsSection() {
                     <TouchableOpacity
                       className="h-9 border rounded-lg px-1.5 flex-row items-center justify-center"
                       style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }}
-                      onPress={() => setCurrencyModalIdx(i)}
+                      onPress={() => { closeSuggestions(); setCurrencyModalIdx(i); }}
                     >
                       <Text className="text-xs font-medium" style={{ color: colors.text }}>{p.currency || "TRY"}</Text>
                       <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
@@ -1083,7 +1078,7 @@ function UsedProductsSection() {
             }
 
             return (
-              <View key={i} className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1, zIndex: activeRow === i ? 100 : 0 }}>
+              <View key={i} className="rounded-xl p-3 mb-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 1 }}>
                 <View className="flex-row items-center justify-between mb-1">
                   <Text className="text-xs font-medium" style={{ color: colors.textSecondary }}>{t("svc.productName")}</Text>
                   <TouchableOpacity onPress={() => removeUsedProduct(i)} hitSlop={8}>
@@ -1093,30 +1088,43 @@ function UsedProductsSection() {
 
                 {nameCell}
 
+                {/* Telefonda miktar+birim ve fiyat+para birimi ayri satirlarda: 5-6 haneli
+                    degerler kutuya sigsin diye sayi alanlari genis tutulur. */}
                 <View className="flex-row gap-2 mt-2">
-                  <View className="flex-1">
+                  <View className="flex-1" style={{ minWidth: 0 }}>
                     <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.qty")}</Text>
-                    <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.quantity} onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.,]/g, "") })} />
+                    <TextInput className="w-full h-10 border rounded-lg px-2.5 text-base" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text, minWidth: 0 }} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" onFocus={closeSuggestions} value={p.quantity} onChangeText={(v) => updateUsedProduct(i, { quantity: v.replace(/[^0-9.,]/g, "") })} />
                   </View>
-                  <View style={{ width: 84 }}>
+                  <View style={{ width: 96 }}>
                     <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.unit")}</Text>
-                    <TouchableOpacity className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => setUnitModalIdx(i)}>
-                      <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.unit || "Adet"}</Text>
+                    <TouchableOpacity className="w-full h-10 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => { closeSuggestions(); setUnitModalIdx(i); }}>
+                      <Text className="text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.unit || "Adet"}</Text>
                       <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 3 }} />
                     </TouchableOpacity>
                   </View>
-                  <View className="flex-1">
+                </View>
+                <View className="flex-row gap-2 mt-2">
+                  <View className="flex-1" style={{ minWidth: 0 }}>
                     <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.price")}</Text>
-                    <TextInput className="w-full h-9 border rounded-lg px-3 text-sm" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text }} placeholder="0.00" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" value={p.unitPrice} onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.,]/g, "") })} />
+                    <TextInput className="w-full h-10 border rounded-lg px-2.5 text-base" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border, color: colors.text, minWidth: 0 }} placeholder="0.00" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" onFocus={closeSuggestions} value={p.unitPrice} onChangeText={(v) => updateUsedProduct(i, { unitPrice: v.replace(/[^0-9.,]/g, "") })} />
                   </View>
-                  <View style={{ width: 84 }}>
+                  <View style={{ width: 96 }}>
                     <Text className="text-[11px] mb-0.5" style={{ color: colors.textMuted }}>{t("svc.currency")}</Text>
-                    <TouchableOpacity className="w-full h-9 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => setCurrencyModalIdx(i)}>
-                      <Text className="text-xs font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.currency || "TRY"}</Text>
+                    <TouchableOpacity className="w-full h-10 border rounded-lg px-2 flex-row items-center justify-center" style={{ backgroundColor: colors.bgCard2, borderColor: colors.border }} onPress={() => { closeSuggestions(); setCurrencyModalIdx(i); }}>
+                      <Text className="text-sm font-medium" style={{ color: colors.text }} numberOfLines={1}>{p.currency || "TRY"}</Text>
                       <Ionicons name="chevron-down" size={12} color={colors.textMuted} style={{ marginLeft: 2 }} />
                     </TouchableOpacity>
                   </View>
                 </View>
+                {lineTotalValue > 0 && (
+                  <View className="flex-row items-center justify-end mt-2">
+                    <Text className="text-xs mr-1.5" style={{ color: colors.textMuted }}>{t("svc.total")}</Text>
+                    <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{formatMoney(lineTotalValue, p.currency)}</Text>
+                    {convertedLineTotal !== null && (
+                      <Text className="text-[11px] ml-1.5" style={{ color: colors.textMuted }} numberOfLines={1}>≈ {formatMoney(convertedLineTotal)} ₺</Text>
+                    )}
+                  </View>
+                )}
               </View>
             );
           })}
@@ -1211,22 +1219,13 @@ function UsedProductsSection() {
         </>
       )}
 
-      <Modal visible={unitModalIdx !== null} transparent animationType="fade" onRequestClose={() => setUnitModalIdx(null)}>
-        <View className="flex-1 justify-center items-center bg-black/60">
-          <View className="rounded-2xl w-60 p-4" style={{ backgroundColor: colors.bgCard }}>
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("svc.unit")}</Text>
-              <TouchableOpacity onPress={() => setUnitModalIdx(null)}><Ionicons name="close" size={24} color={colors.textMuted} /></TouchableOpacity>
-            </View>
-            {UNIT_OPTIONS.map((u, ui, arr) => (
-              <TouchableOpacity key={u} className="flex-row items-center px-3 py-3" style={ui < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined} onPress={() => { if (unitModalIdx !== null) updateUsedProduct(unitModalIdx, { unit: u }); setUnitModalIdx(null); }}>
-                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{u}</Text>
-                {items[unitModalIdx ?? 0]?.unit === u && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
+      <UnitPickerModal
+        visible={unitModalIdx !== null}
+        title={t("svc.unit")}
+        value={unitModalIdx !== null ? items[unitModalIdx]?.unit : null}
+        onSelect={(u) => { if (unitModalIdx !== null) updateUsedProduct(unitModalIdx, { unit: u }); }}
+        onClose={() => setUnitModalIdx(null)}
+      />
 
       <Modal visible={currencyModalIdx !== null} transparent animationType="fade" onRequestClose={() => setCurrencyModalIdx(null)}>
         <View className="flex-1 justify-center items-center bg-black/60">

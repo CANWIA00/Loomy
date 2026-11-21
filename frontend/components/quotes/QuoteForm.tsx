@@ -3,12 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, Alert, Acti
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
+import UnitPickerModal from "../UnitPickerModal";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { useQuotes } from "./QuoteContext";
 import type { Customer } from "../../apiclient/customers";
 import { stockApi, type StockItem } from "../../apiclient/stock";
 import { getCurrentAddress } from "../../utils/location";
-import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, UNIT_OPTIONS, parseNumericInput } from "./types";
+import { formatMoney, round2, KDV_RATE, CURRENCIES, getCurrencySymbol, parseNumericInput } from "./types";
 
 const formatRate = (rate: number) =>
   rate.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -1102,34 +1103,13 @@ export default function QuoteForm() {
         </View>
       </Modal>
 
-      <Modal visible={unitModalIdx !== null} transparent animationType="fade" onRequestClose={() => setUnitModalIdx(null)}>
-        <View className="flex-1 justify-center items-center bg-black/60">
-          <View className="rounded-2xl w-60 p-4" style={{ backgroundColor: colors.bgCard }}>
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("qot.unit")}</Text>
-              <TouchableOpacity onPress={() => setUnitModalIdx(null)}>
-                <Ionicons name="close" size={24} color={colors.textMuted} />
-              </TouchableOpacity>
-            </View>
-            {UNIT_OPTIONS.map((u, i, arr) => (
-              <TouchableOpacity
-                key={u}
-                className="flex-row items-center px-3 py-3"
-                style={i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
-                onPress={() => {
-                  if (unitModalIdx !== null) updateLine(unitModalIdx, "unit", u);
-                  setUnitModalIdx(null);
-                }}
-              >
-                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{u}</Text>
-                {form.lines[unitModalIdx ?? 0]?.unit === u && (
-                  <Ionicons name="checkmark" size={18} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
+      <UnitPickerModal
+        visible={unitModalIdx !== null}
+        title={t("qot.unit")}
+        value={unitModalIdx !== null ? form.lines[unitModalIdx]?.unit : null}
+        onSelect={(u) => { if (unitModalIdx !== null) updateLine(unitModalIdx, "unit", u); }}
+        onClose={() => setUnitModalIdx(null)}
+      />
     </>
   );
 }

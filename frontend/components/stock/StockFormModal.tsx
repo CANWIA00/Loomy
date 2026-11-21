@@ -3,6 +3,7 @@ import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvo
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
+import UnitPickerModal from "../UnitPickerModal";
 import type { StockItem } from "../../apiclient/stock";
 import { parseNumericInput, CURRENCIES, getCurrencySymbol } from "./format";
 
@@ -43,8 +44,6 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
   const [lowStockAlert, setLowStockAlert] = useState(true);
   const [currencyModal, setCurrencyModal] = useState(false);
   const [unitModal, setUnitModal] = useState(false);
-
-  const UNIT_OPTIONS = ["Adet", "Kutu", "Koli", "Kg", "Gram", "metre", "cm", "lt", "ml"] as const;
 
   useEffect(() => {
     if (visible) {
@@ -230,32 +229,13 @@ export default function StockFormModal({ visible, item, onClose, onSubmit }: Pro
         </View>
       </KeyboardAvoidingView>
 
-      <Modal visible={unitModal} transparent animationType="fade" onRequestClose={() => setUnitModal(false)}>
-        <View className="flex-1 justify-center items-center bg-black/60">
-          <View className="rounded-2xl w-72 p-4" style={{ backgroundColor: colors.bgCard }}>
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-lg font-bold" style={{ color: colors.text }}>{t("stock.unit")}</Text>
-              <TouchableOpacity onPress={() => setUnitModal(false)}>
-                <Ionicons name="close" size={24} color={colors.textMuted} />
-              </TouchableOpacity>
-            </View>
-            {UNIT_OPTIONS.map((u, i, arr) => (
-              <TouchableOpacity
-                key={u}
-                className="flex-row items-center px-3 py-3"
-                style={i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
-                onPress={() => {
-                  setUnit(u);
-                  setUnitModal(false);
-                }}
-              >
-                <Text className="text-sm font-medium flex-1" style={{ color: colors.text }}>{u}</Text>
-                {unit === u && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
+      <UnitPickerModal
+        visible={unitModal}
+        title={t("stock.unit")}
+        value={unit}
+        onSelect={setUnit}
+        onClose={() => setUnitModal(false)}
+      />
 
       <Modal visible={currencyModal} transparent animationType="fade" onRequestClose={() => setCurrencyModal(false)}>
         <View className="flex-1 justify-center items-center bg-black/60">
