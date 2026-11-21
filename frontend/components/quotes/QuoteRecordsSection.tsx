@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
-import QuoteActionsMenu, { type QuoteActionKey } from "./modals/QuoteActionsMenu";
+import QuoteActionsMenu from "./modals/QuoteActionsMenu";
 import type { QuoteRecord } from "../../apiclient/quotes";
 import type { QuoteFilter } from "./types";
 import { getCurrencySymbol, round2, formatMoney } from "./types";
@@ -83,8 +83,6 @@ export default function QuoteRecordsSection() {
 
   const [actionsOpen, setActionsOpen] = useState(false);
   const [actionsRecord, setActionsRecord] = useState<QuoteRecord | null>(null);
-  // Masaustu ⋯ menusu yalnizca Kopyala/Sil gosterir; telefondaki ⋮ tum islemleri.
-  const [actionsOnly, setActionsOnly] = useState<QuoteActionKey[] | undefined>(undefined);
 
   const filterLabel = (f: QuoteFilter) =>
     f === "all" ? t("qot.filterAll") : f === "gun" ? t("qot.filterDay") : f === "ay" ? t("qot.filterMonth") : t("qot.filterYear");
@@ -208,7 +206,6 @@ export default function QuoteRecordsSection() {
                     style={{ backgroundColor: colors.bgInput }}
                     onPress={() => {
                       setActionsRecord(k);
-                      setActionsOnly(undefined);
                       setActionsOpen(true);
                     }}
                     accessibilityRole="button"
@@ -246,18 +243,15 @@ export default function QuoteRecordsSection() {
                     </Text>
                   )}
                 </View>
-                {/* Sik kullanilan islemler gorunur; Kopyala ve Sil (yanlislikla tiklanmasin) ⋯ menusunde. */}
-                <View className="w-48 ml-6 flex-row items-center justify-end gap-1">
+                {/* Tum islemler gorunur; Sil yanlislikla tiklanmasin diye en sonda, ayirici cizgiyle ayri (onay da sorar). */}
+                <View className="ml-6 flex-row items-center justify-end gap-1">
                   <RowAction icon="eye-outline" color={colors.primary} label={t("qot.preview")} onPress={() => handleView(k)} />
                   <RowAction icon="create-outline" color={colors.teal} label={t("common.edit")} onPress={() => handleEdit(k)} />
+                  <RowAction icon="copy-outline" color={colors.textSecondary} label={t("qot.copy")} onPress={() => handleDuplicate(k)} />
                   <RowAction icon="download-outline" color={colors.warning} label={t("qot.downloadPdf")} onPress={() => openQuotePDF(k)} />
                   <RowAction icon="share-social-outline" color={colors.purple} label={t("qot.share")} onPress={() => handleShare(k)} />
-                  <RowAction
-                    icon="ellipsis-horizontal"
-                    color={colors.textSecondary}
-                    label={t("common.more")}
-                    onPress={() => { setActionsRecord(k); setActionsOnly(["duplicate", "delete"]); setActionsOpen(true); }}
-                  />
+                  <View style={{ width: 1, height: 20, backgroundColor: colors.border, marginHorizontal: 4 }} />
+                  <RowAction icon="trash-outline" color={colors.danger} label={t("common.delete")} onPress={() => setDeleteAlert({ visible: true, record: k })} />
                 </View>
               </View>
             );
@@ -292,7 +286,6 @@ export default function QuoteRecordsSection() {
       <QuoteActionsMenu
         record={actionsRecord}
         visible={actionsOpen}
-        only={actionsOnly}
         onClose={() => setActionsOpen(false)}
       />
     </>
