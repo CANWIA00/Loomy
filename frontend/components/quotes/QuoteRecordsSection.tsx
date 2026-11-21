@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, useWindowDimensions } from "react-native";
+import { useState, useEffect, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, Pressable, ScrollView, Platform, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
-import QuoteActionsMenu from "./modals/QuoteActionsMenu";
+import QuoteActionsMenu, { type QuoteActionKey } from "./modals/QuoteActionsMenu";
 import type { QuoteRecord } from "../../apiclient/quotes";
 import type { QuoteFilter } from "./types";
 import { getCurrencySymbol, round2, formatMoney } from "./types";
@@ -13,6 +13,37 @@ import { convertToTry } from "../../utils/currencyRates";
 
 const FILTERS: QuoteFilter[] = ["all", "gun", "ay", "yil"];
 const PAGE_SIZE = 15;
+
+/**
+ * Masaustu satir islemi: 32px dokunma alani, ustune gelince vurgu ve tarayicinin
+ * kendi ipucu balonu (title). Liste kaydirma alaninin icinde kirpilmasin diye
+ * ozel bir balon yerine yerel title kullanilir.
+ */
+function RowAction({ icon, color, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; color: string; label: string; onPress: () => void }) {
+  const { colors } = useTheme();
+  const ref = useRef<any>(null);
+  useEffect(() => {
+    if (Platform.OS === "web" && ref.current?.setAttribute) ref.current.setAttribute("title", label);
+  }, [label]);
+  return (
+    <Pressable
+      ref={ref}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ hovered, pressed }: any) => ({
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: hovered || pressed ? colors.bgInput : "transparent",
+      })}
+    >
+      <Ionicons name={icon} size={19} color={color} />
+    </Pressable>
+  );
+}
 
 export default function QuoteRecordsSection() {
   const { colors } = useTheme();
@@ -52,6 +83,8 @@ export default function QuoteRecordsSection() {
 
   const [actionsOpen, setActionsOpen] = useState(false);
   const [actionsRecord, setActionsRecord] = useState<QuoteRecord | null>(null);
+  // Masaustu ⋯ menusu yalnizca Kopyala/Sil gosterir; telefondaki ⋮ tum islemleri.
+  const [actionsOnly, setActionsOnly] = useState<QuoteActionKey[] | undefined>(undefined);
 
   const filterLabel = (f: QuoteFilter) =>
     f === "all" ? t("qot.filterAll") : f === "gun" ? t("qot.filterDay") : f === "ay" ? t("qot.filterMonth") : t("qot.filterYear");
@@ -175,6 +208,7 @@ export default function QuoteRecordsSection() {
                     style={{ backgroundColor: colors.bgInput }}
                     onPress={() => {
                       setActionsRecord(k);
+                      setActionsOnly(undefined);
                       setActionsOpen(true);
                     }}
                     accessibilityRole="button"
@@ -212,25 +246,18 @@ export default function QuoteRecordsSection() {
                     </Text>
                   )}
                 </View>
-                <View className="w-44 ml-6 flex-row items-center justify-end gap-2.5">
-                  <TouchableOpacity onPress={() => handleShare(k)}>
-                    <Ionicons name="share-social-outline" size={20} color={colors.purple} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleDuplicate(k)}>
-                    <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setDeleteAlert({ visible: true, record: k })}>
-                    <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleView(k)}>
-                    <Ionicons name="eye-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleEdit(k)}>
-                    <Ionicons name="create-outline" size={20} color={colors.teal} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => openQuotePDF(k)}>
-                    <Ionicons name="download-outline" size={20} color={colors.warning} />
-                  </TouchableOpacity>
+                {/* Sik kullanilan islemler gorunur; Kopyala ve Sil (yanlislikla tiklanmasin) ⋯ menusunde. */}
+                <View className="w-48 ml-6 flex-row items-center justify-end gap-1">
+                  <RowAction icon="eye-outline" color={colors.primary} label={t("qot.preview")} onPress={() => handleView(k)} />
+                  <RowAction icon="create-outline" color={colors.teal} label={t("common.edit")} onPress={() => handleEdit(k)} />
+                  <RowAction icon="download-outline" color={colors.warning} label={t("qot.downloadPdf")} onPress={() => openQuotePDF(k)} />
+                  <RowAction icon="share-social-outline" color={colors.purple} label={t("qot.share")} onPress={() => handleShare(k)} />
+                  <RowAction
+                    icon="ellipsis-horizontal"
+                    color={colors.textSecondary}
+                    label={t("common.more")}
+                    onPress={() => { setActionsRecord(k); setActionsOnly(["duplicate", "delete"]); setActionsOpen(true); }}
+                  />
                 </View>
               </View>
             );
@@ -265,6 +292,7 @@ export default function QuoteRecordsSection() {
       <QuoteActionsMenu
         record={actionsRecord}
         visible={actionsOpen}
+        only={actionsOnly}
         onClose={() => setActionsOpen(false)}
       />
     </>

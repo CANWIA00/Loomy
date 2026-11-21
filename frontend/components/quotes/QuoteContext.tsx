@@ -507,11 +507,19 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     await performDownloadPDF(pdfData);
   };
 
+  // Web'de on izleme A4 sayfayi (794px) pencere genisligine sigdirarak acar (en fazla %100);
+  // eskiden sabit %50 idi ve masaustunde yazi okunmuyordu. Native WebView davranisi ayni.
+  const initialPreviewZoom = () => {
+    if (Platform.OS !== "web") return 50;
+    const available = Dimensions.get("window").width - 48;
+    return Math.max(30, Math.min(100, Math.floor((available / 794) * 100 / 5) * 5));
+  };
+
   const handleView = async (record: QuoteRecord) => {
     const pdfData = await resolvePdfData(record);
     setPdfPreviewHtml(generateHtml(pdfData));
     setPdfPreviewData(pdfData);
-    setPdfZoom(50);
+    setPdfZoom(initialPreviewZoom());
     setPdfPreviewVisible(true);
   };
 

@@ -5,18 +5,22 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useQuotes } from "../QuoteContext";
 import type { QuoteRecord } from "../../../apiclient/quotes";
 
+export type QuoteActionKey = "preview" | "edit" | "duplicate" | "share" | "download" | "delete";
+
 interface Props {
   record: QuoteRecord | null;
   visible: boolean;
   onClose: () => void;
+  /** Verilirse yalnizca bu islemler listelenir (masaustu ⋯ menusu: Kopyala, Sil). */
+  only?: QuoteActionKey[];
 }
 
-export default function QuoteActionsMenu({ record, visible, onClose }: Props) {
+export default function QuoteActionsMenu({ record, visible, onClose, only }: Props) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { handleShare, handleView, openQuotePDF, handleEdit, handleDuplicate, setDeleteAlert } = useQuotes();
 
-  const actions: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }[] = record
+  const allActions: { key: QuoteActionKey; label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }[] = record
     ? [
         { key: "preview", label: t("qot.preview"), icon: "eye-outline", color: colors.primary, onPress: () => { onClose(); handleView(record); } },
         { key: "edit", label: t("common.edit"), icon: "create-outline", color: colors.teal, onPress: () => { onClose(); handleEdit(record); } },
@@ -26,6 +30,7 @@ export default function QuoteActionsMenu({ record, visible, onClose }: Props) {
         { key: "delete", label: t("common.delete"), icon: "trash-outline", color: colors.danger, onPress: () => { onClose(); setDeleteAlert({ visible: true, record }); } },
       ]
     : [];
+  const actions = only ? allActions.filter((a) => only.includes(a.key)) : allActions;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
