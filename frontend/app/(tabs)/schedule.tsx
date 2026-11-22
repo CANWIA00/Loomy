@@ -23,6 +23,7 @@ import TeamDetailModal from "../../components/schedule/modals/TeamDetailModal";
 import DayListModal from "../../components/schedule/modals/DayListModal";
 import AppointmentDetailModal from "../../components/schedule/modals/AppointmentDetailModal";
 import CustomAlert from "../../components/CustomAlert";
+import { formatIsoDate } from "../../utils/date";
 import type { ScheduleEvent } from "../../components/schedule/types";
 
 function ScheduleScreenInner() {
@@ -52,6 +53,10 @@ function ScheduleScreenInner() {
     cancelJobTarget,
     closeCancelJob,
     confirmCancelJob,
+    pendingMove,
+    cancelMove,
+    confirmMove,
+    moveSaving,
   } = useSchedule();
 
   const now = new Date();
@@ -152,12 +157,29 @@ function ScheduleScreenInner() {
         <AppointmentDetailModal />
         <ManualJobModal />
         <ConfirmModal
+          visible={!!pendingMove}
+          title={t("sch.moveConfirmTitle")}
+          message={pendingMove ? t("sch.moveConfirmMsg", {
+            name: `${pendingMove.job.customerName} · ${pendingMove.job.tur}`,
+            from: `${formatIsoDate(pendingMove.job.tarih)} ${pendingMove.job.startTime}`,
+            to: `${formatIsoDate(pendingMove.tarih)} ${pendingMove.startTime}`,
+          }) : ""}
+          confirmLabel={t("sch.moveConfirmYes")}
+          cancelLabel={t("sch.cancel")}
+          loading={moveSaving}
+          icon="move-outline"
+          tone="primary"
+          onCancel={cancelMove}
+          onConfirm={confirmMove}
+        />
+        <ConfirmModal
           visible={!!cancelJobTarget}
           title={t("sch.cancelJobTitle")}
           message={t("sch.cancelJobMsg", { name: cancelJobTarget?.customerName || "" })}
           confirmLabel={t("sch.cancelJobConfirm")}
           cancelLabel={t("sch.cancel")}
           loading={false}
+          icon="close-circle-outline"
           onCancel={closeCancelJob}
           onConfirm={confirmCancelJob}
         />

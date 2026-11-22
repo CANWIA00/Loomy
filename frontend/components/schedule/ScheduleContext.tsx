@@ -163,6 +163,11 @@ interface ScheduleContextValue {
   /** Takvime verilen gorunum: telefonda 7 sutun okunmadigi icin "Hafta" 3 gun gosterilir */
   calendarMode: Mode;
   isPhone: boolean;
+  /** Takvimde suruklenen plan: kaydetmeden once onay sorulur */
+  pendingMove: { job: Appointment; startTime: string; tarih: string } | null;
+  cancelMove: () => void;
+  confirmMove: () => Promise<void>;
+  moveSaving: boolean;
 }
 
 const ScheduleContext = createContext<ScheduleContextValue | null>(null);
@@ -183,6 +188,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [cancelJobTarget, setCancelJobTarget] = useState<Appointment | null>(null);
   const [manualJobVisible, setManualJobVisible] = useState(false);
   const [editingQuoteId, setEditingQuoteId] = useState<number | null>(null);
+  const [pendingMove, setPendingMove] = useState<{ job: Appointment; startTime: string; tarih: string } | null>(null);
+  const [moveSaving, setMoveSaving] = useState(false);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -600,15 +607,32 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         return;
       }
     }
+    if (!draggedAppt) return;
+    // Tamamlanan isin servis kaydi var; tasinamaz (sunucu da reddeder).
+    if (draggedAppt.status === "DONE") {
+      showAlert("error", t("common.warning"), t("sch.moveDoneBlocked"));
+      return;
+    }
+    // Yanlislikla surukleme olabilir: kaydetmeden once sor. Kart zaten eski yerine doner.
+    setPendingMove({ job: draggedAppt, startTime: newStartTime, tarih: newDate });
+  };
+
+  const cancelMove = () => setPendingMove(null);
+  const confirmMove = async () => {
+    const move = pendingMove;
+    if (!move) return;
+    setMoveSaving(true);
     try {
-      await appointmentApi.update(eventId, { startTime: newStartTime, tarih: newDate } as any);
+      await appointmentApi.update(move.job.id, { startTime: move.startTime, tarih: move.tarih } as any);
       setAppointments((prev) =>
-        prev.map((a) =>
-          a.id === eventId ? { ...a, startTime: newStartTime, tarih: newDate } : a
-        )
+        prev.map((a) => (a.id === move.job.id ? { ...a, startTime: move.startTime, tarih: move.tarih } : a))
       );
+      setPendingMove(null);
     } catch (error: any) {
+      setPendingMove(null);
       showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorDrag"));
+    } finally {
+      setMoveSaving(false);
     }
   };
 
@@ -685,6 +709,10 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   };
 
   const value: ScheduleContextValue = {
+    pendingMove,
+    cancelMove,
+    confirmMove,
+    moveSaving,
     calendarMode,
     isPhone,
     unassignJob,

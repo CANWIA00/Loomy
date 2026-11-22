@@ -1245,5 +1245,9 @@
   "dur.h": "sa",
   "dur.m": "dk",
   "sch.threeDays": "3 Gün",
-  "sch.clearTeamFilter": "Ekip filtresini kaldır"
+  "sch.clearTeamFilter": "Ekip filtresini kaldır",
+  "sch.moveConfirmTitle": "Plan taşınsın mı?",
+  "sch.moveConfirmMsg": "{name}\n{from} → {to}\nDeğişiklik kaydedilsin mi?",
+  "sch.moveConfirmYes": "Evet, kaydet",
+  "sch.moveDoneBlocked": "Tamamlanmış iş taşınamaz; servis kaydı oluşturulmuş."
 }

@@ -1245,5 +1245,9 @@
   "dur.h": "h",
   "dur.m": "min",
   "sch.threeDays": "3 Days",
-  "sch.clearTeamFilter": "Clear team filter"
+  "sch.clearTeamFilter": "Clear team filter",
+  "sch.moveConfirmTitle": "Move this plan?",
+  "sch.moveConfirmMsg": "{name}\n{from} → {to}\nSave the change?",
+  "sch.moveConfirmYes": "Yes, save",
+  "sch.moveDoneBlocked": "A completed job cannot be moved; its service record exists."
 }

@@ -12,6 +12,9 @@ interface ConfirmModalProps {
   loading?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  /** Varsayilan silme (cop kutusu, kirmizi); tasima gibi islemler icin degistirilir */
+  icon?: keyof typeof Ionicons.glyphMap;
+  tone?: "danger" | "primary";
 }
 
 export default function ConfirmModal({
@@ -23,14 +26,17 @@ export default function ConfirmModal({
   loading = false,
   onCancel,
   onConfirm,
+  icon = "trash",
+  tone = "danger",
 }: ConfirmModalProps) {
   const { colors } = useTheme();
+  const accent = tone === "primary" ? colors.primary : colors.danger;
 
   return (
     <ModalShell visible={visible} onRequestClose={() => !loading && onCancel()} maxWidth="max-w-sm">
       <View className="items-center mb-4">
         <View className="w-14 h-14 rounded-full items-center justify-center mb-3" style={{ backgroundColor: colors.bgInput }}>
-          <Ionicons name="trash" size={28} color={colors.danger} />
+          <Ionicons name={icon} size={28} color={accent} />
         </View>
         <Text className="text-lg font-bold text-center" style={{ color: colors.text }}>{title}</Text>
         <Text className="text-sm text-center mt-2" style={{ color: colors.textSecondary }}>
@@ -49,7 +55,7 @@ export default function ConfirmModal({
         </TouchableOpacity>
         <TouchableOpacity
           className="flex-1 h-11 rounded-xl items-center justify-center"
-          style={{ backgroundColor: loading ? colors.danger + '80' : colors.danger }}
+          style={{ backgroundColor: loading ? accent + '80' : accent }}
           onPress={onConfirm}
           disabled={loading}
           activeOpacity={0.7}
