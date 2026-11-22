@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -63,7 +63,15 @@ export default function AwaitingJobsSection() {
       {awaitingJobs.length === 0 ? (
         <Text className="text-xs" style={{ color: colors.textMuted }}>{t("sch.awaitingEmpty")}</Text>
       ) : (
-        <View className="gap-2 mt-1">
+        // Liste uzarsa sayfa sonsuza uzamasin: sabit yukseklikte kendi icinde kayar.
+        <ScrollView
+          className="mt-1"
+          style={{ maxHeight: 380 }}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+          indicatorStyle={colors.indicatorBg as any}
+        >
+        <View className="gap-2 pr-1">
           {awaitingJobs.map((job) => {
             const firstNote = (job.notes || "").split("\n").filter(Boolean);
             const total = totalOf(job);
@@ -134,6 +142,7 @@ export default function AwaitingJobsSection() {
             );
           })}
         </View>
+        </ScrollView>
       )}
     </View>
   );
