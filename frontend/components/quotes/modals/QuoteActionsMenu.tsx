@@ -20,7 +20,7 @@ export default function QuoteActionsMenu({ record, visible, onClose }: Props) {
     ? [
         { key: "preview", label: t("qot.preview"), icon: "eye-outline", color: colors.primary, onPress: () => { onClose(); handleView(record); } },
         { key: "edit", label: t("common.edit"), icon: "create-outline", color: colors.teal, onPress: () => { onClose(); handleEdit(record); } },
-        { key: "service", label: t("qot.createServiceForm"), icon: "construct-outline", color: colors.success, onPress: () => { onClose(); createServiceFromQuote(record); } },
+        ...(record.job?.status === "DONE" ? [] : [{ key: "service", label: t("qot.createServiceForm"), icon: "construct-outline" as const, color: colors.success, onPress: () => { onClose(); createServiceFromQuote(record); } }]),
         { key: "duplicate", label: t("qot.copy"), icon: "copy-outline", color: colors.textSecondary, onPress: () => { onClose(); handleDuplicate(record); } },
         { key: "share", label: t("qot.share"), icon: "share-social-outline", color: colors.purple, onPress: () => { onClose(); handleShare(record); } },
         { key: "download", label: t("qot.downloadPdf"), icon: "download-outline", color: colors.warning, onPress: () => { onClose(); openQuotePDF(record); } },

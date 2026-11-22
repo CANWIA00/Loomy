@@ -1249,5 +1249,6 @@
   "sch.moveConfirmTitle": "Plan taşınsın mı?",
   "sch.moveConfirmMsg": "{name}\n{from} → {to}\nDeğişiklik kaydedilsin mi?",
   "sch.moveConfirmYes": "Evet, kaydet",
-  "sch.moveDoneBlocked": "Tamamlanmış iş taşınamaz; servis kaydı oluşturulmuş."
+  "sch.moveDoneBlocked": "Tamamlanmış iş taşınamaz; servis kaydı oluşturulmuş.",
+  "qot.jobDoneNoService": "Bu teklifin servisi tamamlandı; yeni servis formu oluşturulamaz."
 }

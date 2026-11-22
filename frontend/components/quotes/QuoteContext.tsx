@@ -547,6 +547,11 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
   const router = useRouter();
   const createServiceFromQuote = async (record: QuoteRecord) => {
+    // Servisi tamamlanmis teklif: ikinci servis formu acilmaz
+    if (record.job?.status === "DONE") {
+      setResultAlert({ visible: true, type: "warning", title: t("qot.warning"), message: t("qot.jobDoneNoService") });
+      return;
+    }
     if (needsCustomerPrompt(record)) {
       setCustomerPrompt({ record, action: "service" });
       return;

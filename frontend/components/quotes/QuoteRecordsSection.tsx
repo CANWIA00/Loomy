@@ -233,7 +233,12 @@ export default function QuoteRecordsSection() {
                 <View className="w-64 ml-2 flex-row items-center justify-end gap-1">
                   <RowAction icon="eye-outline" color={colors.primary} label={t("qot.preview")} onPress={() => handleView(k)} />
                   <RowAction icon="create-outline" color={colors.teal} label={t("common.edit")} onPress={() => handleEdit(k)} />
-                  <RowAction icon="construct-outline" color={colors.success} label={t("qot.createServiceForm")} onPress={() => createServiceFromQuote(k)} />
+                  {/* Servisi tamamlanan teklifte yeni servis formu acilmaz; hizalama bozulmasin diye bos yer */}
+                  {k.job?.status === "DONE" ? (
+                    <View style={{ width: 32, height: 32 }} />
+                  ) : (
+                    <RowAction icon="construct-outline" color={colors.success} label={t("qot.createServiceForm")} onPress={() => createServiceFromQuote(k)} />
+                  )}
                   <RowAction icon="copy-outline" color={colors.textSecondary} label={t("qot.copy")} onPress={() => handleDuplicate(k)} />
                   <RowAction icon="download-outline" color={colors.warning} label={t("qot.downloadPdf")} onPress={() => openQuotePDF(k)} />
                   <RowAction icon="share-social-outline" color={colors.purple} label={t("qot.share")} onPress={() => handleShare(k)} />
