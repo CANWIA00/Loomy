@@ -69,12 +69,20 @@ export async function getAppointments(req: AuthRequest, res: Response): Promise<
     return;
   }
 
+  const withQuote = statuses.includes("AWAITING");
   const appointments = await prisma.appointment.findMany({
     where,
     orderBy: orderBy as any,
+    ...(withQuote ? { include: { quote: { select: { lines: true } } } } : {}),
   });
 
-  res.json(appointments.map(mapAppointment));
+  res.json(appointments.map((a: any) => {
+    const base = mapAppointment(a);
+    if (!withQuote || !a.quote) return base;
+    let quoteLines: unknown[] = [];
+    try { quoteLines = JSON.parse(a.quote.lines || "[]"); } catch { quoteLines = []; }
+    return { ...base, quoteLines };
+  }));
 }
 
 export async function createAppointment(req: AuthRequest, res: Response): Promise<void> {
@@ -206,6 +214,11 @@ export async function deleteAppointment(req: AuthRequest, res: Response): Promis
     return;
   }
 
+  if (existing.quoteId) {
+    res.status(400).json({ message: "Teklife bağlı iş silinemez. Atamayı geri alabilir ya da işi iptal edebilirsiniz." });
+    return;
+  }
+
   await prisma.appointment.delete({ where: { id } });
   res.json({ message: "Randevu silindi." });
 }
@@ -242,6 +255,22 @@ export async function cancelAppointment(req: AuthRequest, res: Response): Promis
   });
   if (count === 0) {
     res.status(404).json({ message: "İptal edilebilecek iş bulunamadı." });
+    return;
+  }
+  const job = await prisma.appointment.findFirst({ where: { id, companyId } });
+  res.json(mapAppointment(job));
+}
+
+/** Planli isi takvimden cikarip atama bekleyenlere geri alir (ekip/tarih temizlenir). */
+export async function unassignAppointment(req: AuthRequest, res: Response): Promise<void> {
+  const id = parseInt(String(req.params.id));
+  const companyId = req.user!.companyId!;
+  const { count } = await prisma.appointment.updateMany({
+    where: { id, companyId, status: "SCHEDULED" },
+    data: { status: "AWAITING", teamId: null, teamName: "", date: "", startTime: "", duration: "" },
+  });
+  if (count === 0) {
+    res.status(404).json({ message: "Geri alınabilecek planlı iş bulunamadı." });
     return;
   }
   const job = await prisma.appointment.findFirst({ where: { id, companyId } });

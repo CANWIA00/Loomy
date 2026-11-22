@@ -2,6 +2,7 @@ import { View, Text } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import type { Appointment } from "../../apiclient/appointments";
+import { useTheme } from "../../contexts/ThemeContext";
 import type { ScheduleEvent } from "./types";
 
 const CELL_HEIGHT = Math.max(500 - 30, 1200) / 24;
@@ -25,6 +26,7 @@ export default function ScheduleEventCard({
   onDragEnd,
   onPressEvent,
 }: ScheduleEventCardProps) {
+  const { colors } = useTheme();
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const isDragging = useSharedValue(false);
@@ -52,8 +54,8 @@ export default function ScheduleEventCard({
       const minuteDelta = Math.round((translateY.value / CELL_HEIGHT) * 60 / 15) * 15;
 
       let dayDelta = 0;
-      if (mode === "week" && containerWidth > 0) {
-        const dayWidth = containerWidth / 7;
+      if ((mode === "week" || mode === "3days") && containerWidth > 0) {
+        const dayWidth = containerWidth / (mode === "week" ? 7 : 3);
         dayDelta = Math.round(translateX.value / dayWidth);
       }
 
@@ -93,19 +95,19 @@ export default function ScheduleEventCard({
         style={[
           touchableStyle,
           animStyle,
-          { backgroundColor: `${event.renk}20`, borderLeftWidth: 3, borderLeftColor: event.renk, borderRadius: 6 },
+          { backgroundColor: `${event.renk}20`, borderLeftWidth: 3, borderLeftColor: event.durum === "overdue" ? colors.danger : event.renk, borderRadius: 6, opacity: event.durum === "done" ? 0.55 : 1 },
         ]}
       >
         <View>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600', lineHeight: 13 }} numberOfLines={1}>{event.title}</Text>
+            <Text style={{ color: colors.text, fontSize: 10, fontWeight: '600', lineHeight: 13 }} numberOfLines={1}>{event.title}</Text>
             {event.ekipAdi ? (
               <View style={{ backgroundColor: event.renk, borderRadius: 3, paddingHorizontal: 3, paddingVertical: 0, marginTop: 1, alignSelf: 'flex-start' }}>
                 <Text style={{ color: '#fff', fontSize: 7, fontWeight: '700', lineHeight: 10 }} numberOfLines={1}>{event.ekipAdi}</Text>
               </View>
             ) : null}
             {event.notlar ? (
-              <Text style={{ color: '#ccc', fontSize: 8, lineHeight: 10, marginTop: 1 }} numberOfLines={2}>{event.notlar}</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 8, lineHeight: 10, marginTop: 1 }} numberOfLines={2}>{event.notlar}</Text>
             ) : null}
           </View>
         </View>

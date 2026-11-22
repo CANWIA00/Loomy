@@ -54,7 +54,10 @@ export default function AppointmentModal() {
     openCustomerSelect,
     openServiceSelect,
     teams,
+    editingQuoteId,
   } = useSchedule();
+  // Tekliften gelen iste musteri ve is turu teklife aittir; burada degistirilemez.
+  const locked = editingQuoteId !== null;
 
   const formatTimeInput = (text: string) => {
     const digits = text.replace(/\D/g, "").slice(0, 4);
@@ -100,14 +103,16 @@ export default function AppointmentModal() {
         <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.customer")}</Text>
         <TouchableOpacity
           className="h-10 border rounded-lg px-3 flex-row items-center justify-between"
-          style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+          style={{ backgroundColor: locked ? colors.bgInput : colors.bg, borderColor: colors.border }}
           onPress={openCustomerSelect}
+          disabled={locked}
         >
-          <Text className="text-sm" style={{ color: colors.text }}>
+          <Text className="text-sm flex-1" style={{ color: colors.text }} numberOfLines={1}>
             {selectedCustomer ? selectedCustomer.companyName : t("sch.selectCustomer")}
           </Text>
-          <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+          <Ionicons name={locked ? "lock-closed-outline" : "chevron-down"} size={16} color={colors.textMuted} />
         </TouchableOpacity>
+        {locked ? <Text className="text-[11px] mt-1" style={{ color: colors.textMuted }}>{t("sch.lockedFromQuote")}</Text> : null}
       </View>
 
       <ScrollView className="max-h-[400px]" nestedScrollEnabled indicatorStyle={colors.indicatorBg as any}>
@@ -202,11 +207,12 @@ export default function AppointmentModal() {
           <Text className="text-xs font-medium mb-1" style={{ color: colors.textSecondary }}>{t("sch.serviceType")}</Text>
           <TouchableOpacity
             className="h-10 border rounded-lg px-3 flex-row items-center justify-between"
-            style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+            style={{ backgroundColor: locked ? colors.bgInput : colors.bg, borderColor: colors.border }}
             onPress={openServiceSelect}
+            disabled={locked}
           >
-            <Text className="text-sm" style={{ color: colors.text }}>{selectedService}</Text>
-            <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+            <Text className="text-sm flex-1" style={{ color: colors.text }} numberOfLines={1}>{selectedService}</Text>
+            <Ionicons name={locked ? "lock-closed-outline" : "chevron-down"} size={16} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -226,7 +232,7 @@ export default function AppointmentModal() {
       </ScrollView>
 
       <View className="flex-row gap-3 mt-4">
-        {editingAppointmentId && !assigningJob ? (
+        {editingAppointmentId && !assigningJob && !locked ? (
           <TouchableOpacity onPress={requestDeleteEditing}>
             <Ionicons name="trash-outline" size={18} color={colors.danger} />
           </TouchableOpacity>

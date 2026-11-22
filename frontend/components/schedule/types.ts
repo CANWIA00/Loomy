@@ -4,6 +4,8 @@ export interface ScheduleEvent extends ICalendarEventBase {
   renk: string;
   ekipAdi?: string;
   eventId?: number;
+  /** done: servis kaydi var · overdue: tarihi gecti, servis formu yok · open */
+  durum?: "done" | "overdue" | "open";
   notlar?: string;
 }
 

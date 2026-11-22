@@ -6,7 +6,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useQuotes } from "./QuoteContext";
 import QuoteActionsMenu from "./modals/QuoteActionsMenu";
 import RowAction from "../RowAction";
-import { QuoteStatusInline, QuoteStatusMenu, QuoteStatusFilterSelect } from "./QuoteStatus";
+import { QuoteStatusInline, QuoteStatusMenu, QuoteStatusFilterSelect, QuoteJobBadge } from "./QuoteStatus";
 import type { QuoteRecord } from "../../apiclient/quotes";
 import type { QuoteFilter } from "./types";
 import { getCurrencySymbol, round2, formatMoney } from "./types";
@@ -167,6 +167,7 @@ export default function QuoteRecordsSection() {
                         {k.title}
                       </Text>
                     ) : null}
+                    <QuoteJobBadge record={k} />
                     <View className="mt-1">
                       <Text className="text-sm" style={{ color: colors.text }} numberOfLines={1}>
                         {totalLabels}
@@ -226,6 +227,7 @@ export default function QuoteRecordsSection() {
                 </View>
                 <View className="w-28 ml-6">
                   <QuoteStatusInline status={k.status} onPress={() => setStatusMenuRecord(k)} />
+                  <QuoteJobBadge record={k} />
                 </View>
                 {/* Tum islemler gorunur; Sil yanlislikla tiklanmasin diye en sonda, ayirici cizgiyle ayri (onay da sorar). */}
                 <View className="w-64 ml-2 flex-row items-center justify-end gap-1">

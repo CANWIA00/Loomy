@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { QUOTE_STATUSES, type QuoteRecord, type QuoteStatus } from "../../apiclient/quotes";
+import { useRouter } from "expo-router";
+import { formatIsoDate } from "../../utils/date";
 import { useQuotes } from "./QuoteContext";
 
 const ICONS: Record<QuoteStatus, keyof typeof Ionicons.glyphMap> = {
@@ -153,5 +155,36 @@ export function QuoteStatusFilterSelect() {
         </TouchableOpacity>
       </Modal>
     </>
+  );
+}
+
+/**
+ * Kabul edilen teklifin planlamadaki durumu: Atama bekliyor / Planlandi 25/11 10:00 /
+ * Tamamlandi. Dokununca Plan sayfasina gider.
+ */
+export function QuoteJobBadge({ record }: { record: QuoteRecord }) {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+  const router = useRouter();
+  const job = record.job;
+  if (!job || (record.status || "PENDING") !== "ACCEPTED" || job.status === "CANCELLED") return null;
+  const map = {
+    AWAITING: { icon: "hourglass-outline", color: colors.warning, text: t("qot.job.AWAITING") },
+    SCHEDULED: { icon: "calendar-outline", color: colors.primary, text: t("qot.job.SCHEDULED", { date: `${formatIsoDate(job.date).slice(0, 5)} ${job.startTime}`.trim() }) },
+    DONE: { icon: "checkmark-done-outline", color: colors.success, text: t("qot.job.DONE") },
+  } as const;
+  const m = map[job.status as keyof typeof map];
+  if (!m) return null;
+  return (
+    <TouchableOpacity
+      onPress={() => router.push("/schedule")}
+      accessibilityRole="link"
+      accessibilityLabel={m.text}
+      className="flex-row items-center mt-0.5"
+      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+    >
+      <Ionicons name={m.icon} size={11} color={m.color} />
+      <Text className="text-[10px] ml-1" style={{ color: m.color }} numberOfLines={1}>{m.text}</Text>
+    </TouchableOpacity>
   );
 }

@@ -33,6 +33,16 @@ export interface QuoteRecord {
   lines: QuoteLine[];
   validUntil: string;
   tryRates?: TryRatesData | null;
+  /** Planlamadaki bagli is (kabul edilmis tekliflerde) */
+  job?: QuoteJobInfo | null;
+}
+
+export interface QuoteJobInfo {
+  id: number;
+  status: "AWAITING" | "SCHEDULED" | "DONE" | "CANCELLED";
+  date: string;
+  startTime: string;
+  teamName: string;
 }
 
 interface QuoteRecordBackend {
@@ -53,6 +63,7 @@ interface QuoteRecordBackend {
   validUntil?: string;
   tryRates?: string;
   status?: string;
+  job?: QuoteJobInfo | null;
 }
 
 function toFrontend(b: QuoteRecordBackend): QuoteRecord {
@@ -78,6 +89,7 @@ function toFrontend(b: QuoteRecordBackend): QuoteRecord {
     notlar: b.notes || "",
     lines,
     validUntil: b.validUntil || "",
+    job: b.job ?? null,
     tryRates,
     status: (QUOTE_STATUSES as string[]).includes(b.status || "") ? (b.status as QuoteStatus) : "PENDING",
   };

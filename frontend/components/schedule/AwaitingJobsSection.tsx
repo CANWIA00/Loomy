@@ -16,7 +16,24 @@ export default function AwaitingJobsSection() {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
   const router = useRouter();
-  const { awaitingJobs, openAssignJob, requestCancelJob, openManualJob } = useSchedule();
+  const { awaitingJobs, openAssignJob, requestCancelJob, openManualJob, openDetail } = useSchedule();
+
+  // Teklif tutari (para birimine gore) ve bekleme suresi
+  const totalOf = (job: (typeof awaitingJobs)[number]) => {
+    const sums: Record<string, number> = {};
+    (job.quoteLines || []).forEach((l) => {
+      const cur = l.currency || "TRY";
+      sums[cur] = (sums[cur] || 0) + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
+    });
+    const sym: Record<string, string> = { TRY: "₺", USD: "$", EUR: "€", GBP: "£" };
+    return Object.entries(sums).filter(([, v]) => v > 0)
+      .map(([c, v]) => `${v.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${sym[c] || c}`).join(" + ");
+  };
+  const waitLabel = (createdAt?: string) => {
+    if (!createdAt) return "";
+    const d = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+    return d === 0 ? t("sch.waitingToday") : t("sch.waitingDays", { n: String(d) });
+  };
   // Planlamadan gecmeden (orn. ayni gun yapilan is) servis formu: kayitla is tamamlanir.
   const openServiceForm = (id: number) => router.push({ pathname: "/services", params: { fromJob: String(id) } });
 
@@ -49,10 +66,13 @@ export default function AwaitingJobsSection() {
         <View className="gap-2 mt-1">
           {awaitingJobs.map((job) => {
             const firstNote = (job.notes || "").split("\n").filter(Boolean);
+            const total = totalOf(job);
+            const days = job.createdAt ? Math.floor((Date.now() - new Date(job.createdAt).getTime()) / 86400000) : 0;
             return (
               <View key={job.id} className="rounded-xl border p-3" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
                 <View className="flex-row items-start">
-                  <View className="flex-1 pr-2">
+                  {/* Karta dokununca detay (notlar, teklif baglantisi, tum islemler) */}
+                  <TouchableOpacity className="flex-1 pr-2" onPress={() => openDetail(job)} accessibilityRole="button" activeOpacity={0.7}>
                     <View className="flex-row items-center flex-wrap gap-x-2">
                       <Text className="text-sm font-semibold" style={{ color: colors.text }} numberOfLines={1}>{job.customerName}</Text>
                       {job.quoteId ? (
@@ -67,7 +87,16 @@ export default function AwaitingJobsSection() {
                         {firstNote.slice(job.quoteId ? 1 : 0).join("  ") || firstNote[0]}
                       </Text>
                     )}
-                  </View>
+                    <View className="flex-row items-center flex-wrap gap-x-3 mt-1.5">
+                      <View className="flex-row items-center">
+                        <Ionicons name="time-outline" size={11} color={days >= 3 ? colors.danger : colors.textMuted} />
+                        <Text className="text-[11px] ml-1" style={{ color: days >= 3 ? colors.danger : colors.textMuted }}>{waitLabel(job.createdAt)}</Text>
+                      </View>
+                      {total ? (
+                        <Text className="text-[11px] font-semibold" style={{ color: colors.text }}>{total}</Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
                   {isAdmin && (
                     <View className="flex-row items-center gap-2">
                       <TouchableOpacity

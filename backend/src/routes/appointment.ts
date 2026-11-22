@@ -7,6 +7,7 @@ import {
   deleteAppointment,
   getAppointment,
   cancelAppointment,
+  unassignAppointment,
 } from "../controllers/appointmentController";
 import { authenticate, isAdmin, requirePanelAccess } from "../middleware/auth";
 
@@ -16,6 +17,7 @@ router.get("/", authenticate, requirePanelAccess("schedule", "view"), asyncHandl
 router.post("/", authenticate, isAdmin, asyncHandler(createAppointment));
 router.get("/:id", authenticate, requirePanelAccess("schedule", "view"), asyncHandler(getAppointment));
 router.patch("/:id/cancel", authenticate, isAdmin, asyncHandler(cancelAppointment));
+router.patch("/:id/unassign", authenticate, isAdmin, asyncHandler(unassignAppointment));
 router.put("/:id", authenticate, isAdmin, asyncHandler(updateAppointment));
 router.delete("/:id", authenticate, isAdmin, asyncHandler(deleteAppointment));
 

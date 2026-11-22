@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { useWindowDimensions } from "react-native";
 import type { Mode } from "react-native-big-calendar";
 import { teamApi, type Team, type CompanyUser } from "../../apiclient/teams";
 import { appointmentApi, type Appointment } from "../../apiclient/appointments";
@@ -153,7 +154,15 @@ interface ScheduleContextValue {
   manualJobVisible: boolean;
   openManualJob: () => void;
   closeManualJob: () => void;
-  saveManualJob: (data: { customerName: string; customerId?: string; tur: string; notes: string }) => Promise<boolean>;
+  saveManualJob: (data: { customerName: string; customerId?: string; tur: string; notes: string; saveCustomer?: boolean }) => Promise<boolean>;
+  /** Planli isi atama bekleyenlere geri alir */
+  unassignJob: (job: Appointment) => Promise<void>;
+  /** Atama/duzenleme penceresindeki is tekliften mi (musteri ve tur kilitli) */
+  editingQuoteId: number | null;
+  todayStr: string;
+  /** Takvime verilen gorunum: telefonda 7 sutun okunmadigi icin "Hafta" 3 gun gosterilir */
+  calendarMode: Mode;
+  isPhone: boolean;
 }
 
 const ScheduleContext = createContext<ScheduleContextValue | null>(null);
@@ -173,12 +182,16 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [assigningJob, setAssigningJob] = useState(false);
   const [cancelJobTarget, setCancelJobTarget] = useState<Appointment | null>(null);
   const [manualJobVisible, setManualJobVisible] = useState(false);
+  const [editingQuoteId, setEditingQuoteId] = useState<number | null>(null);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [containerWidth, setContainerWidth] = useState(350);
 
   const [mode, setMode] = useState<Mode>("day");
+  const { width: windowWidth } = useWindowDimensions();
+  const isPhone = windowWidth < 768;
+  const calendarMode: Mode = mode === "week" && isPhone ? "3days" : mode;
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedTeamFilter, setSelectedTeamFilter] = useState(t("sch.allTeams"));
 
@@ -280,6 +293,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     ? appointments
     : appointments.filter((a) => a.ekip === selectedTeamFilter);
 
+  const todayStr = dateToStr(new Date());
   const events: ScheduleEvent[] = filteredAppointments.map((a) => {
     const tarihDate = strToDate(a.tarih);
     const { h, m } = parseSaat(a.startTime);
@@ -288,7 +302,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     const end = new Date(start.getTime() + durationToMs(a.duration));
     const team = teams.find((t) => t.id === a.ekipId);
     return {
-      title: `${a.status === "DONE" ? "✓ " : ""}${a.customerName} - ${a.tur}`,
+      title: `${a.status === "DONE" ? "✓ " : a.tarih < todayStr ? "⚠ " : ""}${a.customerName} - ${a.tur}`,
+      durum: a.status === "DONE" ? "done" : a.tarih < todayStr ? "overdue" : "open",
       ekipAdi: a.ekip,
       start,
       end,
@@ -369,7 +384,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setCustomerSearch("");
     setTimeInput("09:00");
     setSelectedDuration("1saat");
-    setCustomDurationText("");
+    setCustomDurationText("1");
     setSelectedService(serviceTypes[0] || "Alarm");
     setSelectedTeamId(teams[0]?.id || 0);
     setNotlar("");
@@ -381,6 +396,20 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setAppointmentModalVisible(false);
     setEditingAppointmentId(null);
     setAssigningJob(false);
+    setEditingQuoteId(null);
+  };
+
+  const unassignJob = async (job: Appointment) => {
+    try {
+      const res = await appointmentApi.unassign(job.id);
+      setAppointments((prev) => prev.filter((a) => a.id !== job.id));
+      setAwaitingJobs((prev) => [...prev.filter((j) => j.id !== job.id), { ...res.data, quoteLines: undefined }]);
+      setDetailVisible(false);
+      // Teklif kalemleri (tutar) icin listeyi tazele
+      appointmentApi.getAwaiting().then((r) => setAwaitingJobs(r.data)).catch(() => {});
+    } catch (error: any) {
+      showAlert("error", t("common.error"), error.response?.data?.message || t("sch.errorUnassign"));
+    }
   };
 
   // Atama bekleyen isi randevu penceresiyle atar (ekip, tarih, saat secilir).
@@ -393,12 +422,14 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setCustomerSearch(found ? "" : job.customerName);
     setTimeInput("09:00");
     setSelectedDuration("1saat");
-    setCustomDurationText("");
+    setCustomDurationText("1");
     setSelectedService(job.tur);
     setSelectedTeamId(teams[0]?.id || 0);
     setNotlar(job.notes || "");
     setEditingAppointmentId(job.id);
+    setEditingQuoteId(job.quoteId ?? null);
     setAssigningJob(true);
+    setDetailVisible(false);
     setAppointmentModalVisible(true);
   };
 
@@ -421,13 +452,24 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
 
   const openManualJob = () => setManualJobVisible(true);
   const closeManualJob = () => setManualJobVisible(false);
-  const saveManualJob = async (data: { customerName: string; customerId?: string; tur: string; notes: string }): Promise<boolean> => {
+  const saveManualJob = async (data: { customerName: string; customerId?: string; tur: string; notes: string; saveCustomer?: boolean }): Promise<boolean> => {
     if (!data.customerName.trim() || !data.tur.trim()) {
       showAlert("error", t("common.warning"), t("sch.errorJobRequired"));
       return false;
     }
     try {
-      const res = await appointmentApi.createAwaiting(data);
+      let customerId = data.customerId;
+      // Kayitli olmayan musteri: istenirse musteri kayitlarina da eklenir (teklifteki gibi)
+      if (!customerId && data.saveCustomer) {
+        const existing = customers.find((c) => c.companyName.toLocaleLowerCase("tr-TR") === data.customerName.trim().toLocaleLowerCase("tr-TR"));
+        if (existing) customerId = existing.id;
+        else {
+          const created = await customerApi.create({ companyName: data.customerName.trim() } as any);
+          customerId = created.data.id;
+          setCustomers((prev) => [...prev, { id: created.data.id, companyName: created.data.companyName, contactPerson: "" }]);
+        }
+      }
+      const res = await appointmentApi.createAwaiting({ customerName: data.customerName, customerId, tur: data.tur, notes: data.notes });
       setAwaitingJobs((prev) => [...prev, res.data]);
       setManualJobVisible(false);
       return true;
@@ -452,6 +494,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     if (!detailAppointment) return;
     const atama = detailAppointment;
     setEditingAppointmentId(atama.id);
+    setEditingQuoteId(atama.quoteId ?? null);
     const found = customers.find((c) => c.companyName === atama.customerName);
     setSelectedCustomer(found || (atama.customerId ? { id: atama.customerId, companyName: atama.customerName, contactPerson: "" } : null));
     const d = strToDate(atama.tarih);
@@ -642,6 +685,11 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   };
 
   const value: ScheduleContextValue = {
+    calendarMode,
+    isPhone,
+    unassignJob,
+    editingQuoteId,
+    todayStr,
     awaitingJobs,
     openAssignJob,
     assigningJob,

@@ -451,7 +451,20 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   };
 
   const handledEditIdRef = useRef<string>("");
-  const searchParams = useLocalSearchParams<{ edit?: string }>();
+  const searchParams = useLocalSearchParams<{ edit?: string; view?: string }>();
+  const viewParamId = typeof searchParams.view === "string" ? searchParams.view : "";
+  const handledViewIdRef = useRef("");
+  useEffect(() => {
+    if (!viewParamId || handledViewIdRef.current === viewParamId) return;
+    handledViewIdRef.current = viewParamId;
+    // Liste sayfalanmis olabilir: kayit listede yoksa tek teklif olarak cekilir.
+    const rec = records.find((r) => String(r.id) === viewParamId);
+    if (rec) { handleView(rec); return; }
+    quoteApi.getById(Number(viewParamId)).then((res) => handleView(res.data)).catch(() => {
+      setResultAlert({ visible: true, type: "error", title: t("qot.error"), message: t("qot.errorLoadOne") });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewParamId, records.length]);
   const editParamId = typeof searchParams.edit === "string" ? searchParams.edit : "";
   useEffect(() => {
     if (!editParamId || handledEditIdRef.current === editParamId) return;

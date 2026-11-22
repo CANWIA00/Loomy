@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useSchedule } from "../ScheduleContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import ModalShell from "../ModalShell";
 import type { CustomerOption } from "../types";
 
@@ -17,10 +18,13 @@ export default function ManualJobModal() {
   const [tur, setTur] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveCustomer, setSaveCustomer] = useState(true);
+  const { user } = useAuth();
+  const canSaveCustomer = user?.role === "ADMIN";
 
   useEffect(() => {
     if (!manualJobVisible) return;
-    setCustomerName(""); setCustomer(null); setTur(""); setNotes(""); setSaving(false);
+    setCustomerName(""); setCustomer(null); setTur(""); setNotes(""); setSaving(false); setSaveCustomer(true);
   }, [manualJobVisible]);
 
   const q = customerName.trim().toLocaleLowerCase("tr-TR");
@@ -32,7 +36,10 @@ export default function ManualJobModal() {
 
   const save = async () => {
     setSaving(true);
-    await saveManualJob({ customerName: customer?.companyName || customerName.trim(), customerId: customer?.id, tur: tur.trim(), notes: notes.trim() });
+    await saveManualJob({
+      customerName: customer?.companyName || customerName.trim(), customerId: customer?.id, tur: tur.trim(), notes: notes.trim(),
+      saveCustomer: !customer && canSaveCustomer && saveCustomer,
+    });
     setSaving(false);
   };
 
@@ -64,6 +71,18 @@ export default function ManualJobModal() {
           ))}
         </View>
       )}
+
+      {!customer && customerName.trim() && suggestions.length === 0 && canSaveCustomer ? (
+        <TouchableOpacity
+          className="flex-row items-center mt-2"
+          onPress={() => setSaveCustomer((v) => !v)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: saveCustomer }}
+        >
+          <Ionicons name={saveCustomer ? "checkbox" : "square-outline"} size={18} color={saveCustomer ? colors.primary : colors.textMuted} />
+          <Text className="text-xs ml-2 flex-1" style={{ color: colors.textSecondary }}>{t("sch.saveAsCustomer")}</Text>
+        </TouchableOpacity>
+      ) : null}
 
       <Text className="text-xs font-medium mb-1 mt-3" style={{ color: colors.textSecondary }}>{t("sch.jobDescription")}<Text style={{ color: colors.danger }}> *</Text></Text>
       <TextInput

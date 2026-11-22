@@ -24,3 +24,18 @@ export const strToDate = (s: string): Date => {
   const [y, m, d] = s.split("-").map(Number);
   return new Date(y, m - 1, d);
 };
+
+/** "2026-11-25" -> "25/11/2026" (uygulamanin geri kalaniyla ayni bicim) */
+export const formatIsoDate = (s: string): string => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+};
+
+/** "1saat" / "1.5saat" / "30dk" -> "1 sa" / "1 sa 30 dk" / "30 dk" */
+export const formatDuration = (duration: string, units = { h: "sa", m: "dk" }): string => {
+  if (!duration) return "";
+  const totalMin = Math.round(durationToMs(duration) / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return [h ? `${h} ${units.h}` : "", m ? `${m} ${units.m}` : ""].filter(Boolean).join(" ");
+};

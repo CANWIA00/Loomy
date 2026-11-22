@@ -7,11 +7,17 @@ import { useSchedule } from "./ScheduleContext";
 export default function CalendarNavigator() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const { calendarDate, setCalendarDate, mode } = useSchedule();
+  const { calendarDate, setCalendarDate, calendarMode: mode } = useSchedule();
 
-  const shiftDays = (delta: number) => {
+  // Ileri/geri: gun/hafta gun ekleyerek; ay gorunumunde takvim ayi kadar
+  // (30 gun eklemek 31 cekmeli aylarda bir ayi atlatabiliyordu).
+  const step = (dir: 1 | -1) => {
     const d = new Date(calendarDate);
-    d.setDate(d.getDate() + delta);
+    if (mode === "month") {
+      setCalendarDate(new Date(d.getFullYear(), d.getMonth() + dir, 1));
+      return;
+    }
+    d.setDate(d.getDate() + dir * (mode === "week" ? 7 : mode === "3days" ? 3 : 1));
     setCalendarDate(d);
   };
 
@@ -21,9 +27,15 @@ export default function CalendarNavigator() {
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yyyy = d.getFullYear();
     if (mode === "day") return `${dd}/${mm}/${yyyy}`;
+    if (mode === "3days") {
+      const end = new Date(d);
+      end.setDate(d.getDate() + 2);
+      return `${dd}/${mm} - ${String(end.getDate()).padStart(2, "0")}/${String(end.getMonth() + 1).padStart(2, "0")}/${end.getFullYear()}`;
+    }
     if (mode === "week") {
       const weekStart = new Date(d);
-      weekStart.setDate(d.getDate() - d.getDay());
+      // Hafta pazartesi baslar (takvim ve plan listesiyle ayni)
+      weekStart.setDate(d.getDate() - ((d.getDay() + 6) % 7));
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
       const ws = String(weekStart.getDate()).padStart(2, "0");
@@ -44,7 +56,7 @@ export default function CalendarNavigator() {
         <TouchableOpacity
           className="h-8 px-3 rounded-lg items-center justify-center flex-row"
           style={{ backgroundColor: colors.bgInput }}
-          onPress={() => shiftDays(mode === "week" ? -7 : mode === "month" ? -30 : -1)}
+          onPress={() => step(-1)}
         >
           <Ionicons name="chevron-back" size={14} color={colors.textSecondary} />
         </TouchableOpacity>
@@ -60,7 +72,7 @@ export default function CalendarNavigator() {
         <TouchableOpacity
           className="h-8 px-3 rounded-lg items-center justify-center flex-row"
           style={{ backgroundColor: colors.bgInput }}
-          onPress={() => shiftDays(mode === "week" ? 7 : mode === "month" ? 30 : 1)}
+          onPress={() => step(1)}
         >
           <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} />
         </TouchableOpacity>

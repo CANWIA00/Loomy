@@ -32,6 +32,7 @@ function ScheduleScreenInner() {
     loading,
     events,
     mode,
+    calendarMode,
     calendarDate,
     appointments,
     containerWidth,
@@ -54,7 +55,9 @@ function ScheduleScreenInner() {
   } = useSchedule();
 
   const now = new Date();
-  const scrollOffset = now.getHours() * 60 + now.getMinutes() - 30;
+  // Plan yalnizca 08:00-23:00 arasina girilebilir; gece acilinca bos saatler yerine
+  // is saatleri gorunsun (simdiki saat bu araliktaysa ona yakin acilir).
+  const scrollOffset = Math.min(20 * 60, Math.max(7 * 60 + 45, now.getHours() * 60 + now.getMinutes() - 30));
 
   const calendarLocale = {
     monthNames: [t("month.january"), t("month.february"), t("month.march"), t("month.april"), t("month.may"), t("month.june"), t("month.july"), t("month.august"), t("month.september"), t("month.october"), t("month.november"), t("month.december")],
@@ -77,7 +80,6 @@ function ScheduleScreenInner() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} indicatorStyle={colors.indicatorBg as any}>
       <View className="w-full max-w-6xl mx-auto px-4 pt-4 pb-8">
         <ScreenHeader title={t("sch.title")} subtitle={t("sch.subtitle")} />
-        <TeamsSection />
         <AwaitingJobsSection />
         <CalendarToolbar />
         <CalendarNavigator />
@@ -88,11 +90,12 @@ function ScheduleScreenInner() {
           ) : (
             <Calendar
               date={calendarDate}
-              mode={mode}
+              mode={calendarMode}
               events={events}
               height={500}
               swipeEnabled={false}
               scrollOffsetMinutes={scrollOffset}
+              weekStartsOn={1}
               onPressCell={openNewAppointment}
               onPressEvent={openDetailFromEvent}
               renderHeader={TrWeekHeader}
@@ -110,7 +113,7 @@ function ScheduleScreenInner() {
                     event={event}
                     touchableOpacityProps={touchableOpacityProps}
                     containerWidth={containerWidth}
-                    mode={mode}
+                    mode={calendarMode}
                     originalAppointment={originalAppointment}
                     onDragEnd={handleDragEnd}
                     onPressEvent={openDetailFromEvent}
@@ -136,6 +139,7 @@ function ScheduleScreenInner() {
         </View>
 
         <PlanList />
+        <TeamsSection />
 
         <TeamModal />
         <TeamFilterModal target="calendar" />

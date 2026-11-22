@@ -166,6 +166,27 @@ describe("teklif -> planlama -> servis akisi", () => {
     expect(saved.body).toMatchObject({ created: false, customer: { id: existing.body.id } });
   });
 
+  it("planli is atama bekleyenlere geri alinir; teklife bagli is silinemez; teklif listesi is durumunu doner", async () => {
+    const { token, teamId, quoteId } = await setup();
+    const acc = await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });
+    const jobId = acc.body.job.id;
+    await api("PUT", `/appointments/${jobId}`, { token, body: { ekipId: teamId, tarih: "2026-11-25", startTime: "10:00" } });
+
+    const list = await api("GET", "/quotes", { token });
+    expect(list.body.content.find((q: any) => q.id === quoteId).job).toMatchObject({ id: jobId, status: "SCHEDULED", date: "2026-11-25", startTime: "10:00", teamName: "Ekip A" });
+
+    expect((await api("DELETE", `/appointments/${jobId}`, { token })).status).toBe(400);
+
+    const un = await api("PATCH", `/appointments/${jobId}/unassign`, { token });
+    expect(un.status).toBe(200);
+    expect(un.body).toMatchObject({ status: "AWAITING", ekipId: null, tarih: "" });
+    const aw = (await awaiting(token)).body.find((j: any) => j.id === jobId);
+    expect(aw.quoteLines).toEqual([expect.objectContaining({ name: "IP Kamera", quantity: 4, unitPrice: 1250 })]);
+    expect((await calendar(token)).body.some((j: any) => j.id === jobId)).toBe(false);
+    // atama bekleyen is geri alinamaz
+    expect((await api("PATCH", `/appointments/${jobId}/unassign`, { token })).status).toBe(404);
+  });
+
   it("teklif silinince atanmamis is iptal olur", async () => {
     const { token, quoteId } = await setup();
     const acc = await api("PATCH", `/quotes/${quoteId}/status`, { token, body: { status: "ACCEPTED" } });

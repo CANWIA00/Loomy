@@ -19,12 +19,14 @@ export async function getQuoteRecords(
       orderBy: { createdAt: "desc" },
       skip: page * size,
       take: size,
+      include: { appointment: { select: { id: true, status: true, date: true, startTime: true, teamName: true } } },
     }),
     prisma.quoteRecord.count({ where }),
   ]);
 
   res.json({
-    content,
+    // "appointment" iliskisi istemciye "job" olarak gider
+    content: content.map(({ appointment, ...q }) => ({ ...q, job: appointment ?? null })),
     totalElements,
     totalPages: Math.ceil(totalElements / size),
     number: page,

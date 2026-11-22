@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { dateToStr, strToDate } from "../../utils/date";
+import { dateToStr, strToDate, formatIsoDate, formatDuration } from "../../utils/date";
 import { useSchedule } from "./ScheduleContext";
 import type { PlanFilter } from "./types";
 
@@ -19,6 +19,7 @@ export default function PlanList() {
     calendarDate,
     showTeamFilter,
     openDetail,
+    isPhone,
   } = useSchedule();
 
   const d = new Date(calendarDate);
@@ -56,7 +57,7 @@ export default function PlanList() {
     { key: "gun", label: t("sch.day") },
     { key: "hafta", label: t("sch.week") },
     { key: "ay", label: t("sch.month") },
-    { key: "tum", label: t("sch.allTeams") },
+    { key: "tum", label: t("sch.allDates") },
   ];
 
   return (
@@ -66,7 +67,7 @@ export default function PlanList() {
           <Ionicons name="list" size={18} color={colors.primary} />
           <Text className="font-semibold text-base" style={{ color: colors.text }}>{t("sch.planList")}</Text>
           <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.primary + '20' }}>
-            <Text className="text-xs font-semibold" style={{ color: colors.primary }}>{filteredAppointments.length}</Text>
+            <Text className="text-xs font-semibold" style={{ color: colors.primary }}>{filtered.length}</Text>
           </View>
         </View>
       </View>
@@ -128,7 +129,29 @@ export default function PlanList() {
               const team = teams.find((t) => t.id === a.ekipId);
               const gunler = [t("dayShort.sun"), t("dayShort.mon"), t("dayShort.tue"), t("dayShort.wed"), t("dayShort.thu"), t("dayShort.fri"), t("dayShort.sat")];
               const d2 = strToDate(a.tarih);
-              const dateLabel = `${gunler[d2.getDay()]} ${a.tarih}`;
+              const dateLabel = `${gunler[d2.getDay()]} ${formatIsoDate(a.tarih)}`;
+              const done = a.status === "DONE";
+              const overdue = !done && a.tarih < todayStr;
+              // Durum rozeti: masaustunde sagda, telefonda musteri adini kesmesin diye ekip satirinin altinda
+              const badge = (
+                <>
+                  {done ? (
+                      <View className="flex-row items-center px-2 py-0.5 rounded" style={{ backgroundColor: colors.success + '22' }}>
+                        <Ionicons name="checkmark" size={11} color={colors.success} />
+                        <Text className="text-[10px] font-medium ml-0.5" style={{ color: colors.success }}>{t("sch.jobDone")}</Text>
+                      </View>
+                    ) : overdue ? (
+                      <View className="flex-row items-center px-2 py-0.5 rounded" style={{ backgroundColor: colors.danger + '1F' }}>
+                        <Ionicons name="alert-circle" size={11} color={colors.danger} />
+                        <Text className="text-[10px] font-medium ml-0.5" style={{ color: colors.danger }}>{t("sch.serviceFormPending")}</Text>
+                      </View>
+                    ) : a.tarih === todayStr ? (
+                      <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.primary + '20' }}>
+                        <Text className="text-[10px] font-medium" style={{ color: colors.primary }}>{t("dash.today")}</Text>
+                      </View>
+                    ) : null}
+                </>
+              );
               const showDateHeader = a.tarih !== lastDate;
               if (showDateHeader) lastDate = a.tarih;
               return (
@@ -145,15 +168,16 @@ export default function PlanList() {
                     style={{
                       backgroundColor: `${team?.color || "#6080FF"}10`,
                       borderLeftWidth: 3,
-                      borderLeftColor: team?.color || "#6080FF",
-                      opacity: a.tarih < todayStr ? 0.5 : 1,
+                      borderLeftColor: overdue ? colors.danger : team?.color || "#6080FF",
+                      // Tamamlanan isler soluk; tarihi gecmis ama servis formu olmayanlar one cikar.
+                      opacity: done ? 0.55 : 1,
                     }}
                     onPress={() => openDetail(a)}
                     activeOpacity={0.7}
                   >
                     <View className="items-center" style={{ minWidth: 45 }}>
                       <Text className="text-sm font-bold" style={{ color: colors.text }}>{a.startTime}</Text>
-                      <Text className="text-[10px]" style={{ color: colors.textMuted }}>{a.duration}</Text>
+                      <Text className="text-[10px]" style={{ color: colors.textMuted }}>{formatDuration(a.duration, { h: t("dur.h"), m: t("dur.m") })}</Text>
                     </View>
                     <View style={{ width: 1, height: 32, backgroundColor: colors.border }} />
                     <View className="flex-1">
@@ -164,16 +188,9 @@ export default function PlanList() {
                         <Text className="text-xs" style={{ color: colors.textMuted }}>•</Text>
                         <Text className="text-xs" style={{ color: colors.textSecondary }}>{a.tur}</Text>
                       </View>
+                      {isPhone ? <View className="flex-row mt-1">{badge}</View> : null}
                     </View>
-                    {a.tarih < todayStr ? (
-                      <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.textMuted + '30' }}>
-                        <Text className="text-[10px] font-medium" style={{ color: colors.textMuted }}>{t("sch.past")}</Text>
-                      </View>
-                    ) : a.tarih === todayStr ? (
-                      <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.primary + '20' }}>
-                        <Text className="text-[10px] font-medium" style={{ color: colors.primary }}>{t("dash.today")}</Text>
-                      </View>
-                    ) : null}
+                    {!isPhone && badge}
                   </TouchableOpacity>
                 </View>
               );

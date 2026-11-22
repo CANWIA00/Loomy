@@ -18,6 +18,8 @@ export interface Appointment {
   quoteId?: number | null;
   serviceRecordId?: number | null;
   createdAt?: string;
+  /** Atama bekleyen listesinde: tekliften gelen isin kalemleri (tutar icin) */
+  quoteLines?: { name: string; quantity: number; unitPrice: number; currency: string; unit: string }[];
 }
 
 /** Is detayi: kabul edilen tekliften geldiyse teklif kalemleriyle */
@@ -61,4 +63,8 @@ export const appointmentApi = {
 
   cancel: (id: number) =>
     apiClient.patch<Appointment>(`/appointments/${id}/cancel`),
+
+  /** Planli isi takvimden cikarip atama bekleyenlere geri alir */
+  unassign: (id: number) =>
+    apiClient.patch<Appointment>(`/appointments/${id}/unassign`),
 };

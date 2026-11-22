@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -13,6 +13,9 @@ export default function TeamsSection() {
   const isAdmin = user?.role === "ADMIN";
   const { teams, appointments, openTeamModal, openTeamDetail } = useSchedule();
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  // Gunluk kullanimda one cikmasin: sayfanin altinda, telefonda kapali baslar.
+  const { width } = useWindowDimensions();
+  const [open, setOpen] = useState(width >= 768);
 
   const toggle = (teamId: number) => {
     setExpanded((prev) => ({ ...prev, [teamId]: !prev[teamId] }));
@@ -58,8 +61,20 @@ export default function TeamsSection() {
 
   return (
     <View className="rounded-2xl border p-4 mb-6" style={{ backgroundColor: colors.bgCard2, borderColor: colors.borderAlt }}>
-      <View className="flex-row items-center justify-between mb-4">
-        <Text className="font-semibold text-base" style={{ color: colors.text }}>{t("sch.teams")}</Text>
+      <View className={`flex-row items-center justify-between ${open ? "mb-4" : ""}`}>
+        <TouchableOpacity
+          className="flex-row items-center flex-1"
+          onPress={() => setOpen((v) => !v)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+        >
+          <Ionicons name="people-outline" size={18} color={colors.primary} />
+          <Text className="font-semibold text-base ml-2" style={{ color: colors.text }}>{t("sch.teams")}</Text>
+          <View className="ml-2 px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.primary + "20" }}>
+            <Text className="text-xs font-semibold" style={{ color: colors.primary }}>{teams.length}</Text>
+          </View>
+          <Ionicons name={open ? "chevron-up" : "chevron-down"} size={16} color={colors.textMuted} style={{ marginLeft: 6 }} />
+        </TouchableOpacity>
         {isAdmin && (
           <TouchableOpacity
             className="flex-row items-center h-8 px-3 rounded-lg"
@@ -72,7 +87,7 @@ export default function TeamsSection() {
         )}
       </View>
 
-      {teams.length === 0 ? (
+      {!open && teams.length > 0 ? null : teams.length === 0 ? (
         <View className="rounded-2xl border border-dashed p-6 items-center justify-center" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
           <Ionicons name="people-outline" size={36} color={colors.textMuted} />
           <Text className="text-sm text-center mt-3 leading-5" style={{ color: colors.textSecondary }}>

@@ -15,7 +15,9 @@ export default function CalendarToolbar() {
     setSelectedTeamFilter,
     showTeamFilter,
     openNewAppointment,
+    isPhone,
   } = useSchedule();
+  const teamFiltered = selectedTeamFilter !== t("sch.allTeams");
 
   return (
     <View className="flex-row flex-wrap gap-2 mb-4 items-center">
@@ -32,14 +34,14 @@ export default function CalendarToolbar() {
           onPress={() => setMode(m)}
         >
           <Text className="text-xs font-medium" style={{ color: mode === m ? "white" : colors.textSecondary }}>
-            {m === "day" ? t("sch.day") : m === "week" ? t("sch.week") : t("sch.month")}
+            {m === "day" ? t("sch.day") : m === "week" ? (isPhone ? t("sch.threeDays") : t("sch.week")) : t("sch.month")}
           </Text>
         </TouchableOpacity>
       ))}
 
       <TouchableOpacity
         className="flex-row items-center h-8 px-3 border rounded-lg"
-        style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
+        style={{ backgroundColor: teamFiltered ? colors.primary + "15" : colors.bgCard, borderColor: teamFiltered ? colors.primary : colors.border }}
         onPress={() => showTeamFilter("calendar")}
       >
         <Text className="text-xs mr-2" style={{ color: colors.text }}>
@@ -48,13 +50,16 @@ export default function CalendarToolbar() {
         <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
       </TouchableOpacity>
 
-      <TouchableOpacity
-        className="h-8 w-8 rounded-lg items-center justify-center"
-        style={{ backgroundColor: colors.bgInput }}
-        onPress={() => setSelectedTeamFilter(t("sch.allTeams"))}
-      >
-        <Ionicons name="close" size={16} color={colors.danger} />
-      </TouchableOpacity>
+      {teamFiltered ? (
+        <TouchableOpacity
+          className="h-8 w-8 rounded-lg items-center justify-center"
+          style={{ backgroundColor: colors.bgInput }}
+          onPress={() => setSelectedTeamFilter(t("sch.allTeams"))}
+          accessibilityLabel={t("sch.clearTeamFilter")}
+        >
+          <Ionicons name="close" size={16} color={colors.danger} />
+        </TouchableOpacity>
+      ) : null}
 
       <TouchableOpacity
         className="flex-row items-center h-8 px-3 rounded-lg ml-auto"
